@@ -1,0 +1,13 @@
+## Manual Test Checklist
+
+- **Armor assignment & lover notification**: Host starts a game where Armor is alive; confirm Armor screen appears once, picks two players, and both see Lover name in their role card while everyone else sees a waiting message.
+- **Lovers death link**: Create Lovers pair, then (a) vote one Lover out, (b) kill one at night via Werewolves or Witch poison, and (c) let Hunter shoot one—each time ensure the partner dies immediately with “died of heartbreak” log and that chained deaths still trigger Hunter/Joker logic correctly.
+- **Event log visibility**: While alive, verify logs and night report show victim + role but do not reveal the killer. After death, confirm full log details are visible.
+- **Joker voted out**: Configure a Joker, run a day vote that eliminates them, and verify the game ends instantly with Joker win before Lovers or Hunter effects continue.
+- **Hunter dies via Lovers link**: Make Hunter a Lover partner, kill the other Lover (any method), and ensure Hunter still receives the last-shot overlay even though death came from heartbreak.
+- **Werewolf & day vote ties**: Force wolf vote tie to see random target selection, and run a day vote tie to trigger revote UI; verify second tie resolves randomly among tied players.
+- **Witch potion tracking**: Use heal potion once to prevent the wolf kill, confirm potion becomes unavailable later, then poison a target on another night and ensure dead count + Lovers link apply before win checks.
+- **Seer and Witch private info**: Confirm Seer sees the last inspection result only on their device and Witch sees the wolves’ target before acting.
+- **Lobby validation**: Adjust minimum players and attempt to start below it; ensure the backend rejects the start and displays an error alert. Also test too many roles vs player count.
+- **Disconnect / reconnect**: Join from a browser, disconnect (close tab), reopen and resume via stored session to confirm state restores (including role, death state, and pending prompts like Hunter shot).
+- **Endgame reveal**: When a team wins, ensure all roles reveal in the player list and that win condition matches expectations (wolves parity, all wolves dead, or Joker instant win).
