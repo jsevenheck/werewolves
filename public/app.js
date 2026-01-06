@@ -538,13 +538,15 @@ function bindPhaseHandlers() {
     });
   }
   if (room.phase === 'roleReveal') {
+    const readyBtn = document.getElementById('ready-btn');
+    readyBtn?.addEventListener('click', () => {
+      socket.emit('markReady', { roomCode: room.code, playerId: state.playerId });
+    });
+
     if (room.hostId === state.playerId) {
-      document.getElementById('continue-btn')?.addEventListener('click', () => {
+      const continueBtn = document.getElementById('continue-btn');
+      continueBtn?.addEventListener('click', () => {
         socket.emit('continueAfterReveal', { roomCode: room.code, playerId: state.playerId });
-      });
-    } else {
-      document.getElementById('ready-btn')?.addEventListener('click', () => {
-        socket.emit('markReady', { roomCode: room.code, playerId: state.playerId });
       });
     }
   }
