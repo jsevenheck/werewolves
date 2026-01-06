@@ -146,7 +146,7 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomCode);
     if (!room || room.phase !== 'roleReveal') return;
     const player = room.players[playerId];
-    if (!player) return;
+    if (!player || player.socketId !== socket.id) return;
     player.ready = true;
     broadcastRoom(room);
   });
@@ -421,7 +421,8 @@ function sanitizeRoom(room, viewerId) {
       id: viewer.id,
       role: viewer.role,
       team: viewer.team,
-      alive: viewer.alive
+      alive: viewer.alive,
+      ready: room.phase === 'roleReveal' ? viewer.ready : undefined
     } : null
   };
 }
