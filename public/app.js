@@ -265,14 +265,14 @@ function renderRoleRevealSection(room) {
   const info = self?.role ? ROLE_DETAILS[self.role] : null;
   const readyCount = room.players.filter((p) => p.ready).length;
   const totalCount = room.players.length;
-  const isReady = self?.ready;
+  const isSelfReady = self?.ready;
   const isHost = room.hostId === state.playerId;
   const allReady = readyCount === totalCount;
   
   let actionButton = '';
   if (isHost) {
     actionButton = `<button id="continue-btn" ${!allReady ? 'disabled' : ''}>Continue</button>`;
-  } else if (!isReady) {
+  } else if (!isSelfReady) {
     actionButton = '<button id="ready-btn">I\'m Ready</button>';
   } else {
     actionButton = '<p style="color:#4ade80;">✓ You are ready. Waiting for others...</p>';
