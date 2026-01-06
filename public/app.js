@@ -270,7 +270,10 @@ function renderRoleRevealSection(room) {
   const allReady = readyCount === totalCount;
   
   let actionButton = '';
-  if (isHost) {
+  if (isHost && !isSelfReady) {
+    // Host must also mark themselves as ready before being allowed to continue
+    actionButton = '<button id="ready-btn">I\'m Ready</button>';
+  } else if (isHost) {
     actionButton = `<button id="continue-btn" ${!allReady ? 'disabled' : ''}>Continue</button>`;
   } else if (!isSelfReady) {
     actionButton = '<button id="ready-btn">I\'m Ready</button>';
