@@ -142,10 +142,21 @@ io.on('connection', (socket) => {
     broadcastRoom(room);
   });
 
+  socket.on('markReady', ({ roomCode, playerId }) => {
+    const room = rooms.get(roomCode);
+    if (!room || room.phase !== 'roleReveal') return;
+    const player = room.players[playerId];
+    if (!player) return;
+    player.ready = true;
+    broadcastRoom(room);
+  });
+
   socket.on('continueAfterReveal', ({ roomCode, playerId }) => {
     const room = rooms.get(roomCode);
     if (!room || room.hostId !== playerId) return;
     if (room.phase !== 'roleReveal') return;
+    const allReady = Object.values(room.players).every((p) => p.ready);
+    if (!allReady) return;
     advanceFromReveal(room);
   });
 
@@ -337,6 +348,7 @@ function assignRoles(room) {
     const role = deck[index];
     player.role = role;
     player.team = ROLE_INFO[role]?.team ?? 'village';
+    player.ready = false;
     if (role === 'werewolf') {
       player.nightAction = { vote: null };
     } else {
@@ -364,7 +376,8 @@ function sanitizeRoom(room, viewerId) {
     alive: player.alive,
     connected: player.connected,
     isHost: player.isHost,
-    role: player.id === viewerId || room.phase === 'ended' ? player.role : null
+    role: player.id === viewerId || room.phase === 'ended' ? player.role : null,
+    ready: room.phase === 'roleReveal' ? player.ready : undefined
   }));
   const viewerAlive = viewer ? viewer.alive : false;
   const logs = room.logs.slice(-8).map((log) => ({

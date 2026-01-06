@@ -263,11 +263,27 @@ function renderLobbySection(room) {
 function renderRoleRevealSection(room) {
   const self = room.self;
   const info = self?.role ? ROLE_DETAILS[self.role] : null;
+  const readyCount = room.players.filter((p) => p.ready).length;
+  const totalCount = room.players.length;
+  const isReady = room.players.find((p) => p.id === state.playerId)?.ready;
+  const isHost = room.hostId === state.playerId;
+  const allReady = readyCount === totalCount;
+  
+  let actionButton = '';
+  if (isHost) {
+    actionButton = `<button id="continue-btn" ${!allReady ? 'disabled' : ''}>Continue</button>`;
+  } else if (!isReady) {
+    actionButton = '<button id="ready-btn">I\'m Ready</button>';
+  } else {
+    actionButton = '<p style="color:#4ade80;">✓ You are ready. Waiting for others...</p>';
+  }
+  
   return `
     <section class="panel">
       <h2>Your Role</h2>
       ${info ? `<p style="color:${info.color};font-size:1.2rem;">${info.name}</p><p>${info.description}</p>` : '<p>Waiting for assignment...</p>'}
-      ${room.hostId === state.playerId ? '<button id="continue-btn">Continue</button>' : '<p>Host will continue when everyone is ready.</p>'}
+      <p>Players ready: ${readyCount} / ${totalCount}</p>
+      ${actionButton}
     </section>
   `;
 }
@@ -518,10 +534,16 @@ function bindPhaseHandlers() {
       });
     });
   }
-  if (room.phase === 'roleReveal' && room.hostId === state.playerId) {
-    document.getElementById('continue-btn')?.addEventListener('click', () => {
-      socket.emit('continueAfterReveal', { roomCode: room.code, playerId: state.playerId });
-    });
+  if (room.phase === 'roleReveal') {
+    if (room.hostId === state.playerId) {
+      document.getElementById('continue-btn')?.addEventListener('click', () => {
+        socket.emit('continueAfterReveal', { roomCode: room.code, playerId: state.playerId });
+      });
+    } else {
+      document.getElementById('ready-btn')?.addEventListener('click', () => {
+        socket.emit('markReady', { roomCode: room.code, playerId: state.playerId });
+      });
+    }
   }
   if (room.phase === 'armor' && room.self?.role === 'armor' && room.self.alive) {
     const armorForm = document.getElementById('armor-form');
