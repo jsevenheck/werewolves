@@ -540,6 +540,8 @@ function bindPhaseHandlers() {
   if (room.phase === 'roleReveal') {
     const readyBtn = document.getElementById('ready-btn');
     readyBtn?.addEventListener('click', () => {
+      if (readyBtn.disabled) return;
+      readyBtn.disabled = true;
       socket.emit('markReady', { roomCode: room.code, playerId: state.playerId });
     });
 
