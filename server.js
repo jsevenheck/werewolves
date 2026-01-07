@@ -155,7 +155,7 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomCode);
     if (!room || room.hostId !== playerId) return;
     if (room.phase !== 'roleReveal') return;
-    const allReady = Object.values(room.players).every((p) => p.ready);
+    const allReady = Object.values(room.players).every((p) => !p.connected || p.ready);
     if (!allReady) return;
     advanceFromReveal(room);
   });
