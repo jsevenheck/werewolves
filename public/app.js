@@ -570,24 +570,26 @@ function bindPhaseHandlers() {
   const room = state.room;
   if (!room) return;
   if (room.phase === 'lobby' && room.hostId === state.playerId) {
-    document.querySelectorAll('.role-input').forEach((input) => {
-      input.addEventListener('change', () => {
-        const config = {};
-        document.querySelectorAll('.role-input').forEach((field) => {
-          config[field.dataset.role] = Number(field.value);
-        });
-        const minPlayersInput = document.getElementById('min-players');
-        if (minPlayersInput) {
-          config.minPlayers = Number(minPlayersInput.value);
-        }
-        socket.emit('updateRoleConfig', { roomCode: room.code, playerId: state.playerId, config });
+    const updateConfig = () => {
+      const config = {};
+      document.querySelectorAll('.role-input').forEach((field) => {
+        config[field.dataset.role] = Number(field.value);
       });
-    });
-    document.getElementById('min-players')?.addEventListener('change', (event) => {
-      const value = Number(event.target.value);
-      const config = { minPlayers: value };
+      const minPlayersInput = document.getElementById('min-players');
+      if (minPlayersInput) {
+        config.minPlayers = Number(minPlayersInput.value);
+      }
       socket.emit('updateRoleConfig', { roomCode: room.code, playerId: state.playerId, config });
+    };
+    document.querySelectorAll('.role-input').forEach((input) => {
+      input.addEventListener('change', updateConfig);
+      input.addEventListener('input', updateConfig);
     });
+    const minPlayersInput = document.getElementById('min-players');
+    if (minPlayersInput) {
+      minPlayersInput.addEventListener('change', updateConfig);
+      minPlayersInput.addEventListener('input', updateConfig);
+    }
     document.getElementById('start-game')?.addEventListener('click', () => {
       socket.emit('startGame', { roomCode: room.code, playerId: state.playerId }, (res) => {
         if (res?.error) notify(res.error);
