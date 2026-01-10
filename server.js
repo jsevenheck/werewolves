@@ -692,6 +692,9 @@ function tryResolveDayVote(room) {
   }
   entries.sort((a, b) => b[1] - a[1]);
   const top = entries[0];
+  // If a strict majority (> 50%) of alive players abstain (vote null),
+  // the vote is considered skipped. The case where everyone abstains is
+  // already handled above when entries.length === 0.
   if (abstainCount > alivePlayers.length / 2) {
     addLog(room, 'Majority abstained. No one eliminated.', 'Majority abstained. No one eliminated.');
     schedulePhaseTransition(room, 'dayToNight');
