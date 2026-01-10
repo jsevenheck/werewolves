@@ -582,13 +582,23 @@ function bindPhaseHandlers() {
       }
       socket.emit('updateRoleConfig', { roomCode: room.code, playerId: state.playerId, config });
     };
+    // Debounce updates triggered by 'input' events to avoid excessive socket emissions
+    let updateConfigTimeoutId;
+    const debouncedUpdateConfig = () => {
+      if (updateConfigTimeoutId) {
+        clearTimeout(updateConfigTimeoutId);
+      }
+      updateConfigTimeoutId = setTimeout(() => {
+        updateConfig();
+      }, 400);
+    };
     roleInputs.forEach((input) => {
       input.addEventListener('change', updateConfig);
-      input.addEventListener('input', updateConfig);
+      input.addEventListener('input', debouncedUpdateConfig);
     });
     if (minPlayersInput) {
       minPlayersInput.addEventListener('change', updateConfig);
-      minPlayersInput.addEventListener('input', updateConfig);
+      minPlayersInput.addEventListener('input', debouncedUpdateConfig);
     }
     document.getElementById('start-game')?.addEventListener('click', () => {
       socket.emit('startGame', { roomCode: room.code, playerId: state.playerId }, (res) => {
