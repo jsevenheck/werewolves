@@ -266,17 +266,29 @@ io.on('connection', (socket) => {
       return;
     }
     if (room.phaseStep === 'wolves') {
-      room.wolfTarget = null;
-      scheduleNightStep(room, 'seer');
+      // Only allow skip if no living werewolves are present
+      const livingWolves = Object.values(room.players).filter((p) => p.role === 'werewolf' && p.alive);
+      if (livingWolves.length === 0) {
+        room.wolfTarget = null;
+        scheduleNightStep(room, 'seer');
+      }
       return;
     }
     if (room.phaseStep === 'seer') {
-      room.seerActed = true;
-      scheduleNightStep(room, 'witch');
+      // Only allow skip if no living seer is present
+      const livingSeer = Object.values(room.players).find((p) => p.role === 'seer' && p.alive);
+      if (!livingSeer) {
+        room.seerActed = true;
+        scheduleNightStep(room, 'witch');
+      }
       return;
     }
     if (room.phaseStep === 'witch') {
-      handleWitchDecision(room, 'skip');
+      // Only allow skip if no living witch is present
+      const livingWitch = Object.values(room.players).find((p) => p.role === 'witch' && p.alive);
+      if (!livingWitch) {
+        handleWitchDecision(room, 'skip');
+      }
     }
   });
 
