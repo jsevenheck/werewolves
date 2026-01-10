@@ -628,7 +628,29 @@ function bindPhaseHandlers() {
     readyBtn?.addEventListener('click', () => {
       if (readyBtn.disabled) return;
       readyBtn.disabled = true;
-      socket.emit('markReady', { roomCode: room.code, playerId: state.playerId });
+      // Emit markReady with acknowledgment and a timeout fallback so the button
+      // is not left permanently disabled if the server does not respond.
+      const timeoutId = setTimeout(() => {
+        // Re-enable the button and inform the user if no response is received in time.
+        if (readyBtn.disabled) {
+          readyBtn.disabled = false;
+          notify('Failed to mark you as ready. Please try again.');
+        }
+      }, 10000);
+
+      socket.emit(
+        'markReady',
+        { roomCode: room.code, playerId: state.playerId },
+        (res) => {
+          clearTimeout(timeoutId);
+          if (res?.error) {
+            notify(res.error);
+            readyBtn.disabled = false;
+          }
+          // On success, keep the button disabled; further UI updates should come
+          // from room state updates received from the server.
+        }
+      );
     });
 
     if (room.hostId === state.playerId) {
