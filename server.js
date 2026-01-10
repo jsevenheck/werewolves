@@ -261,6 +261,7 @@ io.on('connection', (socket) => {
       }
       if (kind === 'postArmor') {
         startNight(room);
+        return;
       }
       return;
     }
