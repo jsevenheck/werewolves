@@ -20,8 +20,9 @@ Open `http://localhost:3001` (or set `PORT` for another port).
 ## How to Play
 1. Host creates a room and shares the 4-letter code.
 2. Host configures role counts and minimum players, then starts the game.
-3. Players see their private role on their device.
-4. Armor links Lovers once, then night/day cycles begin.
+3. Players see their private role on their device and click Ready.
+4. Host continues once everyone is ready.
+5. Armor links Lovers once, then night/day cycles begin.
 
 ## Docker
 ```bash

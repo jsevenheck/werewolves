@@ -50,7 +50,9 @@ Then open `http://localhost:3000`.
 ### Basic Flow
 - Host configures role counts and starts the game.
 - Everyone sees their private role in the role card.
+- Players mark ready; host continues once everyone is ready.
 - Armor links Lovers once, then night/day cycles begin.
+- Host can skip a night action step if a player is offline.
 
 ### Troubleshooting
 - If players cannot connect, ensure the host firewall allows inbound `3000`.

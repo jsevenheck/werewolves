@@ -46,7 +46,9 @@ const state = {
   playerId: '',
   playerName: '',
   hunterPrompt: false,
-  storedSession: loadSession()
+  storedSession: loadSession(),
+  roleVisible: false,
+  pendingVote: undefined
 };
 
 if (state.storedSession) {
@@ -70,6 +72,12 @@ socket.on('roomUpdate', (room) => {
   if (room.self?.id === state.playerId) {
     state.playerName = room.players.find((p) => p.id === room.self.id)?.name || state.playerName;
     saveSession();
+  }
+  if (room.voteState?.yourVote !== undefined) {
+    state.pendingVote = undefined;
+  }
+  if (room.phase === 'lobby') {
+    state.roleVisible = false;
   }
   renderApp();
 });
@@ -156,6 +164,9 @@ function renderApp() {
     return;
   }
   state.hunterPrompt = !!state.room.awaitingHunterShot;
+  if (state.room.phase !== 'day') {
+    state.pendingVote = undefined;
+  }
   const sections = [
     renderHeader(),
     renderPhaseSection(),
@@ -172,12 +183,19 @@ function renderHeader() {
   const self = state.room.self;
   const detail = self?.role ? ROLE_DETAILS[self.role] : null;
   const loverNote = state.room.loverName ? `<p>Lover: ${state.room.loverName}</p>` : '';
-  const roleBlock = self?.role
+  const seerNote = self?.role === 'seer' && state.room.seerResult
+    ? `<p>Last vision: ${state.room.seerResult.name} is ${state.room.seerResult.result}.</p>`
+    : '';
+  const roleBlock = self?.role && state.roleVisible
     ? `<div class="role-card" style="border-color:${detail?.color || '#f8fafc'};color:${detail?.color || '#f8fafc'}">
         <strong>${detail?.name || self.role}</strong>
         <p>${detail?.description || ''}</p>
         ${loverNote}
+        ${seerNote}
       </div>`
+    : '';
+  const roleToggle = self?.role
+    ? `<button id="toggle-role" type="button">${state.roleVisible ? 'Hide Role' : 'Reveal Role'}</button>`
     : '';
   return `
     <section class="panel">
@@ -190,6 +208,7 @@ function renderHeader() {
           <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;">
             <span class="tag">You: ${state.playerName || 'Unknown'}</span>
             ${self?.alive ? '<span class="tag" style="border-color:#4ade80;color:#4ade80;">Alive</span>' : '<span class="tag" style="border-color:#ef4444;color:#ef4444;">Dead</span>'}
+            ${roleToggle}
             <button id="leave-room" type="button">Leave Game</button>
           </div>
         </div>
@@ -210,6 +229,14 @@ function renderPhaseSection() {
         <p><strong>Winner:</strong> ${room.winner.team.toUpperCase()}</p>
         <button id="restart-btn" type="button">Return to lobby</button>
         ${renderRoleRevealList(room)}
+      </section>
+    `;
+  }
+  if (room.phaseTransition) {
+    return `
+      <section class="panel">
+        <h2>Transitioning...</h2>
+        <p>Next phase in a few seconds. Close your eyes if needed.</p>
       </section>
     `;
   }
@@ -278,15 +305,15 @@ function renderRoleRevealSection(room) {
   } else if (!isSelfReady) {
     actionButton = '<button id="ready-btn">I\'m Ready</button>';
   } else {
-    actionButton = '<p style="color:#4ade80;">✓ You are ready. Waiting for others...</p>';
+    actionButton = '<p style="color:#4ade80;">You are ready. Waiting for others...</p>';
   }
   
   return `
     <section class="panel">
       <h2>Your Role</h2>
-      ${info ? `<p style="color:${info.color};font-size:1.2rem;">${info.name}</p><p>${info.description}</p>` : '<p>Waiting for assignment...</p>'}
-      <p>Players ready: ${readyCount} / ${totalCount}</p>
+      ${info ? '<p>Tap "Reveal Role" to view your role.</p>' : '<p>Waiting for assignment...</p>'}
       ${actionButton}
+      <p>Players ready: ${readyCount} / ${totalCount}</p>
     </section>
   `;
 }
@@ -329,7 +356,10 @@ function renderArmorSection(room, self) {
 function renderNightSection(room, self) {
   const stepLabel = room.phaseStep ? room.phaseStep.toUpperCase() : 'NIGHT';
   let content = '<p>You sleep peacefully.</p>';
-  if (self?.alive) {
+  if (room.phaseStep === 'transition') {
+    const nextLabel = room.nextNightStep ? room.nextNightStep.toUpperCase() : '...';
+    content = `<p>Transitioning... next: ${nextLabel}.</p>`;
+  } else if (self?.alive) {
     if (room.phaseStep === 'wolves' && self.role === 'werewolf') {
       content = renderWolfForm(room);
     } else if (room.phaseStep === 'seer' && self.role === 'seer') {
@@ -340,10 +370,14 @@ function renderNightSection(room, self) {
   } else {
     content = '<p>You are dead. Spectating only.</p>';
   }
+  const hostControls = room.hostId === state.playerId && ['wolves', 'seer', 'witch'].includes(room.phaseStep)
+    ? '<div class="actions"><button id="skip-step" type="button">Skip current action</button></div>'
+    : '';
   return `
     <section class="panel">
-      <h2>Night Phase – ${stepLabel}</h2>
+      <h2>Night Phase - ${stepLabel}</h2>
       ${content}
+      ${hostControls}
     </section>
   `;
 }
@@ -352,7 +386,12 @@ function renderDaySection(room, self) {
   const summary = room.lastNightDeaths?.length
     ? `<ul>${room.lastNightDeaths.map((entry) => `<li>${entry.name} (${ROLE_DETAILS[entry.role]?.name || entry.role})</li>`).join('')}</ul>`
     : '<p>No one died last night.</p>';
-  const voteForm = self?.alive ? renderVoteForm(room) : '<p>You are dead and cannot vote.</p>';
+  const votedValue = room.voteState.yourVote !== undefined ? room.voteState.yourVote : state.pendingVote;
+  const voteForm = self?.alive
+    ? votedValue !== undefined
+      ? renderVoteConfirmation(room, votedValue)
+      : renderVoteForm(room)
+    : '<p>You are dead and cannot vote.</p>';
   return `
     <section class="panel">
       <h2>Day ${room.dayCount}</h2>
@@ -362,6 +401,14 @@ function renderDaySection(room, self) {
       ${voteForm}
     </section>
   `;
+}
+
+function renderVoteConfirmation(room, votedValue) {
+  if (votedValue === null) {
+    return '<p style="color:#4ade80;">Vote submitted: Abstain.</p>';
+  }
+  const name = getPlayerName(room, votedValue);
+  return `<p style="color:#4ade80;">Vote submitted: ${name}.</p>`;
 }
 
 function renderPlayersPanel() {
@@ -384,7 +431,7 @@ function renderPlayersPanel() {
 }
 
 function renderLogsPanel() {
-  const logs = state.room.logs?.map((log) => `<div>${new Date(log.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – ${log.text}</div>`).join('') || '';
+  const logs = state.room.logs?.map((log) => `<div>${new Date(log.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${log.text}</div>`).join('') || '';
   return `
     <section class="panel">
       <h2>Events</h2>
@@ -403,9 +450,14 @@ function renderWolfForm(room) {
   const currentVote = room.wolfVotes?.[state.playerId] || '';
   const options = aliveTargets.map((p) => `<option value="${p.id}" ${currentVote === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
   const peers = room.wolfPeers?.length ? `<p>Other wolves: ${room.wolfPeers.join(', ')}</p>` : '';
+  const voteEntries = Object.entries(room.wolfVotes || {}).filter(([, targetId]) => targetId);
+  const voteSummary = voteEntries.length
+    ? `<p>Wolf votes: ${voteEntries.map(([wolfId, targetId]) => `${getPlayerName(room, wolfId)} -> ${getPlayerName(room, targetId)}`).join(', ')}</p>`
+    : '';
   return `
     <form id="wolf-form" class="actions">
       ${peers}
+      ${voteSummary}
       <label>
         <span>Select a victim</span>
         <select name="target" required>
@@ -476,24 +528,29 @@ function renderVoteForm(room) {
     <form id="vote-form" class="actions">
       ${info}
       <label>
-        <span>Choose someone to eliminate (or leave blank to abstain)</span>
-        <select name="target">
-          <option value="">Abstain</option>
+        <span>Choose someone to eliminate</span>
+        <select name="target" required>
+          <option value="">Select a player</option>
+          <option value="__abstain__">Abstain</option>
           ${options}
         </select>
       </label>
-      <button type="submit">Submit vote</button>
+      <button type="submit" id="vote-submit" disabled>Submit vote</button>
       <small>${submitted} / ${room.voteState.required} votes submitted.</small>
     </form>
   `;
 }
 
 function renderRoleRevealList(room) {
-  const rows = room.players.map((player) => `<div>${player.name} – ${ROLE_DETAILS[player.role]?.name || player.role || 'Unknown'}</div>`).join('');
+  const rows = room.players.map((player) => `<div>${player.name} - ${ROLE_DETAILS[player.role]?.name || player.role || 'Unknown'}</div>`).join('');
   return `<div style="margin-top:1rem;">${rows}</div>`;
 }
 
 function bindCommonHandlers() {
+  document.getElementById('toggle-role')?.addEventListener('click', () => {
+    state.roleVisible = !state.roleVisible;
+    renderApp();
+  });
   document.getElementById('leave-room')?.addEventListener('click', () => {
     state.room = null;
     state.roomCode = '';
@@ -566,6 +623,11 @@ function bindPhaseHandlers() {
     });
   }
   if (room.phase === 'night') {
+    if (room.hostId === state.playerId) {
+      document.getElementById('skip-step')?.addEventListener('click', () => {
+        socket.emit('hostSkipStep', { roomCode: room.code, playerId: state.playerId });
+      });
+    }
     if (room.phaseStep === 'wolves' && room.self?.role === 'werewolf' && room.self.alive) {
       const wolfForm = document.getElementById('wolf-form');
       wolfForm?.addEventListener('submit', (event) => {
@@ -583,7 +645,11 @@ function bindPhaseHandlers() {
         const data = new FormData(seerForm);
         const targetId = data.get('target');
         if (!targetId) return;
-        socket.emit('submitSeerInspect', { roomCode: room.code, playerId: state.playerId, targetId });
+        socket.emit('submitSeerInspect', { roomCode: room.code, playerId: state.playerId, targetId }, (res) => {
+          if (res?.ok) {
+            notify(`Vision: ${res.name} is ${res.result}.`);
+          }
+        });
       });
     }
     if (room.phaseStep === 'witch' && room.self?.role === 'witch' && room.self.alive) {
@@ -603,11 +669,22 @@ function bindPhaseHandlers() {
   }
   if (room.phase === 'day' && room.self?.alive) {
     const voteForm = document.getElementById('vote-form');
+    const voteSelect = voteForm?.querySelector('select[name="target"]');
+    const voteSubmit = document.getElementById('vote-submit');
+    if (voteSelect && voteSubmit) {
+      voteSubmit.disabled = !voteSelect.value;
+      voteSelect.addEventListener('change', () => {
+        voteSubmit.disabled = !voteSelect.value;
+      });
+    }
     voteForm?.addEventListener('submit', (event) => {
       event.preventDefault();
       const data = new FormData(voteForm);
       const targetId = data.get('target');
-      socket.emit('submitDayVote', { roomCode: room.code, playerId: state.playerId, targetId: targetId || null });
+      const normalized = targetId === '__abstain__' ? null : targetId;
+      state.pendingVote = normalized || null;
+      renderApp();
+      socket.emit('submitDayVote', { roomCode: room.code, playerId: state.playerId, targetId: normalized || null });
     });
   }
 }
@@ -720,3 +797,4 @@ function formatPhase(room) {
 function capitalize(str = '') {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+

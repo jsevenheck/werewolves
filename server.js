@@ -13,6 +13,8 @@ const io = new Server(server, {
 });
 
 const PORT = process.env.PORT || 3001;
+const NIGHT_DELAY_MS = 3000;
+const PHASE_DELAY_MS = 3000;
 const ROOM_CODE = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 4);
 const PLAYER_ID = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 12);
 
@@ -157,7 +159,7 @@ io.on('connection', (socket) => {
     if (room.phase !== 'roleReveal') return;
     const allReady = Object.values(room.players).every((p) => !p.connected || p.ready);
     if (!allReady) return;
-    advanceFromReveal(room);
+    schedulePhaseTransition(room, 'postReveal');
   });
 
   socket.on('submitArmor', ({ roomCode, playerId, targets }) => {
@@ -174,7 +176,7 @@ io.on('connection', (socket) => {
     room.lovers = { aId: a, bId: b };
     notifyLovers(room);
     addLog(room, `${player.name} linked two souls together as Lovers.`, 'The Lovers have been chosen.');
-    startNight(room);
+    schedulePhaseTransition(room, 'postArmor');
   });
 
   socket.on('submitWolfVote', ({ roomCode, playerId, targetId }) => {
@@ -188,7 +190,7 @@ io.on('connection', (socket) => {
     broadcastRoom(room);
   });
 
-  socket.on('submitSeerInspect', ({ roomCode, playerId, targetId }) => {
+  socket.on('submitSeerInspect', ({ roomCode, playerId, targetId }, cb) => {
     const room = rooms.get(roomCode);
     if (!room || room.phase !== 'night' || room.phaseStep !== 'seer') return;
     const player = room.players[playerId];
@@ -197,6 +199,7 @@ io.on('connection', (socket) => {
     if (!target) return;
     const result = target.role === 'werewolf' ? 'Werewolf' : 'Not Werewolf';
     player.seerResult = { name: target.name, result };
+    cb?.({ ok: true, name: target.name, result });
     room.seerActed = true;
     advanceNightStep(room);
   });
@@ -207,6 +210,70 @@ io.on('connection', (socket) => {
     const player = room.players[playerId];
     if (!player || player.role !== 'witch' || !player.alive) return;
     handleWitchDecision(room, action, targetId);
+  });
+
+  socket.on('hostSkipStep', ({ roomCode, playerId }) => {
+    const room = rooms.get(roomCode);
+    if (!room || room.hostId !== playerId) return;
+    if (room.phase !== 'night') return;
+    if (room.phaseStep === 'transition' && room.nextNightStep) {
+      if (room.transitionTimer) {
+        clearTimeout(room.transitionTimer);
+        room.transitionTimer = null;
+      }
+      const step = room.nextNightStep;
+      room.phaseStep = step;
+      room.nextNightStep = null;
+      if (step === 'resolve') {
+        resolveNight(room);
+      } else {
+        broadcastRoom(room);
+      }
+      return;
+    }
+    if (room.phaseTransition) {
+      if (room.phaseTimer) {
+        clearTimeout(room.phaseTimer);
+        room.phaseTimer = null;
+      }
+      const kind = room.phaseTransition;
+      room.phaseTransition = null;
+      if (kind === 'nightToDay') {
+        room.dayCount += 1;
+        room.phase = 'day';
+        room.phaseStep = null;
+        room.nextNightStep = null;
+        room.voteState = createVoteState();
+        addLog(room, `Day ${room.dayCount} has begun.`);
+        broadcastRoom(room);
+        return;
+      }
+      if (kind === 'dayToNight') {
+        startNight(room);
+        return;
+      }
+      if (kind === 'postReveal') {
+        advanceFromReveal(room);
+        return;
+      }
+      if (kind === 'postArmor') {
+        startNight(room);
+      }
+      return;
+    }
+    if (room.phaseStep === 'wolves') {
+      room.wolfTarget = null;
+      scheduleNightStep(room, 'seer');
+      return;
+    }
+    if (room.phaseStep === 'seer') {
+      room.seerActed = true;
+      scheduleNightStep(room, 'witch');
+      return;
+    }
+    if (room.phaseStep === 'witch') {
+      handleWitchDecision(room, 'skip');
+    }
   });
 
   socket.on('submitDayVote', ({ roomCode, playerId, targetId }) => {
@@ -281,7 +348,11 @@ function createRoom(hostName, socketId) {
     winner: null,
     lastNightDeaths: [],
     awaitingHunterShot: null,
-    logs: []
+    logs: [],
+    nextNightStep: null,
+    transitionTimer: null,
+    phaseTransition: null,
+    phaseTimer: null
   };
   const player = createPlayer(hostName, socketId, true);
   room.players[player.id] = player;
@@ -349,6 +420,7 @@ function assignRoles(room) {
     player.role = role;
     player.team = ROLE_INFO[role]?.team ?? 'village';
     player.ready = false;
+    player.seerResult = null;
     if (role === 'werewolf') {
       player.nightAction = { vote: null };
     } else {
@@ -406,6 +478,8 @@ function sanitizeRoom(room, viewerId) {
           .filter((p) => p.role === 'werewolf' && p.id !== viewerId && p.alive)
           .map((p) => p.name)
       : null,
+    nextNightStep: room.phaseStep === 'transition' ? room.nextNightStep : null,
+    phaseTransition: room.phaseTransition,
     seerResult: viewer?.role === 'seer' ? viewer.seerResult : null,
     voteState: {
       revoteFromTie: room.voteState.revoteFromTie,
@@ -440,6 +514,16 @@ function advanceFromReveal(room) {
 function startNight(room) {
   room.phase = 'night';
   room.phaseStep = 'wolves';
+  room.nextNightStep = null;
+  room.phaseTransition = null;
+  if (room.transitionTimer) {
+    clearTimeout(room.transitionTimer);
+    room.transitionTimer = null;
+  }
+  if (room.phaseTimer) {
+    clearTimeout(room.phaseTimer);
+    room.phaseTimer = null;
+  }
   room.wolfVotes = {};
   Object.values(room.players).forEach((player) => {
     if (player.role === 'werewolf' && player.alive) {
@@ -458,8 +542,7 @@ function startNight(room) {
 function tryFinalizeWolfVote(room) {
   const wolves = Object.values(room.players).filter((p) => p.role === 'werewolf' && p.alive);
   if (!wolves.length) {
-    room.phaseStep = 'seer';
-    advanceNightStep(room);
+    scheduleNightStep(room, 'seer');
     return;
   }
   const pending = wolves.some((wolf) => room.wolfVotes[wolf.id] == null);
@@ -491,17 +574,15 @@ function tryFinalizeWolfVote(room) {
     }
   }
   room.wolfTarget = chosen;
-  room.phaseStep = 'seer';
-  advanceNightStep(room);
+  scheduleNightStep(room, 'seer');
 }
 
 function advanceNightStep(room) {
   if (room.phaseStep === 'seer') {
     const seerAlive = Object.values(room.players).some((p) => p.role === 'seer' && p.alive);
     if (!seerAlive || room.seerActed) {
-      room.phaseStep = 'witch';
       room.seerActed = false;
-      advanceNightStep(room);
+      scheduleNightStep(room, 'witch');
       return;
     }
     broadcastRoom(room);
@@ -510,15 +591,11 @@ function advanceNightStep(room) {
   if (room.phaseStep === 'witch') {
     const witchAlive = Object.values(room.players).some((p) => p.role === 'witch' && p.alive);
     if (!witchAlive) {
-      room.phaseStep = 'resolve';
-      resolveNight(room);
+      scheduleNightStep(room, 'resolve');
       return;
     }
     broadcastRoom(room);
     return;
-  }
-  if (room.phaseStep === 'resolve') {
-    resolveNight(room);
   }
 }
 
@@ -536,8 +613,7 @@ function handleWitchDecision(room, action, targetId) {
     room.poisonTarget = targetId;
   }
   // skip action uses neither potion
-  room.phaseStep = 'resolve';
-  resolveNight(room);
+  scheduleNightStep(room, 'resolve');
 }
 
 function resolveNight(room) {
@@ -551,12 +627,7 @@ function resolveNight(room) {
   room.poisonTarget = null;
   resolveDeaths(room, 'night');
   if (!room.winner && !room.awaitingHunterShot) {
-    room.dayCount += 1;
-    room.phase = 'day';
-    room.phaseStep = null;
-    room.voteState = createVoteState();
-    addLog(room, `Day ${room.dayCount} has begun.`);
-    broadcastRoom(room);
+    schedulePhaseTransition(room, 'nightToDay');
   }
 }
 
@@ -579,9 +650,9 @@ function resolveDeaths(room, context = 'general') {
       `${player.name} died. Role: ${ROLE_INFO[player.role]?.label || player.role}.`
     );
     if (player.role === 'hunter') {
-      room.awaitingHunterShot = player.id;
       const socket = player.socketId && io.sockets.sockets.get(player.socketId);
       if (socket && player.connected) {
+        room.awaitingHunterShot = player.id;
         socket.emit('hunterPrompt', { roomCode: room.code });
       }
     }
@@ -607,18 +678,25 @@ function tryResolveDayVote(room) {
   const everyoneVoted = alivePlayers.every((p) => room.voteState.votes[p.id] !== undefined);
   if (!everyoneVoted) return;
   const tallies = {};
-  Object.values(room.voteState.votes).forEach((targetId) => {
+  const votes = Object.values(room.voteState.votes);
+  const abstainCount = votes.filter((value) => value === null).length;
+  votes.forEach((targetId) => {
     if (!targetId) return;
     tallies[targetId] = (tallies[targetId] || 0) + 1;
   });
   const entries = Object.entries(tallies);
   if (!entries.length) {
     addLog(room, 'Vote skipped. No one eliminated.', 'Vote skipped. No one eliminated.');
-    startNight(room);
+    schedulePhaseTransition(room, 'dayToNight');
     return;
   }
   entries.sort((a, b) => b[1] - a[1]);
   const top = entries[0];
+  if (abstainCount > alivePlayers.length / 2) {
+    addLog(room, 'Majority abstained. No one eliminated.', 'Majority abstained. No one eliminated.');
+    schedulePhaseTransition(room, 'dayToNight');
+    return;
+  }
   const tied = entries.filter(([, count]) => count === top[1]).map(([id]) => id);
   if (tied.length > 1) {
     if (!room.voteState.revoteFromTie) {
@@ -646,13 +724,24 @@ function resolveDayKill(room, targetId) {
   if (target.role === 'joker') {
     room.winner = { team: 'joker', reason: 'Joker was voted out and laughs last!' };
     room.phase = 'ended';
+    room.phaseStep = null;
+    room.nextNightStep = null;
+    room.phaseTransition = null;
+    if (room.transitionTimer) {
+      clearTimeout(room.transitionTimer);
+      room.transitionTimer = null;
+    }
+    if (room.phaseTimer) {
+      clearTimeout(room.phaseTimer);
+      room.phaseTimer = null;
+    }
     broadcastRoom(room);
     return;
   }
   queueDeath(room, targetId, 'executed by vote');
   resolveDeaths(room, 'day');
   if (!room.winner && !room.awaitingHunterShot) {
-    startNight(room);
+    schedulePhaseTransition(room, 'dayToNight');
   }
 }
 
@@ -663,13 +752,102 @@ function checkWinners(room) {
   if (!wolves.length) {
     room.winner = { team: 'village', reason: 'All Werewolves are dead.' };
     room.phase = 'ended';
+    room.phaseStep = null;
+    room.nextNightStep = null;
+    room.phaseTransition = null;
+    if (room.transitionTimer) {
+      clearTimeout(room.transitionTimer);
+      room.transitionTimer = null;
+    }
+    if (room.phaseTimer) {
+      clearTimeout(room.phaseTimer);
+      room.phaseTimer = null;
+    }
     return;
   }
   const others = alive.length - wolves.length;
   if (wolves.length >= others) {
     room.winner = { team: 'wolves', reason: 'Werewolves reached parity.' };
     room.phase = 'ended';
+    room.phaseStep = null;
+    room.nextNightStep = null;
+    room.phaseTransition = null;
+    if (room.transitionTimer) {
+      clearTimeout(room.transitionTimer);
+      room.transitionTimer = null;
+    }
+    if (room.phaseTimer) {
+      clearTimeout(room.phaseTimer);
+      room.phaseTimer = null;
+    }
   }
+}
+
+function scheduleNightStep(room, nextStep) {
+  if (room.transitionTimer) {
+    clearTimeout(room.transitionTimer);
+    room.transitionTimer = null;
+  }
+  if (room.phaseTimer) {
+    clearTimeout(room.phaseTimer);
+    room.phaseTimer = null;
+  }
+  room.phaseStep = 'transition';
+  room.nextNightStep = nextStep;
+  room.phaseTransition = null;
+  broadcastRoom(room);
+  room.transitionTimer = setTimeout(() => {
+    if (room.phase !== 'night') return;
+    room.phaseStep = nextStep;
+    room.nextNightStep = null;
+    if (nextStep === 'resolve') {
+      resolveNight(room);
+    } else {
+      broadcastRoom(room);
+    }
+  }, NIGHT_DELAY_MS);
+}
+
+function schedulePhaseTransition(room, kind) {
+  if (room.transitionTimer) {
+    clearTimeout(room.transitionTimer);
+    room.transitionTimer = null;
+  }
+  if (room.phaseTimer) {
+    clearTimeout(room.phaseTimer);
+    room.phaseTimer = null;
+  }
+  room.phaseTransition = kind;
+  room.nextNightStep = null;
+  if (room.phase === 'night') {
+    room.phaseStep = 'transition';
+  }
+  broadcastRoom(room);
+  room.phaseTimer = setTimeout(() => {
+    if (room.winner) return;
+    room.phaseTransition = null;
+    if (kind === 'postReveal') {
+      advanceFromReveal(room);
+      return;
+    }
+    if (kind === 'postArmor') {
+      startNight(room);
+      return;
+    }
+    if (kind === 'nightToDay') {
+      room.dayCount += 1;
+      room.phase = 'day';
+      room.phaseStep = null;
+      room.nextNightStep = null;
+      room.voteState = createVoteState();
+      addLog(room, `Day ${room.dayCount} has begun.`);
+      broadcastRoom(room);
+      return;
+    }
+    if (kind === 'dayToNight') {
+      startNight(room);
+    }
+  }, PHASE_DELAY_MS);
 }
 
 function notifyLovers(room) {
