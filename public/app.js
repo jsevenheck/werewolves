@@ -570,18 +570,21 @@ function bindPhaseHandlers() {
   const room = state.room;
   if (!room) return;
   if (room.phase === 'lobby' && room.hostId === state.playerId) {
-    const roleInputs = document.querySelectorAll('.role-input');
-    const minPlayersInput = document.getElementById('min-players');
+    const roleConfigForm = document.getElementById('role-config');
+    if (!roleConfigForm) return;
+    
     const updateConfig = () => {
       const config = {};
-      roleInputs.forEach((field) => {
+      roleConfigForm.querySelectorAll('.role-input').forEach((field) => {
         config[field.dataset.role] = Number(field.value);
       });
+      const minPlayersInput = document.getElementById('min-players');
       if (minPlayersInput) {
         config.minPlayers = Number(minPlayersInput.value);
       }
       socket.emit('updateRoleConfig', { roomCode: room.code, playerId: state.playerId, config });
     };
+    
     // Debounce updates triggered by 'input' events to avoid excessive socket emissions
     let updateConfigTimeoutId;
     const debouncedUpdateConfig = () => {
@@ -592,14 +595,20 @@ function bindPhaseHandlers() {
         updateConfig();
       }, 400);
     };
-    roleInputs.forEach((input) => {
-      input.addEventListener('change', updateConfig);
-      input.addEventListener('input', debouncedUpdateConfig);
+    
+    // Use event delegation on the form to handle all input changes
+    roleConfigForm.addEventListener('change', (e) => {
+      if (e.target.matches('.role-input') || e.target.matches('#min-players')) {
+        updateConfig();
+      }
     });
-    if (minPlayersInput) {
-      minPlayersInput.addEventListener('change', updateConfig);
-      minPlayersInput.addEventListener('input', debouncedUpdateConfig);
-    }
+    
+    roleConfigForm.addEventListener('input', (e) => {
+      if (e.target.matches('.role-input') || e.target.matches('#min-players')) {
+        debouncedUpdateConfig();
+      }
+    });
+    
     document.getElementById('start-game')?.addEventListener('click', () => {
       socket.emit('startGame', { roomCode: room.code, playerId: state.playerId }, (res) => {
         if (res?.error) notify(res.error);
