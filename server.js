@@ -449,7 +449,7 @@ function sanitizeRoom(room, viewerId) {
     connected: player.connected,
     isHost: player.isHost,
     role: player.id === viewerId || room.phase === 'ended' ? player.role : null,
-    ready: room.phase === 'roleReveal' ? player.ready : undefined
+    ...(room.phase === 'roleReveal' ? { ready: player.ready } : {})
   }));
   const viewerAlive = viewer ? viewer.alive : false;
   const logs = room.logs.slice(-8).map((log) => ({
