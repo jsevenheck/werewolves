@@ -676,7 +676,9 @@ function bindPhaseHandlers() {
         if (!targetId) return;
         socket.emit('submitSeerInspect', { roomCode: room.code, playerId: state.playerId, targetId }, (res) => {
           if (res?.ok) {
-            notify(`Vision: ${res.name} is ${res.result}.`);
+            notify('Vision received. Check your role card for the result.');
+          } else if (res && res.error) {
+            notify(`Error: ${res.error}`);
           }
         });
       });
