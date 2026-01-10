@@ -451,8 +451,16 @@ function renderWolfForm(room) {
   const options = aliveTargets.map((p) => `<option value="${p.id}" ${currentVote === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
   const peers = room.wolfPeers?.length ? `<p>Other wolves: ${room.wolfPeers.join(', ')}</p>` : '';
   const voteEntries = Object.entries(room.wolfVotes || {}).filter(([, targetId]) => targetId);
-  const voteSummary = voteEntries.length
-    ? `<p>Wolf votes: ${voteEntries.map(([wolfId, targetId]) => `${getPlayerName(room, wolfId)} -> ${getPlayerName(room, targetId)}`).join(', ')}</p>`
+  const targetVoteCounts = voteEntries.reduce((acc, [, targetId]) => {
+    acc[targetId] = (acc[targetId] || 0) + 1;
+    return acc;
+  }, {});
+  const voteSummary = Object.keys(targetVoteCounts).length
+    ? `<p>Wolf votes: ${
+        Object.entries(targetVoteCounts)
+          .map(([targetId, count]) => `${getPlayerName(room, targetId)} (${count} vote${count > 1 ? 's' : ''})`)
+          .join(', ')
+      }</p>`
     : '';
   return `
     <form id="wolf-form" class="actions">
