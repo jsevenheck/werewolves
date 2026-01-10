@@ -570,22 +570,22 @@ function bindPhaseHandlers() {
   const room = state.room;
   if (!room) return;
   if (room.phase === 'lobby' && room.hostId === state.playerId) {
+    const roleInputs = document.querySelectorAll('.role-input');
+    const minPlayersInput = document.getElementById('min-players');
     const updateConfig = () => {
       const config = {};
-      document.querySelectorAll('.role-input').forEach((field) => {
+      roleInputs.forEach((field) => {
         config[field.dataset.role] = Number(field.value);
       });
-      const minPlayersInput = document.getElementById('min-players');
       if (minPlayersInput) {
         config.minPlayers = Number(minPlayersInput.value);
       }
       socket.emit('updateRoleConfig', { roomCode: room.code, playerId: state.playerId, config });
     };
-    document.querySelectorAll('.role-input').forEach((input) => {
+    roleInputs.forEach((input) => {
       input.addEventListener('change', updateConfig);
       input.addEventListener('input', updateConfig);
     });
-    const minPlayersInput = document.getElementById('min-players');
     if (minPlayersInput) {
       minPlayersInput.addEventListener('change', updateConfig);
       minPlayersInput.addEventListener('input', updateConfig);
