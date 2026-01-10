@@ -157,6 +157,9 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomCode);
     if (!room || room.hostId !== playerId) return;
     if (room.phase !== 'roleReveal') return;
+    // Note: Disconnected players are treated as "ready" here via `!p.connected || p.ready`.
+    // If a player marked ready, disconnected during roleReveal, and then reconnects,
+    // their previous `ready` status may persist until explicitly changed elsewhere.
     const allReady = Object.values(room.players).every((p) => !p.connected || p.ready);
     if (!allReady) return;
     schedulePhaseTransition(room, 'postReveal');
