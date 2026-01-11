@@ -44,6 +44,10 @@ function bindLandingHandlers(socket, renderLanding, enterRoom, attemptResume, sa
 }
 
 function enterRoom({ roomCode, playerId, name }, socket) {
+  if (!socket || typeof socket.emit !== 'function') {
+    console.error('Invalid socket provided to enterRoom');
+    return;
+  }
   state.playerId = playerId;
   state.roomCode = roomCode;
   state.playerName = name;
