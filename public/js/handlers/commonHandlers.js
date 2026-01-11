@@ -41,7 +41,7 @@ function updateHunterOverlay(socket) {
   wrapper.className = 'hunter-overlay';
   
   const room = state.room;
-  if (!Array.isArray(room.players)) {
+  if (!room || !Array.isArray(room.players)) {
     return;
   }
   
@@ -69,7 +69,6 @@ function updateHunterOverlay(socket) {
     const data = new FormData(form);
     const targetId = data.get('target');
     if (!targetId || !state.room) return;
-    if (!socket || typeof socket.emit !== 'function') return;
     if (!socket || typeof socket.emit !== 'function') return;
     socket.emit('hunterShoot', { roomCode: state.room.code, playerId: state.playerId, targetId });
     state.hunterPrompt = false;
