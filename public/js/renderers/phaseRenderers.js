@@ -123,7 +123,7 @@ function renderNightSection(room, self) {
   } else {
     content = '<p>You are dead. Spectating only.</p>';
   }
-  const hostControls = room.hostId === state.playerId && ['wolves', 'seer', 'witch', 'transition'].includes(room.phaseStep)
+  const hostControls = room && state && room.hostId === state.playerId && ['wolves', 'seer', 'witch', 'transition'].includes(room.phaseStep || '')
     ? '<div class="actions"><button id="skip-step" type="button">Skip current action</button></div>'
     : '';
   return `
