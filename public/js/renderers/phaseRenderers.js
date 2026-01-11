@@ -41,12 +41,13 @@ function renderLobbySection(room) {
 }
 
 function renderRoleRevealSection(room) {
-  const self = room.players.find((p) => p.id === state.playerId) || null;
+  const players = room?.players ?? [];
+  const self = players.find((p) => p.id === state?.playerId) || null;
   const info = self?.role ? ROLE_DETAILS[self.role] : null;
-  const readyCount = room.players.filter((p) => p.ready).length;
-  const totalCount = room.players.filter((p) => p.connected).length;
+  const readyCount = players.filter((p) => p.ready).length;
+  const totalCount = players.filter((p) => p.connected).length;
   const isSelfReady = self?.ready;
-  const isHost = room.hostId === state.playerId;
+  const isHost = room.hostId === state?.playerId;
   const allReady = readyCount === totalCount;
   
   let actionButton = '';
