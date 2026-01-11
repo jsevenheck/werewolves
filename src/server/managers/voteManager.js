@@ -2,7 +2,7 @@ const { ROLE_INFO } = require('../config/constants');
 const { addLog, clearRoomTimers } = require('../utils/helpers');
 const { schedulePhaseTransition } = require('./phaseManager');
 
-function tryResolveDayVote(room, broadcastRoom) {
+function tryResolveDayVote(room, broadcastRoom, io) {
   const alivePlayers = Object.values(room.players).filter((p) => p.alive);
   const everyoneVoted = alivePlayers.every((p) => room.voteState.votes[p.id] !== undefined);
   if (!everyoneVoted) return;
@@ -39,13 +39,13 @@ function tryResolveDayVote(room, broadcastRoom) {
       return;
     }
     const randomPick = tied[Math.floor(Math.random() * tied.length)];
-    resolveDayKill(room, randomPick, broadcastRoom);
+    resolveDayKill(room, randomPick, broadcastRoom, io);
   } else {
-    resolveDayKill(room, top[0], broadcastRoom);
+    resolveDayKill(room, top[0], broadcastRoom, io);
   }
 }
 
-function resolveDayKill(room, targetId, broadcastRoom) {
+function resolveDayKill(room, targetId, broadcastRoom, io) {
   const target = room.players[targetId];
   if (!target || !target.alive) return;
   addLog(
@@ -65,7 +65,7 @@ function resolveDayKill(room, targetId, broadcastRoom) {
   }
   const { queueDeath, resolveDeaths } = require('./deathManager');
   queueDeath(room, targetId, 'executed by vote');
-  resolveDeaths(room, 'day', broadcastRoom);
+  resolveDeaths(room, 'day', broadcastRoom, io);
   if (!room.winner && !room.awaitingHunterShot) {
     schedulePhaseTransition(room, 'dayToNight', broadcastRoom);
   }

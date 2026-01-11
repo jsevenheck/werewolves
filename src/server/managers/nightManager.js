@@ -77,7 +77,7 @@ function handleWitchDecision(room, action, targetId, broadcastRoom) {
   scheduleNightStep(room, 'resolve', broadcastRoom);
 }
 
-function resolveNight(room, broadcastRoom) {
+function resolveNight(room, broadcastRoom, io) {
   const { queueDeath, resolveDeaths } = require('./deathManager');
   if (room.wolfTarget && room.healedTarget !== room.wolfTarget) {
     queueDeath(room, room.wolfTarget, 'eaten by Werewolves');
@@ -87,7 +87,7 @@ function resolveNight(room, broadcastRoom) {
   }
   room.healedTarget = null;
   room.poisonTarget = null;
-  resolveDeaths(room, 'night', broadcastRoom);
+  resolveDeaths(room, 'night', broadcastRoom, io);
   if (!room.winner && !room.awaitingHunterShot) {
     schedulePhaseTransition(room, 'nightToDay', broadcastRoom);
   }

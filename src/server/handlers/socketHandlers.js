@@ -160,7 +160,7 @@ function setupSocketHandlers(io, socket) {
       room.nextNightStep = null;
       if (step === 'resolve') {
         const { resolveNight } = require('../managers/nightManager');
-        resolveNight(room, (r) => broadcastRoom(r, io));
+        resolveNight(room, (r) => broadcastRoom(r, io), io);
       } else {
         broadcastRoom(room, io);
       }
@@ -239,7 +239,7 @@ function setupSocketHandlers(io, socket) {
     }
     if (targetId && !room.players[targetId]?.alive) return;
     room.voteState.votes[playerId] = targetId || null;
-    tryResolveDayVote(room, (r) => broadcastRoom(r, io));
+    tryResolveDayVote(room, (r) => broadcastRoom(r, io), io);
     broadcastRoom(room, io);
   });
 
