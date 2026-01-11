@@ -20,7 +20,11 @@ function bindPhaseHandlers(socket, renderApp) {
   if (room.phaseTransition && room.hostId === state?.playerId) {
     const hostSkipBtn = document.getElementById('host-skip-btn');
     hostSkipBtn?.addEventListener('click', () => {
-      socket.emit('hostSkipStep', { roomCode: room.code, playerId: state.playerId });
+      if (!state || !state.playerId) {
+        return;
+      }
+      const playerId = state.playerId;
+      socket.emit('hostSkipStep', { roomCode: room.code, playerId });
     });
   }
   
