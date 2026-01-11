@@ -35,7 +35,7 @@ function renderHeader() {
             <p>Phase: ${formatPhase(room)}</p>
           </div>
           <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;">
-            <span class="tag">You: ${state.playerName || 'Unknown'}</span>
+            <span class="tag">You: ${state?.playerName || 'Unknown'}</span>
             ${self?.alive ? '<span class="tag" style="border-color:#4ade80;color:#4ade80;">Alive</span>' : '<span class="tag" style="border-color:#ef4444;color:#ef4444;">Dead</span>'}
             ${roleToggle}
             <button id="leave-room" type="button">Leave Game</button>
