@@ -30,6 +30,10 @@ function bindCommonHandlers(renderApp, renderLanding, clearSession) {
 
 function updateHunterOverlay(socket) {
   const existing = document.getElementById('hunter-overlay');
+  if (!state) {
+    existing?.remove();
+    return;
+  }
   if (!state.room?.awaitingHunterShot) {
     existing?.remove();
     state.hunterPrompt = false;
