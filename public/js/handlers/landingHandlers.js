@@ -48,6 +48,10 @@ function enterRoom({ roomCode, playerId, name }, socket) {
     console.error('Invalid socket provided to enterRoom');
     return;
   }
+  if (!state) {
+    console.error('Game state is not initialized');
+    return;
+  }
   if (!state || typeof state !== 'object') {
     console.error('Invalid game state in enterRoom');
     return;
