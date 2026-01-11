@@ -7,9 +7,6 @@ function bindCommonHandlers(renderApp, renderLanding, clearSession) {
   }
   document.getElementById('toggle-role')?.addEventListener('click', () => {
     state.roleVisible = !state.roleVisible;
-    renderApp();
-  });
-  
   document.getElementById('leave-room')?.addEventListener('click', () => {
     if (!state) {
       return;
