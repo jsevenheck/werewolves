@@ -218,7 +218,7 @@ io.on('connection', (socket) => {
   socket.on('hostSkipStep', ({ roomCode, playerId }) => {
     const room = rooms.get(roomCode);
     if (!room || room.hostId !== playerId) return;
-    if (room.phase !== 'night') return;
+    if (room.phase !== 'night' && !room.phaseTransition) return;
     if (room.phaseStep === 'transition' && room.nextNightStep) {
       if (room.transitionTimer) {
         clearTimeout(room.transitionTimer);
