@@ -120,7 +120,7 @@ function bindRoleRevealHandlers(socket, room) {
       { roomCode: room.code, playerId: state.playerId },
       (res) => {
         if (!state) return;
-        if (state.readyButtonTimeoutId) {
+        if (state && state.readyButtonTimeoutId) {
           clearTimeout(state.readyButtonTimeoutId);
           state.readyButtonTimeoutId = null;
         }
