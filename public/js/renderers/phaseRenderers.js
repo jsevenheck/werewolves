@@ -220,7 +220,7 @@ function renderSeerForm(room) {
 
 function renderWitchForm(room) {
   const healedText = room.wolfTarget ? `Wolves targeted ${getPlayerName(room, room.wolfTarget)}.` : 'Wolves have no target.';
-  const aliveTargets = room.players.filter((p) => p.alive && p.id !== state.playerId);
+  const aliveTargets = (room?.players ?? []).filter((p) => p.alive && p.id !== state.playerId);
   const options = aliveTargets.map((p) => `<option value="${p.id}">${p.name}</option>`).join('');
   return `
     <div class="actions">
