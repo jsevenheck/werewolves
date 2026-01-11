@@ -240,10 +240,14 @@ function renderPhaseSection() {
       dayToNight: 'Night falls. Close your eyes...'
     };
     const message = transitionMessages[room.phaseTransition] || 'Next phase in a few seconds. Close your eyes if needed.';
+    const hostSkipButtonHtml = self && self.isHost
+      ? '<button id="host-skip-btn" type="button">Skip transition</button>'
+      : '';
     return `
       <section class="panel">
         <h2>Transitioning...</h2>
         <p>${message}</p>
+        ${hostSkipButtonHtml}
       </section>
     `;
   }
