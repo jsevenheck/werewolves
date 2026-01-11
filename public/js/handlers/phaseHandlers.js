@@ -85,7 +85,7 @@ function bindLobbyHandlers(socket, room) {
 }
 
 function bindRoleRevealHandlers(socket, room) {
-  if (!room) return;
+  if (!room || !state) return;
   
   if (state.readyButtonTimeoutId) {
     clearTimeout(state.readyButtonTimeoutId);
