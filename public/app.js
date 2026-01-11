@@ -233,10 +233,17 @@ function renderPhaseSection() {
     `;
   }
   if (room.phaseTransition) {
+    const transitionMessages = {
+      postReveal: 'Preparing for next phase...',
+      postArmor: 'Starting the first night...',
+      nightToDay: 'Dawn is breaking. Day phase begins soon...',
+      dayToNight: 'Night falls. Close your eyes...'
+    };
+    const message = transitionMessages[room.phaseTransition] || 'Next phase in a few seconds. Close your eyes if needed.';
     return `
       <section class="panel">
         <h2>Transitioning...</h2>
-        <p>Next phase in a few seconds. Close your eyes if needed.</p>
+        <p>${message}</p>
       </section>
     `;
   }
