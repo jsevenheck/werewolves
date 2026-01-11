@@ -166,57 +166,60 @@ function bindArmorHandlers(socket, room) {
 }
 
 function bindNightHandlers(socket, room) {
+  if (!room) {
+    return;
+  }
   if (!state?.playerId) {
     return;
   }
   if (room.hostId === state.playerId) {
     document.getElementById('skip-step')?.addEventListener('click', () => {
-      socket.emit('hostSkipStep', { roomCode: room.code, playerId: state.playerId });
+    socket.emit('hostSkipStep', { roomCode: room.code, playerId: state.playerId });
     });
   }
   
   if (room.phaseStep === 'wolves' && room.self?.role === 'werewolf' && room.self.alive) {
     const wolfForm = document.getElementById('wolf-form');
     wolfForm?.addEventListener('submit', (event) => {
-      event.preventDefault();
-      const data = new FormData(wolfForm);
-      const targetId = data.get('target');
-      if (!targetId) return;
-      socket.emit('submitWolfVote', { roomCode: room.code, playerId: state.playerId, targetId });
+    event.preventDefault();
+    const data = new FormData(wolfForm);
+    const targetId = data.get('target');
+    if (!targetId) return;
+    socket.emit('submitWolfVote', { roomCode: room.code, playerId: state.playerId, targetId });
     });
   }
   
   if (room.phaseStep === 'seer' && room.self?.role === 'seer' && room.self.alive) {
     const seerForm = document.getElementById('seer-form');
     seerForm?.addEventListener('submit', (event) => {
-      event.preventDefault();
-      const data = new FormData(seerForm);
-      const targetId = data.get('target');
-      if (!targetId) return;
-      socket.emit('submitSeerInspect', { roomCode: room.code, playerId: state.playerId, targetId }, (res) => {
-        if (res?.ok) {
-          notify('Vision received. Check your role card for the result.');
-        } else if (res && res.error) {
-          notify(`Error: ${res.error}`);
-        }
-      });
+    event.preventDefault();
+    const data = new FormData(seerForm);
+    const targetId = data.get('target');
+    if (!targetId) return;
+    socket.emit('submitSeerInspect', { roomCode: room.code, playerId: state.playerId, targetId }, (res) => {
+      if (res?.ok) {
+        notify('Vision received. Check your role card for the result.');
+      } else if (res && res.error) {
+        notify(`Error: ${res.error}`);
+      }
+    });
     });
   }
   
   if (room.phaseStep === 'witch' && room.self?.role === 'witch' && room.self.alive) {
     document.getElementById('heal-btn')?.addEventListener('click', () => {
-      socket.emit('submitWitchDecision', { roomCode: room.code, playerId: state.playerId, action: 'heal' });
+    socket.emit('submitWitchDecision', { roomCode: room.code, playerId: state.playerId, action: 'heal' });
     });
     
     document.getElementById('poison-btn')?.addEventListener('click', () => {
-      const select = document.getElementById('poison-select');
-      const target = select?.value;
-      if (!target) return;
-      socket.emit('submitWitchDecision', { roomCode: room.code, playerId: state.playerId, action: 'poison', targetId: target });
+    const select = document.getElementById('poison-select');
+    const target = select?.value;
+    if (!target) return;
+    socket.emit('submitWitchDecision', { roomCode: room.code, playerId: state.playerId, action: 'poison', targetId: target });
     });
     
     document.getElementById('skip-witch')?.addEventListener('click', () => {
-      socket.emit('submitWitchDecision', { roomCode: room.code, playerId: state.playerId, action: 'skip' });
+    socket.emit('submitWitchDecision', { roomCode: room.code, playerId: state.playerId, action: 'skip' });
     });
   }
 }
