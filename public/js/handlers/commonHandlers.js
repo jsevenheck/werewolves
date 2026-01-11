@@ -30,11 +30,19 @@ function updateHunterOverlay(socket) {
     return;
   }
   if (!state.hunterPrompt) return;
+  if (!state.room) return;
+  
   existing?.remove();
   const wrapper = document.createElement('div');
   wrapper.id = 'hunter-overlay';
   wrapper.className = 'hunter-overlay';
-  const targets = state.room.players.filter((player) => player.alive);
+  
+  const room = state.room;
+  if (!Array.isArray(room.players)) {
+    return;
+  }
+  
+  const targets = room.players.filter((player) => player.alive);
   const options = targets.map((player) => `<option value="${player.id}">${player.name}</option>`).join('');
   wrapper.innerHTML = `
     <div class="panel">
@@ -57,7 +65,7 @@ function updateHunterOverlay(socket) {
     event.preventDefault();
     const data = new FormData(form);
     const targetId = data.get('target');
-    if (!targetId) return;
+    if (!targetId || !state.room) return;
     socket.emit('hunterShoot', { roomCode: state.room.code, playerId: state.playerId, targetId });
     state.hunterPrompt = false;
     wrapper.remove();

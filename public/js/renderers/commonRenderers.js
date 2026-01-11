@@ -4,12 +4,17 @@ import { formatPhase } from '../utils/helpers.js';
 
 function renderHeader() {
   if (!state.room) return '';
-  const self = state.room.self;
+  
+  const room = state.room;
+  const self = room.self;
   const detail = self?.role ? ROLE_DETAILS[self.role] : null;
-  const loverNote = state.room.loverName ? `<p>Lover: ${state.room.loverName}</p>` : '';
-  const seerNote = self?.role === 'seer' && state.room.seerResult
-    ? `<p>Last vision: ${state.room.seerResult.name} is ${state.room.seerResult.result}.</p>`
+  const loverNote = room.loverName ? `<p>Lover: ${room.loverName}</p>` : '';
+  
+  const seerResult = room.seerResult;
+  const seerNote = self?.role === 'seer' && seerResult
+    ? `<p>Last vision: ${seerResult.name} is ${seerResult.result}.</p>`
     : '';
+  
   const roleBlock = self?.role && state.roleVisible
     ? `<div class="role-card" style="border-color:${detail?.color || '#f8fafc'};color:${detail?.color || '#f8fafc'}">
         <strong>${detail?.name || self.role}</strong>
@@ -26,8 +31,8 @@ function renderHeader() {
       <div style="display:flex;flex-direction:column;gap:.5rem;">
         <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;">
           <div>
-            <h1>Room ${state.room.code}</h1>
-            <p>Phase: ${formatPhase(state.room)}</p>
+            <h1>Room ${room.code}</h1>
+            <p>Phase: ${formatPhase(room)}</p>
           </div>
           <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;">
             <span class="tag">You: ${state.playerName || 'Unknown'}</span>
@@ -44,19 +49,23 @@ function renderHeader() {
 
 function renderPlayersPanel() {
   if (!state.room) return '';
-  const cards = state.room.players.map((player) => `
+  
+  const room = state.room;
+  const players = Array.isArray(room.players) ? room.players : [];
+  
+  const cards = players.map((player) => `
     <div class="player-card ${player.alive ? '' : 'dead'}">
       <strong>${player.name}</strong>
       <div style="margin-top:.35rem;font-size:.9rem;display:flex;flex-wrap:wrap;gap:.35rem;">
         ${player.isHost ? '<span class="tag">Host</span>' : ''}
         ${!player.connected ? '<span class="tag" style="border-color:#fbbf24;color:#fbbf24;">Disconnected</span>' : ''}
-        ${state.room.phase === 'ended' && player.role ? `<span class="tag" style="border-color:#38bdf8;color:#38bdf8;">${ROLE_DETAILS[player.role]?.name || player.role}</span>` : ''}
+        ${room.phase === 'ended' && player.role ? `<span class="tag" style="border-color:#38bdf8;color:#38bdf8;">${ROLE_DETAILS[player.role]?.name || player.role}</span>` : ''}
       </div>
     </div>
   `).join('');
   return `
     <section class="panel">
-      <h2>Players (${state.room.players.length})</h2>
+      <h2>Players (${players.length})</h2>
       <div class="players-list">${cards}</div>
     </section>
   `;
@@ -64,7 +73,10 @@ function renderPlayersPanel() {
 
 function renderLogsPanel() {
   if (!state.room) return '';
-  const logs = state.room.logs?.map((log) => `<div>${new Date(log.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${log.text}</div>`).join('') || '';
+  
+  const room = state.room;
+  const logs = (room.logs || []).map((log) => `<div>${new Date(log.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${log.text}</div>`).join('') || '';
+  
   return `
     <section class="panel">
       <h2>Events</h2>
