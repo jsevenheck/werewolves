@@ -243,7 +243,9 @@ function bindDayHandlers(socket, room, renderApp) {
     const data = new FormData(voteForm);
     const targetId = data.get('target');
     const normalized = targetId === '__abstain__' ? null : targetId;
-    state.pendingVote = normalized;
+    if (state) {
+      state.pendingVote = normalized;
+    }
     renderApp();
     socket.emit('submitDayVote', { roomCode: room.code, playerId: state.playerId, targetId: normalized });
   });
