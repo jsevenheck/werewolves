@@ -159,7 +159,7 @@ function bindArmorHandlers(socket, room) {
 }
 
 function bindNightHandlers(socket, room) {
-  if (!state || !state.playerId) {
+  if (!state?.playerId) {
     return;
   }
   if (room.hostId === state.playerId) {
