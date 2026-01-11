@@ -38,7 +38,7 @@ function bindPhaseHandlers(socket, renderApp) {
 }
 
 function bindLobbyHandlers(socket, room) {
-  if (!room || room.hostId !== state.playerId) return;
+  if (!room || !state || room.hostId !== state.playerId) return;
   
   const roleConfigForm = document.getElementById('role-config');
   if (!roleConfigForm) return;
