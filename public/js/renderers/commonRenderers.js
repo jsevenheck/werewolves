@@ -53,16 +53,25 @@ function renderPlayersPanel() {
   const room = state.room;
   const players = Array.isArray(room.players) ? room.players : [];
   
-  const cards = players.map((player) => `
+  const cards = players.map((player) => {
+    if (!player) return '';
+
+    const roleKey = player.role;
+    const roleLabel = roleKey && ROLE_DETAILS[roleKey]?.name
+      ? ROLE_DETAILS[roleKey].name
+      : (roleKey || '');
+
+    return `
     <div class="player-card ${player.alive ? '' : 'dead'}">
       <strong>${player.name}</strong>
       <div style="margin-top:.35rem;font-size:.9rem;display:flex;flex-wrap:wrap;gap:.35rem;">
         ${player.isHost ? '<span class="tag">Host</span>' : ''}
         ${!player.connected ? '<span class="tag" style="border-color:#fbbf24;color:#fbbf24;">Disconnected</span>' : ''}
-        ${room.phase === 'ended' && player.role ? `<span class="tag" style="border-color:#38bdf8;color:#38bdf8;">${ROLE_DETAILS[player.role]?.name || player.role}</span>` : ''}
+        ${room.phase === 'ended' && roleKey ? `<span class="tag" style="border-color:#38bdf8;color:#38bdf8;">${roleLabel}</span>` : ''}
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
   return `
     <section class="panel">
       <h2>Players (${players.length})</h2>
