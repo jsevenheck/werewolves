@@ -77,7 +77,7 @@ function updateHunterOverlay(socket) {
     const targetId = data.get('target');
     if (!targetId || !state || !state.room || !state.playerId) return;
     if (!socket || typeof socket.emit !== 'function') return;
-    socket.emit('hunterShoot', { roomCode: state.room.code, playerId: state.playerId, targetId });
+    socket.emit('hunterShoot', { roomCode: state.roomCode, playerId: state.playerId, targetId });
     state.hunterPrompt = false;
     wrapper.remove();
   });
