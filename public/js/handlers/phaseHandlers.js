@@ -137,6 +137,7 @@ function bindRoleRevealHandlers(socket, room) {
     }
     continueBtn.addEventListener('click', () => {
       if (continueBtn.disabled) return;
+      if (!state) return;
       continueBtn.disabled = true;
       socket.emit('continueAfterReveal', { roomCode: room.code, playerId: state.playerId });
     });
