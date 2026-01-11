@@ -6,47 +6,47 @@ This document describes the refactored codebase structure.
 
 ```
 werewolves/
-├── server.js                 # Main server entry point
-├── src/                      # Server-side code
-│   └── server/
-│       ├── config/           # Configuration and constants
-│       │   └── constants.js  # Game constants, role info, defaults
-│       ├── models/           # Data models
-│       │   ├── room.js       # Room creation and management
-│       │   └── player.js     # Player creation and socket index
-│       ├── managers/         # Business logic managers
-│       │   ├── roleManager.js      # Role assignment and validation
-│       │   ├── phaseManager.js     # Game phase transitions
-│       │   ├── nightManager.js     # Night phase logic
-│       │   ├── voteManager.js      # Day voting logic
-│       │   ├── deathManager.js     # Death resolution and win conditions
-│       │   └── broadcastManager.js # Room state broadcasting
-│       ├── handlers/         # Socket event handlers
-│       │   └── socketHandlers.js   # All socket.io event handlers
-│       └── utils/            # Utility functions
-│           └── helpers.js    # Helper functions
-├── public/                   # Client-side code
-│   ├── index.html            # Main HTML file
-│   ├── style.css             # Styles
-│   ├── app.js                # Main client entry point
-│   └── js/                   # Client JavaScript modules
-│       ├── config/           # Client configuration
-│       │   └── constants.js  # Role details and constants
-│       ├── state/            # State management
-│       │   └── gameState.js  # Global game state and session storage
-│       ├── renderers/        # UI rendering functions
-│       │   ├── landingRenderer.js  # Landing page renderer
-│       │   ├── commonRenderers.js  # Header, players, logs renderers
-│       │   └── phaseRenderers.js   # Game phase renderers
-│       ├── handlers/         # Event handlers
-│       │   ├── landingHandlers.js  # Landing page event handlers
-│       │   ├── commonHandlers.js   # Common UI event handlers
-│       │   └── phaseHandlers.js    # Game phase event handlers
-│       └── utils/            # Utility functions
-│           └── helpers.js    # Client helper functions
-├── docs/                     # Documentation
-├── package.json              # Dependencies and scripts
-└── README.md                 # Project README
+|-- server.js                 # Main server entry point
+|-- src/                      # Server-side code
+|   `-- server/
+|       |-- config/           # Configuration and constants
+|       |   `-- constants.js  # Game constants, role info, defaults
+|       |-- models/           # Data models
+|       |   |-- room.js       # Room creation and management
+|       |   `-- player.js     # Player creation and socket index
+|       |-- managers/         # Business logic managers
+|       |   |-- roleManager.js      # Role assignment and validation
+|       |   |-- phaseManager.js     # Game phase transitions
+|       |   |-- nightManager.js     # Night phase logic
+|       |   |-- voteManager.js      # Day voting logic
+|       |   |-- deathManager.js     # Death resolution and win conditions
+|       |   `-- broadcastManager.js # Room state broadcasting
+|       |-- handlers/         # Socket event handlers
+|       |   `-- socketHandlers.js   # All socket.io event handlers
+|       `-- utils/            # Utility functions
+|           `-- helpers.js    # Helper functions
+|-- public/                   # Client-side code
+|   |-- index.html            # Main HTML file
+|   |-- style.css             # Styles
+|   |-- app.js                # Main client entry point
+|   `-- js/                   # Client JavaScript modules
+|       |-- config/           # Client configuration
+|       |   `-- constants.js  # Role details and constants
+|       |-- state/            # State management
+|       |   `-- gameState.js  # Global game state and session storage
+|       |-- renderers/        # UI rendering functions
+|       |   |-- landingRenderer.js  # Landing page renderer
+|       |   |-- commonRenderers.js  # Header, players, logs renderers
+|       |   `-- phaseRenderers.js   # Game phase renderers
+|       |-- handlers/         # Event handlers
+|       |   |-- landingHandlers.js  # Landing page event handlers
+|       |   |-- commonHandlers.js   # Common UI event handlers
+|       |   `-- phaseHandlers.js    # Game phase event handlers
+|       `-- utils/            # Utility functions
+|           `-- helpers.js    # Client helper functions
+|-- docs/                     # Documentation
+|-- package.json              # Dependencies and scripts
+`-- README.md                 # Project README
 ```
 
 ## Server-Side Architecture
@@ -101,19 +101,19 @@ Event handlers separated by functionality:
 ### Server Dependencies
 ```
 server.js
-  └─> socketHandlers.js
-       ├─> models/ (room, player)
-       ├─> managers/ (role, phase, night, vote, death, broadcast)
-       └─> utils/ (helpers)
+  -> socketHandlers.js
+       -> models/ (room, player)
+       -> managers/ (role, phase, night, vote, death, broadcast)
+       -> utils/ (helpers)
 ```
 
 ### Client Dependencies
 ```
 app.js
-  ├─> state/gameState.js
-  ├─> renderers/ (landing, common, phase)
-  ├─> handlers/ (landing, common, phase)
-  └─> utils/helpers.js
+  -> state/gameState.js
+  -> renderers/ (landing, common, phase)
+  -> handlers/ (landing, common, phase)
+  -> utils/helpers.js
 ```
 
 ## Benefits of This Structure
@@ -186,7 +186,7 @@ Test basic functionality:
 ## Migration Notes
 
 All functionality from the original two-file structure has been preserved:
-- Original `server.js` (871 lines) → Modular server structure (22 files)
-- Original `public/app.js` (907 lines) → Modular client structure (11 files)
+- Original `server.js` (871 lines) -> Modular server structure (22 files)
+- Original `public/app.js` (907 lines) -> Modular client structure (11 files)
 
 No breaking changes were introduced. The application behavior remains identical.

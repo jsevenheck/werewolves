@@ -1,35 +1,38 @@
 import { state } from '../state/gameState.js';
 
 function bindCommonHandlers(renderApp, renderLanding, clearSession) {
-  document.getElementById('toggle-role')?.addEventListener('click', () => {
+  const toggleRoleBtn = document.getElementById('toggle-role');
+  toggleRoleBtn?.addEventListener('click', () => {
     if (!state) {
+      console.error('Game state is not initialized; cannot toggle role visibility.');
       return;
     }
-    console.error('Game state is not initialized; cannot bind common handlers.');
-    return;
-  }
-  document.getElementById('toggle-role')?.addEventListener('click', () => {
     state.roleVisible = !state.roleVisible;
+    renderApp();
+  });
+
   document.getElementById('leave-room')?.addEventListener('click', () => {
-    if (!state) {
-      return;
-    }
-    state.room = null;
-    state.roomCode = '';
-    state.playerId = '';
-    state.playerName = '';
-    state.hunterPrompt = false;
+    resetState();
     clearSession();
     renderLanding();
   });
   
   document.getElementById('restart-btn')?.addEventListener('click', () => {
-    if (!state) {
-      return;
-    }
-    state.room = null;
+    resetState();
+    clearSession();
     renderLanding();
   });
+}
+
+function resetState() {
+  if (!state) return;
+  state.room = null;
+  state.roomCode = '';
+  state.playerId = '';
+  state.playerName = '';
+  state.hunterPrompt = false;
+  state.pendingVote = undefined;
+  state.roleVisible = false;
 }
 
 function updateHunterOverlay(socket) {
