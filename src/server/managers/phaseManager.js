@@ -21,7 +21,7 @@ function startNight(room) {
   room.awaitingHunterShot = null;
 }
 
-function scheduleNightStep(room, nextStep, broadcastRoom) {
+function scheduleNightStep(room, nextStep, broadcastRoom, io) {
   clearRoomTimers(room);
   room.phaseStep = 'transition';
   room.nextNightStep = nextStep;
@@ -34,7 +34,7 @@ function scheduleNightStep(room, nextStep, broadcastRoom) {
     room.nextNightStep = null;
     if (nextStep === 'resolve') {
       const { resolveNight } = require('./nightManager');
-      resolveNight(room, broadcastRoom);
+      resolveNight(room, broadcastRoom, io);
     } else {
       broadcastRoom(room);
     }

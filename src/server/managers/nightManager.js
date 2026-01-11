@@ -1,9 +1,9 @@
 const { scheduleNightStep, schedulePhaseTransition } = require('./phaseManager');
 
-function tryFinalizeWolfVote(room, broadcastRoom) {
+function tryFinalizeWolfVote(room, broadcastRoom, io) {
   const wolves = Object.values(room.players).filter((p) => p.role === 'werewolf' && p.alive);
   if (!wolves.length) {
-    scheduleNightStep(room, 'seer', broadcastRoom);
+    scheduleNightStep(room, 'seer', broadcastRoom, io);
     return;
   }
   const pending = wolves.some((wolf) => room.wolfVotes[wolf.id] == null);
@@ -35,15 +35,15 @@ function tryFinalizeWolfVote(room, broadcastRoom) {
     }
   }
   room.wolfTarget = chosen;
-  scheduleNightStep(room, 'seer', broadcastRoom);
+  scheduleNightStep(room, 'seer', broadcastRoom, io);
 }
 
-function advanceNightStep(room, broadcastRoom) {
+function advanceNightStep(room, broadcastRoom, io) {
   if (room.phaseStep === 'seer') {
     const seerAlive = Object.values(room.players).some((p) => p.role === 'seer' && p.alive);
     if (!seerAlive || room.seerActed) {
       room.seerActed = false;
-      scheduleNightStep(room, 'witch', broadcastRoom);
+      scheduleNightStep(room, 'witch', broadcastRoom, io);
       return;
     }
     broadcastRoom(room);
@@ -52,7 +52,7 @@ function advanceNightStep(room, broadcastRoom) {
   if (room.phaseStep === 'witch') {
     const witchAlive = Object.values(room.players).some((p) => p.role === 'witch' && p.alive);
     if (!witchAlive) {
-      scheduleNightStep(room, 'resolve', broadcastRoom);
+      scheduleNightStep(room, 'resolve', broadcastRoom, io);
       return;
     }
     broadcastRoom(room);
@@ -60,7 +60,7 @@ function advanceNightStep(room, broadcastRoom) {
   }
 }
 
-function handleWitchDecision(room, action, targetId, broadcastRoom) {
+function handleWitchDecision(room, action, targetId, broadcastRoom, io) {
   if (action === 'heal') {
     if (!room.witchState.healAvailable) return;
     if (!room.wolfTarget) return;
@@ -74,7 +74,7 @@ function handleWitchDecision(room, action, targetId, broadcastRoom) {
     room.poisonTarget = targetId;
   }
   // skip action uses neither potion
-  scheduleNightStep(room, 'resolve', broadcastRoom);
+  scheduleNightStep(room, 'resolve', broadcastRoom, io);
 }
 
 function resolveNight(room, broadcastRoom, io) {

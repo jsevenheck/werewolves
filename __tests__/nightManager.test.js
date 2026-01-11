@@ -40,7 +40,7 @@ describe('nightManager', () => {
     tryFinalizeWolfVote(room, jest.fn());
 
     expect(room.wolfTarget).toBe('v1');
-    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'seer', expect.any(Function));
+    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'seer', expect.any(Function), undefined);
     randomSpy.mockRestore();
   });
 
@@ -52,7 +52,7 @@ describe('nightManager', () => {
 
     tryFinalizeWolfVote(room, jest.fn());
 
-    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'seer', expect.any(Function));
+    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'seer', expect.any(Function), undefined);
   });
 
   test('handleWitchDecision uses heal potion and advances', () => {
@@ -63,7 +63,7 @@ describe('nightManager', () => {
 
     expect(room.witchState.healAvailable).toBe(false);
     expect(room.healedTarget).toBe('v1');
-    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'resolve', expect.any(Function));
+    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'resolve', expect.any(Function), undefined);
   });
 
   test('handleWitchDecision uses poison potion and advances', () => {
@@ -74,7 +74,7 @@ describe('nightManager', () => {
 
     expect(room.witchState.poisonAvailable).toBe(false);
     expect(room.poisonTarget).toBe('v2');
-    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'resolve', expect.any(Function));
+    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'resolve', expect.any(Function), undefined);
   });
 
   test('resolveNight queues deaths, resolves, and transitions', () => {

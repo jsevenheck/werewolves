@@ -122,7 +122,7 @@ function setupSocketHandlers(io, socket) {
     if (!player || player.role !== 'werewolf' || !player.alive) return;
     if (targetId && !room.players[targetId]?.alive) return;
     room.wolfVotes[playerId] = targetId || null;
-    tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io));
+    tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io), io);
     broadcastRoom(room, io);
   });
 
@@ -137,7 +137,7 @@ function setupSocketHandlers(io, socket) {
     player.seerResult = { name: target.name, result };
     cb?.({ ok: true, name: target.name, result });
     room.seerActed = true;
-    advanceNightStep(room, (r) => broadcastRoom(r, io));
+    advanceNightStep(room, (r) => broadcastRoom(r, io), io);
   });
 
   socket.on('submitWitchDecision', ({ roomCode, playerId, action, targetId }) => {
@@ -145,7 +145,7 @@ function setupSocketHandlers(io, socket) {
     if (!room || room.phase !== 'night' || room.phaseStep !== 'witch') return;
     const player = room.players[playerId];
     if (!player || player.role !== 'witch' || !player.alive) return;
-    handleWitchDecision(room, action, targetId, (r) => broadcastRoom(r, io));
+    handleWitchDecision(room, action, targetId, (r) => broadcastRoom(r, io), io);
   });
 
   socket.on('hostSkipStep', ({ roomCode, playerId }) => {
@@ -206,7 +206,7 @@ function setupSocketHandlers(io, socket) {
       if (livingWolves.length === 0) {
         room.wolfTarget = null;
         const { scheduleNightStep } = require('../managers/phaseManager');
-        scheduleNightStep(room, 'seer', (r) => broadcastRoom(r, io));
+        scheduleNightStep(room, 'seer', (r) => broadcastRoom(r, io), io);
       }
       return;
     }
@@ -216,7 +216,7 @@ function setupSocketHandlers(io, socket) {
       if (!livingSeer) {
         room.seerActed = true;
         const { scheduleNightStep } = require('../managers/phaseManager');
-        scheduleNightStep(room, 'witch', (r) => broadcastRoom(r, io));
+        scheduleNightStep(room, 'witch', (r) => broadcastRoom(r, io), io);
       }
       return;
     }
