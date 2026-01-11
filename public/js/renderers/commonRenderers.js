@@ -15,7 +15,7 @@ function renderHeader() {
     ? `<p>Last vision: ${seerResult.name} is ${seerResult.result}.</p>`
     : '';
   
-  const roleBlock = self?.role && state.roleVisible
+  const roleBlock = self?.role && state?.roleVisible
     ? `<div class="role-card" style="border-color:${detail?.color || '#f8fafc'};color:${detail?.color || '#f8fafc'}">
         <strong>${detail?.name || self.role}</strong>
         <p>${detail?.description || ''}</p>
