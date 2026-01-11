@@ -34,3 +34,4 @@ docker run --rm -p 3001:3001 werewolves
 - Setup: `docs/setup.md`
 - Data model + phase engine: `docs/spec.md`
 - Manual tests: `docs/test-checklist.md`
+- Codebase structure: `docs/structure.md`
