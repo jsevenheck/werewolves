@@ -14,9 +14,10 @@ function renderLobbySection(room) {
   const villagerSlots = Math.max(playersCount - totals, 0);
   const needsAdjust = totals > playersCount;
   const canStart = state?.playerId === room.hostId;
+  const safeRoleDetails = ROLE_DETAILS || {};
   const roleInputs = Object.entries(room.roleConfig).map(([role, count]) => `
     <label>
-      <span>${ROLE_DETAILS[role]?.name || role}</span>
+      <span>${safeRoleDetails[role]?.name || role}</span>
       <input type="number" class="role-input" data-role="${role}" min="0" value="${count}" />
     </label>
   `).join('');
