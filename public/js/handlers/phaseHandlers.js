@@ -79,7 +79,11 @@ function bindLobbyHandlers(socket, room) {
   });
   
   document.getElementById('start-game')?.addEventListener('click', () => {
-    socket.emit('startGame', { roomCode: room.code, playerId: state.playerId }, (res) => {
+    if (!state || !state.playerId) {
+      return;
+    }
+    const playerId = state.playerId;
+    socket.emit('startGame', { roomCode: room.code, playerId }, (res) => {
       if (res?.error) notify(res.error);
     });
   });
