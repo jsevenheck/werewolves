@@ -3,7 +3,8 @@ import { state } from '../state/gameState.js';
 import { getPlayerName } from '../utils/helpers.js';
 
 function renderRoleRevealList(room) {
-  const rows = room.players.map((player) => `<div>${player.name} - ${ROLE_DETAILS[player.role]?.name || player.role || 'Unknown'}</div>`).join('');
+  const players = room?.players ?? [];
+  const rows = players.map((player) => `<div>${player.name} - ${ROLE_DETAILS[player.role]?.name || player.role || 'Unknown'}</div>`).join('');
   return `<div style="margin-top:1rem;">${rows}</div>`;
 }
 
