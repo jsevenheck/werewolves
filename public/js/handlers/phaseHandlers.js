@@ -3,7 +3,7 @@ import { notify } from '../utils/helpers.js';
 
 function bindPhaseHandlers(socket, renderApp) {
   if (!state || !state.room) return;
-  const room = state.room;
+  const room = state && state.room;
   
   // Clean up any phase-specific timeouts when phase changes
   if (room.phase !== 'lobby' && state.updateConfigTimeoutId) {
