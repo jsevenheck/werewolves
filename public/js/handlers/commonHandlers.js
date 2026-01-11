@@ -20,6 +20,9 @@ function bindCommonHandlers(renderApp, renderLanding, clearSession) {
   });
   
   document.getElementById('restart-btn')?.addEventListener('click', () => {
+    if (!state) {
+      return;
+    }
     state.room = null;
     renderLanding();
   });
