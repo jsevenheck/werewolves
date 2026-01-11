@@ -198,7 +198,7 @@ function renderWolfForm(room) {
 }
 
 function renderSeerForm(room) {
-  const targets = room.players.filter((p) => p.alive && p.id !== state.playerId);
+  const targets = (room?.players ?? []).filter((p) => p.alive && p.id !== state.playerId);
   if (!targets.length) return '<p>No one left to inspect.</p>';
   const options = targets.map((p) => `<option value="${p.id}">${p.name}</option>`).join('');
   const result = room.seerResult ? `<p>Last vision: ${room.seerResult.name} is ${room.seerResult.result}.</p>` : '';
