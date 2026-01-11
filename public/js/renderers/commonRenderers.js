@@ -24,7 +24,7 @@ function renderHeader() {
       </div>`
     : '';
   const roleToggle = self?.role
-    ? `<button id="toggle-role" type="button">${state.roleVisible ? 'Hide Role' : 'Reveal Role'}</button>`
+    ? `<button id="toggle-role" type="button">${state?.roleVisible ? 'Hide Role' : 'Reveal Role'}</button>`
     : '';
   return `
     <section class="panel">
