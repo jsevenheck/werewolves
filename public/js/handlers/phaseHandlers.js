@@ -2,8 +2,8 @@ import { state } from '../state/gameState.js';
 import { notify } from '../utils/helpers.js';
 
 function bindPhaseHandlers(socket, renderApp) {
+  if (!state || !state.room) return;
   const room = state.room;
-  if (!room) return;
   
   // Clean up any phase-specific timeouts when phase changes
   if (room.phase !== 'lobby' && state.updateConfigTimeoutId) {
