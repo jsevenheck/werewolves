@@ -162,6 +162,9 @@ function bindArmorHandlers(socket, room) {
 }
 
 function bindNightHandlers(socket, room) {
+  if (!state || !state.playerId) {
+    return;
+  }
   if (room.hostId === state.playerId) {
     document.getElementById('skip-step')?.addEventListener('click', () => {
       socket.emit('hostSkipStep', { roomCode: room.code, playerId: state.playerId });
