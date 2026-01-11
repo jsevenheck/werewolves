@@ -102,6 +102,9 @@ function bindRoleRevealHandlers(socket, room) {
     readyBtn.disabled = true;
     
     state.readyButtonTimeoutId = setTimeout(() => {
+      if (!state) {
+        return;
+      }
       const currentBtn = document.getElementById('ready-btn');
       if (currentBtn && currentBtn.disabled) {
         currentBtn.disabled = false;
