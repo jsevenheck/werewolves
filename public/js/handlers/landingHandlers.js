@@ -44,6 +44,13 @@ function bindLandingHandlers(socket, renderLanding, enterRoom, attemptResume, sa
 }
 
 function enterRoom({ roomCode, playerId, name }, socket) {
+  if (!state) {
+    // Fail gracefully if the application state has not been initialized.
+    if (typeof pushNotification === 'function') {
+      pushNotification('Unable to enter room: application state is not initialized.');
+    }
+    return;
+  }
   state.playerId = playerId;
   state.roomCode = roomCode;
   state.playerName = name;
