@@ -48,6 +48,10 @@ function enterRoom({ roomCode, playerId, name }, socket) {
     console.error('Invalid socket provided to enterRoom');
     return;
   }
+  if (!state || typeof state !== 'object') {
+    console.error('Invalid game state in enterRoom');
+    return;
+  }
   state.playerId = playerId;
   state.roomCode = roomCode;
   state.playerName = name;
