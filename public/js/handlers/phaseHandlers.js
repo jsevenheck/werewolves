@@ -134,7 +134,10 @@ function bindRoleRevealHandlers(socket, room) {
 
   if (room.hostId === state.playerId) {
     const continueBtn = document.getElementById('continue-btn');
-    continueBtn?.addEventListener('click', () => {
+    if (!continueBtn) {
+      return;
+    }
+    continueBtn.addEventListener('click', () => {
       if (continueBtn.disabled) return;
       continueBtn.disabled = true;
       socket.emit('continueAfterReveal', { roomCode: room.code, playerId: state.playerId });
