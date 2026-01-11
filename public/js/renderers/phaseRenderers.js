@@ -161,7 +161,7 @@ function renderDaySection(room, self) {
 function renderWolfForm(room) {
   const wolfIds = Object.keys(room.wolfVotes || {});
   const votesCast = Object.values(room.wolfVotes || {}).filter(Boolean).length;
-  const aliveTargets = room.players.filter((p) => p.alive && p.id !== state.playerId);
+  const aliveTargets = (room?.players ?? []).filter((p) => p.alive && p.id !== state.playerId);
   if (!aliveTargets.length) {
     return '<p>No valid targets available.</p>';
   }
