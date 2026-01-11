@@ -1,6 +1,10 @@
 import { state } from '../state/gameState.js';
 
 function bindCommonHandlers(renderApp, renderLanding, clearSession) {
+  if (!state) {
+    console.error('Game state is not initialized; cannot bind common handlers.');
+    return;
+  }
   document.getElementById('toggle-role')?.addEventListener('click', () => {
     state.roleVisible = !state.roleVisible;
     renderApp();
