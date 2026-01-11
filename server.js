@@ -223,10 +223,7 @@ io.on('connection', (socket) => {
     if (!room || room.hostId !== playerId) return;
     if (room.phase !== 'night' && !room.phaseTransition) return;
     if (room.phaseStep === 'transition' && room.nextNightStep) {
-      if (room.transitionTimer) {
-        clearTimeout(room.transitionTimer);
-        room.transitionTimer = null;
-      }
+      clearRoomTimers(room);
       const step = room.nextNightStep;
       room.phaseStep = step;
       room.nextNightStep = null;
@@ -452,6 +449,17 @@ function broadcastRoom(room) {
   Object.values(room.players).forEach((player) => sendStateToPlayer(room, player));
 }
 
+function clearRoomTimers(room) {
+  if (room.transitionTimer) {
+    clearTimeout(room.transitionTimer);
+    room.transitionTimer = null;
+  }
+  if (room.phaseTimer) {
+    clearTimeout(room.phaseTimer);
+    room.phaseTimer = null;
+  }
+}
+
 function sendStateToPlayer(room, player) {
   if (!player.socketId) return;
   const socket = io.sockets.sockets.get(player.socketId);
@@ -535,14 +543,7 @@ function startNight(room) {
   room.phaseStep = 'wolves';
   room.nextNightStep = null;
   room.phaseTransition = null;
-  if (room.transitionTimer) {
-    clearTimeout(room.transitionTimer);
-    room.transitionTimer = null;
-  }
-  if (room.phaseTimer) {
-    clearTimeout(room.phaseTimer);
-    room.phaseTimer = null;
-  }
+  clearRoomTimers(room);
   room.wolfVotes = {};
   Object.values(room.players).forEach((player) => {
     if (player.role === 'werewolf' && player.alive) {
@@ -749,14 +750,7 @@ function resolveDayKill(room, targetId) {
     room.phaseStep = null;
     room.nextNightStep = null;
     room.phaseTransition = null;
-    if (room.transitionTimer) {
-      clearTimeout(room.transitionTimer);
-      room.transitionTimer = null;
-    }
-    if (room.phaseTimer) {
-      clearTimeout(room.phaseTimer);
-      room.phaseTimer = null;
-    }
+    clearRoomTimers(room);
     broadcastRoom(room);
     return;
   }
@@ -777,14 +771,7 @@ function checkWinners(room) {
     room.phaseStep = null;
     room.nextNightStep = null;
     room.phaseTransition = null;
-    if (room.transitionTimer) {
-      clearTimeout(room.transitionTimer);
-      room.transitionTimer = null;
-    }
-    if (room.phaseTimer) {
-      clearTimeout(room.phaseTimer);
-      room.phaseTimer = null;
-    }
+    clearRoomTimers(room);
     return;
   }
   const others = alive.length - wolves.length;
@@ -794,26 +781,12 @@ function checkWinners(room) {
     room.phaseStep = null;
     room.nextNightStep = null;
     room.phaseTransition = null;
-    if (room.transitionTimer) {
-      clearTimeout(room.transitionTimer);
-      room.transitionTimer = null;
-    }
-    if (room.phaseTimer) {
-      clearTimeout(room.phaseTimer);
-      room.phaseTimer = null;
-    }
+    clearRoomTimers(room);
   }
 }
 
 function scheduleNightStep(room, nextStep) {
-  if (room.transitionTimer) {
-    clearTimeout(room.transitionTimer);
-    room.transitionTimer = null;
-  }
-  if (room.phaseTimer) {
-    clearTimeout(room.phaseTimer);
-    room.phaseTimer = null;
-  }
+  clearRoomTimers(room);
   room.phaseStep = 'transition';
   room.nextNightStep = nextStep;
   room.phaseTransition = null;
@@ -832,14 +805,7 @@ function scheduleNightStep(room, nextStep) {
 }
 
 function schedulePhaseTransition(room, kind) {
-  if (room.transitionTimer) {
-    clearTimeout(room.transitionTimer);
-    room.transitionTimer = null;
-  }
-  if (room.phaseTimer) {
-    clearTimeout(room.phaseTimer);
-    room.phaseTimer = null;
-  }
+  clearRoomTimers(room);
   room.phaseTransition = kind;
   room.nextNightStep = null;
   if (room.phase === 'night') {
