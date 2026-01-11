@@ -1,7 +1,7 @@
 import { state } from '../state/gameState.js';
 import { notify } from '../utils/helpers.js';
 
-function bindPhaseHandlers(socket, broadcastRoom) {
+function bindPhaseHandlers(socket, renderApp) {
   const room = state.room;
   if (!room) return;
   
@@ -33,7 +33,7 @@ function bindPhaseHandlers(socket, broadcastRoom) {
   } else if (room.phase === 'night') {
     bindNightHandlers(socket, room);
   } else if (room.phase === 'day') {
-    bindDayHandlers(socket, room);
+    bindDayHandlers(socket, room, renderApp);
   }
 }
 

@@ -3,6 +3,7 @@ import { state } from '../state/gameState.js';
 import { formatPhase } from '../utils/helpers.js';
 
 function renderHeader() {
+  if (!state.room) return '';
   const self = state.room.self;
   const detail = self?.role ? ROLE_DETAILS[self.role] : null;
   const loverNote = state.room.loverName ? `<p>Lover: ${state.room.loverName}</p>` : '';
@@ -42,6 +43,7 @@ function renderHeader() {
 }
 
 function renderPlayersPanel() {
+  if (!state.room) return '';
   const cards = state.room.players.map((player) => `
     <div class="player-card ${player.alive ? '' : 'dead'}">
       <strong>${player.name}</strong>
@@ -61,6 +63,7 @@ function renderPlayersPanel() {
 }
 
 function renderLogsPanel() {
+  if (!state.room) return '';
   const logs = state.room.logs?.map((log) => `<div>${new Date(log.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${log.text}</div>`).join('') || '';
   return `
     <section class="panel">

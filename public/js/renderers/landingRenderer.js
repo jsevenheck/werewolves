@@ -1,4 +1,4 @@
-import { state, loadSession } from '../state/gameState.js';
+import { loadSession } from '../state/gameState.js';
 
 function renderLanding() {
   const saved = loadSession();

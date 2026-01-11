@@ -1,5 +1,4 @@
-import { state, saveSession } from '../state/gameState.js';
-import { notify } from '../utils/helpers.js';
+import { state } from '../state/gameState.js';
 
 function bindCommonHandlers(renderApp, renderLanding, clearSession) {
   document.getElementById('toggle-role')?.addEventListener('click', () => {
