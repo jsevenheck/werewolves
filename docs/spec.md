@@ -7,7 +7,7 @@
 - `team`: derived team id for win logic (`wolf`, `village`, `neutral`).
 - `alive`: boolean.
 - `connected`: boolean for reconnect tracking.
-- `ready`: boolean for lobby toggles.
+- `ready`: boolean for role-reveal readiness.
 - `voteTarget`: player id selected during day (reset each vote).
 - `nightAction`: per-role payload:
   - Werewolf: `targetId`.
@@ -26,9 +26,9 @@
 - `players`: map playerId -> Player.
 - `hostId`: player id allowed to configure roles/start.
 - `roleConfig`: counts for each special role; villagers fill remainder automatically.
+- `minPlayers`: configurable minimum players before start (default 5, min 3).
 - `assignedRoles`: shuffle result stored for reconnection/resync.
 - `lovers`: `{aId, bId}` or null.
-- `minPlayers`: configurable minimum players before start (default 5, min 3).
 - `witch`: `{healAvailable: boolean, poisonAvailable: boolean, pendingDecision: {target, type}}`.
 - `wolfVote`: tracking map playerId -> targetId for nightly kill.
 - `voteTallies`: map for day vote + `revoteList`.
@@ -46,6 +46,8 @@ loop:
       assign roles randomly; set phase=roleReveal
     roleReveal:
       send each player role; wolves get list of other wolves (private UI fields)
+      require each player to mark ready
+      host continues once all connected players are ready
       go phase=armor if armor exists else phase=night with step='wolves'
     armor:
       wait for armor player to choose two targets
@@ -55,6 +57,7 @@ loop:
       if step='wolves':
         collect werewolf votes until timer or all submitted
         once locked, compute target using majority (ties random)
+        werewolves can see each other's submitted targets during the vote
         store `wolfTarget` and advance step='seer'
       if step='seer':
         if seer alive:
@@ -65,6 +68,8 @@ loop:
           show wolves' target; let witch save/poison (one potion per night)
           update potion flags
         advance step='resolve'
+      wait 3 seconds between all phase transitions and night steps to allow players to reset
+      host may skip current step if a player is offline or unresponsive
       if step='resolve':
         apply wolf target unless healed -> queue death
         apply poison death (if any)
@@ -73,6 +78,7 @@ loop:
     day:
       announce deaths to all
       collect votes from alive players
+      abstain requires explicit selection; majority abstain -> no elimination
       if tie: set revoteList + reset votes limited to tied players
       once winner target established:
         if role(target)=='joker': endGame('joker', 'Joker voted out')
