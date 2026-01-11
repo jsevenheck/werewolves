@@ -7,6 +7,9 @@ function bindCommonHandlers(renderApp, renderLanding, clearSession) {
   });
   
   document.getElementById('leave-room')?.addEventListener('click', () => {
+    if (!state) {
+      return;
+    }
     state.room = null;
     state.roomCode = '';
     state.playerId = '';
