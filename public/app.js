@@ -48,7 +48,9 @@ const state = {
   hunterPrompt: false,
   storedSession: loadSession(),
   roleVisible: false,
-  pendingVote: undefined
+  pendingVote: undefined,
+  updateConfigTimeoutId: null,
+  readyButtonTimeoutId: null
 };
 
 if (state.storedSession) {
@@ -588,6 +590,20 @@ function bindCommonHandlers() {
 function bindPhaseHandlers() {
   const room = state.room;
   if (!room) return;
+  
+  // Clean up any phase-specific timeouts when phase changes
+  // Clear debounce timeout if not in lobby phase
+  if (room.phase !== 'lobby' && state.updateConfigTimeoutId) {
+    clearTimeout(state.updateConfigTimeoutId);
+    state.updateConfigTimeoutId = null;
+  }
+  
+  // Clear ready button timeout if not in roleReveal phase
+  if (room.phase !== 'roleReveal' && state.readyButtonTimeoutId) {
+    clearTimeout(state.readyButtonTimeoutId);
+    state.readyButtonTimeoutId = null;
+  }
+  
   if (room.phase === 'lobby' && room.hostId === state.playerId) {
     const roleConfigForm = document.getElementById('role-config');
     if (!roleConfigForm) return;
@@ -605,13 +621,13 @@ function bindPhaseHandlers() {
     };
     
     // Debounce updates triggered by 'input' events to avoid excessive socket emissions
-    let updateConfigTimeoutId;
     const debouncedUpdateConfig = () => {
-      if (updateConfigTimeoutId) {
-        clearTimeout(updateConfigTimeoutId);
+      if (state.updateConfigTimeoutId) {
+        clearTimeout(state.updateConfigTimeoutId);
       }
-      updateConfigTimeoutId = setTimeout(() => {
+      state.updateConfigTimeoutId = setTimeout(() => {
         updateConfig();
+        state.updateConfigTimeoutId = null;
       }, 400);
     };
     
@@ -635,28 +651,44 @@ function bindPhaseHandlers() {
     });
   }
   if (room.phase === 'roleReveal') {
+    // Clear any existing ready button timeout from previous renders
+    if (state.readyButtonTimeoutId) {
+      clearTimeout(state.readyButtonTimeoutId);
+      state.readyButtonTimeoutId = null;
+    }
+    
     const readyBtn = document.getElementById('ready-btn');
     readyBtn?.addEventListener('click', () => {
       if (readyBtn.disabled) return;
       readyBtn.disabled = true;
       // Emit markReady with acknowledgment and a timeout fallback so the button
       // is not left permanently disabled if the server does not respond.
-      const timeoutId = setTimeout(() => {
+      state.readyButtonTimeoutId = setTimeout(() => {
         // Re-enable the button and inform the user if no response is received in time.
-        if (readyBtn.disabled) {
-          readyBtn.disabled = false;
+        // Check if button is still in DOM before modifying it
+        const currentBtn = document.getElementById('ready-btn');
+        if (currentBtn && currentBtn.disabled) {
+          currentBtn.disabled = false;
           notify('Failed to mark you as ready. Please try again.');
         }
+        state.readyButtonTimeoutId = null;
       }, 10000);
 
       socket.emit(
         'markReady',
         { roomCode: room.code, playerId: state.playerId },
         (res) => {
-          clearTimeout(timeoutId);
+          if (state.readyButtonTimeoutId) {
+            clearTimeout(state.readyButtonTimeoutId);
+            state.readyButtonTimeoutId = null;
+          }
           if (res?.error) {
             notify(res.error);
-            readyBtn.disabled = false;
+            // Check if button is still in DOM before modifying it
+            const currentBtn = document.getElementById('ready-btn');
+            if (currentBtn) {
+              currentBtn.disabled = false;
+            }
           }
           // On success, keep the button disabled; further UI updates should come
           // from room state updates received from the server.
