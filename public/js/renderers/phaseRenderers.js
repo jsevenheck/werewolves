@@ -43,7 +43,7 @@ function renderLobbySection(room) {
 function renderRoleRevealSection(room) {
   const players = room?.players ?? [];
   const self = players.find((p) => p.id === state?.playerId) || null;
-  const info = self?.role ? ROLE_DETAILS[self.role] : null;
+  const info = self?.role && ROLE_DETAILS ? ROLE_DETAILS[self.role] : null;
   const readyCount = players.filter((p) => p.ready).length;
   const totalCount = players.filter((p) => p.connected).length;
   const isSelfReady = self?.ready;
