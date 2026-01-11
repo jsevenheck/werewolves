@@ -114,7 +114,7 @@ function bindRoleRevealHandlers(socket, room) {
       'markReady',
       { roomCode: room.code, playerId: state.playerId },
       (res) => {
-        if (state && state.readyButtonTimeoutId) {
+        if (state.readyButtonTimeoutId) {
           clearTimeout(state.readyButtonTimeoutId);
           state.readyButtonTimeoutId = null;
         }
