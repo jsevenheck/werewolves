@@ -6,12 +6,12 @@ function bindPhaseHandlers(socket, renderApp) {
   const room = state.room;
   
   // Clean up any phase-specific timeouts when phase changes
-  if (room.phase !== 'lobby' && state.updateConfigTimeoutId) {
+  if (room.phase !== 'lobby' && state && state.updateConfigTimeoutId) {
     clearTimeout(state.updateConfigTimeoutId);
     state.updateConfigTimeoutId = null;
   }
   
-  if (room.phase !== 'roleReveal' && state.readyButtonTimeoutId) {
+  if (room.phase !== 'roleReveal' && state && state.readyButtonTimeoutId) {
     clearTimeout(state.readyButtonTimeoutId);
     state.readyButtonTimeoutId = null;
   }
