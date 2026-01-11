@@ -604,6 +604,14 @@ function bindPhaseHandlers() {
     state.readyButtonTimeoutId = null;
   }
   
+  // Handle host skip button for phase transitions (can occur during any phase)
+  if (room.phaseTransition && room.hostId === state.playerId) {
+    const hostSkipBtn = document.getElementById('host-skip-btn');
+    hostSkipBtn?.addEventListener('click', () => {
+      socket.emit('hostSkipStep', { roomCode: room.code, playerId: state.playerId });
+    });
+  }
+  
   if (room.phase === 'lobby' && room.hostId === state.playerId) {
     const roleConfigForm = document.getElementById('role-config');
     if (!roleConfigForm) return;
