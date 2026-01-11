@@ -144,13 +144,16 @@ io.on('connection', (socket) => {
     broadcastRoom(room);
   });
 
-  socket.on('markReady', ({ roomCode, playerId }) => {
+  socket.on('markReady', ({ roomCode, playerId }, cb) => {
     const room = rooms.get(roomCode);
-    if (!room || room.phase !== 'roleReveal') return;
+    if (!room) return cb?.({ error: 'Room missing' });
+    if (room.phase !== 'roleReveal') return cb?.({ error: 'Not in roleReveal phase' });
     const player = room.players[playerId];
-    if (!player || player.socketId !== socket.id) return;
+    if (!player) return cb?.({ error: 'Player missing' });
+    if (player.socketId !== socket.id) return cb?.({ error: 'Socket mismatch' });
     player.ready = true;
     broadcastRoom(room);
+    cb?.({ ok: true });
   });
 
   socket.on('continueAfterReveal', ({ roomCode, playerId }) => {
