@@ -819,6 +819,7 @@ function scheduleNightStep(room, nextStep) {
   room.phaseTransition = null;
   broadcastRoom(room);
   room.transitionTimer = setTimeout(() => {
+    room.transitionTimer = null;
     if (room.phase !== 'night') return;
     room.phaseStep = nextStep;
     room.nextNightStep = null;
@@ -846,6 +847,7 @@ function schedulePhaseTransition(room, kind) {
   }
   broadcastRoom(room);
   room.phaseTimer = setTimeout(() => {
+    room.phaseTimer = null;
     if (room.winner) return;
     room.phaseTransition = null;
     if (kind === 'postReveal') {
