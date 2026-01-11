@@ -136,8 +136,9 @@ function renderNightSection(room, self) {
 }
 
 function renderDaySection(room, self) {
-  const summary = room.lastNightDeaths?.length
-    ? `<ul>${room.lastNightDeaths.map((entry) => `<li>${entry.name} (${ROLE_DETAILS[entry.role]?.name || entry.role})</li>`).join('')}</ul>`
+  const lastNightDeaths = room.lastNightDeaths ?? [];
+  const summary = lastNightDeaths.length
+    ? `<ul>${lastNightDeaths.map((entry) => `<li>${entry.name} (${ROLE_DETAILS[entry.role]?.name || entry.role})</li>`).join('')}</ul>`
     : '<p>No one died last night.</p>';
   const votedValue = room.voteState.yourVote !== undefined ? room.voteState.yourVote : state.pendingVote;
   const voteForm = self?.alive
