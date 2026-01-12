@@ -1,7 +1,7 @@
 import { loadSession } from '../state/gameState.js';
 
 function renderLanding() {
-  const saved = typeof loadSession === 'function' ? loadSession() : null;
+  const saved = loadSession();
   const resumeBlock = saved
     ? `<button id="resume-btn">Resume ${saved.roomCode} as ${saved.name}</button>`
     : '';
