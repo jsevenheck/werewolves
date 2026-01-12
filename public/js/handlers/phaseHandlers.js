@@ -63,12 +63,21 @@ function bindLobbyHandlers(socket, room) {
     if (!state) {
       return;
     }
+  const debouncedUpdateConfig = () => {
+    // Guard against state becoming undefined between binding and invocation
+    if (!state) {
+      return;
+    }
 
     if (state.updateConfigTimeoutId) {
       clearTimeout(state.updateConfigTimeoutId);
     }
 
     state.updateConfigTimeoutId = setTimeout(() => {
+      // Re-check in case state changes before the timeout fires
+      if (!state) {
+        return;
+      }
       if (!state) {
         return;
       }
