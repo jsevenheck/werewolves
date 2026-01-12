@@ -224,7 +224,7 @@ function setupSocketHandlers(io, socket) {
     if (room.phaseStep === 'witch') {
       const livingWitch = Object.values(room.players).find((p) => p.role === 'witch' && p.alive);
       if (!livingWitch) {
-        handleWitchDecision(room, 'skip', null, (r) => broadcastRoom(r, io));
+        handleWitchDecision(room, 'skip', null, (r) => broadcastRoom(r, io), io);
       }
     }
   });
