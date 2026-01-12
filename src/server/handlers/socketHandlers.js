@@ -9,6 +9,15 @@ const { tryResolveDayVote } = require('../managers/voteManager');
 const { queueDeath, resolveDeaths } = require('../managers/deathManager');
 const { createVoteState, addLog, clearRoomTimers } = require('../utils/helpers');
 
+/**
+ * @typedef {import('socket.io').Server} SocketServer
+ * @typedef {import('socket.io').Socket} Socket
+ */
+
+/**
+ * @param {SocketServer} io
+ * @param {Socket} socket
+ */
 function setupSocketHandlers(io, socket) {
   socket.on('createRoom', ({ name }, cb) => {
     const cleanName = sanitizeName(name);
