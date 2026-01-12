@@ -97,7 +97,9 @@ function renderApp() {
   if (typeof bindCommonHandlers === 'function') {
     bindCommonHandlers(renderApp, renderLandingPage, clearSession);
   }
-  bindPhaseHandlers(socket, renderApp);
+  if (typeof bindPhaseHandlers === 'function') {
+    bindPhaseHandlers(socket, renderApp);
+  }
   updateHunterOverlay(socket);
 }
 
