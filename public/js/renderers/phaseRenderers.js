@@ -169,7 +169,7 @@ function renderWolfForm(room) {
   if (!aliveTargets.length) {
     return '<p>No valid targets available.</p>';
   }
-  const currentVote = room.wolfVotes?.[state.playerId] || '';
+  const currentVote = room?.wolfVotes?.[state.playerId] ?? '';
   const options = aliveTargets.map((p) => `<option value="${p.id}" ${currentVote === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
   const peers = room.wolfPeers?.length ? `<p>Other wolves: ${room.wolfPeers.join(', ')}</p>` : '';
   const voteEntries = Object.entries(room.wolfVotes || {}).filter(([, targetId]) => targetId);
