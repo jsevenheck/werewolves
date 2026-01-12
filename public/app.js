@@ -56,7 +56,12 @@ socket.on('hunterPrompt', () => {
 });
 
 function renderLandingPage() {
-  appEl.innerHTML = renderLanding();
+  if (typeof renderLanding === 'function') {
+    appEl.innerHTML = renderLanding();
+  } else {
+    notify('Unable to render landing page.', 'error');
+    appEl.innerHTML = '';
+  }
   const saved = loadSession();
   bindLandingHandlers(socket, renderLandingPage, 
     (params) => enterRoom(params, socket), 
