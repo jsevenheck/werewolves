@@ -6,7 +6,9 @@ function tryFinalizeWolfVote(room, broadcastRoom, io) {
     scheduleNightStep(room, 'seer', broadcastRoom, io);
     return;
   }
-  const pending = wolves.some((wolf) => room.wolfVotes[wolf.id] == null);
+  const pending = wolves.some(
+    (wolf) => room.wolfVotes[wolf.id] === undefined || room.wolfVotes[wolf.id] === ''
+  );
   if (pending) return;
   const tally = {};
   Object.values(room.wolfVotes).forEach((targetId) => {
