@@ -219,7 +219,7 @@ function setupSocketHandlers(io, socket) {
         return;
       }
       livingWolves.forEach((wolf) => {
-        if (room.wolfVotes[wolf.id] === undefined || room.wolfVotes[wolf.id] === '') {
+        if (room.wolfVotes[wolf.id] == null) {
           room.wolfVotes[wolf.id] = '';
         }
       });

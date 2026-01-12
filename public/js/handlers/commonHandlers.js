@@ -46,7 +46,6 @@ function updateHunterOverlay(socket) {
     state.hunterPrompt = false;
     return;
   }
-  if (!state.hunterPrompt) return;
   if (!state.room) return;
   
   existing?.remove();

@@ -27,7 +27,7 @@ if (state.storedSession) {
 
 socket.on('connect', () => {
   if (state.playerId && state.roomCode) {
-    socket.emit('requestState', { roomCode: state.roomCode, playerId: state.playerId });
+    attemptResume({ roomCode: state.roomCode, playerId: state.playerId, name: state.playerName });
   }
 });
 
@@ -99,6 +99,9 @@ function renderApp() {
   }
   if (typeof bindPhaseHandlers === 'function') {
     bindPhaseHandlers(socket, renderApp);
+  }
+  if (typeof updateHunterOverlay === 'function') {
+    updateHunterOverlay(socket);
   }
 }
 

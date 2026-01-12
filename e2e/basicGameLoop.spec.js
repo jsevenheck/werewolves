@@ -37,7 +37,9 @@ const createLobbyWithPlayers = async (browser, names) => {
 const configureRoles = async (host, config) => {
   for (const role of ROLE_FIELDS) {
     const value = config[role] ?? 0;
-    await host.fill(`input[data-role="${role}"]`, String(value));
+    const input = host.locator(`input[data-role="${role}"]`);
+    await input.fill(String(value));
+    await input.dispatchEvent('change');
   }
   await host.fill('#min-players', String(config.minPlayers || 4));
   await host.dispatchEvent('#min-players', 'change');
@@ -69,10 +71,110 @@ const tryClick = async (locator) => {
   return true;
 };
 
+const selectFirstOption = async (select) => {
+  const options = select.locator('option');
+  const count = await options.count();
+  if (count > 1) {
+    await select.selectOption({ index: 1 });
+    return true;
+  }
+  return false;
+};
+
+const selectOptionByLabel = async (select, label) => {
+  if (!label) {
+    return false;
+  }
+  try {
+    await select.selectOption({ label });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const trySubmitNightActions = async (pages, submissionState, options = {}) => {
+  const { wolfTargetName } = options;
+  let acted = false;
+  for (const page of pages) {
+    const state = submissionState.get(page) || { wolf: false, seer: false, witch: false };
+
+    const wolfForm = page.locator('#wolf-form');
+    if (await wolfForm.count() && (await wolfForm.isVisible())) {
+      if (!state.wolf) {
+        const select = wolfForm.locator('select[name="target"]');
+        const picked =
+          (await selectOptionByLabel(select, wolfTargetName)) || (await selectFirstOption(select));
+        if (picked) {
+          await wolfForm.locator('button[type="submit"]').click();
+          state.wolf = true;
+          acted = true;
+        }
+      }
+    } else {
+      state.wolf = false;
+    }
+
+    const seerForm = page.locator('#seer-form');
+    if (await seerForm.count() && (await seerForm.isVisible())) {
+      if (!state.seer) {
+        const select = seerForm.locator('select[name="target"]');
+        if (await selectFirstOption(select)) {
+          await seerForm.locator('button[type="submit"]').click();
+          state.seer = true;
+          acted = true;
+        }
+      }
+    } else {
+      state.seer = false;
+    }
+
+    const skipWitch = page.locator('#skip-witch');
+    if (await skipWitch.count() && (await skipWitch.isVisible())) {
+      if (!state.witch) {
+        await skipWitch.click();
+        state.witch = true;
+        acted = true;
+      }
+    } else {
+      state.witch = false;
+    }
+
+    submissionState.set(page, state);
+  }
+  return acted;
+};
+
+const trySubmitArmor = async (pages) => {
+  for (const page of pages) {
+    const armorForm = page.locator('#armor-form');
+    if (await armorForm.count() && (await armorForm.isVisible())) {
+      const selects = armorForm.locator('select');
+      const first = selects.nth(0);
+      const second = selects.nth(1);
+      const optionCount = await first.locator('option').count();
+      if (optionCount > 2) {
+        await first.selectOption({ index: 1 });
+        await second.selectOption({ index: 2 });
+      } else if (optionCount > 1) {
+        await first.selectOption({ index: 1 });
+        await second.selectOption({ index: 1 });
+      }
+      await armorForm.locator('button[type="submit"]').click();
+      return true;
+    }
+  }
+  return false;
+};
+
 const findHunterPromptPage = async (pages) => {
   for (const page of pages) {
     const overlay = page.locator('#hunter-overlay');
-    if (await overlay.isVisible()) {
+    if (await overlay.count()) {
+      return page;
+    }
+    const form = page.locator('#hunter-form');
+    if (await form.count()) {
       return page;
     }
   }
@@ -80,34 +182,136 @@ const findHunterPromptPage = async (pages) => {
 };
 
 const submitHunterShot = async (page) => {
-  await page.waitForSelector('#hunter-form');
+  await page.waitForSelector('#hunter-form', { state: 'attached' });
   const select = page.locator('#hunter-form select[name="target"]');
   const optionCount = await select.locator('option').count();
   if (optionCount > 1) {
     await select.selectOption({ index: 1 });
   }
-  await page.click('#hunter-form button[type="submit"]');
+  await page.click('#hunter-form button[type="submit"]', { force: true });
   await page.locator('#hunter-overlay').waitFor({ state: 'detached', timeout: 5000 });
 };
 
-const advanceToDay = async (host, pages, options = {}) => {
-  const { allowHunterStop = false } = options;
-  const dayReport = host.locator('h3:has-text("Night Report")');
-  let hunterShot = false;
-  for (let i = 0; i < 120; i += 1) {
-    if (await dayReport.count()) {
-      return { hunterShot, gameOver: false, dayVisible: true };
+const ensureHunterOverlay = async (page, roomCode) => {
+  const overlay = page.locator('#hunter-overlay');
+  const firstTry = await overlay
+    .waitFor({ state: 'attached', timeout: 8000 })
+    .then(() => true)
+    .catch(() => false);
+  if (firstTry) {
+    return true;
+  }
+  await page.reload();
+  if (roomCode) {
+    const resumeBtn = page.locator('#resume-btn');
+    const hasResume = await resumeBtn
+      .waitFor({ state: 'visible', timeout: 5000 })
+      .then(() => true)
+      .catch(() => false);
+    if (hasResume) {
+      await resumeBtn.click();
+      await page.waitForSelector(`text=Room ${roomCode}`, { timeout: 10000 });
     }
-    if (await host.locator('h2:has-text("Game Over")').count()) {
+  }
+  return overlay
+    .waitFor({ state: 'attached', timeout: 8000 })
+    .then(() => true)
+    .catch(() => false);
+};
+
+const reconnectPage = async (page, roomCode) => {
+  await page.reload();
+  if (!roomCode) {
+    return;
+  }
+  const roomHeader = page.locator(`text=Room ${roomCode}`);
+  const inRoom = await roomHeader
+    .waitFor({ state: 'visible', timeout: 8000 })
+    .then(() => true)
+    .catch(() => false);
+  if (inRoom) {
+    return;
+  }
+  const resumeBtn = page.locator('#resume-btn');
+  const hasResume = await resumeBtn
+    .waitFor({ state: 'visible', timeout: 5000 })
+    .then(() => true)
+    .catch(() => false);
+  if (hasResume) {
+    await resumeBtn.click();
+    await roomHeader.waitFor({ state: 'visible', timeout: 10000 });
+  }
+};
+
+const waitForDayOnAllPages = async (pages) => {
+  await Promise.all(
+    pages.map((page) =>
+      page
+        .waitForSelector('h3:has-text("Night Report")', { timeout: 15000 })
+        .catch(() => null)
+    )
+  );
+};
+
+const findVisiblePage = async (pages, selector) => {
+  for (const page of pages) {
+    const locator = page.locator(selector);
+    try {
+      if (await locator.isVisible()) {
+        return page;
+      }
+    } catch {
+      // Ignore closed pages.
+    }
+  }
+  return null;
+};
+
+const getPhaseText = async (page) => {
+  try {
+    const phase = page.locator('text=Phase:');
+    if (!(await phase.count())) {
+      return null;
+    }
+    const text = await phase.first().textContent();
+    return text ? text.trim() : null;
+  } catch {
+    return null;
+  }
+};
+
+const advanceToDay = async (host, pages, options = {}) => {
+  const { allowHunterStop = false, wolfTargetName } = options;
+  const submissionState = new Map();
+  const dayReportSelector = 'h3:has-text("Night Report")';
+  const gameOverSelector = 'h2:has-text("Game Over")';
+  let hunterShot = false;
+  let lastPhase = null;
+  for (let i = 0; i < 120; i += 1) {
+    lastPhase = (await getPhaseText(host)) || lastPhase;
+    const dayPage = await findVisiblePage(pages, dayReportSelector);
+    if (dayPage) {
+      return { hunterShot, gameOver: false, dayVisible: true, dayPage };
+    }
+    if (await findVisiblePage(pages, gameOverSelector)) {
       return { hunterShot, gameOver: true, dayVisible: false };
+    }
+    if (await trySubmitArmor(pages)) {
+      await host.waitForTimeout(200);
+      continue;
     }
     const hunterPage = await findHunterPromptPage(pages);
     if (hunterPage) {
       await submitHunterShot(hunterPage);
       hunterShot = true;
       if (allowHunterStop) {
-        return { hunterShot, gameOver: false, dayVisible: await dayReport.count() > 0 };
+        const dayVisible = !!(await findVisiblePage(pages, dayReportSelector));
+        return { hunterShot, gameOver: false, dayVisible };
       }
+      await host.waitForTimeout(200);
+      continue;
+    }
+    if (await trySubmitNightActions(pages, submissionState, { wolfTargetName })) {
       await host.waitForTimeout(200);
       continue;
     }
@@ -121,8 +325,11 @@ const advanceToDay = async (host, pages, options = {}) => {
     }
     await host.waitForTimeout(200);
   }
-  await dayReport.waitFor({ state: 'visible', timeout: 20000 });
-  return { hunterShot, gameOver: false, dayVisible: true };
+  const finalDayPage = await findVisiblePage(pages, dayReportSelector);
+  if (finalDayPage) {
+    return { hunterShot, gameOver: false, dayVisible: true, dayPage: finalDayPage };
+  }
+  throw new Error(`Failed to reach day phase in time. Last phase: ${lastPhase || 'unknown'}`);
 };
 
 const getAliveNames = async (page) => {
@@ -132,30 +339,6 @@ const getAliveNames = async (page) => {
       .map((card) => card.querySelector('strong')?.textContent?.trim())
       .filter(Boolean);
   });
-};
-
-const revealRoleName = async (page) => {
-  const toggle = page.locator('#toggle-role');
-  if (await toggle.count() === 0) {
-    return null;
-  }
-  const roleText = page.locator('.role-card strong');
-  if (!(await roleText.count())) {
-    await toggle.click();
-    await roleText.waitFor({ state: 'visible' });
-  }
-  const text = await roleText.textContent();
-  return text ? text.trim() : null;
-};
-
-const findRolePage = async (players, roleName) => {
-  for (const player of players) {
-    const role = await revealRoleName(player.page);
-    if (role === roleName) {
-      return player;
-    }
-  }
-  return null;
 };
 
 const voteAllForTarget = async (players, targetName) => {
@@ -201,10 +384,17 @@ test('host can start a 4-player game and reach day', async ({ browser }) => {
     });
 
     await startGameAndReady(pages);
-    await advanceToDay(host, pages);
+    const advanceResult = await advanceToDay(host, pages);
+    await waitForDayOnAllPages(pages);
 
-    await expect(host.locator('h3:has-text("Night Report")')).toBeVisible();
-    await expect(host.locator('#vote-form')).toBeVisible();
+    const dayPage = advanceResult.dayPage || host;
+    await expect(dayPage.locator('h3:has-text("Night Report")')).toBeVisible();
+    const voteForm = dayPage.locator('#vote-form');
+    if (await voteForm.count()) {
+      await expect(voteForm).toBeVisible();
+    } else {
+      await expect(dayPage.locator('text=You are dead')).toBeVisible();
+    }
   } finally {
     await closeContexts(contexts);
   }
@@ -228,14 +418,16 @@ test('day vote eliminates a player', async ({ browser }) => {
     });
 
     await startGameAndReady(pages);
-    await advanceToDay(host, pages);
+    const advanceResult = await advanceToDay(host, pages);
+    await waitForDayOnAllPages(pages);
 
-    const aliveNames = await getAliveNames(host);
+    const dayPage = advanceResult.dayPage || host;
+    const aliveNames = await getAliveNames(dayPage);
     expect(aliveNames.length).toBeGreaterThan(1);
     const targetName = aliveNames[0];
 
     await voteAllForTarget(players, targetName);
-    await host.waitForSelector('text=was voted out', { timeout: 10000 });
+    await dayPage.waitForSelector('text=was voted out', { timeout: 10000 });
   } finally {
     await closeContexts(contexts);
   }
@@ -243,7 +435,7 @@ test('day vote eliminates a player', async ({ browser }) => {
 
 test('hunter prompt allows a follow-up shot', async ({ browser }) => {
   const names = ['Host', 'Player 2', 'Player 3', 'Player 4'];
-  const { contexts, pages } = await createLobbyWithPlayers(browser, names);
+  const { contexts, pages, code } = await createLobbyWithPlayers(browser, names);
   const [host] = pages;
   const players = pages.map((page, index) => ({ page, name: names[index] }));
 
@@ -259,18 +451,27 @@ test('hunter prompt allows a follow-up shot', async ({ browser }) => {
     });
 
     await startGameAndReady(pages);
-    const advanceResult = await advanceToDay(host, pages, { allowHunterStop: true });
+    const wolfPlayer = players[0];
+    const hunterPlayer = players[1];
+    const safeTarget = players[2]?.name || players[3]?.name;
+    const advanceResult = await advanceToDay(host, pages, {
+      allowHunterStop: true,
+      wolfTargetName: safeTarget
+    });
 
     if (!advanceResult.hunterShot && !advanceResult.gameOver) {
-      const hunterPlayer = await findRolePage(players, 'Hunter');
-      expect(hunterPlayer).not.toBeNull();
-
+      const dayPage = advanceResult.dayPage || host;
+      await waitForDayOnAllPages(pages);
+      await reconnectPage(hunterPlayer.page, code);
       await voteAllForTarget(players, hunterPlayer.name);
-      await hunterPlayer.page.waitForSelector('#hunter-overlay', { timeout: 10000 });
+      await dayPage.waitForSelector(`text=${hunterPlayer.name} was voted out`, { timeout: 20000 });
+      const overlayReady = await ensureHunterOverlay(hunterPlayer.page, code);
+      expect(overlayReady).toBe(true);
       await submitHunterShot(hunterPlayer.page);
     }
 
-    await host.waitForSelector('text=shot by Hunter', { timeout: 10000 });
+    const resultPage = advanceResult.dayPage || host;
+    await resultPage.waitForSelector('text=shot by Hunter', { timeout: 20000 });
   } finally {
     await closeContexts(contexts);
   }

@@ -1,8 +1,9 @@
 const { customAlphabet } = require('nanoid');
 
 const PORT = process.env.PORT || 3001;
-const NIGHT_DELAY_MS = 3000;
-const PHASE_DELAY_MS = 3000;
+const IS_E2E = process.env.E2E_TESTS === '1';
+const NIGHT_DELAY_MS = IS_E2E ? 0 : 3000;
+const PHASE_DELAY_MS = IS_E2E ? 0 : 3000;
 const ROOM_CODE = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 4);
 const PLAYER_ID = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 12);
 

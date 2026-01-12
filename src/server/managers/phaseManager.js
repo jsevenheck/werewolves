@@ -10,7 +10,7 @@ function startNight(room) {
   room.wolfVotes = {};
   Object.values(room.players).forEach((player) => {
     if (player.role === 'werewolf' && player.alive) {
-      room.wolfVotes[player.id] = '';
+      room.wolfVotes[player.id] = null;
     }
   });
   room.wolfTarget = null;

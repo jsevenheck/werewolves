@@ -10,6 +10,9 @@ module.exports = defineConfig({
   webServer: {
     command: 'node server.js',
     port: 3001,
-    reuseExistingServer: !process.env.CI
+    reuseExistingServer: !process.env.CI,
+    env: {
+      E2E_TESTS: '1'
+    }
   }
 });

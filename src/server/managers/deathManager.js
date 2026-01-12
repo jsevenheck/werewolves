@@ -20,9 +20,9 @@ function resolveDeaths(room, context = 'general', broadcastRoom, io) {
       `${player.name} died. Role: ${ROLE_INFO[player.role]?.label || player.role}.`
     );
     if (player.role === 'hunter' && io) {
+      room.awaitingHunterShot = player.id;
       const socket = player.socketId && io.sockets.sockets.get(player.socketId);
       if (socket && player.connected) {
-        room.awaitingHunterShot = player.id;
         socket.emit('hunterPrompt', { roomCode: room.code });
       }
     }

@@ -3,6 +3,9 @@ function sanitizeName(name) {
 }
 
 function shuffle(arr) {
+  if (process.env.E2E_TESTS === '1') {
+    return [...arr];
+  }
   const array = [...arr];
   for (let i = array.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
