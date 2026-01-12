@@ -63,9 +63,19 @@ function renderLandingPage() {
     appEl.innerHTML = '';
   }
   const saved = loadSession();
-  bindLandingHandlers(socket, renderLandingPage, 
-    (params) => enterRoom(params, socket), 
-    attemptResume, saved);
+  const enterRoomWithSocket = (params) => {
+    if (typeof enterRoom === 'function') {
+      return enterRoom(params, socket);
+    }
+    notify('Unable to enter room: action is unavailable.');
+  };
+  bindLandingHandlers(
+    socket,
+    renderLandingPage,
+    enterRoomWithSocket,
+    attemptResume,
+    saved
+  );
 }
 
 function renderApp() {
