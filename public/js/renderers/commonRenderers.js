@@ -58,7 +58,7 @@ function renderPlayersPanel() {
 
     const roleKey = player.role;
     const roleLabel = roleKey && ROLE_DETAILS[roleKey]?.name
-      ? ROLE_DETAILS[roleKey].name
+      ? ROLE_DETAILS[roleKey]?.name
       : (roleKey || '');
 
     return `
