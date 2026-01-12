@@ -17,6 +17,18 @@ npm start
 
 Open `http://localhost:3001` (or set `PORT` for another port).
 
+## Tests
+Unit/UI tests:
+```bash
+npm test
+```
+
+End-to-end tests:
+```bash
+npx playwright install
+npm run test:e2e
+```
+
 ## How to Play
 1. Host creates a room and shares the 4-letter code.
 2. Host configures role counts and minimum players, then starts the game.
@@ -34,3 +46,4 @@ docker run --rm -p 3001:3001 werewolves
 - Setup: `docs/setup.md`
 - Data model + phase engine: `docs/spec.md`
 - Manual tests: `docs/test-checklist.md`
+- Codebase structure: `docs/structure.md`
