@@ -210,7 +210,7 @@ function setupSocketHandlers(io, socket) {
         return;
       }
       livingWolves.forEach((wolf) => {
-        if (room.wolfVotes[wolf.id] == null) {
+        if (room.wolfVotes[wolf.id] === undefined || room.wolfVotes[wolf.id] === '') {
           room.wolfVotes[wolf.id] = '';
         }
       });
