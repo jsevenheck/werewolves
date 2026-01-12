@@ -202,6 +202,7 @@ function renderWolfForm(room) {
 }
 
 function renderSeerForm(room) {
+  if (!room) return '<p>Room data unavailable.</p>';
   const targets = (room?.players ?? []).filter((p) => p.alive && p.id !== state.playerId);
   if (!targets.length) return '<p>No one left to inspect.</p>';
   const options = targets.map((p) => `<option value="${p.id}">${p.name}</option>`).join('');
