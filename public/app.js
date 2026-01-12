@@ -94,7 +94,9 @@ function renderApp() {
     renderLogsPanel()
   ].filter(Boolean);
   appEl.innerHTML = sections.join('');
-  bindCommonHandlers(renderApp, renderLandingPage, clearSession);
+  if (typeof bindCommonHandlers === 'function') {
+    bindCommonHandlers(renderApp, renderLandingPage, clearSession);
+  }
   bindPhaseHandlers(socket, renderApp);
   updateHunterOverlay(socket);
 }
