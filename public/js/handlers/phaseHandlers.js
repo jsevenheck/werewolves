@@ -104,7 +104,9 @@ function bindLobbyHandlers(socket, room) {
     }
     const playerId = state.playerId;
     socket.emit('startGame', { roomCode: room.code, playerId }, (res) => {
-      if (res?.error) notify(res.error);
+      if (res?.error && typeof notify === 'function') {
+        notify(res.error);
+      }
     });
   });
 }
