@@ -160,6 +160,9 @@ function renderDaySection(room, self) {
 }
 
 function renderWolfForm(room) {
+  if (!room || !Array.isArray(room.players)) {
+    return '<p>No game data available.</p>';
+  }
   const wolfIds = Object.keys(room.wolfVotes || {});
   const votesCast = Object.values(room.wolfVotes || {}).filter(Boolean).length;
   const aliveTargets = (room?.players ?? []).filter((p) => p.alive && p.id !== state.playerId);
