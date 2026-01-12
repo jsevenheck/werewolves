@@ -223,24 +223,25 @@ function renderSeerForm(room) {
 }
 
 function renderWitchForm(room) {
-  const healedText = room.wolfTarget ? `Wolves targeted ${getPlayerName(room, room.wolfTarget)}.` : 'Wolves have no target.';
-  const aliveTargets = (room?.players ?? []).filter((p) => p.alive && p.id !== state.playerId);
+  const healedText = room?.wolfTarget ? `Wolves targeted ${getPlayerName(room, room.wolfTarget)}.` : 'Wolves have no target.';
+  const aliveTargets = (room?.players ?? []).filter((p) => p && p.alive && p.id !== state.playerId);
   const options = aliveTargets.map((p) => `<option value="${p.id}">${p.name}</option>`).join('');
+  const witchState = room?.witchState ?? {};
   return `
     <div class="actions">
       <p>${healedText}</p>
       <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
-        <button type="button" id="heal-btn" ${!room.witchState.healAvailable || !room.wolfTarget ? 'disabled' : ''}>Use heal potion</button>
+        <button type="button" id="heal-btn" ${!witchState.healAvailable || !room?.wolfTarget ? 'disabled' : ''}>Use heal potion</button>
         <div style="flex:1;min-width:220px;">
           <label>
             <span>Poison target</span>
-            <select id="poison-select" ${!room.witchState.poisonAvailable ? 'disabled' : ''}>
+            <select id="poison-select" ${!witchState.poisonAvailable ? 'disabled' : ''}>
               <option value="">Choose player</option>
               ${options}
             </select>
           </label>
         </div>
-        <button type="button" id="poison-btn" ${!room.witchState.poisonAvailable ? 'disabled' : ''}>Use poison</button>
+        <button type="button" id="poison-btn" ${!witchState.poisonAvailable ? 'disabled' : ''}>Use poison</button>
       </div>
       <button type="button" id="skip-witch">Skip</button>
     </div>
