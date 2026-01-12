@@ -5,8 +5,14 @@ const { Server } = require('socket.io');
 const { PORT } = require('./src/server/config/constants');
 const { setupSocketHandlers } = require('./src/server/handlers/socketHandlers');
 
+/**
+ * @typedef {import('socket.io').Server} SocketServer
+ * @typedef {import('socket.io').Socket} Socket
+ */
+
 const app = express();
 const server = http.createServer(app);
+/** @type {SocketServer} */
 const io = new Server(server, {
   cors: {
     origin: '*'
@@ -20,7 +26,7 @@ server.listen(PORT, () => {
   console.log(`Werewolves server running on http://localhost:${PORT}`);
 });
 
-io.on('connection', (socket) => {
+io.on('connection', /** @param {Socket} socket */ (socket) => {
   console.log('client connected', socket.id);
   setupSocketHandlers(io, socket);
 });
