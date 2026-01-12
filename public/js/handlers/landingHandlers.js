@@ -55,7 +55,11 @@ function enterRoom({ roomCode, playerId, name }, socket) {
   state.playerId = playerId;
   state.roomCode = roomCode;
   state.playerName = name;
-  saveSession();
+  if (typeof saveSession === 'function') {
+    saveSession();
+  } else {
+    console.error('saveSession is not a function in enterRoom');
+  }
   socket.emit('requestState', { roomCode, playerId });
 }
 
