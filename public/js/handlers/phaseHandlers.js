@@ -214,9 +214,13 @@ function bindNightHandlers(socket, room) {
     if (!targetId) return;
     socket.emit('submitSeerInspect', { roomCode: room.code, playerId: state.playerId, targetId }, (res) => {
       if (res?.ok) {
-        notify('Vision received. Check your role card for the result.');
+        if (typeof notify === 'function') {
+          notify('Vision received. Check your role card for the result.');
+        }
       } else if (res && res.error) {
-        notify(`Error: ${res.error}`);
+        if (typeof notify === 'function') {
+          notify(`Error: ${res.error}`);
+        }
       }
     });
     });
