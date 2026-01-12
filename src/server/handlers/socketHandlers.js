@@ -207,25 +207,27 @@ function setupSocketHandlers(io, socket) {
         room.wolfTarget = null;
         const { scheduleNightStep } = require('../managers/phaseManager');
         scheduleNightStep(room, 'seer', (r) => broadcastRoom(r, io), io);
+        return;
       }
+      livingWolves.forEach((wolf) => {
+        if (room.wolfVotes[wolf.id] == null) {
+          room.wolfVotes[wolf.id] = '';
+        }
+      });
+      tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io), io);
       return;
     }
     
     if (room.phaseStep === 'seer') {
-      const livingSeer = Object.values(room.players).find((p) => p.role === 'seer' && p.alive);
-      if (!livingSeer) {
-        room.seerActed = true;
-        const { scheduleNightStep } = require('../managers/phaseManager');
-        scheduleNightStep(room, 'witch', (r) => broadcastRoom(r, io), io);
-      }
+      room.seerActed = true;
+      const { scheduleNightStep } = require('../managers/phaseManager');
+      scheduleNightStep(room, 'witch', (r) => broadcastRoom(r, io), io);
       return;
     }
     
     if (room.phaseStep === 'witch') {
-      const livingWitch = Object.values(room.players).find((p) => p.role === 'witch' && p.alive);
-      if (!livingWitch) {
-        handleWitchDecision(room, 'skip', null, (r) => broadcastRoom(r, io), io);
-      }
+      handleWitchDecision(room, 'skip', null, (r) => broadcastRoom(r, io), io);
+      return;
     }
   });
 
