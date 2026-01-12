@@ -1,5 +1,3 @@
-const { ROLE_INFO } = require('../config/constants');
-
 function broadcastRoom(room, io) {
   Object.values(room.players).forEach((player) => sendStateToPlayer(room, player, io));
 }
