@@ -236,6 +236,7 @@ function setupSocketHandlers(io, socket) {
     if (!room || room.phase !== 'day') return;
     const player = room.players[playerId];
     if (!player || !player.alive) return;
+    if (player.socketId !== socket.id) return;
     if (room.voteState.revoteFromTie && targetId && !room.voteState.revoteFromTie.includes(targetId)) {
       return;
     }
