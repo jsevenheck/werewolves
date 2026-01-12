@@ -257,7 +257,11 @@ function setupSocketHandlers(io, socket) {
 
   socket.on('hunterShoot', ({ roomCode, playerId, targetId }) => {
     const room = getRoom(roomCode);
-    if (!room || room.awaitingHunterShot !== playerId) return;
+    if (!room) return;
+    const player = room.players[playerId];
+    if (!player || !player.alive) return;
+    if (player.socketId !== socket.id) return;
+    if (room.awaitingHunterShot !== playerId) return;
     const target = room.players[targetId];
     if (!target || !target.alive) return;
     queueDeath(room, targetId, 'shot by Hunter');
