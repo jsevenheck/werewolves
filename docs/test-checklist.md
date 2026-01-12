@@ -7,7 +7,7 @@
 - **Hunter dies via Lovers link**: Make Hunter a Lover partner, kill the other Lover (any method), and ensure Hunter still receives the last-shot overlay even though death came from heartbreak.
 - **Werewolf & day vote ties**: Force wolf vote tie to see random target selection, and run a day vote tie to trigger revote UI; verify second tie resolves randomly among tied players.
 - **Role reveal readiness**: During role reveal, each player must click Ready; host can only continue once all connected players are ready.
-- **Host skip night step**: With a disconnected Witch/Seer/Wolf, host uses Skip current action and the game continues normally.
+- **Host skip night step**: With an unresponsive or disconnected Witch/Seer/Wolf, host uses Skip current action and the game continues normally.
 - **Transition delays**: Confirm ~3s delay after each night action, and after phase changes (role reveal -> armor/night, armor -> night, night -> day, day -> night).
 - **Witch potion tracking**: Use heal potion once to prevent the wolf kill, confirm potion becomes unavailable later, then poison a target on another night and ensure dead count + Lovers link apply before win checks.
 - **Seer and Witch private info**: Confirm Seer sees the last inspection result only on their device and Witch sees the wolves' target before acting.

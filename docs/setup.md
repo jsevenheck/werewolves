@@ -24,6 +24,18 @@ npm start
 
 Then open `http://localhost:3000`.
 
+### Tests
+Unit/UI tests:
+```bash
+npm test
+```
+
+End-to-end tests:
+```bash
+npx playwright install
+npm run test:e2e
+```
+
 ### Docker
 Build:
 ```bash
@@ -52,7 +64,7 @@ Then open `http://localhost:3000`.
 - Everyone sees their private role in the role card.
 - Players mark ready; host continues once everyone is ready.
 - Armor links Lovers once, then night/day cycles begin.
-- Host can skip a night action step if a player is offline.
+- Host can skip a night action step if a player is offline or unresponsive.
 
 ### Troubleshooting
 - If players cannot connect, ensure the host firewall allows inbound `3001` (or the `PORT` you set).
