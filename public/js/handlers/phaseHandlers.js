@@ -60,11 +60,18 @@ function bindLobbyHandlers(socket, room) {
   };
   
   const debouncedUpdateConfig = () => {
+    if (!state) {
+      return;
+    }
+
     if (state.updateConfigTimeoutId) {
       clearTimeout(state.updateConfigTimeoutId);
     }
 
     state.updateConfigTimeoutId = setTimeout(() => {
+      if (!state) {
+        return;
+      }
       updateConfig();
       state.updateConfigTimeoutId = null;
     }, 400);
