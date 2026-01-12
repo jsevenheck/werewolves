@@ -4,7 +4,7 @@ jest.mock('../src/server/managers/phaseManager', () => ({
 
 const { queueDeath, resolveDeaths } = require('../src/server/managers/deathManager');
 const { tryResolveDayVote } = require('../src/server/managers/voteManager');
-const { createRoom, getRoom } = require('../src/server/models/room');
+const { createRoom } = require('../src/server/models/room');
 const { createPlayer } = require('../src/server/models/player');
 const { schedulePhaseTransition } = require('../src/server/managers/phaseManager');
 
