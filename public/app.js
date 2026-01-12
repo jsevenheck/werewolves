@@ -100,9 +100,6 @@ function renderApp() {
   if (typeof bindPhaseHandlers === 'function') {
     bindPhaseHandlers(socket, renderApp);
   }
-  if (typeof updateHunterOverlay === 'function') {
-    updateHunterOverlay(socket);
-  }
 }
 
 function renderPhaseSection() {
