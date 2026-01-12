@@ -23,11 +23,17 @@ jest.mock('../src/server/managers/nightManager', () => ({
   handleWitchDecision: jest.fn()
 }));
 
+jest.mock('../src/server/managers/deathManager', () => ({
+  queueDeath: jest.fn(),
+  resolveDeaths: jest.fn()
+}));
+
 const { getRoom } = require('../src/server/models/room');
 const { broadcastRoom } = require('../src/server/managers/broadcastManager');
 const { scheduleNightStep } = require('../src/server/managers/phaseManager');
 const { startNight, advanceFromReveal } = require('../src/server/managers/phaseManager');
 const { tryFinalizeWolfVote, handleWitchDecision } = require('../src/server/managers/nightManager');
+const { queueDeath, resolveDeaths } = require('../src/server/managers/deathManager');
 const { setupSocketHandlers } = require('../src/server/handlers/socketHandlers');
 
 const makeSocket = () => {
@@ -67,7 +73,7 @@ describe('socketHandlers hostSkipStep', () => {
 
     handlers.hostSkipStep({ roomCode: 'ABCD', playerId: 'host' });
 
-    expect(room.wolfVotes).toEqual({ w1: '', w2: '' });
+    expect(room.wolfVotes).toEqual({ w1: null, w2: null });
     expect(tryFinalizeWolfVote).toHaveBeenCalledWith(room, expect.any(Function), io);
   });
 
@@ -200,5 +206,35 @@ describe('socketHandlers hostSkipStep', () => {
     handlers.hostSkipStep({ roomCode: 'ABCD', playerId: 'host' });
 
     expect(advanceFromReveal).toHaveBeenCalledWith(room, expect.any(Function));
+  });
+});
+
+describe('socketHandlers hunterShoot', () => {
+  const io = { sockets: { sockets: new Map() } };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('hunter can shoot after death when awaitingHunterShot is set', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      awaitingHunterShot: 'hunter',
+      players: {
+        hunter: { id: 'hunter', role: 'hunter', alive: false, socketId: 'socket1' },
+        v1: { id: 'v1', role: 'villager', alive: true }
+      }
+    };
+    getRoom.mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    socket.id = 'socket1';
+    setupSocketHandlers(io, socket);
+
+    handlers.hunterShoot({ roomCode: 'ABCD', playerId: 'hunter', targetId: 'v1' });
+
+    expect(queueDeath).toHaveBeenCalledWith(room, 'v1', 'shot by Hunter');
+    expect(room.awaitingHunterShot).toBeNull();
+    expect(resolveDeaths).toHaveBeenCalledWith(room, 'general', expect.any(Function), io);
   });
 });

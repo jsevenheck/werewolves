@@ -259,7 +259,7 @@ function setupSocketHandlers(io, socket) {
     const room = getRoom(roomCode);
     if (!room) return;
     const player = room.players[playerId];
-    if (!player || !player.alive) return;
+    if (!player || player.role !== 'hunter') return;
     if (player.socketId !== socket.id) return;
     if (room.awaitingHunterShot !== playerId) return;
     const target = room.players[targetId];
