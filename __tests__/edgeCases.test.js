@@ -6,7 +6,6 @@ const { queueDeath, resolveDeaths } = require('../src/server/managers/deathManag
 const { tryResolveDayVote } = require('../src/server/managers/voteManager');
 const { createRoom } = require('../src/server/models/room');
 const { createPlayer } = require('../src/server/models/player');
-const { schedulePhaseTransition } = require('../src/server/managers/phaseManager');
 
 describe('Edge Cases', () => {
   describe('Room Initialization', () => {
