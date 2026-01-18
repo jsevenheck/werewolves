@@ -27,7 +27,7 @@ if (state.storedSession) {
 
 socket.on('connect', () => {
   if (state.playerId && state.roomCode) {
-    attemptResume({ roomCode: state.roomCode, playerId: state.playerId, name: state.playerName });
+    attemptResume({ roomCode: state.roomCode, playerId: state.playerId, name: state.playerName || '' });
   }
 });
 
@@ -56,18 +56,10 @@ socket.on('hunterPrompt', () => {
 });
 
 function renderLandingPage() {
-  if (typeof renderLanding === 'function') {
-    appEl.innerHTML = renderLanding();
-  } else {
-    notify('Unable to render landing page.', 'error');
-    appEl.innerHTML = '';
-  }
+  appEl.innerHTML = renderLanding();
   const saved = loadSession();
   const enterRoomWithSocket = (params) => {
-    if (typeof enterRoom === 'function') {
-      return enterRoom(params, socket);
-    }
-    notify('Unable to enter room: action is unavailable.');
+    return enterRoom(params, socket);
   };
   bindLandingHandlers(
     socket,
@@ -94,12 +86,9 @@ function renderApp() {
     renderLogsPanel()
   ].filter(Boolean);
   appEl.innerHTML = sections.join('');
-  if (typeof bindCommonHandlers === 'function') {
-    bindCommonHandlers(renderApp, renderLandingPage, clearSession);
-  }
-  if (typeof bindPhaseHandlers === 'function') {
-    bindPhaseHandlers(socket, renderApp);
-  }
+  bindCommonHandlers(renderApp, renderLandingPage, clearSession);
+  bindPhaseHandlers(socket, renderApp);
+  updateHunterOverlay(socket);
 }
 
 function renderPhaseSection() {

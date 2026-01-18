@@ -95,7 +95,7 @@ function bindLobbyHandlers(socket, room) {
     }
     const playerId = state.playerId;
     socket.emit('startGame', { roomCode: room.code, playerId }, (res) => {
-      if (res?.error && typeof notify === 'function') {
+      if (res?.error) {
         notify(res.error);
       }
     });
@@ -116,6 +116,7 @@ function bindRoleRevealHandlers(socket, room) {
     readyBtn.disabled = true;
     
     state.readyButtonTimeoutId = setTimeout(() => {
+      if (!state) return;
       const currentBtn = document.getElementById('ready-btn');
       if (currentBtn && currentBtn.disabled) {
         currentBtn.disabled = false;
@@ -170,6 +171,7 @@ function bindArmorHandlers(socket, room) {
       notify('Choose two distinct Lovers.');
       return;
     }
+    if (!state?.playerId) return;
     socket.emit('submitArmor', { roomCode: room.code, playerId: state.playerId, targets });
   });
 }
@@ -183,7 +185,11 @@ function bindNightHandlers(socket, room) {
   }
   if (room.hostId === state.playerId) {
     document.getElementById('skip-step')?.addEventListener('click', () => {
-    socket.emit('hostSkipStep', { roomCode: room.code, playerId: state.playerId });
+      const playerId = state?.playerId;
+      if (!playerId) {
+        return;
+      }
+      socket.emit('hostSkipStep', { roomCode: room.code, playerId });
     });
   }
   
@@ -193,7 +199,7 @@ function bindNightHandlers(socket, room) {
     event.preventDefault();
     const data = new FormData(wolfForm);
     const targetId = data.get('target');
-    if (!targetId) return;
+    if (!targetId || !state?.playerId) return;
     socket.emit('submitWolfVote', { roomCode: room.code, playerId: state.playerId, targetId });
     });
   }
@@ -204,16 +210,12 @@ function bindNightHandlers(socket, room) {
     event.preventDefault();
     const data = new FormData(seerForm);
     const targetId = data.get('target');
-    if (!targetId) return;
+    if (!targetId || !state?.playerId) return;
     socket.emit('submitSeerInspect', { roomCode: room.code, playerId: state.playerId, targetId }, (res) => {
       if (res?.ok) {
-        if (typeof notify === 'function') {
-          notify('Vision received. Check your role card for the result.');
-        }
+        notify('Vision received. Check your role card for the result.');
       } else if (res && res.error) {
-        if (typeof notify === 'function') {
-          notify(`Error: ${res.error}`);
-        }
+        notify(`Error: ${res.error}`);
       }
     });
     });
@@ -221,17 +223,19 @@ function bindNightHandlers(socket, room) {
   
   if (room.phaseStep === 'witch' && room.self?.role === 'witch' && room.self.alive) {
     document.getElementById('heal-btn')?.addEventListener('click', () => {
+    if (!state?.playerId) return;
     socket.emit('submitWitchDecision', { roomCode: room.code, playerId: state.playerId, action: 'heal' });
     });
     
     document.getElementById('poison-btn')?.addEventListener('click', () => {
     const select = document.getElementById('poison-select');
     const target = select?.value;
-    if (!target) return;
+    if (!target || !state?.playerId) return;
     socket.emit('submitWitchDecision', { roomCode: room.code, playerId: state.playerId, action: 'poison', targetId: target });
     });
     
     document.getElementById('skip-witch')?.addEventListener('click', () => {
+    if (!state?.playerId) return;
     socket.emit('submitWitchDecision', { roomCode: room.code, playerId: state.playerId, action: 'skip' });
     });
   }

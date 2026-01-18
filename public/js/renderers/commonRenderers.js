@@ -32,7 +32,7 @@ function renderHeader() {
         <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;">
           <div>
             <h1>Room ${room.code}</h1>
-            <p>Phase: ${formatPhase(room)}</p>
+            <p>Phase: ${formatPhase ? formatPhase(room) : (room.phase || '')}</p>
           </div>
           <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;">
             <span class="tag">You: ${state?.playerName || 'Unknown'}</span>

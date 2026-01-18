@@ -451,7 +451,6 @@ test('hunter prompt allows a follow-up shot', async ({ browser }) => {
     });
 
     await startGameAndReady(pages);
-    const wolfPlayer = players[0];
     const hunterPlayer = players[1];
     const safeTarget = players[2]?.name || players[3]?.name;
     const advanceResult = await advanceToDay(host, pages, {
