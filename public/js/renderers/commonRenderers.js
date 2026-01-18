@@ -57,9 +57,8 @@ function renderPlayersPanel() {
     if (!player) return '';
 
     const roleKey = player.role;
-    const roleLabel = roleKey && ROLE_DETAILS[roleKey]?.name
-      ? ROLE_DETAILS[roleKey]?.name
-      : (roleKey || '');
+    const roleDetail = roleKey ? ROLE_DETAILS[roleKey] : undefined;
+    const roleLabel = roleDetail?.name || (roleKey || '');
 
     return `
     <div class="player-card ${player.alive ? '' : 'dead'}">
