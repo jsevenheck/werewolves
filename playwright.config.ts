@@ -20,6 +20,8 @@ export default defineConfig({
       command: 'vite --config vite.config.ts',
       port: 5173,
       reuseExistingServer: !process.env.CI,
+      stdout: 'pipe',  
+      stderr: 'pipe',  
       env: {
         E2E_TESTS: '1'
       }
