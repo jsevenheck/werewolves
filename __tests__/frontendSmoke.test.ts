@@ -44,7 +44,7 @@ describe('frontend smoke', () => {
       witchState: { healAvailable: null, poisonAvailable: null },
       wolfVotes: null,
       wolfTarget: null,
-      wolfPeers: null,
+      wolfPeers: [],
       nextNightStep: null,
       phaseTransition: null,
       seerResult: null,

@@ -54,7 +54,7 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
       ? Object.values(room.players)
           .filter((p) => p.role === 'werewolf' && p.id !== viewerId && p.alive)
           .map((p) => p.name)
-      : null,
+      : [],
     nextNightStep: room.phaseStep === 'transition' ? room.nextNightStep : null,
     phaseTransition: room.phaseTransition,
     seerResult: viewer?.role === 'seer' ? viewer.seerResult : null,
