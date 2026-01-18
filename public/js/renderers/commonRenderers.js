@@ -83,8 +83,8 @@ function renderPlayersPanel() {
 function renderLogsPanel() {
   if (!state?.room) return '';
   
-  const room = state.room;
-  const logs = (room.logs || []).map((log) => `<div>${new Date(log.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${log.text}</div>`).join('') || '';
+  const room = state?.room;
+  const logs = (room?.logs || []).map((log) => `<div>${new Date(log.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${log.text}</div>`).join('') || '';
   
   return `
     <section class="panel">
