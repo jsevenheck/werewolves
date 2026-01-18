@@ -34,7 +34,10 @@ test('day vote eliminates a player', async ({ browser }) => {
     const dayPage = advanceResult.dayPage || host;
     const aliveNames = await getAliveNames(dayPage);
     expect(aliveNames.length).toBeGreaterThan(1);
-    const targetName = aliveNames[0];
+    const [targetName] = aliveNames;
+    if (!targetName) {
+      throw new Error('Expected at least one alive player to vote out.');
+    }
 
     await voteAllForTarget(players, targetName);
     await dayPage.waitForSelector('text=was voted out', { timeout: 10000 });
