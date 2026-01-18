@@ -1,0 +1,86 @@
+import { test, expect, type Page } from '@playwright/test';
+import {
+  waitForDayOnAllPages,
+  closeContexts,
+  configureRoles,
+  createLobbyWithPlayers,
+  startGameAndReady
+} from './helpers';
+
+const waitForWitchStep = async (host: Page, witch: Page) => {
+  for (let i = 0; i < 50; i += 1) {
+    if (await witch.locator('#heal-btn').isVisible()) {
+      return;
+    }
+    const skipStep = host.locator('#skip-step');
+    if (await skipStep.isVisible()) {
+      await skipStep.click();
+    }
+    await host.waitForTimeout(200);
+  }
+  await expect(witch.locator('#heal-btn')).toBeVisible();
+};
+
+const submitAbstainVotes = async (pages: Page[]) => {
+  for (const page of pages) {
+    const form = page.locator('#vote-form');
+    if (!(await form.count()) || !(await form.isVisible())) {
+      continue;
+    }
+    await form.locator('select[name="target"]').selectOption('__abstain__');
+    await page.click('#vote-submit');
+  }
+};
+
+test('witch can heal and poison across nights', async ({ browser }) => {
+  const names = ['Werewolf', 'Witch', 'Villager A', 'Villager B', 'Villager C'];
+  const { contexts, pages } = await createLobbyWithPlayers(browser, names);
+  const [host, witch] = pages;
+
+  try {
+    await configureRoles(host, {
+      werewolf: 1,
+      seer: 0,
+      hunter: 0,
+      witch: 1,
+      armor: 0,
+      joker: 0,
+      minPlayers: 5
+    });
+
+    await startGameAndReady(pages);
+
+    await host.waitForSelector('#wolf-form', { timeout: 10000 });
+    await host.locator('#wolf-form select[name="target"]').selectOption({ label: names[2] });
+    await host.locator('#wolf-form button[type="submit"]').click();
+    await host.locator('#wolf-form').waitFor({ state: 'detached' });
+
+    await waitForWitchStep(host, witch);
+    const healBtn = witch.locator('#heal-btn');
+    await expect(healBtn).toBeEnabled();
+    await healBtn.click();
+
+    await host.waitForSelector('h3:has-text("Night Report")', { timeout: 15000 });
+    const firstReport = host.locator('section.panel:has(h3:has-text("Night Report"))');
+    await expect(firstReport).toContainText('No one died last night.');
+
+    await waitForDayOnAllPages(pages);
+    await submitAbstainVotes(pages);
+
+    await host.waitForSelector('#wolf-form', { timeout: 10000 });
+    await host.locator('#wolf-form select[name="target"]').selectOption({ label: names[3] });
+    await host.locator('#wolf-form button[type="submit"]').click();
+    await host.locator('#wolf-form').waitFor({ state: 'detached' });
+
+    await waitForWitchStep(host, witch);
+    await witch.locator('#poison-select').selectOption({ label: names[4] });
+    await witch.locator('#poison-btn').click();
+
+    await host.waitForSelector('h3:has-text("Night Report")', { timeout: 15000 });
+    const secondReport = host.locator('section.panel:has(h3:has-text("Night Report"))');
+    await expect(secondReport).toContainText(names[3]);
+    await expect(secondReport).toContainText(names[4]);
+  } finally {
+    await closeContexts(contexts);
+  }
+});
