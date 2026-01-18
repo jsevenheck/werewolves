@@ -142,7 +142,7 @@ export interface RoomView {
   witchState: { healAvailable: boolean | null; poisonAvailable: boolean | null };
   wolfVotes: Record<string, string | null> | null;
   wolfTarget: string | null;
-  wolfPeers: string[] | null;
+  wolfPeers: string[];
   nextNightStep: NightStep;
   phaseTransition: PhaseTransition;
   seerResult: SeerResult | null;
