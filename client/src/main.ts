@@ -16,14 +16,16 @@ import { bindPhaseHandlers } from './handlers/phaseHandlers';
 import { notify } from './utils/helpers';
 import type { ClientToServerEvents, ServerToClientEvents } from '@shared/events';
 import type { RoomView, StoredSession } from '@shared/types';
+import type { EnterRoomParams } from './handlers/landingHandlers';
 import './style.css';
 
 const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io();
-const appEl = document.getElementById('app');
+const appElCandidate = document.getElementById('app');
 
-if (!appEl) {
+if (!appElCandidate) {
   throw new Error('Missing app root element');
 }
+const appEl = appElCandidate;
 
 initializeState();
 
@@ -66,7 +68,7 @@ socket.on('hunterPrompt', () => {
 function renderLandingPage() {
   appEl.innerHTML = renderLanding();
   const saved = loadSession();
-  const enterRoomWithSocket = (params: { name: string; code: string }) => {
+  const enterRoomWithSocket = (params: EnterRoomParams) => {
     return enterRoom(params, socket);
   };
   bindLandingHandlers(
@@ -122,7 +124,7 @@ function renderPhaseSection(room: RoomView) {
       dayToNight: 'Night falls. Close your eyes...'
     };
     const message = transitionMessages[room.phaseTransition] || 'Next phase in a few seconds. Close your eyes if needed.';
-    const hostSkipButtonHtml = self && self.isHost
+    const hostSkipButtonHtml = room.hostId === self?.id
       ? '<button id="host-skip-btn" type="button">Skip transition</button>'
       : '';
     return `

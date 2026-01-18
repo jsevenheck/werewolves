@@ -2,7 +2,7 @@ import type { Server } from 'socket.io';
 import { ROLE_INFO } from '../config/constants';
 import { addLog, clearRoomTimers } from '../utils/helpers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
-import type { Room } from '../../shared/types';
+import type { NightDeathAnnouncement, Room } from '../../shared/types';
 
 function queueDeath(room: Room, playerId: string, reason: string) {
   room.pendingDeaths.push({ playerId, reason });
@@ -14,7 +14,7 @@ function resolveDeaths(
   broadcastRoom: (room: Room) => void,
   io?: Server<ClientToServerEvents, ServerToClientEvents>
 ) {
-  const announced: { name: string; role: string | null }[] = [];
+  const announced: NightDeathAnnouncement[] = [];
   while (room.pendingDeaths.length) {
     const next = room.pendingDeaths.shift();
     if (!next) break;

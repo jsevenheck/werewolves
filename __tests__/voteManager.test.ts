@@ -10,7 +10,7 @@ const makeRoom = (players: Record<string, Player>): Room => ({
   code: 'ABCD',
   hostId: 'a',
   phase: 'day',
-  phaseStep: 'vote',
+  phaseStep: null,
   dayCount: 1,
   players,
   minPlayers: 3,

@@ -13,7 +13,7 @@ type EnterRoomParams = {
 function bindLandingHandlers(
   socket: Socket<ServerToClientEvents, ClientToServerEvents>,
   renderLanding: () => void,
-  enterRoomFn: (params: EnterRoomParams, socket: Socket<ServerToClientEvents, ClientToServerEvents>) => void,
+  enterRoomFn: (params: EnterRoomParams) => void,
   attemptResume: (session: StoredSession) => void,
   saved: StoredSession | null
 ) {
@@ -26,13 +26,15 @@ function bindLandingHandlers(
     const name = (formData.get('name') || '').toString().trim();
     if (!name) return;
     socket.emit('createRoom', { name }, (payload) => {
-      if (payload && 'error' in payload && payload.error) {
-        pushNotification(payload.error);
+      if (!payload || 'error' in payload) {
+        if (payload?.error) {
+          pushNotification(payload.error);
+        }
         renderLanding();
         return;
       }
-      if (!payload?.roomCode || !payload.playerId) return;
-      enterRoomFn({ roomCode: payload.roomCode, playerId: payload.playerId, name }, socket);
+      if (!payload.roomCode || !payload.playerId) return;
+      enterRoomFn({ roomCode: payload.roomCode, playerId: payload.playerId, name });
     });
   });
 
@@ -43,13 +45,15 @@ function bindLandingHandlers(
     const code = (formData.get('code') || '').toString().trim().toUpperCase();
     if (!name || code.length !== 4) return;
     socket.emit('joinRoom', { name, code }, (payload) => {
-      if (payload && 'error' in payload && payload.error) {
-        pushNotification(payload.error);
+      if (!payload || 'error' in payload) {
+        if (payload?.error) {
+          pushNotification(payload.error);
+        }
         renderLanding();
         return;
       }
-      if (!payload?.roomCode || !payload.playerId) return;
-      enterRoomFn({ roomCode: payload.roomCode, playerId: payload.playerId, name }, socket);
+      if (!payload.roomCode || !payload.playerId) return;
+      enterRoomFn({ roomCode: payload.roomCode, playerId: payload.playerId, name });
     });
   });
 
@@ -69,3 +73,4 @@ function enterRoom({ roomCode, playerId, name }: EnterRoomParams, socket: Socket
 }
 
 export { bindLandingHandlers, enterRoom };
+export type { EnterRoomParams };

@@ -2,16 +2,16 @@ import { DEFAULT_ROLE_CONFIG, ROLE_INFO } from '../config/constants';
 import { shuffle } from '../utils/helpers';
 import type { Room, RoleConfig, Role } from '../../shared/types';
 
-function normalizeRoleConfig(config: Partial<RoleConfig> = {}) {
+function normalizeRoleConfig(config: Partial<RoleConfig> = {}): RoleConfig {
   const normalized: RoleConfig = { ...DEFAULT_ROLE_CONFIG };
-  for (const key of Object.keys(DEFAULT_ROLE_CONFIG) as Role[]) {
+  for (const key of Object.keys(DEFAULT_ROLE_CONFIG) as (keyof RoleConfig)[]) {
     const raw = Number(config[key]);
     normalized[key] = Number.isFinite(raw) && raw >= 0 ? Math.floor(raw) : DEFAULT_ROLE_CONFIG[key];
   }
   return normalized;
 }
 
-function validateCounts(room: Room) {
+function validateCounts(room: Room): { ok: true } | { error: string } {
   const players = Object.values(room.players);
   if (players.length < room.minPlayers) {
     return { error: `Need at least ${room.minPlayers} players` };

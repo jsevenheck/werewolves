@@ -195,7 +195,7 @@ describe('Edge Cases', () => {
   });
 
   describe('Hunter Edge Cases', () => {
-    test('disconnected hunter stores pending shot but does not get prompt', () => {
+    test('disconnected hunter does not get prompt and does not block winner check', () => {
       const room = {
         players: {
           hunter: {
@@ -231,11 +231,11 @@ describe('Edge Cases', () => {
       queueDeath(room, 'hunter', 'executed by vote');
       resolveDeaths(room, 'day', broadcastRoom, io as unknown as never);
 
-      expect(room.awaitingHunterShot).toBe('hunter');
+      expect(room.awaitingHunterShot).toBeNull();
       expect(emit).not.toHaveBeenCalled();
     });
 
-    test('hunter without socket stores pending shot but does not get prompt', () => {
+    test('hunter without socket does not get prompt and does not block winner check', () => {
       const room = {
         players: {
           hunter: {
@@ -270,7 +270,7 @@ describe('Edge Cases', () => {
       queueDeath(room, 'hunter', 'executed by vote');
       resolveDeaths(room, 'day', broadcastRoom, io as unknown as never);
 
-      expect(room.awaitingHunterShot).toBe('hunter');
+      expect(room.awaitingHunterShot).toBeNull();
     });
   });
 });
