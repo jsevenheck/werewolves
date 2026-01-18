@@ -90,7 +90,7 @@ function bindLobbyHandlers(socket, room) {
   });
   
   document.getElementById('start-game')?.addEventListener('click', () => {
-    if (!state || !state.playerId) {
+    if (!state.playerId) {
       return;
     }
     const playerId = state.playerId;
