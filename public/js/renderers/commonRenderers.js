@@ -48,9 +48,9 @@ function renderHeader() {
 }
 
 function renderPlayersPanel() {
-  if (!state.room) return '';
+  const room = state?.room;
+  if (!room) return '';
   
-  const room = state.room;
   const players = Array.isArray(room.players) ? room.players : [];
   
   const cards = players.map((player) => {
