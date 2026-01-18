@@ -1,14 +1,28 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "checkJs": true,
-    "noEmit": true,
+    "target": "ES2020",
     "module": "commonjs",
     "moduleResolution": "node",
-    "target": "ES2020",
     "lib": ["ES2020", "DOM"],
-    "skipLibCheck": true
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["src/shared/*"]
+    }
   },
-  "include": ["**/*.js"],
+  "include": [
+    "server.ts",
+    "src/**/*.ts",
+    "client/src/**/*.ts",
+    "__tests__/**/*.ts",
+    "e2e/**/*.ts",
+    "jest.setup.ts",
+    "vite.config.ts",
+    "playwright.config.ts"
+  ],
   "exclude": ["node_modules", "dist", "build", "coverage"]
 }

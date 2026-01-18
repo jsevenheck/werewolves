@@ -12,7 +12,7 @@
 **Issue**: Room model was missing explicit initialization for several fields  
 **Fix**: Added initialization for `wolfTarget`, `healedTarget`, `poisonTarget`, and `seerActed`  
 **Impact**: Prevents potential undefined behavior during game state operations  
-**File**: `src/server/models/room.js`
+**File**: `src/server/models/room.ts`
 
 ### 2. Enhanced Test Coverage
 **Added 9 new edge case tests** covering:
@@ -108,17 +108,17 @@
 ## Testing Validation
 
 ### Unit Tests (43 total, 100% passing)
-1. ✅ broadcastManager.test.js (sanitization)
-2. ✅ deathManager.test.js (death resolution, lovers, hunters, winners)
-3. ✅ edgeCases.test.js (room init, lover chains, votes, hunters)
-4. ✅ frontendSmoke.test.js (client-side basics)
-5. ✅ helpers.test.js (utility functions)
-6. ✅ lobbyHandlers.test.js (room creation, joining)
-7. ✅ nightManager.test.js (wolf votes, witch, seer)
-8. ✅ phaseManager.test.js (phase transitions)
-9. ✅ roleManager.test.js (role assignment, validation)
-10. ✅ socketHandlers.test.js (event handlers)
-11. ✅ voteManager.test.js (day voting, ties, joker)
+1. ✅ broadcastManager.test.ts (sanitization)
+2. ✅ deathManager.test.ts (death resolution, lovers, hunters, winners)
+3. ✅ edgeCases.test.ts (room init, lover chains, votes, hunters)
+4. ✅ frontendSmoke.test.ts (client-side basics)
+5. ✅ helpers.test.ts (utility functions)
+6. ✅ lobbyHandlers.test.ts (room creation, joining)
+7. ✅ nightManager.test.ts (wolf votes, witch, seer)
+8. ✅ phaseManager.test.ts (phase transitions)
+9. ✅ roleManager.test.ts (role assignment, validation)
+10. ✅ socketHandlers.test.ts (event handlers)
+11. ✅ voteManager.test.ts (day voting, ties, joker)
 
 ### Server Validation
 - ✅ Server starts successfully on port 3001

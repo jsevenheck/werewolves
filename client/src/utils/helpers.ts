@@ -1,0 +1,28 @@
+import type { RoomView } from '@shared/types';
+
+function notify(text: string) {
+  if (!text) return;
+  window.alert(text);
+}
+
+function pushNotification(text: string) {
+  notify(text);
+}
+
+function getPlayerName(room: RoomView, id: string) {
+  return room.players.find((p) => p.id === id)?.name || 'Unknown';
+}
+
+function formatPhase(room: RoomView) {
+  if (room.winner) return 'Ended';
+  if (room.phase === 'night' && room.phaseStep) {
+    return `${capitalize(room.phase)} (${capitalize(room.phaseStep)})`;
+  }
+  return capitalize(room.phase);
+}
+
+function capitalize(str = '') {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export { notify, pushNotification, getPlayerName, formatPhase, capitalize };
