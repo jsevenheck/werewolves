@@ -1,4 +1,5 @@
-FROM node:22-alpine
+# Build stage
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -7,7 +8,17 @@ RUN npm install
 
 COPY . .
 
-RUN npm run build && npm prune --omit=dev
+RUN npm run build
+
+# Production stage
+FROM node:22-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm install --omit=dev
+
+COPY --from=builder /app/dist ./dist
 
 ENV PORT=3000
 EXPOSE 3000
