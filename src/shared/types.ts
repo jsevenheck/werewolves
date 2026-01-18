@@ -18,10 +18,23 @@ export interface SeerResult {
   result: 'Werewolf' | 'Not Werewolf';
 }
 
+/**
+ * Represents a player in the game.
+ * 
+ * @remarks
+ * The `role` and `team` fields are `null` during the lobby phase, before roles are assigned.
+ * Once the game starts (after the lobby phase), these fields are populated via the `assignRoles` function.
+ * 
+ * When displaying a player's role (e.g., in death/vote announcements), 'villager' is used as the 
+ * default fallback if the role is somehow null, as villager is the base role filled in when 
+ * there aren't enough special roles configured.
+ */
 export interface Player {
   id: string;
   name: string;
+  /** The player's assigned role. Null during lobby phase, assigned when game starts. */
   role: Role | null;
+  /** The player's team affiliation. Null during lobby phase, assigned when game starts. */
   team: Team | null;
   alive: boolean;
   connected: boolean;

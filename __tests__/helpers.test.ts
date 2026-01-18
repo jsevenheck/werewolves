@@ -1,5 +1,5 @@
-import { sanitizeName, shuffle, createVoteState, addLog } from '../src/server/utils/helpers';
-import type { Room } from '../src/shared/types';
+import { sanitizeName, shuffle, createVoteState, addLog, getPlayerRoleLabel } from '../src/server/utils/helpers';
+import type { Room, Player } from '../src/shared/types';
 
 describe('helpers', () => {
   test('sanitizeName trims and caps at 20 characters', () => {
@@ -29,5 +29,44 @@ describe('helpers', () => {
     expect(room.logs).toHaveLength(1);
     expect(room.logs[0]).toMatchObject({ text: 'private text', publicText: 'public text' });
     expect(typeof room.logs[0].ts).toBe('number');
+  });
+
+  describe('getPlayerRoleLabel', () => {
+    test('returns role label for assigned roles', () => {
+      const player = { role: 'werewolf' } as Player;
+      expect(getPlayerRoleLabel(player)).toBe('Werewolf');
+    });
+
+    test('returns role label for seer', () => {
+      const player = { role: 'seer' } as Player;
+      expect(getPlayerRoleLabel(player)).toBe('Seer');
+    });
+
+    test('returns role label for villager', () => {
+      const player = { role: 'villager' } as Player;
+      expect(getPlayerRoleLabel(player)).toBe('Villager');
+    });
+
+    test('returns villager label when role is null (lobby phase)', () => {
+      const player = { role: null } as Player;
+      expect(getPlayerRoleLabel(player)).toBe('Villager');
+    });
+
+    test('handles all role types correctly', () => {
+      const roles: Array<{ role: 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'villager'; expected: string }> = [
+        { role: 'werewolf', expected: 'Werewolf' },
+        { role: 'seer', expected: 'Seer' },
+        { role: 'hunter', expected: 'Hunter' },
+        { role: 'witch', expected: 'Witch' },
+        { role: 'armor', expected: 'Armor' },
+        { role: 'joker', expected: 'Joker' },
+        { role: 'villager', expected: 'Villager' }
+      ];
+
+      roles.forEach(({ role, expected }) => {
+        const player = { role } as Player;
+        expect(getPlayerRoleLabel(player)).toBe(expected);
+      });
+    });
   });
 });

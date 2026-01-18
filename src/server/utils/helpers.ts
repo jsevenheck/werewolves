@@ -1,4 +1,5 @@
-import type { Room, VoteState } from '../../shared/types';
+import type { Room, VoteState, Role, Player } from '../../shared/types';
+import { ROLE_INFO } from '../config/constants';
 
 function sanitizeName(name: string) {
   return (name || '').trim().slice(0, 20);
@@ -38,10 +39,30 @@ function clearRoomTimers(room: Room) {
   }
 }
 
+/**
+ * Gets the display label for a player's role, with proper fallback behavior.
+ * 
+ * @param player - The player whose role label to retrieve
+ * @returns The role's display label from ROLE_INFO, or the role itself as fallback.
+ *          Returns 'villager' if the player's role is null (e.g., during lobby phase).
+ * 
+ * @remarks
+ * This function centralizes the fallback logic for displaying player roles.
+ * The 'villager' default is used because:
+ * - Roles are null during the lobby phase before assignment
+ * - Villager is the base role filled in when not enough special roles are configured
+ * - It provides a safe, meaningful default for any edge cases
+ */
+function getPlayerRoleLabel(player: Player): string {
+  const role: Role = player.role ?? 'villager';
+  return ROLE_INFO[role]?.label || role;
+}
+
 export {
   sanitizeName,
   shuffle,
   createVoteState,
   addLog,
-  clearRoomTimers
+  clearRoomTimers,
+  getPlayerRoleLabel
 };
