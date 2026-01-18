@@ -1,5 +1,5 @@
 import { sanitizeName, shuffle, createVoteState, addLog, getPlayerRoleLabel } from '../src/server/utils/helpers';
-import type { Room, Player } from '../src/shared/types';
+import type { Room, Player, Role } from '../src/shared/types';
 
 describe('helpers', () => {
   test('sanitizeName trims and caps at 20 characters', () => {
@@ -53,7 +53,7 @@ describe('helpers', () => {
     });
 
     test('handles all role types correctly', () => {
-      const roles: Array<{ role: 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'villager'; expected: string }> = [
+      const roles: Array<{ role: Role; expected: string }> = [
         { role: 'werewolf', expected: 'Werewolf' },
         { role: 'seer', expected: 'Seer' },
         { role: 'hunter', expected: 'Hunter' },

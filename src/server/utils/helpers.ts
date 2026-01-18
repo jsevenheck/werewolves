@@ -54,8 +54,7 @@ function clearRoomTimers(room: Room) {
  * - It provides a safe, meaningful default for any edge cases
  */
 function getPlayerRoleLabel(player: Player): string {
-  const role: Role = player.role ?? 'villager';
-  return ROLE_INFO[role]?.label || role;
+  return ROLE_INFO[player.role ?? 'villager']?.label || player.role || 'villager';
 }
 
 export {
