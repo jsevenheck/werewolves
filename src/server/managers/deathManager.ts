@@ -1,6 +1,5 @@
 import type { Server } from 'socket.io';
-import { ROLE_INFO } from '../config/constants';
-import { addLog, clearRoomTimers } from '../utils/helpers';
+import { addLog, clearRoomTimers, getPlayerRoleLabel } from '../utils/helpers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { NightDeathAnnouncement, Room } from '../../shared/types';
 
@@ -24,10 +23,11 @@ function resolveDeaths(
     player.alive = false;
     player.voteTarget = null;
     announced.push({ name: player.name, role: player.role });
+    const roleLabel = getPlayerRoleLabel(player);
     addLog(
       room,
-      `${player.name} died (${reason}). Role: ${ROLE_INFO[player.role ?? 'villager']?.label || player.role}.`,
-      `${player.name} died. Role: ${ROLE_INFO[player.role ?? 'villager']?.label || player.role}.`
+      `${player.name} died (${reason}). Role: ${roleLabel}.`,
+      `${player.name} died. Role: ${roleLabel}.`
     );
     if (player.role === 'hunter' && io) {
       const socket = player.socketId && io.sockets?.sockets?.get(player.socketId);

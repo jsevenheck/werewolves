@@ -1,6 +1,5 @@
 import type { Server } from 'socket.io';
-import { ROLE_INFO } from '../config/constants';
-import { addLog, clearRoomTimers } from '../utils/helpers';
+import { addLog, clearRoomTimers, getPlayerRoleLabel } from '../utils/helpers';
 import { schedulePhaseTransition } from './phaseManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { Room } from '../../shared/types';
@@ -60,10 +59,11 @@ function resolveDayKill(
 ) {
   const target = room.players[targetId];
   if (!target || !target.alive) return;
+  const roleLabel = getPlayerRoleLabel(target);
   addLog(
     room,
-    `${target.name} was voted out. Role: ${ROLE_INFO[target.role ?? 'villager']?.label || target.role}.`,
-    `${target.name} was voted out. Role: ${ROLE_INFO[target.role ?? 'villager']?.label || target.role}.`
+    `${target.name} was voted out. Role: ${roleLabel}.`,
+    `${target.name} was voted out. Role: ${roleLabel}.`
   );
   if (target.role === 'joker') {
     room.winner = { team: 'joker', reason: 'Joker was voted out and laughs last!' };
