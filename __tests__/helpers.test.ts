@@ -53,14 +53,14 @@ describe('helpers', () => {
     });
 
     test('handles all role types correctly', () => {
-      const roles: Array<{ role: Role; expected: string }> = [
-        { role: 'werewolf', expected: 'Werewolf' },
-        { role: 'seer', expected: 'Seer' },
-        { role: 'hunter', expected: 'Hunter' },
-        { role: 'witch', expected: 'Witch' },
-        { role: 'armor', expected: 'Armor' },
-        { role: 'joker', expected: 'Joker' },
-        { role: 'villager', expected: 'Villager' }
+      const roles = [
+        { role: 'werewolf' as Role, expected: 'Werewolf' },
+        { role: 'seer' as Role, expected: 'Seer' },
+        { role: 'hunter' as Role, expected: 'Hunter' },
+        { role: 'witch' as Role, expected: 'Witch' },
+        { role: 'armor' as Role, expected: 'Armor' },
+        { role: 'joker' as Role, expected: 'Joker' },
+        { role: 'villager' as Role, expected: 'Villager' }
       ];
 
       roles.forEach(({ role, expected }) => {
