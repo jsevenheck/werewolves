@@ -32,7 +32,8 @@
 
 ## E2E Tests
 ```bash
-npx playwright test
+npx playwright install  # First time only
+npm run test:e2e
 ```
 
 ## Basic Flow
