@@ -21,7 +21,7 @@ function resolveDeaths(room, context = 'general', broadcastRoom, io) {
     );
     if (player.role === 'hunter' && io) {
       room.awaitingHunterShot = player.id;
-      const socket = player.socketId && io.sockets.sockets.get(player.socketId);
+      const socket = player.socketId && io.sockets?.sockets?.get(player.socketId);
       if (socket && player.connected) {
         socket.emit('hunterPrompt', { roomCode: room.code });
       }
