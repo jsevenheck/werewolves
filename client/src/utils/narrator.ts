@@ -80,6 +80,7 @@ class Narrator {
       const cleanup = () => {
         unlockHowl.off('play');
         unlockHowl.off('playerror');
+        unlockHowl.unload();
       };
       unlockHowl.once('play', () => {
         this.unlocked = true;
@@ -106,6 +107,7 @@ class Narrator {
 
   private stop() {
     this.currentHowl?.stop();
+    this.currentHowl?.unload();
     this.currentHowl = null;
   }
 
