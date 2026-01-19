@@ -74,6 +74,7 @@ describe('phaseManager', () => {
     const room = makeRoom();
     room.phase = 'night';
     room.phaseStep = 'wolves';
+    room.seerActed = false;
     room.players = {
       s1: buildPlayer({ id: 's1', role: 'seer', alive: true })
     };
