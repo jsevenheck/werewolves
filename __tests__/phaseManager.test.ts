@@ -74,6 +74,9 @@ describe('phaseManager', () => {
     const room = makeRoom();
     room.phase = 'night';
     room.phaseStep = 'wolves';
+    room.players = {
+      s1: buildPlayer({ id: 's1', role: 'seer', alive: true })
+    };
     const broadcastRoom = jest.fn();
 
     scheduleNightStep(room, 'seer', broadcastRoom, undefined as never);
