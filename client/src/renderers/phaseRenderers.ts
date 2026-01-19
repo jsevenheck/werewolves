@@ -259,6 +259,7 @@ function renderVoteForm(room: RoomView) {
     : room.players.filter((p) => p.alive);
   const filtered = eligible.filter((player) => player.id !== state.playerId && player.alive);
   const pendingVote = state.pendingVote;
+  const abstainSelected = pendingVote === null;
   const options = filtered
     .map((player) => `<option value="${player.id}" ${pendingVote === player.id ? 'selected' : ''}>${player.name}</option>`)
     .join('');
@@ -271,7 +272,7 @@ function renderVoteForm(room: RoomView) {
         <span>Choose someone to eliminate</span>
         <select name="target" required>
           <option value="">Select a player</option>
-          <option value="__abstain__" ${pendingVote === null ? 'selected' : ''}>Abstain</option>
+          <option value="__abstain__" ${abstainSelected ? 'selected' : ''}>Abstain</option>
           ${options}
         </select>
       </label>
