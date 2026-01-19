@@ -1,4 +1,4 @@
-type HowlEvent = 'play' | 'playerror';
+type HowlEvent = 'play' | 'playerror' | 'loaderror';
 
 class MockHowl {
   static instances: MockHowl[] = [];
@@ -203,16 +203,20 @@ describe('narrator unlock', () => {
     expect(unlockHowl.stop).toHaveBeenCalled();
     expect(unlockHowl.off).toHaveBeenCalledWith('play');
     expect(unlockHowl.off).toHaveBeenCalledWith('playerror');
+    expect(unlockHowl.off).toHaveBeenCalledWith('loaderror');
   });
 
   test('unlock resolves false on playerror', async () => {
     const narrator = createNarrator({ initialEnabled: true, initialUnlocked: false });
     const unlockPromise = narrator.unlock();
-    const [unlockHowl] = MockHowl.instances;
+    const [initialHowl] = MockHowl.instances;
 
-    unlockHowl.trigger('playerror');
+    initialHowl.trigger('playerror');
+    const fallbackHowl = MockHowl.instances[1];
+    fallbackHowl.trigger('playerror');
     await expect(unlockPromise).resolves.toBe(false);
-    expect(unlockHowl.off).toHaveBeenCalledWith('play');
-    expect(unlockHowl.off).toHaveBeenCalledWith('playerror');
+    expect(initialHowl.off).toHaveBeenCalledWith('play');
+    expect(initialHowl.off).toHaveBeenCalledWith('playerror');
+    expect(initialHowl.off).toHaveBeenCalledWith('loaderror');
   });
 });
