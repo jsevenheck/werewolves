@@ -20,4 +20,4 @@
 
 ## Narrator Audio Assets
 
-Replace the placeholder MP3s in `client/public/audio/` with real recorded lines, keeping the same filenames (for example, `night_wolves.mp3` or `dayToNight.mp3`) so the narrator continues to map phase changes correctly. The code falls back to an embedded silent clip when files are missing, so adding the real audio files is required for audible narration.
+Place MP3 narrator clips in `client/public/audio/` with filenames matching the expected ones (for example, `night_wolves.mp3` or `dayToNight.mp3`) so the narrator continues to map phase changes correctly. The code falls back to an embedded silent clip when files are missing, so adding the real audio files is required for audible narration.
