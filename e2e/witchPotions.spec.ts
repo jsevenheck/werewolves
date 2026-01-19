@@ -59,6 +59,8 @@ test('witch can heal and poison across nights', async ({ browser }) => {
     const healBtn = witch.locator('#heal-btn');
     await expect(healBtn).toBeEnabled();
     await healBtn.click();
+    await expect(witch.locator('#skip-witch')).toBeVisible();
+    await witch.locator('#skip-witch').click();
 
     await host.waitForSelector('h3:has-text("Night Report")', { timeout: 15000 });
     const firstReport = host.locator('section.panel:has(h3:has-text("Night Report"))');
