@@ -49,7 +49,10 @@ function resolveDeaths(
   }
   if (context === 'day') {
     room.lastDayDeaths = announced;
-    room.lastDayMessage = announced.length ? null : room.lastDayMessage;
+    // If there were any day deaths, clear lastDayMessage since the death announcement itself is sufficient.
+    if (announced.length) {
+      room.lastDayMessage = null;
+    }
   }
   if (!room.awaitingHunterShot) {
     checkWinners(room);
