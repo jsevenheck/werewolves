@@ -2,6 +2,7 @@ import { state } from '../state/gameState';
 import type { ClientToServerEvents, ServerToClientEvents } from '@shared/events';
 import type { Socket } from 'socket.io-client';
 import { notify } from '../utils/helpers';
+import { narrator } from '../utils/narrator';
 
 function bindCommonHandlers(
   socket: Socket<ServerToClientEvents, ClientToServerEvents>,
@@ -32,6 +33,23 @@ function bindCommonHandlers(
       return;
     }
     socket.emit('restartGame', { roomCode: state.roomCode, playerId: state.playerId });
+  });
+
+  document.getElementById('toggle-narrator')?.addEventListener('click', async () => {
+    if (narrator.isEnabled()) {
+      narrator.setEnabled(false);
+      renderApp();
+      return;
+    }
+    const unlocked = await narrator.unlock();
+    if (!unlocked) {
+      narrator.setEnabled(false);
+      notify('Audio is blocked. Tap again and check your mute switch or volume.');
+      renderApp();
+      return;
+    }
+    narrator.setEnabled(true);
+    renderApp();
   });
 }
 

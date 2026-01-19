@@ -15,6 +15,7 @@ import { bindLandingHandlers, enterRoom } from './handlers/landingHandlers';
 import { bindPhaseHandlers } from './handlers/phaseHandlers';
 import { notify } from './utils/helpers';
 import { ROLE_DETAILS } from './config/constants';
+import { narrator } from './utils/narrator';
 import type { ClientToServerEvents, ServerToClientEvents } from '@shared/events';
 import type { RoomView, StoredSession } from '@shared/types';
 import type { EnterRoomParams } from './handlers/landingHandlers';
@@ -29,6 +30,9 @@ if (!appElCandidate) {
 const appEl = appElCandidate;
 
 initializeState();
+narrator.initFromStorage();
+
+let previousRoom: RoomView | null = null;
 
 if (state.storedSession) {
   attemptResume(state.storedSession);
@@ -43,6 +47,8 @@ socket.on('connect', () => {
 });
 
 socket.on('roomUpdate', (room) => {
+  narrator.handleRoomUpdate(previousRoom, room);
+  previousRoom = room;
   state.room = room;
   state.roomCode = room.code;
   if (!state.playerId && room.self) {
