@@ -64,7 +64,6 @@ class Narrator {
       }
       this.howls.clear();
       this.currentHowl = null;
-      this.lastAnnouncedKey = null;
     }
   }
 
