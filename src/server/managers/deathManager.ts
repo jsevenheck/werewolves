@@ -131,7 +131,7 @@ function resolveDeaths(
   }
   if (context === 'day') {
     if (announced.length) {
-      room.lastDayDeaths = room.lastDayDeaths.concat(announced);
+      room.lastDayDeaths = (room.lastDayDeaths || []).concat(announced);
       // If there were any day deaths, clear lastDayMessage since the death announcement itself is sufficient.
       room.lastDayMessage = null;
     }
