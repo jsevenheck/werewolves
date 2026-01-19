@@ -29,6 +29,8 @@ function createRoom(hostName: string, socketId: string, createPlayer: (name: str
     pendingDeaths: [],
     winner: null,
     lastNightDeaths: [],
+    lastDayDeaths: [],
+    lastDayMessage: null,
     awaitingHunterShot: null,
     logs: [],
     nextNightStep: null,

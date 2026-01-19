@@ -29,7 +29,7 @@ const ROLE_INFO: RoleInfo = {
   witch: {
     label: 'Witch',
     team: 'village',
-    description: 'You have one heal potion and one poison potion for the whole game. You may use at most one per night.'
+    description: 'You have one heal potion and one poison potion for the whole game. You may use both in the same night.'
   },
   armor: {
     label: 'Armor',

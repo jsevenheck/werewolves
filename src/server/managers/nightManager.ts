@@ -71,6 +71,7 @@ function advanceNightStep(room: Room, broadcastRoom: (room: Room) => void, io: S
 
 function handleWitchDecision(
   room: Room,
+  playerId: string | null,
   action: 'heal' | 'poison' | 'skip',
   targetId: string | null,
   broadcastRoom: (room: Room) => void,
@@ -88,8 +89,18 @@ function handleWitchDecision(
     room.witchState.poisonAvailable = false;
     room.poisonTarget = targetId;
   }
-  // skip action uses neither potion
-  scheduleNightStep(room, 'resolve', broadcastRoom, io);
+  if (action === 'skip') {
+    scheduleNightStep(room, 'resolve', broadcastRoom, io);
+    return;
+  }
+  const canHeal = room.witchState.healAvailable && !!room.wolfTarget;
+  const canPoison = room.witchState.poisonAvailable
+    && Object.values(room.players).some((p) => p.alive && p.id !== playerId);
+  if (!canHeal && !canPoison) {
+    scheduleNightStep(room, 'resolve', broadcastRoom, io);
+    return;
+  }
+  broadcastRoom(room);
 }
 
 function resolveNight(room: Room, broadcastRoom: (room: Room) => void, io: Server<ClientToServerEvents, ServerToClientEvents>) {

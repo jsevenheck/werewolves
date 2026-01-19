@@ -124,6 +124,7 @@ function setupSocketHandlers(
     if (!room || room.phase !== 'night' || room.phaseStep !== 'wolves') return;
     const player = room.players[playerId];
     if (!player || player.role !== 'werewolf' || !player.alive) return;
+    if (room.wolfVotes[playerId]) return;
     if (targetId && !room.players[targetId]?.alive) return;
     room.wolfVotes[playerId] = targetId || null;
     tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io), io);
@@ -149,7 +150,7 @@ function setupSocketHandlers(
     if (!room || room.phase !== 'night' || room.phaseStep !== 'witch') return;
     const player = room.players[playerId];
     if (!player || player.role !== 'witch' || !player.alive) return;
-    handleWitchDecision(room, action, targetId ?? null, (r) => broadcastRoom(r, io), io);
+    handleWitchDecision(room, playerId, action, targetId ?? null, (r) => broadcastRoom(r, io), io);
   });
 
   socket.on('hostSkipStep', ({ roomCode, playerId }) => {
@@ -230,7 +231,7 @@ function setupSocketHandlers(
     }
 
     if (room.phaseStep === 'witch') {
-      handleWitchDecision(room, 'skip', null, (r) => broadcastRoom(r, io), io);
+      handleWitchDecision(room, null, 'skip', null, (r) => broadcastRoom(r, io), io);
       return;
     }
   });
@@ -262,6 +263,45 @@ function setupSocketHandlers(
     queueDeath(room, targetId, 'shot by Hunter');
     room.awaitingHunterShot = null;
     resolveDeaths(room, 'general', (r) => broadcastRoom(r, io), io);
+  });
+
+  socket.on('restartGame', ({ roomCode, playerId }) => {
+    const room = getRoom(roomCode);
+    if (!room || room.hostId !== playerId) return;
+    if (room.phase !== 'ended') return;
+    clearRoomTimers(room);
+    room.phase = 'lobby';
+    room.phaseStep = null;
+    room.dayCount = 0;
+    room.lovers = null;
+    room.witchState = { healAvailable: true, poisonAvailable: true };
+    room.wolfVotes = {};
+    room.wolfTarget = null;
+    room.healedTarget = null;
+    room.poisonTarget = null;
+    room.seerActed = false;
+    room.voteState = createVoteState();
+    room.pendingDeaths = [];
+    room.winner = null;
+    room.lastNightDeaths = [];
+    room.lastDayDeaths = [];
+    room.lastDayMessage = null;
+    room.awaitingHunterShot = null;
+    room.logs = [];
+    room.nextNightStep = null;
+    room.phaseTransition = null;
+    room.phaseTimer = null;
+    Object.values(room.players).forEach((player) => {
+      player.role = null;
+      player.team = null;
+      player.alive = true;
+      player.voteTarget = null;
+      player.nightAction = null;
+      player.ready = false;
+      player.seerResult = null;
+    });
+    addLog(room, 'Game reset. Back to lobby.');
+    broadcastRoom(room, io);
   });
 
   socket.on('requestState', ({ roomCode, playerId }) => {

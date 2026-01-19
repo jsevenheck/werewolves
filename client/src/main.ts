@@ -14,6 +14,7 @@ import { bindCommonHandlers, updateHunterOverlay } from './handlers/commonHandle
 import { bindLandingHandlers, enterRoom } from './handlers/landingHandlers';
 import { bindPhaseHandlers } from './handlers/phaseHandlers';
 import { notify } from './utils/helpers';
+import { ROLE_DETAILS } from './config/constants';
 import type { ClientToServerEvents, ServerToClientEvents } from '@shared/events';
 import type { RoomView, StoredSession } from '@shared/types';
 import type { EnterRoomParams } from './handlers/landingHandlers';
@@ -96,7 +97,7 @@ function renderApp() {
     renderLogsPanel()
   ].filter(Boolean);
   appEl.innerHTML = sections.join('');
-  bindCommonHandlers(renderApp, renderLandingPage, clearSession);
+  bindCommonHandlers(socket, renderApp, renderLandingPage, clearSession);
   bindPhaseHandlers(socket, renderApp);
   updateHunterOverlay(socket);
 }
@@ -124,6 +125,18 @@ function renderPhaseSection(room: RoomView) {
       dayToNight: 'Night falls. Close your eyes...'
     };
     const message = transitionMessages[room.phaseTransition] || 'Next phase in a few seconds. Close your eyes if needed.';
+    const roleDetails = ROLE_DETAILS || {};
+    const dayResults = room.phaseTransition === 'dayToNight'
+      ? (() => {
+          if (room.lastDayDeaths.length) {
+            const items = room.lastDayDeaths
+              .map((entry) => `<li>${entry.name} (${roleDetails[entry.role || 'villager']?.name || entry.role || 'Unknown'})</li>`)
+              .join('');
+            return `<h3>Vote Results</h3><ul>${items}</ul>`;
+          }
+          return `<h3>Vote Results</h3><p>${room.lastDayMessage || 'No one was eliminated.'}</p>`;
+        })()
+      : '';
     const hostSkipButtonHtml = room.hostId === self?.id
       ? '<button id="host-skip-btn" type="button">Skip transition</button>'
       : '';
@@ -131,6 +144,7 @@ function renderPhaseSection(room: RoomView) {
       <section class="panel">
         <h2>Transitioning...</h2>
         <p>${message}</p>
+        ${dayResults}
         ${hostSkipButtonHtml}
       </section>
     `;

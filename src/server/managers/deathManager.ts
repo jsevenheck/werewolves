@@ -47,6 +47,10 @@ function resolveDeaths(
   if (announced.length && context === 'night') {
     room.lastNightDeaths = announced;
   }
+  if (context === 'day') {
+    room.lastDayDeaths = announced;
+    room.lastDayMessage = announced.length ? null : room.lastDayMessage;
+  }
   if (!room.awaitingHunterShot) {
     checkWinners(room);
   }

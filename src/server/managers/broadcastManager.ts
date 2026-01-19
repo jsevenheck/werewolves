@@ -65,6 +65,8 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
       yourVote: room.voteState.votes[viewerId]
     },
     lastNightDeaths: room.lastNightDeaths,
+    lastDayDeaths: room.lastDayDeaths,
+    lastDayMessage: room.lastDayMessage,
     awaitingHunterShot: room.awaitingHunterShot === viewerId,
     winner: room.winner,
     logs,

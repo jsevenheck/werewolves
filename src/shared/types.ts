@@ -102,6 +102,8 @@ export interface Room {
   pendingDeaths: PendingDeath[];
   winner: Winner | null;
   lastNightDeaths: NightDeathAnnouncement[];
+  lastDayDeaths: NightDeathAnnouncement[];
+  lastDayMessage: string | null;
   awaitingHunterShot: string | null;
   logs: RoomLog[];
   nextNightStep: NightStep;
@@ -161,6 +163,8 @@ export interface RoomView {
   seerResult: SeerResult | null;
   voteState: RoomViewVoteState;
   lastNightDeaths: NightDeathAnnouncement[];
+  lastDayDeaths: NightDeathAnnouncement[];
+  lastDayMessage: string | null;
   awaitingHunterShot: boolean;
   winner: Winner | null;
   logs: RoomViewLog[];

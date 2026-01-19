@@ -20,6 +20,8 @@ function startNight(room: Room) {
   room.seerActed = false;
   room.pendingDeaths = [];
   room.lastNightDeaths = [];
+  room.lastDayDeaths = [];
+  room.lastDayMessage = null;
   room.voteState = createVoteState();
   room.awaitingHunterShot = null;
 }
@@ -43,6 +45,9 @@ function scheduleNightStep(
     if (nextStep === 'resolve') {
       const { resolveNight } = require('./nightManager');
       resolveNight(room, broadcastRoom, io);
+    } else if (nextStep === 'seer' || nextStep === 'witch') {
+      const { advanceNightStep } = require('./nightManager');
+      advanceNightStep(room, broadcastRoom, io);
     } else {
       broadcastRoom(room);
     }

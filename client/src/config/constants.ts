@@ -10,7 +10,7 @@ const ROLE_DETAILS: Record<Role, RoleDetail> = {
   werewolf: {
     name: 'Werewolf',
     description: 'Coordinate at night to eat one villager.',
-    color: '#f97316'
+    color: '#ef4444'
   },
   seer: {
     name: 'Seer',
@@ -20,11 +20,11 @@ const ROLE_DETAILS: Record<Role, RoleDetail> = {
   hunter: {
     name: 'Hunter',
     description: 'When you die, immediately shoot someone else.',
-    color: '#f87171'
+    color: '#f97316'
   },
   witch: {
     name: 'Witch',
-    description: 'Single-use heal & poison potions. At most one per night.',
+    description: 'Single-use heal & poison potions. You may use both in the same night.',
     color: '#a855f7'
   },
   armor: {
