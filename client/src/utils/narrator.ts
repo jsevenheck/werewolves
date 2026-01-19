@@ -142,7 +142,6 @@ class Narrator {
   private stop() {
     if (this.currentHowl) {
       this.currentHowl.stop();
-      this.currentHowl.unload();
       this.currentHowl = null;
     }
   }
