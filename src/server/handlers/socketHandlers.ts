@@ -124,7 +124,13 @@ function setupSocketHandlers(
     if (!room || room.phase !== 'night' || room.phaseStep !== 'wolves') return;
     const player = room.players[playerId];
     if (!player || player.role !== 'werewolf' || !player.alive) return;
-    if (room.wolfVotes[playerId]) return;
+    if (room.wolfVotes[playerId]) {
+      // Inform the client that this vote was rejected because the player has already voted.
+      (socket as any).emit('wolfVoteRejected', {
+        reason: 'already_voted',
+      });
+      return;
+    }
     if (targetId && !room.players[targetId]?.alive) return;
     room.wolfVotes[playerId] = targetId || null;
     tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io), io);
