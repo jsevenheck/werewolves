@@ -354,7 +354,7 @@ function setupSocketHandlers(
     if (!player) return;
     player.connected = false;
     addLog(room, `${player.name} disconnected.`);
-    if (room.phase === 'day' && player.alive) {
+    if (room.phase === 'day' && player.alive && player.voteTarget != null) {
       tryResolveDayVote(room, (r) => broadcastRoom(r, io), io);
     }
     broadcastRoom(room, io);
