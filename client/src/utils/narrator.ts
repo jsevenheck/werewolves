@@ -72,46 +72,56 @@ class Narrator {
     if (this.unlocked) return true;
     return new Promise((resolve) => {
       let attemptedFallback = false;
-      const unlockHowl = new Howl({
-        src: '/audio/lobby.mp3',
-        html5: true,
-        preload: 'metadata',
-        volume: 0
-      });
+      let unlockHowl: Howl;
+      const createUnlockHowl = (src: string) =>
+        new Howl({
+          src,
+          html5: true,
+          preload: 'metadata',
+          volume: 0
+        });
+      unlockHowl = createUnlockHowl('/audio/lobby.mp3');
       const tryFallback = (playAfterSwap: boolean) => {
         if (attemptedFallback) return;
         attemptedFallback = true;
-        unlockHowl.src(PLACEHOLDER_AUDIO);
+        const fallbackHowl = createUnlockHowl(PLACEHOLDER_AUDIO);
+        unlockHowl.unload();
+        unlockHowl = fallbackHowl;
+        attachListeners(unlockHowl);
         if (playAfterSwap) {
           unlockHowl.play();
-        } else {
-          unlockHowl.load();
-        }
-      };
-      const cleanup = () => {
-        unlockHowl.off('play');
-        unlockHowl.off('playerror');
-        unlockHowl.off('loaderror');
-      };
-      unlockHowl.once('play', () => {
-        this.unlocked = true;
-        unlockHowl.stop();
-        cleanup();
-        unlockHowl.unload();
-        resolve(true);
-      });
-      unlockHowl.once('loaderror', () => {
-        tryFallback(false);
-      });
-      unlockHowl.once('playerror', () => {
-        if (!attemptedFallback) {
-          tryFallback(true);
           return;
         }
-        cleanup();
-        unlockHowl.unload();
-        resolve(false);
-      });
+        unlockHowl.load();
+      };
+      const cleanup = (howl: Howl) => {
+        howl.off('play');
+        howl.off('playerror');
+        howl.off('loaderror');
+      };
+      const attachListeners = (howl: Howl) => {
+        howl.once('play', () => {
+          this.unlocked = true;
+          howl.stop();
+          cleanup(howl);
+          howl.unload();
+          resolve(true);
+        });
+        howl.once('loaderror', () => {
+          cleanup(howl);
+          tryFallback(false);
+        });
+        howl.once('playerror', () => {
+          cleanup(howl);
+          if (!attemptedFallback) {
+            tryFallback(true);
+            return;
+          }
+          howl.unload();
+          resolve(false);
+        });
+      };
+      attachListeners(unlockHowl);
       unlockHowl.play();
     });
   }
@@ -144,7 +154,7 @@ class Narrator {
     const existing = this.howls.get(key);
     if (existing) return existing;
     let attemptedFallback = false;
-    const howl = new Howl({
+    let howl = new Howl({
       src: `/audio/${key}.mp3`,
       html5: true,
       preload: 'metadata',
@@ -153,19 +163,31 @@ class Narrator {
     const tryFallback = (playAfterSwap: boolean) => {
       if (attemptedFallback) return;
       attemptedFallback = true;
-      howl.src(PLACEHOLDER_AUDIO);
+      const fallbackHowl = new Howl({
+        src: PLACEHOLDER_AUDIO,
+        html5: true,
+        preload: 'metadata',
+        volume: DEFAULT_VOLUME
+      });
+      this.howls.set(key, fallbackHowl);
+      const previousHowl = howl;
+      howl = fallbackHowl;
+      previousHowl.unload();
       if (playAfterSwap) {
-        howl.play();
-      } else {
-        howl.load();
+        fallbackHowl.play();
+        return;
       }
+      fallbackHowl.load();
     };
-    howl.once('loaderror', () => {
-      tryFallback(false);
-    });
-    howl.once('playerror', () => {
-      tryFallback(true);
-    });
+    const attachListeners = (targetHowl: Howl) => {
+      targetHowl.once('loaderror', () => {
+        tryFallback(false);
+      });
+      targetHowl.once('playerror', () => {
+        tryFallback(true);
+      });
+    };
+    attachListeners(howl);
     this.howls.set(key, howl);
     return howl;
   }
