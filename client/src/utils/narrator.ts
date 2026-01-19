@@ -108,6 +108,11 @@ class Narrator {
         });
         howl.once('loaderror', () => {
           cleanup(howl);
+          if (attemptedFallback) {
+            howl.unload();
+            resolve(false);
+            return;
+          }
           tryFallback(true);
         });
         howl.once('playerror', () => {
