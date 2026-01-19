@@ -56,7 +56,15 @@ class Narrator {
       this.storage.setItem(STORAGE_KEY, String(next));
     }
     if (!next) {
+      // Stop any currently playing narration
       this.stop();
+      // Unload and clear all cached Howl instances to free memory
+      for (const howl of this.howls.values()) {
+        howl.unload();
+      }
+      this.howls.clear();
+      this.currentHowl = null;
+      this.lastAnnouncedKey = null;
     }
   }
 
