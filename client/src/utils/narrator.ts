@@ -108,7 +108,7 @@ class Narrator {
         });
         howl.once('loaderror', () => {
           cleanup(howl);
-          tryFallback(false);
+          tryFallback(true);
         });
         howl.once('playerror', () => {
           cleanup(howl);
