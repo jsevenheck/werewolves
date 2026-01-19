@@ -128,9 +128,11 @@ test('witch can heal and poison in the same night', async ({ browser }) => {
     await poisonBtn.click();
 
     await host.waitForSelector('h3:has-text("Night Report")', { timeout: 15000 });
-    const report = host.locator('section.panel:has(h3:has-text("Night Report"))');
-    await expect(report).toContainText(names[3]);
-    await expect(report).not.toContainText(names[2]);
+    const reportSummary = host
+      .locator('h3:has-text("Night Report")')
+      .locator('xpath=following-sibling::*[1]');
+    await expect(reportSummary).toContainText(names[3]);
+    await expect(reportSummary).not.toContainText(names[2]);
   } finally {
     await closeContexts(contexts);
   }
