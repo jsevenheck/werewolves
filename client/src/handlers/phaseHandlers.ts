@@ -251,7 +251,7 @@ function bindDayHandlers(socket: Socket<ServerToClientEvents, ClientToServerEven
     voteSelect.addEventListener('change', () => {
       voteSubmit.disabled = !voteSelect.value;
       const selected = voteSelect.value;
-      state.pendingVote = selected === '__abstain__' ? null : (selected ? selected : undefined);
+      state.pendingVote = selected === '__abstain__' ? null : (selected ? selected : null);
     });
   }
 
