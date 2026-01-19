@@ -45,7 +45,7 @@ function setupSocketHandlers(
     player.connected = true;
     setSocketIndex(socket.id, roomCode, playerId);
     cb?.({ ok: true });
-    broadcastRoom(room, io);
+    sendStateToPlayer(room, player, io);
   });
 
   socket.on('updateRoleConfig', ({ roomCode, playerId, config }) => {
