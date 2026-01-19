@@ -97,11 +97,8 @@ function handleWitchDecision(
   const alivePlayers = Object.values(room.players).filter((p) => p.alive);
   const canPoison =
     room.witchState.poisonAvailable &&
-    (
-      playerId
-        ? alivePlayers.some((p) => p.id !== playerId)
-        : alivePlayers.length > 1
-    );
+    !!playerId &&
+    alivePlayers.some((p) => p.id !== playerId);
   if (!canHeal && !canPoison) {
     scheduleNightStep(room, 'resolve', broadcastRoom, io);
     return;
