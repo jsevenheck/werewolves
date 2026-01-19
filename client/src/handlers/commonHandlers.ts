@@ -35,21 +35,42 @@ function bindCommonHandlers(
     socket.emit('restartGame', { roomCode: state.roomCode, playerId: state.playerId });
   });
 
-  document.getElementById('toggle-narrator')?.addEventListener('click', async () => {
+  const toggleNarratorBtn = document.getElementById('toggle-narrator');
+  let narratorUnlockInProgress = false;
+  toggleNarratorBtn?.addEventListener('click', async () => {
+    if (narratorUnlockInProgress) {
+      return;
+    }
+
     if (narrator.isEnabled()) {
       narrator.setEnabled(false);
       renderApp();
       return;
     }
-    const unlocked = await narrator.unlock();
-    if (!unlocked) {
-      narrator.setEnabled(false);
-      notify('Audio is blocked. Tap again and check your mute switch or volume.');
-      renderApp();
-      return;
+
+    narratorUnlockInProgress = true;
+    const buttonElement =
+      toggleNarratorBtn instanceof HTMLButtonElement ? toggleNarratorBtn : null;
+    if (buttonElement) {
+      buttonElement.disabled = true;
     }
-    narrator.setEnabled(true);
-    renderApp();
+
+    try {
+      const unlocked = await narrator.unlock();
+      if (!unlocked) {
+        narrator.setEnabled(false);
+        notify('Audio is blocked. Tap again and check your mute switch or volume.');
+        renderApp();
+        return;
+      }
+      narrator.setEnabled(true);
+      renderApp();
+    } finally {
+      narratorUnlockInProgress = false;
+      if (buttonElement) {
+        buttonElement.disabled = false;
+      }
+    }
   });
 }
 
