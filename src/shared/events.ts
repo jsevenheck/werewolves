@@ -28,6 +28,7 @@ export interface ClientToServerEvents {
 export interface ServerToClientEvents {
   roomUpdate: (room: RoomView) => void;
   hunterPrompt: (payload: { roomCode: string }) => void;
+  wolfVoteRejected: (payload: { reason: 'already_voted' }) => void;
 }
 
 export interface InterServerEvents {

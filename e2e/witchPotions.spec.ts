@@ -59,6 +59,10 @@ test('witch can heal and poison across nights', async ({ browser }) => {
     const healBtn = witch.locator('#heal-btn');
     await expect(healBtn).toBeEnabled();
     await healBtn.click();
+    const poisonBtn = witch.locator('#poison-btn');
+    const poisonSelect = witch.locator('#poison-select');
+    await expect(poisonBtn).toBeEnabled();
+    await expect(poisonSelect).toBeEnabled();
     await expect(witch.locator('#skip-witch')).toBeVisible();
     await witch.locator('#skip-witch').click();
 

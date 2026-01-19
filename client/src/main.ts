@@ -66,6 +66,14 @@ socket.on('hunterPrompt', () => {
   renderApp();
 });
 
+socket.on('wolfVoteRejected', (payload) => {
+  if (payload.reason === 'already_voted') {
+    notify('You already voted.');
+  } else {
+    notify('Wolf vote rejected.');
+  }
+});
+
 function renderLandingPage() {
   appEl.innerHTML = renderLanding();
   const saved = loadSession();

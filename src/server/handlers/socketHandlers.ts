@@ -126,9 +126,7 @@ function setupSocketHandlers(
     if (!player || player.role !== 'werewolf' || !player.alive) return;
     if (room.wolfVotes[playerId]) {
       // Inform the client that this vote was rejected because the player has already voted.
-      (socket as any).emit('wolfVoteRejected', {
-        reason: 'already_voted',
-      });
+      socket.emit('wolfVoteRejected', { reason: 'already_voted' });
       return;
     }
     if (targetId && !room.players[targetId]?.alive) return;
