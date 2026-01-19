@@ -36,6 +36,7 @@ const makeRoom = (): Room => ({
   phaseTransition: null,
   phaseTimer: null,
   transitionTimer: null,
+  hunterShotTimer: null,
   lastNightDeaths: [],
   lastDayDeaths: [],
   lastDayMessage: null,

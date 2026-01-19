@@ -29,6 +29,7 @@ const makeRoom = (players: Record<string, Player>): Room => ({
   phaseTransition: 'dayToNight',
   phaseTimer: null,
   transitionTimer: null,
+  hunterShotTimer: null,
   lastNightDeaths: [],
   lastDayDeaths: [],
   lastDayMessage: null,
@@ -90,6 +91,23 @@ describe('voteManager', () => {
     expect(room.logs[room.logs.length - 1].text).toBe('Majority abstained. No one eliminated.');
     expect(room.lastDayDeaths).toEqual([]);
     expect(room.lastDayMessage).toBe('No one was eliminated.');
+  });
+
+  test('tryResolveDayVote counts disconnected players as abstain after others vote', () => {
+    const players = {
+      a: buildPlayer({ id: 'a', alive: true, connected: true }),
+      b: buildPlayer({ id: 'b', alive: true, connected: true }),
+      c: buildPlayer({ id: 'c', alive: true, connected: false })
+    };
+    const room = makeRoom(players);
+    room.voteState.votes = { a: null, b: null };
+    const broadcastRoom = jest.fn();
+
+    tryResolveDayVote(room, broadcastRoom, undefined as never);
+
+    expect(room.voteState.votes.c).toBeNull();
+    expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'dayToNight', broadcastRoom);
+    expect(room.logs[room.logs.length - 1].text).toBe('Vote skipped. No one eliminated.');
   });
 
   test('resolveDayKill ends the game when Joker is voted out', () => {

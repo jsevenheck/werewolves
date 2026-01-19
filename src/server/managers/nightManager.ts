@@ -97,6 +97,7 @@ function handleWitchDecision(
   const alivePlayers = Object.values(room.players).filter((p) => p.alive);
   const canPoison =
     room.witchState.poisonAvailable &&
+    // Only allow poison when a real witch is acting; host skips pass null.
     !!playerId &&
     alivePlayers.some((p) => p.id !== playerId);
   if (!canHeal && !canPoison) {

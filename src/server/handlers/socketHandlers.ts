@@ -45,7 +45,10 @@ function setupSocketHandlers(
     player.connected = true;
     setSocketIndex(socket.id, roomCode, playerId);
     cb?.({ ok: true });
-    sendStateToPlayer(room, player, io);
+    broadcastRoom(room, io);
+    if (room.awaitingHunterShot === playerId && player.role === 'hunter' && !player.alive) {
+      socket.emit('hunterPrompt', { roomCode: room.code });
+    }
   });
 
   socket.on('updateRoleConfig', ({ roomCode, playerId, config }) => {
@@ -264,6 +267,10 @@ function setupSocketHandlers(
     if (!player || player.role !== 'hunter') return;
     if (player.socketId !== socket.id) return;
     if (room.awaitingHunterShot !== playerId) return;
+    if (room.hunterShotTimer) {
+      clearTimeout(room.hunterShotTimer);
+      room.hunterShotTimer = null;
+    }
     const target = room.players[targetId];
     if (!target || !target.alive) return;
     queueDeath(room, targetId, 'shot by Hunter');
@@ -298,6 +305,7 @@ function setupSocketHandlers(
     room.phaseTransition = null;
     room.phaseTimer = null;
     room.transitionTimer = null;
+    room.hunterShotTimer = null;
     Object.values(room.players).forEach((player) => {
       player.role = null;
       player.team = null;

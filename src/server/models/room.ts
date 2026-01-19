@@ -36,7 +36,8 @@ function createRoom(hostName: string, socketId: string, createPlayer: (name: str
     nextNightStep: null,
     transitionTimer: null,
     phaseTransition: null,
-    phaseTimer: null
+    phaseTimer: null,
+    hunterShotTimer: null
   };
   const player = createPlayer(hostName, socketId, true);
   room.players[player.id] = player;

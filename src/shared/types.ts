@@ -110,6 +110,7 @@ export interface Room {
   transitionTimer: NodeJS.Timeout | null;
   phaseTransition: PhaseTransition;
   phaseTimer: NodeJS.Timeout | null;
+  hunterShotTimer: NodeJS.Timeout | null;
 }
 
 export interface PlayerPublic {

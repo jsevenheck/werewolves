@@ -287,7 +287,8 @@ describe('socketHandlers restartGame', () => {
       nextNightStep: 'resolve',
       phaseTransition: 'dayToNight',
       phaseTimer: 1,
-      transitionTimer: 2
+      transitionTimer: 2,
+      hunterShotTimer: 3
     } as unknown as Room;
     (getRoom as jest.Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
@@ -316,6 +317,7 @@ describe('socketHandlers restartGame', () => {
     expect(room.phaseTransition).toBeNull();
     expect(room.phaseTimer).toBeNull();
     expect(room.transitionTimer).toBeNull();
+    expect(room.hunterShotTimer).toBeNull();
     expect(room.logs[room.logs.length - 1].text).toBe('Game reset. Back to lobby.');
     Object.values(room.players).forEach((player) => {
       expect(player.role).toBeNull();

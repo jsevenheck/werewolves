@@ -28,7 +28,8 @@ const makeRoom = (): Room => ({
   nextNightStep: null,
   transitionTimer: null,
   phaseTransition: null,
-  phaseTimer: null
+  phaseTimer: null,
+  hunterShotTimer: null
 });
 
 const buildPlayer = (overrides: Partial<Player>): Player => ({

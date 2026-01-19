@@ -1,5 +1,6 @@
 import type { Server } from 'socket.io';
 import { addLog, clearRoomTimers, getPlayerRoleLabel } from '../utils/helpers';
+import { HUNTER_SHOT_WINDOW_MS } from '../config/constants';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { NightDeathAnnouncement, Room } from '../../shared/types';
 
@@ -29,11 +30,36 @@ function resolveDeaths(
       `${player.name} died (${reason}). Role: ${roleLabel}.`,
       `${player.name} died. Role: ${roleLabel}.`
     );
-    if (player.role === 'hunter' && io) {
-      const socket = player.socketId && io.sockets?.sockets?.get(player.socketId);
+    if (player.role === 'hunter') {
+      room.awaitingHunterShot = player.id;
+      if (room.hunterShotTimer) {
+        clearTimeout(room.hunterShotTimer);
+        room.hunterShotTimer = null;
+      }
+      const socket = io && player.socketId && io.sockets?.sockets?.get(player.socketId);
       if (socket && player.connected) {
-        room.awaitingHunterShot = player.id;
         socket.emit('hunterPrompt', { roomCode: room.code });
+      } else {
+        room.hunterShotTimer = setTimeout(() => {
+          room.hunterShotTimer = null;
+          if (room.awaitingHunterShot !== player.id) return;
+          room.awaitingHunterShot = null;
+          if (!room.winner) {
+            checkWinners(room);
+          }
+          if (!room.winner) {
+            const transition =
+              room.phase === 'night' ? 'nightToDay' :
+              room.phase === 'day' ? 'dayToNight' :
+              null;
+            if (transition) {
+              const { schedulePhaseTransition } = require('./phaseManager');
+              schedulePhaseTransition(room, transition, broadcastRoom);
+              return;
+            }
+          }
+          broadcastRoom(room);
+        }, HUNTER_SHOT_WINDOW_MS);
       }
     }
     if (room.lovers && (room.lovers.aId === playerId || room.lovers.bId === playerId)) {
