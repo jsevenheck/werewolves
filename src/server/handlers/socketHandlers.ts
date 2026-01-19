@@ -295,6 +295,7 @@ function setupSocketHandlers(
     room.nextNightStep = null;
     room.phaseTransition = null;
     room.phaseTimer = null;
+    room.transitionTimer = null;
     Object.values(room.players).forEach((player) => {
       player.role = null;
       player.team = null;
