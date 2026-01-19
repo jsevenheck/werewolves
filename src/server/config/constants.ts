@@ -5,7 +5,7 @@ const PORT = process.env.PORT ?? 3001;
 const IS_E2E = process.env.E2E_TESTS === '1';
 const NIGHT_DELAY_MS = IS_E2E ? 0 : 3000;
 const PHASE_DELAY_MS = IS_E2E ? 0 : 3000;
-const HUNTER_SHOT_WINDOW_MS = 5000;
+const HUNTER_SHOT_WINDOW_MS = IS_E2E ? 0 : 5000;
 const ROOM_CODE = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 4);
 const PLAYER_ID = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 12);
 
