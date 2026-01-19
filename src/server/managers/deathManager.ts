@@ -130,9 +130,9 @@ function resolveDeaths(
     room.lastNightDeaths = announced;
   }
   if (context === 'day') {
-    room.lastDayDeaths = announced;
-    // If there were any day deaths, clear lastDayMessage since the death announcement itself is sufficient.
     if (announced.length) {
+      room.lastDayDeaths = room.lastDayDeaths.concat(announced);
+      // If there were any day deaths, clear lastDayMessage since the death announcement itself is sufficient.
       room.lastDayMessage = null;
     }
   }
