@@ -105,8 +105,11 @@ class Narrator {
   }
 
   private stop() {
-    this.currentHowl?.stop();
-    this.currentHowl = null;
+    if (this.currentHowl) {
+      this.currentHowl.stop();
+      this.currentHowl.unload();
+      this.currentHowl = null;
+    }
   }
 
   private playWithHowler(key: string) {
