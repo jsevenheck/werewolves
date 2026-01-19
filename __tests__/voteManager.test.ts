@@ -109,6 +109,7 @@ describe('voteManager', () => {
     expect(room.voteState.votes.c).toBeNull();
     expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'dayToNight', broadcastRoom);
     expect(room.logs[room.logs.length - 1].text).toBe('Vote skipped. No one eliminated.');
+    expect(room.lastDayMessage).toBe('No one was eliminated.');
   });
 
   test('resolveDayKill ends the game when Joker is voted out', () => {

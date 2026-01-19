@@ -8,6 +8,18 @@ function queueDeath(room: Room, playerId: string, reason: string) {
   room.pendingDeaths.push({ playerId, reason });
 }
 
+function shiftNextValidHunter(room: Room) {
+  while (room.hunterShotQueue.length) {
+    const nextId = room.hunterShotQueue.shift();
+    if (!nextId) continue;
+    const hunter = room.players[nextId];
+    if (hunter && hunter.role === 'hunter' && !hunter.alive) {
+      return nextId;
+    }
+  }
+  return null;
+}
+
 function startHunterShot(
   room: Room,
   hunterId: string,
@@ -29,11 +41,9 @@ function startHunterShot(
     room.hunterShotTimer = null;
     if (room.awaitingHunterShot !== hunterId) return;
     room.awaitingHunterShot = null;
-    if (room.hunterShotQueue.length) {
-      const nextId = room.hunterShotQueue.shift();
-      if (nextId) {
-        startHunterShot(room, nextId, broadcastRoom, io, true);
-      }
+    const nextId = shiftNextValidHunter(room);
+    if (nextId) {
+      startHunterShot(room, nextId, broadcastRoom, io, true);
       return;
     }
     if (!room.winner) {
@@ -65,7 +75,7 @@ function startNextHunterShot(
   if (room.awaitingHunterShot || !room.hunterShotQueue.length) {
     return false;
   }
-  const nextId = room.hunterShotQueue.shift();
+  const nextId = shiftNextValidHunter(room);
   if (!nextId) {
     return false;
   }
@@ -102,7 +112,7 @@ function resolveDeaths(
         room.hunterShotQueue.push(player.id);
       }
       if (!room.awaitingHunterShot) {
-        const nextId = room.hunterShotQueue.shift();
+        const nextId = shiftNextValidHunter(room);
         if (nextId) {
           startHunterShot(room, nextId, broadcastRoom, io, false);
         }
