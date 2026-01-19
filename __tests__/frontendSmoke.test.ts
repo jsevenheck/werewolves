@@ -25,7 +25,7 @@ describe('frontend smoke', () => {
     expect(typeof bindPhaseHandlers).toBe('function');
   });
 
-  test('renderDaySection uses pending vote fallback', () => {
+  test('renderDaySection keeps pending vote in dropdown without confirmation', () => {
     const room = {
       code: 'ABCD',
       phase: 'day',
@@ -59,7 +59,8 @@ describe('frontend smoke', () => {
     } as RoomView;
 
     const html = renderDaySection(room, { alive: true, id: 'p1', role: null, team: null });
-    expect(html).toContain('Vote submitted');
-    expect(html).toContain('Bob');
+    expect(html).toContain('<form id="vote-form"');
+    expect(html).not.toContain('Vote submitted');
+    expect(html).toContain('<option value="p2" selected>Bob</option>');
   });
 });
