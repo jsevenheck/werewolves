@@ -1,4 +1,37 @@
-jest.mock('howler', () => ({ Howl: class {} }));
+type HowlEvent = 'play' | 'playerror';
+
+class MockHowl {
+  static instances: MockHowl[] = [];
+  static reset() {
+    MockHowl.instances = [];
+  }
+
+  readonly options: Record<string, unknown>;
+  private readonly handlers = new Map<HowlEvent, Array<() => void>>();
+  off = jest.fn((_event: HowlEvent) => this);
+  play = jest.fn(() => 1);
+  stop = jest.fn();
+  unload = jest.fn();
+
+  constructor(options: Record<string, unknown>) {
+    this.options = options;
+    MockHowl.instances.push(this);
+  }
+
+  once(event: HowlEvent, handler: () => void) {
+    const existing = this.handlers.get(event) ?? [];
+    this.handlers.set(event, [...existing, handler]);
+    return this;
+  }
+
+  trigger(event: HowlEvent) {
+    const handlers = this.handlers.get(event) ?? [];
+    this.handlers.delete(event);
+    handlers.forEach((handler) => handler());
+  }
+}
+
+jest.mock('howler', () => ({ Howl: MockHowl }));
 
 import { computeNarrationKey, createNarrator } from '../client/src/utils/narrator';
 import type { RoomView } from '../src/shared/types';
@@ -52,6 +85,10 @@ const buildRoom = (overrides: RoomOverrides = {}): RoomView => ({
 });
 
 describe('computeNarrationKey', () => {
+  beforeEach(() => {
+    MockHowl.reset();
+  });
+
   test('phaseTransition overrides phase and step', () => {
     const room = buildRoom({
       phase: 'night',
@@ -73,6 +110,10 @@ describe('computeNarrationKey', () => {
 });
 
 describe('narrator dedupe', () => {
+  beforeEach(() => {
+    MockHowl.reset();
+  });
+
   test('does not re-announce the same key', () => {
     const playClip = jest.fn();
     const narrator = createNarrator({
@@ -105,5 +146,65 @@ describe('narrator dedupe', () => {
 
     expect(playClip).toHaveBeenCalledTimes(2);
     expect(playClip).toHaveBeenLastCalledWith('night_wolves');
+  });
+});
+
+describe('narrator persistence', () => {
+  beforeEach(() => {
+    MockHowl.reset();
+  });
+
+  test('initFromStorage loads enabled state', () => {
+    const storage = {
+      getItem: jest.fn(() => 'true'),
+      setItem: jest.fn()
+    };
+    const narrator = createNarrator({ storage, initialEnabled: false });
+
+    narrator.initFromStorage();
+
+    expect(storage.getItem).toHaveBeenCalledWith('werewolves_narrator_enabled');
+    expect(narrator.isEnabled()).toBe(true);
+  });
+
+  test('setEnabled updates storage', () => {
+    const storage = {
+      getItem: jest.fn(),
+      setItem: jest.fn()
+    };
+    const narrator = createNarrator({ storage, initialEnabled: false });
+
+    narrator.setEnabled(true);
+
+    expect(storage.setItem).toHaveBeenCalledWith('werewolves_narrator_enabled', 'true');
+  });
+});
+
+describe('narrator unlock', () => {
+  beforeEach(() => {
+    MockHowl.reset();
+  });
+
+  test('unlock resolves true on play', async () => {
+    const narrator = createNarrator({ initialEnabled: true, initialUnlocked: false });
+    const unlockPromise = narrator.unlock();
+    const [unlockHowl] = MockHowl.instances;
+
+    unlockHowl.trigger('play');
+    await expect(unlockPromise).resolves.toBe(true);
+    expect(unlockHowl.stop).toHaveBeenCalled();
+    expect(unlockHowl.off).toHaveBeenCalledWith('play');
+    expect(unlockHowl.off).toHaveBeenCalledWith('playerror');
+  });
+
+  test('unlock resolves false on playerror', async () => {
+    const narrator = createNarrator({ initialEnabled: true, initialUnlocked: false });
+    const unlockPromise = narrator.unlock();
+    const [unlockHowl] = MockHowl.instances;
+
+    unlockHowl.trigger('playerror');
+    await expect(unlockPromise).resolves.toBe(false);
+    expect(unlockHowl.off).toHaveBeenCalledWith('play');
+    expect(unlockHowl.off).toHaveBeenCalledWith('playerror');
   });
 });
