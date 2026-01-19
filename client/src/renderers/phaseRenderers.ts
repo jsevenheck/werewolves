@@ -144,10 +144,9 @@ function renderDaySection(room: RoomView, self: RoomViewSelf | null) {
     ? `<ul>${lastNightDeaths.map((entry) => `<li>${entry.name} (${safeRoleDetails[entry.role || 'villager']?.name || entry.role})</li>`).join('')}</ul>`
     : '<p>No one died last night.</p>';
   const yourVote = room?.voteState?.yourVote;
-  const votedValue = yourVote !== undefined ? yourVote : state.pendingVote;
   const voteForm = self?.alive
-    ? votedValue !== undefined
-      ? renderVoteConfirmation(room, votedValue)
+    ? yourVote !== undefined
+      ? renderVoteConfirmation(room, yourVote)
       : renderVoteForm(room)
     : '<p>You are dead and cannot vote.</p>';
   return `
