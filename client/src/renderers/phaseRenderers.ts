@@ -166,13 +166,13 @@ function renderWolfForm(room: RoomView) {
     return '<p>No game data available.</p>';
   }
   const wolfIds = Object.keys(room.wolfVotes || {});
-  const votesCast = Object.values(room.wolfVotes || {}).filter(Boolean).length;
+  const votesCast = Object.values(room.wolfVotes || {}).filter((value) => value !== undefined && value !== '').length;
   const aliveTargets = (room?.players ?? []).filter((p) => p.alive && p.id !== state.playerId);
   if (!aliveTargets.length) {
     return '<p>No valid targets available.</p>';
   }
   const currentVote = room?.wolfVotes?.[state.playerId];
-  const locked = currentVote !== undefined;
+  const locked = currentVote !== undefined && currentVote !== '';
   const options = aliveTargets.map((p) => `<option value="${p.id}" ${currentVote === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
   const peers = room.wolfPeers?.length ? `<p>Other wolves: ${room.wolfPeers.join(', ')}</p>` : '';
   const voteEntries = Object.entries(room.wolfVotes || {}).filter(([, targetId]) => targetId);

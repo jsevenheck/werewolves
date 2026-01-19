@@ -14,7 +14,7 @@ function tryFinalizeWolfVote(
     return;
   }
   const pending = wolves.some(
-    (wolf) => room.wolfVotes[wolf.id] == null || room.wolfVotes[wolf.id] === ''
+    (wolf) => room.wolfVotes[wolf.id] === undefined || room.wolfVotes[wolf.id] === ''
   );
   if (pending) return;
   const tally: Record<string, number> = {};

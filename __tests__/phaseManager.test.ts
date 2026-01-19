@@ -62,7 +62,7 @@ describe('phaseManager', () => {
 
     expect(room.phase).toBe('night');
     expect(room.phaseStep).toBe('wolves');
-    expect(room.wolfVotes).toEqual({ w1: null });
+    expect(room.wolfVotes).toEqual({ w1: '' });
     expect(room.wolfTarget).toBeNull();
     expect(room.seerActed).toBe(false);
     expect(room.pendingDeaths).toEqual([]);
