@@ -39,28 +39,27 @@ function resolveDeaths(
       const socket = io && player.socketId && io.sockets?.sockets?.get(player.socketId);
       if (socket && player.connected) {
         socket.emit('hunterPrompt', { roomCode: room.code });
-      } else {
-        room.hunterShotTimer = setTimeout(() => {
-          room.hunterShotTimer = null;
-          if (room.awaitingHunterShot !== player.id) return;
-          room.awaitingHunterShot = null;
-          if (!room.winner) {
-            checkWinners(room);
-          }
-          if (!room.winner) {
-            const transition =
-              room.phase === 'night' ? 'nightToDay' :
-              room.phase === 'day' ? 'dayToNight' :
-              null;
-            if (transition) {
-              const { schedulePhaseTransition } = require('./phaseManager');
-              schedulePhaseTransition(room, transition, broadcastRoom);
-              return;
-            }
-          }
-          broadcastRoom(room);
-        }, HUNTER_SHOT_WINDOW_MS);
       }
+      room.hunterShotTimer = setTimeout(() => {
+        room.hunterShotTimer = null;
+        if (room.awaitingHunterShot !== player.id) return;
+        room.awaitingHunterShot = null;
+        if (!room.winner) {
+          checkWinners(room);
+        }
+        if (!room.winner) {
+          const transition =
+            room.phase === 'night' ? 'nightToDay' :
+            room.phase === 'day' ? 'dayToNight' :
+            null;
+          if (transition) {
+            const { schedulePhaseTransition } = require('./phaseManager');
+            schedulePhaseTransition(room, transition, broadcastRoom);
+            return;
+          }
+        }
+        broadcastRoom(room);
+      }, HUNTER_SHOT_WINDOW_MS);
     }
     if (room.lovers && (room.lovers.aId === playerId || room.lovers.bId === playerId)) {
       const otherId = room.lovers.aId === playerId ? room.lovers.bId : room.lovers.aId;

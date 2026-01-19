@@ -56,6 +56,7 @@ describe('Edge Cases', () => {
     });
 
     test('hunter gets shot when dying as lover', () => {
+      jest.useFakeTimers();
       const room = {
         players: {
           hunter: {
@@ -97,6 +98,11 @@ describe('Edge Cases', () => {
       expect(room.players.hunter.alive).toBe(false);
       expect(room.awaitingHunterShot).toBe('hunter');
       expect(emit).toHaveBeenCalledWith('hunterPrompt', { roomCode: room.code });
+      if (room.hunterShotTimer) {
+        clearTimeout(room.hunterShotTimer);
+        room.hunterShotTimer = null;
+      }
+      jest.useRealTimers();
     });
 
     test('both lovers dead - no repeated death processing', () => {
