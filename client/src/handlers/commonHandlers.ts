@@ -27,6 +27,10 @@ function bindCommonHandlers(
       notify('Only the host can restart the game.');
       return;
     }
+    if (state.room?.phase !== 'ended') {
+      notify('The game can only be restarted after it has ended.');
+      return;
+    }
     socket.emit('restartGame', { roomCode: state.roomCode, playerId: state.playerId });
   });
 }
