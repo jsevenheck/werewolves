@@ -267,12 +267,12 @@ function setupSocketHandlers(
     if (!player || player.role !== 'hunter') return;
     if (player.socketId !== socket.id) return;
     if (room.awaitingHunterShot !== playerId) return;
+    const target = room.players[targetId];
+    if (!target || !target.alive) return;
     if (room.hunterShotTimer) {
       clearTimeout(room.hunterShotTimer);
       room.hunterShotTimer = null;
     }
-    const target = room.players[targetId];
-    if (!target || !target.alive) return;
     queueDeath(room, targetId, 'shot by Hunter');
     room.awaitingHunterShot = null;
     const context =
