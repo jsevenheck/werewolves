@@ -1,7 +1,7 @@
 import { getRoom } from '../src/server/models/room';
 import { broadcastRoom } from '../src/server/managers/broadcastManager';
 import { scheduleNightStep, startNight, advanceFromReveal } from '../src/server/managers/phaseManager';
-import { tryFinalizeWolfVote, handleWitchDecision } from '../src/server/managers/nightManager';
+import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../src/server/managers/nightManager';
 import { queueDeath, resolveDeaths } from '../src/server/managers/deathManager';
 import { setupSocketHandlers } from '../src/server/handlers/socketHandlers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../src/shared/events';
@@ -41,6 +41,7 @@ const makeSocket = () => {
   const handlers: Record<string, (payload?: any) => void> = {};
   const socket = {
     id: 'socket-1',
+    emit: jest.fn(),
     on: (event: string, handler: (payload?: any) => void) => {
       handlers[event] = handler;
     }
@@ -141,7 +142,28 @@ describe('socketHandlers hostSkipStep', () => {
 
     expect(room.phaseStep).toBe('seer');
     expect(room.nextNightStep).toBeNull();
-    expect(broadcastRoom).toHaveBeenCalledWith(room, io);
+    expect(advanceNightStep).toHaveBeenCalledWith(room, expect.any(Function), io);
+  });
+
+  test('rejects duplicate wolf votes', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'wolves',
+      players: {
+        w1: { id: 'w1', role: 'werewolf', alive: true },
+        v1: { id: 'v1', role: 'villager', alive: true }
+      },
+      wolfVotes: { w1: 'v1' }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.submitWolfVote({ roomCode: 'ABCD', playerId: 'w1', targetId: 'v1' });
+
+    expect(socket.emit).toHaveBeenCalledWith('wolfVoteRejected', { reason: 'already_voted' });
   });
 
   test('host skips phase transition night to day', () => {

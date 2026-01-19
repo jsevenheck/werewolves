@@ -45,7 +45,7 @@ function setupSocketHandlers(
     player.connected = true;
     setSocketIndex(socket.id, roomCode, playerId);
     cb?.({ ok: true });
-    sendStateToPlayer(room, player, io);
+    broadcastRoom(room, io);
   });
 
   socket.on('updateRoleConfig', ({ roomCode, playerId, config }) => {
@@ -170,6 +170,8 @@ function setupSocketHandlers(
       if (step === 'resolve') {
         const { resolveNight } = require('../managers/nightManager');
         resolveNight(room, (r: typeof room) => broadcastRoom(r, io), io);
+      } else if (step === 'seer' || step === 'witch') {
+        advanceNightStep(room, (r) => broadcastRoom(r, io), io);
       } else {
         broadcastRoom(room, io);
       }
