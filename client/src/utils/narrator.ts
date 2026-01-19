@@ -71,24 +71,45 @@ class Narrator {
   async unlock(): Promise<boolean> {
     if (this.unlocked) return true;
     return new Promise((resolve) => {
+      let attemptedFallback = false;
       const unlockHowl = new Howl({
-        src: ['/audio/lobby.mp3', PLACEHOLDER_AUDIO],
+        src: '/audio/lobby.mp3',
         html5: true,
         preload: 'metadata',
         volume: 0
       });
+      const tryFallback = (playAfterSwap: boolean) => {
+        if (attemptedFallback) return;
+        attemptedFallback = true;
+        unlockHowl.src(PLACEHOLDER_AUDIO);
+        if (playAfterSwap) {
+          unlockHowl.play();
+        } else {
+          unlockHowl.load();
+        }
+      };
       const cleanup = () => {
         unlockHowl.off('play');
         unlockHowl.off('playerror');
+        unlockHowl.off('loaderror');
       };
       unlockHowl.once('play', () => {
         this.unlocked = true;
         unlockHowl.stop();
         cleanup();
+        unlockHowl.unload();
         resolve(true);
       });
+      unlockHowl.once('loaderror', () => {
+        tryFallback(false);
+      });
       unlockHowl.once('playerror', () => {
+        if (!attemptedFallback) {
+          tryFallback(true);
+          return;
+        }
         cleanup();
+        unlockHowl.unload();
         resolve(false);
       });
       unlockHowl.play();
@@ -122,11 +143,28 @@ class Narrator {
   private getHowl(key: string) {
     const existing = this.howls.get(key);
     if (existing) return existing;
+    let attemptedFallback = false;
     const howl = new Howl({
-      src: [`/audio/${key}.mp3`, PLACEHOLDER_AUDIO],
+      src: `/audio/${key}.mp3`,
       html5: true,
       preload: 'metadata',
       volume: DEFAULT_VOLUME
+    });
+    const tryFallback = (playAfterSwap: boolean) => {
+      if (attemptedFallback) return;
+      attemptedFallback = true;
+      howl.src(PLACEHOLDER_AUDIO);
+      if (playAfterSwap) {
+        howl.play();
+      } else {
+        howl.load();
+      }
+    };
+    howl.once('loaderror', () => {
+      tryFallback(false);
+    });
+    howl.once('playerror', () => {
+      tryFallback(true);
     });
     this.howls.set(key, howl);
     return howl;
