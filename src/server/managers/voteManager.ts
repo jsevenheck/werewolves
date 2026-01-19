@@ -13,7 +13,7 @@ function tryResolveDayVote(
   const connectedAlive = alivePlayers.filter((p) => p.connected);
   const disconnectedAlive = alivePlayers.filter((p) => !p.connected);
   const everyoneConnectedVoted = connectedAlive.every((p) => room.voteState.votes[p.id] !== undefined);
-  if (connectedAlive.length && everyoneConnectedVoted && disconnectedAlive.length) {
+  if (connectedAlive.length > 0 && everyoneConnectedVoted && disconnectedAlive.length) {
     disconnectedAlive.forEach((player) => {
       if (room.voteState.votes[player.id] === undefined) {
         room.voteState.votes[player.id] = null;
