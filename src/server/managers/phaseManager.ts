@@ -10,6 +10,7 @@ function startNight(room: Room) {
   room.nextNightStep = null;
   room.phaseTransition = null;
   clearRoomTimers(room);
+  room.hunterShotQueue = [];
   room.wolfVotes = {};
   Object.values(room.players).forEach((player) => {
     if (player.role === 'werewolf' && player.alive) {

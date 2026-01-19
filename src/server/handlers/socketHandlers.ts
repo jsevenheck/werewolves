@@ -7,7 +7,7 @@ import { normalizeRoleConfig, validateCounts, assignRoles } from '../managers/ro
 import { schedulePhaseTransition, advanceFromReveal, startNight, notifyLovers } from '../managers/phaseManager';
 import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../managers/nightManager';
 import { tryResolveDayVote } from '../managers/voteManager';
-import { queueDeath, resolveDeaths } from '../managers/deathManager';
+import { queueDeath, resolveDeaths, startNextHunterShot } from '../managers/deathManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 
 function setupSocketHandlers(
@@ -275,7 +275,23 @@ function setupSocketHandlers(
     if (!target || !target.alive) return;
     queueDeath(room, targetId, 'shot by Hunter');
     room.awaitingHunterShot = null;
-    resolveDeaths(room, 'general', (r) => broadcastRoom(r, io), io);
+    const context =
+      room.phase === 'night' ? 'night' :
+      room.phase === 'day' ? 'day' :
+      'general';
+    resolveDeaths(room, context, (r) => broadcastRoom(r, io), io);
+    if (startNextHunterShot(room, (r) => broadcastRoom(r, io), io)) {
+      return;
+    }
+    if (!room.winner && !room.awaitingHunterShot) {
+      const transition =
+        room.phase === 'night' ? 'nightToDay' :
+        room.phase === 'day' ? 'dayToNight' :
+        null;
+      if (transition) {
+        schedulePhaseTransition(room, transition, (r) => broadcastRoom(r, io));
+      }
+    }
   });
 
   socket.on('restartGame', ({ roomCode, playerId }) => {
@@ -306,6 +322,7 @@ function setupSocketHandlers(
     room.phaseTimer = null;
     room.transitionTimer = null;
     room.hunterShotTimer = null;
+    room.hunterShotQueue = [];
     Object.values(room.players).forEach((player) => {
       player.role = null;
       player.team = null;

@@ -1,8 +1,8 @@
 import { getRoom } from '../src/server/models/room';
 import { broadcastRoom } from '../src/server/managers/broadcastManager';
-import { scheduleNightStep, startNight, advanceFromReveal } from '../src/server/managers/phaseManager';
+import { scheduleNightStep, schedulePhaseTransition, startNight, advanceFromReveal } from '../src/server/managers/phaseManager';
 import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../src/server/managers/nightManager';
-import { queueDeath, resolveDeaths } from '../src/server/managers/deathManager';
+import { queueDeath, resolveDeaths, startNextHunterShot } from '../src/server/managers/deathManager';
 import { setupSocketHandlers } from '../src/server/handlers/socketHandlers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../src/shared/events';
 import type { Room } from '../src/shared/types';
@@ -34,7 +34,8 @@ jest.mock('../src/server/managers/nightManager', () => ({
 
 jest.mock('../src/server/managers/deathManager', () => ({
   queueDeath: jest.fn(),
-  resolveDeaths: jest.fn()
+  resolveDeaths: jest.fn(),
+  startNextHunterShot: jest.fn()
 }));
 
 const makeSocket = () => {
@@ -288,7 +289,8 @@ describe('socketHandlers restartGame', () => {
       phaseTransition: 'dayToNight',
       phaseTimer: 1,
       transitionTimer: 2,
-      hunterShotTimer: 3
+      hunterShotTimer: 3,
+      hunterShotQueue: ['hunter']
     } as unknown as Room;
     (getRoom as jest.Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
@@ -318,6 +320,7 @@ describe('socketHandlers restartGame', () => {
     expect(room.phaseTimer).toBeNull();
     expect(room.transitionTimer).toBeNull();
     expect(room.hunterShotTimer).toBeNull();
+    expect(room.hunterShotQueue).toEqual([]);
     expect(room.logs[room.logs.length - 1].text).toBe('Game reset. Back to lobby.');
     Object.values(room.players).forEach((player) => {
       expect(player.role).toBeNull();
@@ -383,6 +386,7 @@ describe('socketHandlers hunterShoot', () => {
     const room = {
       code: 'ABCD',
       hostId: 'host',
+      phase: 'day',
       awaitingHunterShot: 'hunter',
       players: {
         hunter: { id: 'hunter', role: 'hunter', alive: false, socketId: 'socket1' },
@@ -398,6 +402,8 @@ describe('socketHandlers hunterShoot', () => {
 
     expect(queueDeath).toHaveBeenCalledWith(room, 'v1', 'shot by Hunter');
     expect(room.awaitingHunterShot).toBeNull();
-    expect(resolveDeaths).toHaveBeenCalledWith(room, 'general', expect.any(Function), io);
+    expect(resolveDeaths).toHaveBeenCalledWith(room, 'day', expect.any(Function), io);
+    expect(startNextHunterShot).toHaveBeenCalledWith(room, expect.any(Function), io);
+    expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'dayToNight', expect.any(Function));
   });
 });

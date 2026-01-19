@@ -8,6 +8,71 @@ function queueDeath(room: Room, playerId: string, reason: string) {
   room.pendingDeaths.push({ playerId, reason });
 }
 
+function startHunterShot(
+  room: Room,
+  hunterId: string,
+  broadcastRoom: (room: Room) => void,
+  io?: Server<ClientToServerEvents, ServerToClientEvents>,
+  shouldBroadcast = true
+) {
+  room.awaitingHunterShot = hunterId;
+  if (room.hunterShotTimer) {
+    clearTimeout(room.hunterShotTimer);
+    room.hunterShotTimer = null;
+  }
+  const hunter = room.players[hunterId];
+  const socket = io && hunter?.socketId && io.sockets?.sockets?.get(hunter.socketId);
+  if (socket && hunter?.connected) {
+    socket.emit('hunterPrompt', { roomCode: room.code });
+  }
+  room.hunterShotTimer = setTimeout(() => {
+    room.hunterShotTimer = null;
+    if (room.awaitingHunterShot !== hunterId) return;
+    room.awaitingHunterShot = null;
+    if (room.hunterShotQueue.length) {
+      const nextId = room.hunterShotQueue.shift();
+      if (nextId) {
+        startHunterShot(room, nextId, broadcastRoom, io, true);
+      }
+      return;
+    }
+    if (!room.winner) {
+      checkWinners(room);
+    }
+    if (!room.winner) {
+      const transition =
+        room.phase === 'night' ? 'nightToDay' :
+        room.phase === 'day' ? 'dayToNight' :
+        null;
+      if (transition) {
+        const { schedulePhaseTransition } = require('./phaseManager');
+        schedulePhaseTransition(room, transition, broadcastRoom);
+        return;
+      }
+    }
+    broadcastRoom(room);
+  }, HUNTER_SHOT_WINDOW_MS);
+  if (shouldBroadcast) {
+    broadcastRoom(room);
+  }
+}
+
+function startNextHunterShot(
+  room: Room,
+  broadcastRoom: (room: Room) => void,
+  io?: Server<ClientToServerEvents, ServerToClientEvents>
+) {
+  if (room.awaitingHunterShot || !room.hunterShotQueue.length) {
+    return false;
+  }
+  const nextId = room.hunterShotQueue.shift();
+  if (!nextId) {
+    return false;
+  }
+  startHunterShot(room, nextId, broadcastRoom, io, true);
+  return true;
+}
+
 function resolveDeaths(
   room: Room,
   context: 'general' | 'night' | 'day' = 'general',
@@ -31,35 +96,17 @@ function resolveDeaths(
       `${player.name} died. Role: ${roleLabel}.`
     );
     if (player.role === 'hunter') {
-      room.awaitingHunterShot = player.id;
-      if (room.hunterShotTimer) {
-        clearTimeout(room.hunterShotTimer);
-        room.hunterShotTimer = null;
+      const alreadyQueued =
+        room.awaitingHunterShot === player.id || room.hunterShotQueue.includes(player.id);
+      if (!alreadyQueued) {
+        room.hunterShotQueue.push(player.id);
       }
-      const socket = io && player.socketId && io.sockets?.sockets?.get(player.socketId);
-      if (socket && player.connected) {
-        socket.emit('hunterPrompt', { roomCode: room.code });
+      if (!room.awaitingHunterShot) {
+        const nextId = room.hunterShotQueue.shift();
+        if (nextId) {
+          startHunterShot(room, nextId, broadcastRoom, io, false);
+        }
       }
-      room.hunterShotTimer = setTimeout(() => {
-        room.hunterShotTimer = null;
-        if (room.awaitingHunterShot !== player.id) return;
-        room.awaitingHunterShot = null;
-        if (!room.winner) {
-          checkWinners(room);
-        }
-        if (!room.winner) {
-          const transition =
-            room.phase === 'night' ? 'nightToDay' :
-            room.phase === 'day' ? 'dayToNight' :
-            null;
-          if (transition) {
-            const { schedulePhaseTransition } = require('./phaseManager');
-            schedulePhaseTransition(room, transition, broadcastRoom);
-            return;
-          }
-        }
-        broadcastRoom(room);
-      }, HUNTER_SHOT_WINDOW_MS);
     }
     if (room.lovers && (room.lovers.aId === playerId || room.lovers.bId === playerId)) {
       const otherId = room.lovers.aId === playerId ? room.lovers.bId : room.lovers.aId;
@@ -79,7 +126,7 @@ function resolveDeaths(
       room.lastDayMessage = null;
     }
   }
-  if (!room.awaitingHunterShot) {
+  if (!room.awaitingHunterShot && room.hunterShotQueue.length === 0) {
     checkWinners(room);
   }
   broadcastRoom(room);
@@ -112,5 +159,6 @@ function checkWinners(room: Room) {
 export {
   queueDeath,
   resolveDeaths,
+  startNextHunterShot,
   checkWinners
 };

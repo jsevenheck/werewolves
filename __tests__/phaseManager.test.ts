@@ -12,6 +12,7 @@ const makeRoom = (): Room => ({
   transitionTimer: null,
   phaseTimer: null,
   hunterShotTimer: null,
+  hunterShotQueue: [],
   wolfVotes: { stale: 'x' },
   wolfTarget: 'old',
   healedTarget: null,

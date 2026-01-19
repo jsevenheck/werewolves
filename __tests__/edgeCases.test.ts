@@ -22,6 +22,7 @@ describe('Edge Cases', () => {
       expect(room.pendingDeaths).toEqual([]);
       expect(room.awaitingHunterShot).toBe(null);
       expect(room.hunterShotTimer).toBe(null);
+      expect(room.hunterShotQueue).toEqual([]);
     });
   });
 
@@ -42,7 +43,8 @@ describe('Edge Cases', () => {
         nextNightStep: null,
         phaseTransition: null,
         transitionTimer: null,
-        phaseTimer: null
+        phaseTimer: null,
+        hunterShotQueue: []
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -85,7 +87,8 @@ describe('Edge Cases', () => {
         nextNightStep: null,
         phaseTransition: null,
         transitionTimer: null,
-        phaseTimer: null
+        phaseTimer: null,
+        hunterShotQueue: []
       } as unknown as Room;
       const emit = jest.fn();
       const io = { sockets: { sockets: new Map([['socket-h', { emit }]]) } };
@@ -121,7 +124,8 @@ describe('Edge Cases', () => {
         nextNightStep: null,
         phaseTransition: null,
         transitionTimer: null,
-        phaseTimer: null
+        phaseTimer: null,
+        hunterShotQueue: []
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -144,7 +148,8 @@ describe('Edge Cases', () => {
         voteState: { votes: { a: 'a', b: 'b' }, revoteFromTie: null },
         logs: [],
         phase: 'day',
-        winner: null
+        winner: null,
+        hunterShotQueue: []
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -171,7 +176,8 @@ describe('Edge Cases', () => {
         winner: null,
         awaitingHunterShot: null,
         transitionTimer: null,
-        phaseTimer: null
+        phaseTimer: null,
+        hunterShotQueue: []
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -191,7 +197,8 @@ describe('Edge Cases', () => {
         voteState: { votes: { a: null, b: null, c: null }, revoteFromTie: null },
         logs: [],
         phase: 'day',
-        winner: null
+        winner: null,
+        hunterShotQueue: []
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -230,7 +237,8 @@ describe('Edge Cases', () => {
         nextNightStep: null,
         phaseTransition: null,
         transitionTimer: null,
-        phaseTimer: null
+        phaseTimer: null,
+        hunterShotQueue: []
       } as unknown as Room;
       const emit = jest.fn();
       const io = { sockets: { sockets: new Map([['socket-h', { emit }]]) } };
@@ -275,7 +283,8 @@ describe('Edge Cases', () => {
         nextNightStep: null,
         phaseTransition: null,
         transitionTimer: null,
-        phaseTimer: null
+        phaseTimer: null,
+        hunterShotQueue: []
       } as unknown as Room;
       const io = { sockets: { sockets: new Map() } };
       const broadcastRoom = jest.fn();
