@@ -155,9 +155,13 @@ describe('narrator persistence', () => {
   });
 
   test('initFromStorage loads enabled state', () => {
-    const storage = {
+    const storage: Storage = {
       getItem: jest.fn(() => 'true'),
-      setItem: jest.fn()
+      setItem: jest.fn(),
+      clear: jest.fn(),
+      key: jest.fn(() => null),
+      removeItem: jest.fn(),
+      length: 0
     };
     const narrator = createNarrator({ storage, initialEnabled: false });
 
@@ -168,9 +172,13 @@ describe('narrator persistence', () => {
   });
 
   test('setEnabled updates storage', () => {
-    const storage = {
+    const storage: Storage = {
       getItem: jest.fn(),
-      setItem: jest.fn()
+      setItem: jest.fn(),
+      clear: jest.fn(),
+      key: jest.fn(() => null),
+      removeItem: jest.fn(),
+      length: 0
     };
     const narrator = createNarrator({ storage, initialEnabled: false });
 
