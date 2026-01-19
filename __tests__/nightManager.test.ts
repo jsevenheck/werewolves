@@ -37,6 +37,8 @@ const makeRoom = (): Room => ({
   phaseTimer: null,
   transitionTimer: null,
   lastNightDeaths: [],
+  lastDayDeaths: [],
+  lastDayMessage: null,
   awaitingHunterShot: null,
   winner: null
 });
@@ -91,7 +93,7 @@ describe('nightManager', () => {
     const room = makeRoom();
     room.wolfTarget = 'v1';
 
-    handleWitchDecision(room, 'heal', null, jest.fn(), undefined as never);
+    handleWitchDecision(room, 'w1', 'heal', null, jest.fn(), undefined as never);
 
     expect(room.witchState.healAvailable).toBe(false);
     expect(room.healedTarget).toBe('v1');
@@ -102,7 +104,7 @@ describe('nightManager', () => {
     const room = makeRoom();
     room.players = { v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true }) };
 
-    handleWitchDecision(room, 'poison', 'v2', jest.fn(), undefined as never);
+    handleWitchDecision(room, 'w1', 'poison', 'v2', jest.fn(), undefined as never);
 
     expect(room.witchState.poisonAvailable).toBe(false);
     expect(room.poisonTarget).toBe('v2');

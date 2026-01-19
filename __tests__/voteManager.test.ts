@@ -30,6 +30,8 @@ const makeRoom = (players: Record<string, Player>): Room => ({
   phaseTimer: null,
   transitionTimer: null,
   lastNightDeaths: [],
+  lastDayDeaths: [],
+  lastDayMessage: null,
   awaitingHunterShot: null,
   winner: null
 });
@@ -86,6 +88,8 @@ describe('voteManager', () => {
 
     expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'dayToNight', broadcastRoom);
     expect(room.logs[room.logs.length - 1].text).toBe('Majority abstained. No one eliminated.');
+    expect(room.lastDayDeaths).toEqual([]);
+    expect(room.lastDayMessage).toBe('No one was eliminated.');
   });
 
   test('resolveDayKill ends the game when Joker is voted out', () => {

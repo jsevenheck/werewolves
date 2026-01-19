@@ -120,7 +120,7 @@ describe('socketHandlers hostSkipStep', () => {
 
     handlers.hostSkipStep({ roomCode: 'ABCD', playerId: 'host' });
 
-    expect(handleWitchDecision).toHaveBeenCalledWith(room, 'skip', null, expect.any(Function), io);
+    expect(handleWitchDecision).toHaveBeenCalledWith(room, null, 'skip', null, expect.any(Function), io);
   });
 
   test('host skips transition to a night step immediately', () => {

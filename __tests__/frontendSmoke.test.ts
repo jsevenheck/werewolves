@@ -50,6 +50,8 @@ describe('frontend smoke', () => {
       seerResult: null,
       voteState: { yourVote: undefined, submitted: 0, required: 2, revoteFromTie: null },
       lastNightDeaths: [],
+      lastDayDeaths: [],
+      lastDayMessage: null,
       awaitingHunterShot: false,
       winner: null,
       logs: [],

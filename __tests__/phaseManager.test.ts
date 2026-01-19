@@ -18,6 +18,8 @@ const makeRoom = (): Room => ({
   seerActed: true,
   pendingDeaths: [],
   lastNightDeaths: [],
+  lastDayDeaths: [],
+  lastDayMessage: null,
   voteState: { votes: { a: 'b' }, revoteFromTie: ['b'] },
   awaitingHunterShot: 'p1',
   dayCount: 0,
