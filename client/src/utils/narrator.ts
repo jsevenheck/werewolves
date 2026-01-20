@@ -51,6 +51,10 @@ class Narrator {
     return this.enabled;
   }
 
+  isUnlocked() {
+    return this.unlocked;
+  }
+
   setEnabled(next: boolean) {
     this.enabled = next;
     if (this.storage) {
