@@ -42,7 +42,7 @@ function bindCommonHandlers(
       return;
     }
 
-    if (narrator.isEnabled()) {
+    if (narrator.isEnabled() && narrator.isUnlocked()) {
       narrator.setEnabled(false);
       renderApp();
       return;
