@@ -29,12 +29,16 @@ function createRoom(hostName: string, socketId: string, createPlayer: (name: str
     pendingDeaths: [],
     winner: null,
     lastNightDeaths: [],
+    lastDayDeaths: [],
+    lastDayMessage: null,
     awaitingHunterShot: null,
     logs: [],
     nextNightStep: null,
     transitionTimer: null,
     phaseTransition: null,
-    phaseTimer: null
+    phaseTimer: null,
+    hunterShotTimer: null,
+    hunterShotQueue: []
   };
   const player = createPlayer(hostName, socketId, true);
   room.players[player.id] = player;

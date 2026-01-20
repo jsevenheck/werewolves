@@ -21,6 +21,8 @@ describe('Edge Cases', () => {
       expect(room.lovers).toBe(null);
       expect(room.pendingDeaths).toEqual([]);
       expect(room.awaitingHunterShot).toBe(null);
+      expect(room.hunterShotTimer).toBe(null);
+      expect(room.hunterShotQueue).toEqual([]);
     });
   });
 
@@ -41,7 +43,8 @@ describe('Edge Cases', () => {
         nextNightStep: null,
         phaseTransition: null,
         transitionTimer: null,
-        phaseTimer: null
+        phaseTimer: null,
+        hunterShotQueue: []
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -55,6 +58,7 @@ describe('Edge Cases', () => {
     });
 
     test('hunter gets shot when dying as lover', () => {
+      jest.useFakeTimers();
       const room = {
         players: {
           hunter: {
@@ -83,7 +87,8 @@ describe('Edge Cases', () => {
         nextNightStep: null,
         phaseTransition: null,
         transitionTimer: null,
-        phaseTimer: null
+        phaseTimer: null,
+        hunterShotQueue: []
       } as unknown as Room;
       const emit = jest.fn();
       const io = { sockets: { sockets: new Map([['socket-h', { emit }]]) } };
@@ -96,6 +101,11 @@ describe('Edge Cases', () => {
       expect(room.players.hunter.alive).toBe(false);
       expect(room.awaitingHunterShot).toBe('hunter');
       expect(emit).toHaveBeenCalledWith('hunterPrompt', { roomCode: room.code });
+      if (room.hunterShotTimer) {
+        clearTimeout(room.hunterShotTimer);
+        room.hunterShotTimer = null;
+      }
+      jest.useRealTimers();
     });
 
     test('both lovers dead - no repeated death processing', () => {
@@ -114,7 +124,8 @@ describe('Edge Cases', () => {
         nextNightStep: null,
         phaseTransition: null,
         transitionTimer: null,
-        phaseTimer: null
+        phaseTimer: null,
+        hunterShotQueue: []
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -137,7 +148,8 @@ describe('Edge Cases', () => {
         voteState: { votes: { a: 'a', b: 'b' }, revoteFromTie: null },
         logs: [],
         phase: 'day',
-        winner: null
+        winner: null,
+        hunterShotQueue: []
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -164,7 +176,8 @@ describe('Edge Cases', () => {
         winner: null,
         awaitingHunterShot: null,
         transitionTimer: null,
-        phaseTimer: null
+        phaseTimer: null,
+        hunterShotQueue: []
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -184,7 +197,8 @@ describe('Edge Cases', () => {
         voteState: { votes: { a: null, b: null, c: null }, revoteFromTie: null },
         logs: [],
         phase: 'day',
-        winner: null
+        winner: null,
+        hunterShotQueue: []
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -195,7 +209,8 @@ describe('Edge Cases', () => {
   });
 
   describe('Hunter Edge Cases', () => {
-    test('disconnected hunter does not get prompt and does not block winner check', () => {
+    test('disconnected hunter gets a brief shot window before resolution', () => {
+      jest.useFakeTimers();
       const room = {
         players: {
           hunter: {
@@ -222,7 +237,8 @@ describe('Edge Cases', () => {
         nextNightStep: null,
         phaseTransition: null,
         transitionTimer: null,
-        phaseTimer: null
+        phaseTimer: null,
+        hunterShotQueue: []
       } as unknown as Room;
       const emit = jest.fn();
       const io = { sockets: { sockets: new Map([['socket-h', { emit }]]) } };
@@ -231,11 +247,16 @@ describe('Edge Cases', () => {
       queueDeath(room, 'hunter', 'executed by vote');
       resolveDeaths(room, 'day', broadcastRoom, io as unknown as never);
 
-      expect(room.awaitingHunterShot).toBeNull();
+      expect(room.awaitingHunterShot).toBe('hunter');
       expect(emit).not.toHaveBeenCalled();
+      jest.advanceTimersByTime(5000);
+      expect(room.awaitingHunterShot).toBeNull();
+      expect(room.winner).not.toBeNull();
+      jest.useRealTimers();
     });
 
-    test('hunter without socket does not get prompt and does not block winner check', () => {
+    test('hunter without socket gets a brief shot window before resolution', () => {
+      jest.useFakeTimers();
       const room = {
         players: {
           hunter: {
@@ -262,7 +283,8 @@ describe('Edge Cases', () => {
         nextNightStep: null,
         phaseTransition: null,
         transitionTimer: null,
-        phaseTimer: null
+        phaseTimer: null,
+        hunterShotQueue: []
       } as unknown as Room;
       const io = { sockets: { sockets: new Map() } };
       const broadcastRoom = jest.fn();
@@ -270,7 +292,11 @@ describe('Edge Cases', () => {
       queueDeath(room, 'hunter', 'executed by vote');
       resolveDeaths(room, 'day', broadcastRoom, io as unknown as never);
 
+      expect(room.awaitingHunterShot).toBe('hunter');
+      jest.advanceTimersByTime(5000);
       expect(room.awaitingHunterShot).toBeNull();
+      expect(room.winner).not.toBeNull();
+      jest.useRealTimers();
     });
   });
 });

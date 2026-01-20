@@ -144,10 +144,9 @@ function renderDaySection(room: RoomView, self: RoomViewSelf | null) {
     ? `<ul>${lastNightDeaths.map((entry) => `<li>${entry.name} (${safeRoleDetails[entry.role || 'villager']?.name || entry.role})</li>`).join('')}</ul>`
     : '<p>No one died last night.</p>';
   const yourVote = room?.voteState?.yourVote;
-  const votedValue = yourVote !== undefined ? yourVote : state.pendingVote;
   const voteForm = self?.alive
-    ? votedValue !== undefined
-      ? renderVoteConfirmation(room, votedValue)
+    ? yourVote !== undefined
+      ? renderVoteConfirmation(room, yourVote)
       : renderVoteForm(room)
     : '<p>You are dead and cannot vote.</p>';
   return `
@@ -166,12 +165,13 @@ function renderWolfForm(room: RoomView) {
     return '<p>No game data available.</p>';
   }
   const wolfIds = Object.keys(room.wolfVotes || {});
-  const votesCast = Object.values(room.wolfVotes || {}).filter(Boolean).length;
+  const votesCast = Object.values(room.wolfVotes || {}).filter((value) => value !== undefined && value !== '').length;
   const aliveTargets = (room?.players ?? []).filter((p) => p.alive && p.id !== state.playerId);
   if (!aliveTargets.length) {
     return '<p>No valid targets available.</p>';
   }
-  const currentVote = room?.wolfVotes?.[state.playerId] ?? '';
+  const currentVote = room?.wolfVotes?.[state.playerId];
+  const locked = currentVote !== undefined && currentVote !== '';
   const options = aliveTargets.map((p) => `<option value="${p.id}" ${currentVote === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
   const peers = room.wolfPeers?.length ? `<p>Other wolves: ${room.wolfPeers.join(', ')}</p>` : '';
   const voteEntries = Object.entries(room.wolfVotes || {}).filter(([, targetId]) => targetId);
@@ -191,14 +191,15 @@ function renderWolfForm(room: RoomView) {
     <form id="wolf-form" class="actions">
       ${peers}
       ${voteSummary}
+      ${locked ? '<p style="color:#4ade80;">Vote submitted. Awaiting other wolves.</p>' : ''}
       <label>
         <span>Select a victim</span>
-        <select name="target" required>
+        <select name="target" required ${locked ? 'disabled' : ''}>
           <option value="">Pick target</option>
           ${options}
         </select>
       </label>
-      <button type="submit">Submit vote</button>
+      <button type="submit" ${locked ? 'disabled' : ''}>Submit vote</button>
       <small>${votesCast} / ${wolfIds.length || 1} votes submitted.</small>
     </form>
   `;
@@ -256,7 +257,11 @@ function renderVoteForm(room: RoomView) {
     ? room.players.filter((p) => room.voteState.revoteFromTie?.includes(p.id))
     : room.players.filter((p) => p.alive);
   const filtered = eligible.filter((player) => player.id !== state.playerId && player.alive);
-  const options = filtered.map((player) => `<option value="${player.id}">${player.name}</option>`).join('');
+  const pendingVote = state.pendingVote;
+  const abstainSelected = pendingVote === null;
+  const options = filtered
+    .map((player) => `<option value="${player.id}" ${pendingVote === player.id ? 'selected' : ''}>${player.name}</option>`)
+    .join('');
   const submitted = room.voteState.submitted || 0;
   const info = room.voteState.revoteFromTie ? '<p>Revote among tied players.</p>' : '';
   return `
@@ -266,7 +271,7 @@ function renderVoteForm(room: RoomView) {
         <span>Choose someone to eliminate</span>
         <select name="target" required>
           <option value="">Select a player</option>
-          <option value="__abstain__">Abstain</option>
+          <option value="__abstain__" ${abstainSelected ? 'selected' : ''}>Abstain</option>
           ${options}
         </select>
       </label>

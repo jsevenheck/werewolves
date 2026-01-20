@@ -1,8 +1,14 @@
 import { state } from '../state/gameState';
 import type { ClientToServerEvents, ServerToClientEvents } from '@shared/events';
 import type { Socket } from 'socket.io-client';
+import { notify } from '../utils/helpers';
 
-function bindCommonHandlers(renderApp: () => void, renderLanding: () => void, clearSession: () => void) {
+function bindCommonHandlers(
+  socket: Socket<ServerToClientEvents, ClientToServerEvents>,
+  renderApp: () => void,
+  renderLanding: () => void,
+  clearSession: () => void
+) {
   const toggleRoleBtn = document.getElementById('toggle-role');
   toggleRoleBtn?.addEventListener('click', () => {
     state.roleVisible = !state.roleVisible;
@@ -16,9 +22,16 @@ function bindCommonHandlers(renderApp: () => void, renderLanding: () => void, cl
   });
 
   document.getElementById('restart-btn')?.addEventListener('click', () => {
-    resetState();
-    clearSession();
-    renderLanding();
+    if (!state.roomCode || !state.playerId) return;
+    if (state.room?.hostId !== state.playerId) {
+      notify('Only the host can restart the game.');
+      return;
+    }
+    if (state.room?.phase !== 'ended') {
+      notify('The game can only be restarted after it has ended.');
+      return;
+    }
+    socket.emit('restartGame', { roomCode: state.roomCode, playerId: state.playerId });
   });
 }
 

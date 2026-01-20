@@ -212,9 +212,7 @@ function bindNightHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
       const targetId = data.get('target');
       if (!targetId || !state.playerId) return;
       socket.emit('submitSeerInspect', { roomCode: room.code, playerId: state.playerId, targetId: String(targetId) }, (res) => {
-        if (res && 'ok' in res && res.ok) {
-          notify('Vision received. Check your role card for the result.');
-        } else if (res && 'error' in res && res.error) {
+        if (res && 'error' in res && res.error) {
           notify(`Error: ${res.error}`);
         }
       });
@@ -252,6 +250,8 @@ function bindDayHandlers(socket: Socket<ServerToClientEvents, ClientToServerEven
     voteSubmit.disabled = !voteSelect.value;
     voteSelect.addEventListener('change', () => {
       voteSubmit.disabled = !voteSelect.value;
+      const selected = voteSelect.value;
+      state.pendingVote = selected === '__abstain__' ? null : (selected ? selected : null);
     });
   }
 

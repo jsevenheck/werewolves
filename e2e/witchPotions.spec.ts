@@ -59,6 +59,12 @@ test('witch can heal and poison across nights', async ({ browser }) => {
     const healBtn = witch.locator('#heal-btn');
     await expect(healBtn).toBeEnabled();
     await healBtn.click();
+    const poisonBtn = witch.locator('#poison-btn');
+    const poisonSelect = witch.locator('#poison-select');
+    await expect(poisonBtn).toBeEnabled();
+    await expect(poisonSelect).toBeEnabled();
+    await expect(witch.locator('#skip-witch')).toBeVisible();
+    await witch.locator('#skip-witch').click();
 
     await host.waitForSelector('h3:has-text("Night Report")', { timeout: 15000 });
     const firstReport = host.locator('section.panel:has(h3:has-text("Night Report"))');
@@ -80,6 +86,53 @@ test('witch can heal and poison across nights', async ({ browser }) => {
     const secondReport = host.locator('section.panel:has(h3:has-text("Night Report"))');
     await expect(secondReport).toContainText(names[3]);
     await expect(secondReport).toContainText(names[4]);
+  } finally {
+    await closeContexts(contexts);
+  }
+});
+
+test('witch can heal and poison in the same night', async ({ browser }) => {
+  const names = ['Werewolf', 'Witch', 'Villager A', 'Villager B', 'Villager C'];
+  const { contexts, pages } = await createLobbyWithPlayers(browser, names);
+  const [host, witch] = pages;
+
+  try {
+    await configureRoles(host, {
+      werewolf: 1,
+      seer: 0,
+      hunter: 0,
+      witch: 1,
+      armor: 0,
+      joker: 0,
+      minPlayers: 5
+    });
+
+    await startGameAndReady(pages);
+
+    await host.waitForSelector('#wolf-form', { timeout: 10000 });
+    await host.locator('#wolf-form select[name="target"]').selectOption({ label: names[2] });
+    await host.locator('#wolf-form button[type="submit"]').click();
+    await host.locator('#wolf-form').waitFor({ state: 'detached' });
+
+    await waitForWitchStep(host, witch);
+    const healBtn = witch.locator('#heal-btn');
+    await expect(healBtn).toBeEnabled();
+    await healBtn.click();
+    await expect(healBtn).toBeDisabled();
+
+    const poisonSelect = witch.locator('#poison-select');
+    const poisonBtn = witch.locator('#poison-btn');
+    await expect(poisonSelect).toBeEnabled();
+    await expect(poisonBtn).toBeEnabled();
+    await poisonSelect.selectOption({ label: names[3] });
+    await poisonBtn.click();
+
+    await host.waitForSelector('h3:has-text("Night Report")', { timeout: 15000 });
+    const reportSummary = host
+      .locator('h3:has-text("Night Report")')
+      .locator('xpath=following-sibling::*[1]');
+    await expect(reportSummary).toContainText(names[3]);
+    await expect(reportSummary).not.toContainText(names[2]);
   } finally {
     await closeContexts(contexts);
   }

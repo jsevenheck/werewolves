@@ -10,6 +10,16 @@ function tryResolveDayVote(
   io: Server<ClientToServerEvents, ServerToClientEvents>
 ) {
   const alivePlayers = Object.values(room.players).filter((p) => p.alive);
+  const connectedAlive = alivePlayers.filter((p) => p.connected);
+  const disconnectedAlive = alivePlayers.filter((p) => !p.connected);
+  const everyoneConnectedVoted = connectedAlive.every((p) => room.voteState.votes[p.id] !== undefined);
+  if (connectedAlive.length > 0 && everyoneConnectedVoted && disconnectedAlive.length) {
+    disconnectedAlive.forEach((player) => {
+      if (room.voteState.votes[player.id] === undefined) {
+        room.voteState.votes[player.id] = null;
+      }
+    });
+  }
   const everyoneVoted = alivePlayers.every((p) => room.voteState.votes[p.id] !== undefined);
   if (!everyoneVoted) return;
   const tallies: Record<string, number> = {};
@@ -22,6 +32,8 @@ function tryResolveDayVote(
   const entries = Object.entries(tallies);
   if (!entries.length) {
     addLog(room, 'Vote skipped. No one eliminated.', 'Vote skipped. No one eliminated.');
+    room.lastDayDeaths = [];
+    room.lastDayMessage = 'No one was eliminated.';
     schedulePhaseTransition(room, 'dayToNight', broadcastRoom);
     return;
   }
@@ -32,6 +44,8 @@ function tryResolveDayVote(
   // already handled above when entries.length === 0.
   if (abstainCount > alivePlayers.length / 2) {
     addLog(room, 'Majority abstained. No one eliminated.', 'Majority abstained. No one eliminated.');
+    room.lastDayDeaths = [];
+    room.lastDayMessage = 'No one was eliminated.';
     schedulePhaseTransition(room, 'dayToNight', broadcastRoom);
     return;
   }
@@ -59,6 +73,7 @@ function resolveDayKill(
 ) {
   const target = room.players[targetId];
   if (!target || !target.alive) return;
+  room.lastDayMessage = null;
   const roleLabel = getPlayerRoleLabel(target);
   addLog(
     room,

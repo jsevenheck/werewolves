@@ -102,12 +102,16 @@ export interface Room {
   pendingDeaths: PendingDeath[];
   winner: Winner | null;
   lastNightDeaths: NightDeathAnnouncement[];
+  lastDayDeaths: NightDeathAnnouncement[];
+  lastDayMessage: string | null;
   awaitingHunterShot: string | null;
   logs: RoomLog[];
   nextNightStep: NightStep;
   transitionTimer: NodeJS.Timeout | null;
   phaseTransition: PhaseTransition;
   phaseTimer: NodeJS.Timeout | null;
+  hunterShotTimer: NodeJS.Timeout | null;
+  hunterShotQueue: string[];
 }
 
 export interface PlayerPublic {
@@ -161,6 +165,8 @@ export interface RoomView {
   seerResult: SeerResult | null;
   voteState: RoomViewVoteState;
   lastNightDeaths: NightDeathAnnouncement[];
+  lastDayDeaths: NightDeathAnnouncement[];
+  lastDayMessage: string | null;
   awaitingHunterShot: boolean;
   winner: Winner | null;
   logs: RoomViewLog[];

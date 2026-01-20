@@ -21,12 +21,16 @@ const makeRoom = (): Room => ({
   pendingDeaths: [],
   winner: null,
   lastNightDeaths: [],
+  lastDayDeaths: [],
+  lastDayMessage: null,
   awaitingHunterShot: null,
   logs: [],
   nextNightStep: null,
   transitionTimer: null,
   phaseTransition: null,
-  phaseTimer: null
+  phaseTimer: null,
+  hunterShotTimer: null,
+  hunterShotQueue: []
 });
 
 const buildPlayer = (overrides: Partial<Player>): Player => ({

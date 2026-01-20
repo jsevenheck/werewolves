@@ -7,7 +7,7 @@ import { normalizeRoleConfig, validateCounts, assignRoles } from '../managers/ro
 import { schedulePhaseTransition, advanceFromReveal, startNight, notifyLovers } from '../managers/phaseManager';
 import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../managers/nightManager';
 import { tryResolveDayVote } from '../managers/voteManager';
-import { queueDeath, resolveDeaths } from '../managers/deathManager';
+import { queueDeath, resolveDeaths, startNextHunterShot } from '../managers/deathManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 
 function setupSocketHandlers(
@@ -45,7 +45,10 @@ function setupSocketHandlers(
     player.connected = true;
     setSocketIndex(socket.id, roomCode, playerId);
     cb?.({ ok: true });
-    sendStateToPlayer(room, player, io);
+    broadcastRoom(room, io);
+    if (room.awaitingHunterShot === playerId && player.role === 'hunter' && !player.alive) {
+      socket.emit('hunterPrompt', { roomCode: room.code });
+    }
   });
 
   socket.on('updateRoleConfig', ({ roomCode, playerId, config }) => {
@@ -124,6 +127,11 @@ function setupSocketHandlers(
     if (!room || room.phase !== 'night' || room.phaseStep !== 'wolves') return;
     const player = room.players[playerId];
     if (!player || player.role !== 'werewolf' || !player.alive) return;
+    if (room.wolfVotes[playerId] !== undefined && room.wolfVotes[playerId] !== '') {
+      // Inform the client that this vote was rejected because the player has already voted.
+      socket.emit('wolfVoteRejected', { reason: 'already_voted' });
+      return;
+    }
     if (targetId && !room.players[targetId]?.alive) return;
     room.wolfVotes[playerId] = targetId || null;
     tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io), io);
@@ -149,7 +157,7 @@ function setupSocketHandlers(
     if (!room || room.phase !== 'night' || room.phaseStep !== 'witch') return;
     const player = room.players[playerId];
     if (!player || player.role !== 'witch' || !player.alive) return;
-    handleWitchDecision(room, action, targetId ?? null, (r) => broadcastRoom(r, io), io);
+    handleWitchDecision(room, playerId, action, targetId ?? null, (r) => broadcastRoom(r, io), io);
   });
 
   socket.on('hostSkipStep', ({ roomCode, playerId }) => {
@@ -165,6 +173,8 @@ function setupSocketHandlers(
       if (step === 'resolve') {
         const { resolveNight } = require('../managers/nightManager');
         resolveNight(room, (r: typeof room) => broadcastRoom(r, io), io);
+      } else if (step === 'seer' || step === 'witch') {
+        advanceNightStep(room, (r) => broadcastRoom(r, io), io);
       } else {
         broadcastRoom(room, io);
       }
@@ -214,7 +224,7 @@ function setupSocketHandlers(
         return;
       }
       livingWolves.forEach((wolf) => {
-        if (room.wolfVotes[wolf.id] === undefined) {
+        if (room.wolfVotes[wolf.id] === undefined || room.wolfVotes[wolf.id] === '') {
           room.wolfVotes[wolf.id] = null;
         }
       });
@@ -230,7 +240,7 @@ function setupSocketHandlers(
     }
 
     if (room.phaseStep === 'witch') {
-      handleWitchDecision(room, 'skip', null, (r) => broadcastRoom(r, io), io);
+      handleWitchDecision(room, null, 'skip', null, (r) => broadcastRoom(r, io), io);
       return;
     }
   });
@@ -259,9 +269,71 @@ function setupSocketHandlers(
     if (room.awaitingHunterShot !== playerId) return;
     const target = room.players[targetId];
     if (!target || !target.alive) return;
+    if (room.hunterShotTimer) {
+      clearTimeout(room.hunterShotTimer);
+      room.hunterShotTimer = null;
+    }
     queueDeath(room, targetId, 'shot by Hunter');
     room.awaitingHunterShot = null;
-    resolveDeaths(room, 'general', (r) => broadcastRoom(r, io), io);
+    const context =
+      room.phase === 'night' ? 'night' :
+      room.phase === 'day' ? 'day' :
+      'general';
+    resolveDeaths(room, context, (r) => broadcastRoom(r, io), io);
+    if (startNextHunterShot(room, (r) => broadcastRoom(r, io), io)) {
+      return;
+    }
+    if (!room.winner && !room.awaitingHunterShot) {
+      const transition =
+        room.phase === 'night' ? 'nightToDay' :
+        room.phase === 'day' ? 'dayToNight' :
+        null;
+      if (transition) {
+        schedulePhaseTransition(room, transition, (r) => broadcastRoom(r, io));
+      }
+    }
+  });
+
+  socket.on('restartGame', ({ roomCode, playerId }) => {
+    const room = getRoom(roomCode);
+    if (!room || room.hostId !== playerId) return;
+    if (room.phase !== 'ended') return;
+    clearRoomTimers(room);
+    room.phase = 'lobby';
+    room.phaseStep = null;
+    room.dayCount = 0;
+    room.lovers = null;
+    room.witchState = { healAvailable: true, poisonAvailable: true };
+    room.wolfVotes = {};
+    room.wolfTarget = null;
+    room.healedTarget = null;
+    room.poisonTarget = null;
+    room.seerActed = false;
+    room.voteState = createVoteState();
+    room.pendingDeaths = [];
+    room.winner = null;
+    room.lastNightDeaths = [];
+    room.lastDayDeaths = [];
+    room.lastDayMessage = null;
+    room.awaitingHunterShot = null;
+    room.logs = [];
+    room.nextNightStep = null;
+    room.phaseTransition = null;
+    room.phaseTimer = null;
+    room.transitionTimer = null;
+    room.hunterShotTimer = null;
+    room.hunterShotQueue = [];
+    Object.values(room.players).forEach((player) => {
+      player.role = null;
+      player.team = null;
+      player.alive = true;
+      player.voteTarget = null;
+      player.nightAction = null;
+      player.ready = false;
+      player.seerResult = null;
+    });
+    addLog(room, 'Game reset. Back to lobby.');
+    broadcastRoom(room, io);
   });
 
   socket.on('requestState', ({ roomCode, playerId }) => {
@@ -282,6 +354,9 @@ function setupSocketHandlers(
     if (!player) return;
     player.connected = false;
     addLog(room, `${player.name} disconnected.`);
+    if (room.phase === 'day' && player.alive && player.voteTarget != null) {
+      tryResolveDayVote(room, (r) => broadcastRoom(r, io), io);
+    }
     broadcastRoom(room, io);
   });
 }

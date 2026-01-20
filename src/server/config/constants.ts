@@ -5,6 +5,7 @@ const PORT = process.env.PORT ?? 3001;
 const IS_E2E = process.env.E2E_TESTS === '1';
 const NIGHT_DELAY_MS = IS_E2E ? 0 : 3000;
 const PHASE_DELAY_MS = IS_E2E ? 0 : 3000;
+const HUNTER_SHOT_WINDOW_MS = IS_E2E ? 20000 : 5000;
 const ROOM_CODE = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 4);
 const PLAYER_ID = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 12);
 
@@ -29,7 +30,7 @@ const ROLE_INFO: RoleInfo = {
   witch: {
     label: 'Witch',
     team: 'village',
-    description: 'You have one heal potion and one poison potion for the whole game. You may use at most one per night.'
+    description: 'You have one heal potion and one poison potion for the whole game. You may use both in the same night.'
   },
   armor: {
     label: 'Armor',
@@ -61,6 +62,7 @@ export {
   PORT,
   NIGHT_DELAY_MS,
   PHASE_DELAY_MS,
+  HUNTER_SHOT_WINDOW_MS,
   ROOM_CODE,
   PLAYER_ID,
   ROLE_INFO,

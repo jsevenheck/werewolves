@@ -21,12 +21,14 @@ export interface ClientToServerEvents {
   hostSkipStep: (payload: { roomCode: string; playerId: string }) => void;
   submitDayVote: (payload: { roomCode: string; playerId: string; targetId?: string | null }) => void;
   hunterShoot: (payload: { roomCode: string; playerId: string; targetId: string }) => void;
+  restartGame: (payload: { roomCode: string; playerId: string }) => void;
   requestState: (payload: { roomCode: string; playerId: string }) => void;
 }
 
 export interface ServerToClientEvents {
   roomUpdate: (room: RoomView) => void;
   hunterPrompt: (payload: { roomCode: string }) => void;
+  wolfVoteRejected: (payload: { reason: 'already_voted' }) => void;
 }
 
 export interface InterServerEvents {

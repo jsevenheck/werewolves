@@ -37,6 +37,10 @@ function clearRoomTimers(room: Room) {
     clearTimeout(room.phaseTimer);
     room.phaseTimer = null;
   }
+  if (room.hunterShotTimer) {
+    clearTimeout(room.hunterShotTimer);
+    room.hunterShotTimer = null;
+  }
 }
 
 /**

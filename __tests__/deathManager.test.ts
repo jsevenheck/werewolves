@@ -23,12 +23,16 @@ const makeRoom = (): Room => ({
   pendingDeaths: [],
   logs: [],
   lastNightDeaths: [],
+  lastDayDeaths: [],
+  lastDayMessage: null,
   awaitingHunterShot: null,
   winner: null,
   nextNightStep: null,
   phaseTransition: null,
   transitionTimer: null,
-  phaseTimer: null
+  phaseTimer: null,
+  hunterShotTimer: null,
+  hunterShotQueue: []
 });
 
 const buildPlayer = (overrides: Partial<Player>): Player => ({
@@ -70,6 +74,7 @@ describe('deathManager', () => {
   });
 
   test('resolveDeaths queues hunter prompt and delays winner check', () => {
+    jest.useFakeTimers();
     const room = makeRoom();
     room.players = {
       hunter: buildPlayer({
@@ -90,8 +95,14 @@ describe('deathManager', () => {
     resolveDeaths(room, 'day', broadcastRoom, io as unknown as never);
 
     expect(room.awaitingHunterShot).toBe('hunter');
+    expect(room.hunterShotTimer).not.toBeNull();
     expect(emit).toHaveBeenCalledWith('hunterPrompt', { roomCode: room.code });
     expect(room.winner).toBeNull();
+    if (room.hunterShotTimer) {
+      clearTimeout(room.hunterShotTimer);
+      room.hunterShotTimer = null;
+    }
+    jest.useRealTimers();
   });
 
   test('checkWinners ends the game on wolf parity', () => {

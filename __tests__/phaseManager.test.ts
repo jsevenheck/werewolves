@@ -11,6 +11,8 @@ const makeRoom = (): Room => ({
   phaseTransition: null,
   transitionTimer: null,
   phaseTimer: null,
+  hunterShotTimer: null,
+  hunterShotQueue: [],
   wolfVotes: { stale: 'x' },
   wolfTarget: 'old',
   healedTarget: null,
@@ -18,6 +20,8 @@ const makeRoom = (): Room => ({
   seerActed: true,
   pendingDeaths: [],
   lastNightDeaths: [],
+  lastDayDeaths: [],
+  lastDayMessage: null,
   voteState: { votes: { a: 'b' }, revoteFromTie: ['b'] },
   awaitingHunterShot: 'p1',
   dayCount: 0,
@@ -58,7 +62,7 @@ describe('phaseManager', () => {
 
     expect(room.phase).toBe('night');
     expect(room.phaseStep).toBe('wolves');
-    expect(room.wolfVotes).toEqual({ w1: null });
+    expect(room.wolfVotes).toEqual({ w1: '' });
     expect(room.wolfTarget).toBeNull();
     expect(room.seerActed).toBe(false);
     expect(room.pendingDeaths).toEqual([]);
@@ -72,6 +76,10 @@ describe('phaseManager', () => {
     const room = makeRoom();
     room.phase = 'night';
     room.phaseStep = 'wolves';
+    room.seerActed = false;
+    room.players = {
+      s1: buildPlayer({ id: 's1', role: 'seer', alive: true })
+    };
     const broadcastRoom = jest.fn();
 
     scheduleNightStep(room, 'seer', broadcastRoom, undefined as never);
