@@ -166,7 +166,7 @@ function renderWolfForm(room: RoomView) {
   }
   const wolfIds = Object.keys(room.wolfVotes || {});
   const votesCast = Object.values(room.wolfVotes || {}).filter((value) => value !== undefined && value !== '').length;
-  const aliveTargets = (room?.players ?? []).filter((p) => p.alive && p.id !== state.playerId && p.role !== 'werewolf');
+  const aliveTargets = (room?.players ?? []).filter((p) => p.alive && !wolfIds.includes(p.id));
   if (!aliveTargets.length) {
     return '<p>No valid targets available.</p>';
   }
