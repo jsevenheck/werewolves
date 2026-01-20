@@ -117,4 +117,18 @@ describe('deathManager', () => {
     expect(room.transitionTimer).toBeNull();
     expect(room.phaseTimer).toBeNull();
   });
+
+  test('checkWinners defers wolf parity when lone witch has both potions', () => {
+    const room = makeRoom();
+    room.players = {
+      wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: true }),
+      witch: buildPlayer({ id: 'witch', role: 'witch', team: 'village', alive: true })
+    };
+    room.witchState = { healAvailable: true, poisonAvailable: true };
+
+    checkWinners(room);
+
+    expect(room.winner).toBeNull();
+    expect(room.phase).not.toBe('ended');
+  });
 });

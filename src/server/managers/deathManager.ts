@@ -131,6 +131,11 @@ function checkWinners(room: Room) {
   }
   const others = alive.length - wolves.length;
   if (wolves.length >= others) {
+    const loneWitch = alive.length === 2 && alive.some((p) => p.role === 'witch');
+    const witchHasLastStand = loneWitch && room.witchState.healAvailable && room.witchState.poisonAvailable;
+    if (witchHasLastStand) {
+      return;
+    }
     room.winner = { team: 'wolves', reason: 'Werewolves reached parity.' };
     room.phase = 'ended';
     room.phaseStep = null;
