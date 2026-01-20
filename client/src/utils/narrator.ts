@@ -31,6 +31,7 @@ class Narrator {
   private currentHowl: Howl | null = null;
   private readonly howls = new Map<string, Howl>();
   private readonly howlPromises = new Map<string, Promise<Howl>>();
+  private disableToken = 0;
   private readonly storage: Storage | null;
   private readonly playClip: (key: string) => void;
 
@@ -61,6 +62,7 @@ class Narrator {
       this.storage.setItem(STORAGE_KEY, String(next));
     }
     if (!next) {
+      this.disableToken += 1;
       // Stop any currently playing narration
       this.stop();
       // Unload and clear all cached Howl instances to free memory
@@ -68,6 +70,7 @@ class Narrator {
         howl.unload();
       }
       this.howls.clear();
+      this.howlPromises.clear();
       this.currentHowl = null;
     }
   }
@@ -168,6 +171,8 @@ class Narrator {
     const promise = new Promise<Howl>((resolve) => {
       let attemptedFallback = false;
       let resolved = false;
+      const requestToken = this.disableToken;
+      const shouldCache = () => this.enabled && this.disableToken === requestToken;
       const createHowl = (src: string) =>
         new Howl({
           src,
@@ -185,8 +190,14 @@ class Narrator {
       const finalize = (howl: Howl) => {
         if (resolved) return;
         resolved = true;
-        this.howls.set(key, howl);
         this.howlPromises.delete(key);
+        if (!shouldCache()) {
+          cleanup(howl);
+          howl.unload();
+          resolve(howl);
+          return;
+        }
+        this.howls.set(key, howl);
         resolve(howl);
       };
       const swapToFallback = (playAfterSwap: boolean) => {
@@ -196,8 +207,11 @@ class Narrator {
         cleanup(activeHowl);
         activeHowl.unload();
         activeHowl = fallbackHowl;
-        this.howls.set(key, fallbackHowl);
         attachListeners(fallbackHowl);
+        if (!shouldCache()) {
+          finalize(fallbackHowl);
+          return;
+        }
         if (playAfterSwap) {
           fallbackHowl.play();
           finalize(fallbackHowl);
