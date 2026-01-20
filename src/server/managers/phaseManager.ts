@@ -33,20 +33,21 @@ function scheduleNightStep(
   broadcastRoom: (room: Room) => void,
   io: Server<ClientToServerEvents, ServerToClientEvents>
 ) {
+  const resolvedStep = resolveNightStep(room, nextStep);
   clearRoomTimers(room);
   room.phaseStep = 'transition';
-  room.nextNightStep = nextStep;
+  room.nextNightStep = resolvedStep;
   room.phaseTransition = null;
   broadcastRoom(room);
   room.transitionTimer = setTimeout(() => {
     room.transitionTimer = null;
     if (room.phase !== 'night') return;
-    room.phaseStep = nextStep;
+    room.phaseStep = resolvedStep;
     room.nextNightStep = null;
-    if (nextStep === 'resolve') {
+    if (resolvedStep === 'resolve') {
       const { resolveNight } = require('./nightManager');
       resolveNight(room, broadcastRoom, io);
-    } else if (nextStep === 'seer' || nextStep === 'witch') {
+    } else if (resolvedStep === 'seer' || resolvedStep === 'witch') {
       const { advanceNightStep } = require('./nightManager');
       advanceNightStep(room, broadcastRoom, io);
     } else {
@@ -102,6 +103,22 @@ function holdDayToNightTransition(room: Room, broadcastRoom: (room: Room) => voi
   room.phaseTransition = 'dayToNight';
   room.nextNightStep = null;
   broadcastRoom(room);
+}
+
+function resolveNightStep(room: Room, nextStep: NightStep): NightStep {
+  if (nextStep === 'seer') {
+    const seerAlive = Object.values(room.players).some((p) => p.role === 'seer' && p.alive);
+    if (!seerAlive) {
+      return resolveNightStep(room, 'witch');
+    }
+  }
+  if (nextStep === 'witch') {
+    const witchAlive = Object.values(room.players).some((p) => p.role === 'witch' && p.alive);
+    if (!witchAlive) {
+      return 'resolve';
+    }
+  }
+  return nextStep;
 }
 
 function advanceFromReveal(room: Room, broadcastRoom: (room: Room) => void) {
