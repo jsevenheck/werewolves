@@ -4,6 +4,15 @@ import type { Socket } from 'socket.io-client';
 import { notify } from '../utils/helpers';
 import { narrator } from '../utils/narrator';
 
+let narratorUnlockInProgress = false;
+
+function setNarratorButtonDisabled(disabled: boolean) {
+  const button = document.getElementById('toggle-narrator');
+  if (button instanceof HTMLButtonElement) {
+    button.disabled = disabled;
+  }
+}
+
 function bindCommonHandlers(
   socket: Socket<ServerToClientEvents, ClientToServerEvents>,
   renderApp: () => void,
@@ -36,7 +45,7 @@ function bindCommonHandlers(
   });
 
   const toggleNarratorBtn = document.getElementById('toggle-narrator');
-  let narratorUnlockInProgress = false;
+  setNarratorButtonDisabled(narratorUnlockInProgress);
   toggleNarratorBtn?.addEventListener('click', async () => {
     if (narratorUnlockInProgress) {
       return;
@@ -49,11 +58,7 @@ function bindCommonHandlers(
     }
 
     narratorUnlockInProgress = true;
-    const buttonElement =
-      toggleNarratorBtn instanceof HTMLButtonElement ? toggleNarratorBtn : null;
-    if (buttonElement) {
-      buttonElement.disabled = true;
-    }
+    setNarratorButtonDisabled(true);
 
     try {
       const unlocked = await narrator.unlock();
@@ -67,9 +72,7 @@ function bindCommonHandlers(
       renderApp();
     } finally {
       narratorUnlockInProgress = false;
-      if (buttonElement) {
-        buttonElement.disabled = false;
-      }
+      setNarratorButtonDisabled(false);
     }
   });
 }

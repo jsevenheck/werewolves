@@ -1,4 +1,4 @@
-type HowlEvent = 'play' | 'playerror' | 'loaderror';
+type HowlEvent = 'play' | 'playerror' | 'load' | 'loaderror';
 
 class MockHowl {
   static instances: MockHowl[] = [];
@@ -12,6 +12,7 @@ class MockHowl {
   play = jest.fn(() => 1);
   stop = jest.fn();
   unload = jest.fn();
+  load = jest.fn(() => this);
 
   constructor(options: Record<string, unknown>) {
     this.options = options;
@@ -84,6 +85,8 @@ const buildRoom = (overrides: RoomOverrides = {}): RoomView => ({
   ...overrides
 });
 
+const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0));
+
 describe('computeNarrationKey', () => {
   beforeEach(() => {
     MockHowl.reset();
@@ -146,6 +149,58 @@ describe('narrator dedupe', () => {
 
     expect(playClip).toHaveBeenCalledTimes(2);
     expect(playClip).toHaveBeenLastCalledWith('night_wolves');
+  });
+});
+
+describe('narrator playback', () => {
+  beforeEach(() => {
+    MockHowl.reset();
+  });
+
+  test('does not play if disabled while clip is loading', async () => {
+    const narrator = createNarrator({ initialEnabled: true, initialUnlocked: true, storage: null });
+    const room = buildRoom({ phase: 'day' });
+
+    narrator.handleRoomUpdate(null, room);
+    const [howl] = MockHowl.instances;
+
+    narrator.setEnabled(false);
+    howl.trigger('load');
+    await flushPromises();
+
+    expect(howl.play).not.toHaveBeenCalled();
+  });
+
+  test('falls back to placeholder audio on loaderror', async () => {
+    const narrator = createNarrator({ initialEnabled: true, initialUnlocked: true, storage: null });
+    const room = buildRoom({ phase: 'day' });
+
+    narrator.handleRoomUpdate(null, room);
+    const initialHowl = MockHowl.instances[0];
+
+    initialHowl.trigger('loaderror');
+    const fallbackHowl = MockHowl.instances[1];
+    fallbackHowl.trigger('load');
+    await flushPromises();
+
+    expect(initialHowl.unload).toHaveBeenCalled();
+    expect(fallbackHowl.play).toHaveBeenCalled();
+    expect(String(fallbackHowl.options.src)).toMatch(/^data:audio\/mp3;base64/);
+  });
+
+  test('setEnabled(false) stops playback and unloads cached audio', async () => {
+    const narrator = createNarrator({ initialEnabled: true, initialUnlocked: true, storage: null });
+    const room = buildRoom({ phase: 'day' });
+
+    narrator.handleRoomUpdate(null, room);
+    const [howl] = MockHowl.instances;
+
+    howl.trigger('load');
+    await flushPromises();
+    narrator.setEnabled(false);
+
+    expect(howl.stop).toHaveBeenCalled();
+    expect(howl.unload).toHaveBeenCalled();
   });
 });
 

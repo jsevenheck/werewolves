@@ -153,6 +153,7 @@ class Narrator {
 
   private async playWithHowler(key: string) {
     const howl = await this.getHowl(key);
+    if (!this.enabled || !this.unlocked) return;
     this.stop();
     this.currentHowl = howl;
     howl.play();
