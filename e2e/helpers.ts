@@ -424,7 +424,7 @@ export const advanceToDay = async (
 
 export const getAliveNames = async (page: Page) => {
   return page.evaluate(() => {
-    return [...document.querySelectorAll('.player-card')]
+    return Array.from(document.querySelectorAll('.player-card'))
       .filter((card) => !card.classList.contains('dead'))
       .map((card) => card.querySelector('strong')?.textContent?.trim())
       .filter(Boolean);
