@@ -1,6 +1,12 @@
 import { getRoom } from '../src/server/models/room';
 import { broadcastRoom } from '../src/server/managers/broadcastManager';
-import { scheduleNightStep, schedulePhaseTransition, startNight, advanceFromReveal } from '../src/server/managers/phaseManager';
+import {
+  scheduleNightStep,
+  schedulePhaseTransition,
+  startNight,
+  advanceFromReveal,
+  holdDayToNightTransition
+} from '../src/server/managers/phaseManager';
 import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../src/server/managers/nightManager';
 import { queueDeath, resolveDeaths, startNextHunterShot } from '../src/server/managers/deathManager';
 import { setupSocketHandlers } from '../src/server/handlers/socketHandlers';
@@ -20,6 +26,7 @@ jest.mock('../src/server/managers/broadcastManager', () => ({
 
 jest.mock('../src/server/managers/phaseManager', () => ({
   schedulePhaseTransition: jest.fn(),
+  holdDayToNightTransition: jest.fn(),
   advanceFromReveal: jest.fn(),
   startNight: jest.fn(),
   notifyLovers: jest.fn(),
@@ -404,6 +411,6 @@ describe('socketHandlers hunterShoot', () => {
     expect(room.awaitingHunterShot).toBeNull();
     expect(resolveDeaths).toHaveBeenCalledWith(room, 'day', expect.any(Function), io);
     expect(startNextHunterShot).toHaveBeenCalledWith(room, expect.any(Function), io);
-    expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'dayToNight', expect.any(Function));
+    expect(holdDayToNightTransition).toHaveBeenCalledWith(room, expect.any(Function));
   });
 });

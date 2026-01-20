@@ -4,7 +4,7 @@ import { createRoom, getRoom } from '../models/room';
 import { createPlayer, setSocketIndex, getSocketIndex, deleteSocketIndex } from '../models/player';
 import { broadcastRoom, sendStateToPlayer } from '../managers/broadcastManager';
 import { normalizeRoleConfig, validateCounts, assignRoles } from '../managers/roleManager';
-import { schedulePhaseTransition, advanceFromReveal, startNight, notifyLovers } from '../managers/phaseManager';
+import { schedulePhaseTransition, advanceFromReveal, startNight, notifyLovers, holdDayToNightTransition } from '../managers/phaseManager';
 import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../managers/nightManager';
 import { tryResolveDayVote } from '../managers/voteManager';
 import { queueDeath, resolveDeaths, startNextHunterShot } from '../managers/deathManager';
@@ -133,6 +133,7 @@ function setupSocketHandlers(
       return;
     }
     if (targetId && !room.players[targetId]?.alive) return;
+    if (targetId && room.players[targetId]?.role === 'werewolf') return;
     room.wolfVotes[playerId] = targetId || null;
     tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io), io);
     broadcastRoom(room, io);
@@ -289,7 +290,11 @@ function setupSocketHandlers(
         room.phase === 'day' ? 'dayToNight' :
         null;
       if (transition) {
-        schedulePhaseTransition(room, transition, (r) => broadcastRoom(r, io));
+        if (transition === 'dayToNight') {
+          holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
+        } else {
+          schedulePhaseTransition(room, transition, (r) => broadcastRoom(r, io));
+        }
       }
     }
   });

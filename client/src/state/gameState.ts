@@ -10,6 +10,7 @@ type GameState = {
   storedSession: StoredSession | null;
   roleVisible: boolean;
   pendingVote: string | null | undefined;
+  pendingWolfVote: string | undefined;
   updateConfigTimeoutId: number | null;
   readyButtonTimeoutId: number | null;
 };
@@ -23,6 +24,7 @@ const state: GameState = {
   storedSession: null,
   roleVisible: false,
   pendingVote: undefined,
+  pendingWolfVote: undefined,
   updateConfigTimeoutId: null,
   readyButtonTimeoutId: null
 };

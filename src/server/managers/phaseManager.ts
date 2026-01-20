@@ -97,6 +97,13 @@ function schedulePhaseTransition(
   }, PHASE_DELAY_MS);
 }
 
+function holdDayToNightTransition(room: Room, broadcastRoom: (room: Room) => void) {
+  clearRoomTimers(room);
+  room.phaseTransition = 'dayToNight';
+  room.nextNightStep = null;
+  broadcastRoom(room);
+}
+
 function advanceFromReveal(room: Room, broadcastRoom: (room: Room) => void) {
   if (room.roleConfig.armor > 0 && Object.values(room.players).some((p) => p.role === 'armor' && p.alive)) {
     room.phase = 'armor';
@@ -120,6 +127,7 @@ export {
   startNight,
   scheduleNightStep,
   schedulePhaseTransition,
+  holdDayToNightTransition,
   advanceFromReveal,
   notifyLovers
 };
