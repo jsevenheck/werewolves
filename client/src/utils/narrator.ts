@@ -30,6 +30,7 @@ class Narrator {
   private lastAnnouncedKey: NarrationKey = null;
   private currentHowl: Howl | null = null;
   private readonly howls = new Map<string, Howl>();
+  private readonly howlPromises = new Map<string, Promise<Howl>>();
   private readonly storage: Storage | null;
   private readonly playClip: (key: string) => void;
 
@@ -37,7 +38,7 @@ class Narrator {
     this.storage = options.storage ?? (typeof localStorage === 'undefined' ? null : localStorage);
     this.enabled = options.initialEnabled ?? false;
     this.unlocked = options.initialUnlocked ?? false;
-    this.playClip = options.playClip ?? ((key) => this.playWithHowler(key));
+    this.playClip = options.playClip ?? ((key) => void this.playWithHowler(key));
   }
 
   initFromStorage() {
@@ -146,53 +147,81 @@ class Narrator {
     }
   }
 
-  private playWithHowler(key: string) {
-    const howl = this.getHowl(key);
+  private async playWithHowler(key: string) {
+    const howl = await this.getHowl(key);
     this.stop();
     this.currentHowl = howl;
     howl.play();
   }
 
-  private getHowl(key: string) {
+  private async getHowl(key: string) {
     const existing = this.howls.get(key);
     if (existing) return existing;
-    let attemptedFallback = false;
-    let howl = new Howl({
-      src: `/audio/${key}.mp3`,
-      html5: true,
-      preload: 'metadata',
-      volume: DEFAULT_VOLUME
+    const pending = this.howlPromises.get(key);
+    if (pending) return pending;
+
+    const promise = new Promise<Howl>((resolve) => {
+      let attemptedFallback = false;
+      let resolved = false;
+      const createHowl = (src: string) =>
+        new Howl({
+          src,
+          html5: true,
+          preload: 'metadata',
+          volume: DEFAULT_VOLUME
+        });
+      let activeHowl = createHowl(`/audio/${key}.mp3`);
+
+      const cleanup = (howl: Howl) => {
+        howl.off('load');
+        howl.off('loaderror');
+        howl.off('playerror');
+      };
+      const finalize = (howl: Howl) => {
+        if (resolved) return;
+        resolved = true;
+        this.howls.set(key, howl);
+        this.howlPromises.delete(key);
+        resolve(howl);
+      };
+      const swapToFallback = (playAfterSwap: boolean) => {
+        if (attemptedFallback) return;
+        attemptedFallback = true;
+        const fallbackHowl = createHowl(PLACEHOLDER_AUDIO);
+        cleanup(activeHowl);
+        activeHowl.unload();
+        activeHowl = fallbackHowl;
+        this.howls.set(key, fallbackHowl);
+        attachListeners(fallbackHowl);
+        if (playAfterSwap) {
+          fallbackHowl.play();
+          finalize(fallbackHowl);
+          return;
+        }
+        fallbackHowl.load();
+      };
+      const attachListeners = (targetHowl: Howl) => {
+        targetHowl.once('load', () => {
+          finalize(targetHowl);
+        });
+        targetHowl.once('loaderror', () => {
+          if (attemptedFallback) {
+            finalize(targetHowl);
+            return;
+          }
+          swapToFallback(false);
+        });
+        targetHowl.once('playerror', () => {
+          swapToFallback(true);
+        });
+      };
+
+      attachListeners(activeHowl);
+      activeHowl.load();
     });
-    const tryFallback = (playAfterSwap: boolean) => {
-      if (attemptedFallback) return;
-      attemptedFallback = true;
-      const fallbackHowl = new Howl({
-        src: PLACEHOLDER_AUDIO,
-        html5: true,
-        preload: 'metadata',
-        volume: DEFAULT_VOLUME
-      });
-      this.howls.set(key, fallbackHowl);
-      const previousHowl = howl;
-      howl = fallbackHowl;
-      previousHowl.unload();
-      if (playAfterSwap) {
-        fallbackHowl.play();
-        return;
-      }
-      fallbackHowl.load();
-    };
-    const attachListeners = (targetHowl: Howl) => {
-      targetHowl.once('loaderror', () => {
-        tryFallback(false);
-      });
-      targetHowl.once('playerror', () => {
-        tryFallback(true);
-      });
-    };
-    attachListeners(howl);
-    this.howls.set(key, howl);
-    return howl;
+
+    this.howlPromises.set(key, promise);
+    return promise;
   }
 }
 
