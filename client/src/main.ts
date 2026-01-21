@@ -55,8 +55,15 @@ socket.on('roomUpdate', (room) => {
   if (room.voteState?.yourVote !== undefined) {
     state.pendingVote = undefined;
   }
+  const currentWolfVote = state.playerId ? room.wolfVotes?.[state.playerId] : undefined;
+  if (currentWolfVote !== undefined && currentWolfVote !== '') {
+    state.pendingWolfVote = undefined;
+  }
   if (room.phase === 'lobby') {
     state.roleVisible = false;
+  }
+  if (shouldDeferRoomRender(room)) {
+    return;
   }
   renderApp();
 });
@@ -95,6 +102,9 @@ function renderApp() {
   if (state.room.phase !== 'day') {
     state.pendingVote = undefined;
   }
+  if (state.room.phase !== 'night' || state.room.phaseStep !== 'wolves') {
+    state.pendingWolfVote = undefined;
+  }
   const sections = [
     renderHeader(),
     renderPhaseSection(state.room),
@@ -107,6 +117,30 @@ function renderApp() {
   updateHunterOverlay(socket);
 }
 
+function shouldDeferRoomRender(room: RoomView) {
+  const active = document.activeElement;
+  if (!(active instanceof HTMLSelectElement)) {
+    return false;
+  }
+
+  if (room.phase === 'day') {
+    const isVoteSelect = !!active.closest('#vote-form');
+    return isVoteSelect && room.voteState?.yourVote === undefined;
+  }
+
+  if (room.phase === 'night' && room.phaseStep === 'wolves') {
+    const isWolfSelect = !!active.closest('#wolf-form');
+    if (!isWolfSelect || !state.playerId) {
+      return false;
+    }
+    const currentVote = room.wolfVotes?.[state.playerId];
+    const locked = currentVote !== undefined && currentVote !== '';
+    return !locked;
+  }
+
+  return false;
+}
+
 function renderPhaseSection(room: RoomView) {
   const self = room.self;
 
@@ -116,7 +150,7 @@ function renderPhaseSection(room: RoomView) {
         <h2>Game Over</h2>
         <p>${room.winner.reason}</p>
         <p><strong>Winner:</strong> ${room.winner.team.toUpperCase()}</p>
-        <button id="restart-btn" type="button">Return to lobby</button>
+        ${room.hostId === self?.id ? '<button id="restart-btn" type="button">Return to lobby</button>' : ''}
         ${renderRoleRevealList(room)}
       </section>
     `;
@@ -142,8 +176,9 @@ function renderPhaseSection(room: RoomView) {
           return `<h3>Vote Results</h3><p>${room.lastDayMessage || 'No one was eliminated.'}</p>`;
         })()
       : '';
+    const hostSkipLabel = room.phaseTransition === 'dayToNight' ? 'Start next round' : 'Skip transition';
     const hostSkipButtonHtml = room.hostId === self?.id
-      ? '<button id="host-skip-btn" type="button">Skip transition</button>'
+      ? `<button id="host-skip-btn" type="button">${hostSkipLabel}</button>`
       : '';
     return `
       <section class="panel">

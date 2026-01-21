@@ -38,7 +38,7 @@ function bindPhaseHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
   } else if (room.phase === 'armor') {
     bindArmorHandlers(socket, room);
   } else if (room.phase === 'night') {
-    bindNightHandlers(socket, room);
+    bindNightHandlers(socket, room, renderApp);
   } else if (room.phase === 'day') {
     bindDayHandlers(socket, room, renderApp);
   }
@@ -174,7 +174,11 @@ function bindArmorHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
   });
 }
 
-function bindNightHandlers(socket: Socket<ServerToClientEvents, ClientToServerEvents>, room: RoomView) {
+function bindNightHandlers(
+  socket: Socket<ServerToClientEvents, ClientToServerEvents>,
+  room: RoomView,
+  renderApp: () => void
+) {
   if (!room) {
     return;
   }
@@ -193,12 +197,24 @@ function bindNightHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
 
   if (room.phaseStep === 'wolves' && room.self?.role === 'werewolf' && room.self.alive) {
     const wolfForm = document.getElementById('wolf-form') as HTMLFormElement | null;
+    const wolfSelect = wolfForm?.querySelector('select[name="target"]') as HTMLSelectElement | null;
+    if (wolfSelect) {
+      wolfSelect.addEventListener('change', () => {
+        state.pendingWolfVote = wolfSelect.value || undefined;
+      });
+      wolfSelect.addEventListener('blur', () => {
+        window.setTimeout(() => {
+          renderApp();
+        }, 0);
+      });
+    }
     wolfForm?.addEventListener('submit', (event) => {
       event.preventDefault();
       if (!wolfForm) return;
       const data = new FormData(wolfForm);
       const targetId = data.get('target');
       if (!targetId || !state.playerId) return;
+      state.pendingWolfVote = undefined;
       socket.emit('submitWolfVote', { roomCode: room.code, playerId: state.playerId, targetId: String(targetId) });
     });
   }
@@ -252,6 +268,11 @@ function bindDayHandlers(socket: Socket<ServerToClientEvents, ClientToServerEven
       voteSubmit.disabled = !voteSelect.value;
       const selected = voteSelect.value;
       state.pendingVote = selected === '__abstain__' ? null : (selected ? selected : null);
+    });
+    voteSelect.addEventListener('blur', () => {
+      window.setTimeout(() => {
+        renderApp();
+      }, 0);
     });
   }
 

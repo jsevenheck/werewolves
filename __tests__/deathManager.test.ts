@@ -74,7 +74,6 @@ describe('deathManager', () => {
   });
 
   test('resolveDeaths queues hunter prompt and delays winner check', () => {
-    jest.useFakeTimers();
     const room = makeRoom();
     room.players = {
       hunter: buildPlayer({
@@ -95,14 +94,9 @@ describe('deathManager', () => {
     resolveDeaths(room, 'day', broadcastRoom, io as unknown as never);
 
     expect(room.awaitingHunterShot).toBe('hunter');
-    expect(room.hunterShotTimer).not.toBeNull();
+    expect(room.hunterShotTimer).toBeNull();
     expect(emit).toHaveBeenCalledWith('hunterPrompt', { roomCode: room.code });
     expect(room.winner).toBeNull();
-    if (room.hunterShotTimer) {
-      clearTimeout(room.hunterShotTimer);
-      room.hunterShotTimer = null;
-    }
-    jest.useRealTimers();
   });
 
   test('checkWinners ends the game on wolf parity', () => {
@@ -122,5 +116,19 @@ describe('deathManager', () => {
     expect(room.phaseTransition).toBeNull();
     expect(room.transitionTimer).toBeNull();
     expect(room.phaseTimer).toBeNull();
+  });
+
+  test('checkWinners defers wolf parity when lone witch has both potions', () => {
+    const room = makeRoom();
+    room.players = {
+      wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: true }),
+      witch: buildPlayer({ id: 'witch', role: 'witch', team: 'village', alive: true })
+    };
+    room.witchState = { healAvailable: true, poisonAvailable: true };
+
+    checkWinners(room);
+
+    expect(room.winner).toBeNull();
+    expect(room.phase).not.toBe('ended');
   });
 });

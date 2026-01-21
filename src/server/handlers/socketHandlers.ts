@@ -4,10 +4,10 @@ import { createRoom, getRoom } from '../models/room';
 import { createPlayer, setSocketIndex, getSocketIndex, deleteSocketIndex } from '../models/player';
 import { broadcastRoom, sendStateToPlayer } from '../managers/broadcastManager';
 import { normalizeRoleConfig, validateCounts, assignRoles } from '../managers/roleManager';
-import { schedulePhaseTransition, advanceFromReveal, startNight, notifyLovers } from '../managers/phaseManager';
+import { schedulePhaseTransition, advanceFromReveal, startNight, notifyLovers, holdDayToNightTransition } from '../managers/phaseManager';
 import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../managers/nightManager';
 import { tryResolveDayVote } from '../managers/voteManager';
-import { queueDeath, resolveDeaths, startNextHunterShot } from '../managers/deathManager';
+import { queueDeath, resolveDeaths, startNextHunterShot, checkWinners } from '../managers/deathManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 
 function setupSocketHandlers(
@@ -133,6 +133,7 @@ function setupSocketHandlers(
       return;
     }
     if (targetId && !room.players[targetId]?.alive) return;
+    if (targetId && room.players[targetId]?.role === 'werewolf') return;
     room.wolfVotes[playerId] = targetId || null;
     tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io), io);
     broadcastRoom(room, io);
@@ -163,7 +164,37 @@ function setupSocketHandlers(
   socket.on('hostSkipStep', ({ roomCode, playerId }) => {
     const room = getRoom(roomCode);
     if (!room || room.hostId !== playerId) return;
-    if (room.phase !== 'night' && !room.phaseTransition) return;
+    if (room.phase !== 'night' && !room.phaseTransition && !room.awaitingHunterShot) return;
+
+    if (room.awaitingHunterShot) {
+      room.awaitingHunterShot = null;
+      if (room.hunterShotTimer) {
+        clearTimeout(room.hunterShotTimer);
+        room.hunterShotTimer = null;
+      }
+      if (startNextHunterShot(room, (r) => broadcastRoom(r, io), io)) {
+        return;
+      }
+      if (!room.winner) {
+        checkWinners(room);
+      }
+      if (!room.winner) {
+        const transition =
+          room.phase === 'night' ? 'nightToDay' :
+          room.phase === 'day' ? 'dayToNight' :
+          null;
+        if (transition) {
+          if (transition === 'dayToNight') {
+            holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
+          } else {
+            schedulePhaseTransition(room, transition, (r) => broadcastRoom(r, io));
+          }
+          return;
+        }
+      }
+      broadcastRoom(room, io);
+      return;
+    }
 
     if (room.phaseStep === 'transition' && room.nextNightStep) {
       clearRoomTimers(room);
@@ -289,7 +320,11 @@ function setupSocketHandlers(
         room.phase === 'day' ? 'dayToNight' :
         null;
       if (transition) {
-        schedulePhaseTransition(room, transition, (r) => broadcastRoom(r, io));
+        if (transition === 'dayToNight') {
+          holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
+        } else {
+          schedulePhaseTransition(room, transition, (r) => broadcastRoom(r, io));
+        }
       }
     }
   });

@@ -158,6 +158,14 @@ const selectOptionByLabel = async (select: Locator, label?: string | null) => {
   if (!label) {
     return false;
   }
+  const option = select.locator('option', { hasText: label }).first();
+  const optionReady = await option
+    .waitFor({ state: 'attached', timeout: 2000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!optionReady) {
+    return false;
+  }
   try {
     await select.selectOption({ label });
     return true;
@@ -180,8 +188,9 @@ const trySubmitNightActions = async (
     if ((await wolfForm.count()) && (await wolfForm.isVisible())) {
       if (!state.wolf) {
         const select = wolfForm.locator('select[name="target"]');
-        const picked =
-          (await selectOptionByLabel(select, wolfTargetName)) || (await selectFirstOption(select));
+        const picked = wolfTargetName
+          ? await selectOptionByLabel(select, wolfTargetName)
+          : await selectFirstOption(select);
         if (picked) {
           await wolfForm.locator('button[type="submit"]').click();
           state.wolf = true;
@@ -415,7 +424,7 @@ export const advanceToDay = async (
 
 export const getAliveNames = async (page: Page) => {
   return page.evaluate(() => {
-    return [...document.querySelectorAll('.player-card')]
+    return Array.from(document.querySelectorAll('.player-card'))
       .filter((card) => !card.classList.contains('dead'))
       .map((card) => card.querySelector('strong')?.textContent?.trim())
       .filter(Boolean);
@@ -435,7 +444,11 @@ export const voteAllForTarget = async (
     if (player.name === targetName) {
       await select.selectOption('__abstain__');
     } else {
-      await select.selectOption({ label: targetName });
+      const picked = await selectOptionByLabel(select, targetName);
+      if (!picked) {
+        await select.locator('option', { hasText: targetName }).first().waitFor({ state: 'attached', timeout: 5000 });
+        await select.selectOption({ label: targetName });
+      }
     }
     await player.page.click('#vote-submit');
   }

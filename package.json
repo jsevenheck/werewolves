@@ -1,16 +1,17 @@
 {
   "name": "werewolves",
   "version": "1.0.0",
+  "packageManager": "pnpm@10.28.1",
   "description": "Moderator-free Werewolf / Mafia party game MVP",
   "main": "dist/server.js",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev": "concurrently \"pnpm run dev:server\" \"pnpm run dev:client\"",
     "dev:server": "tsx watch server.ts",
     "dev:client": "vite --config vite.config.ts",
-    "build": "npm run build:server && npm run build:client",
+    "build": "pnpm run build:server && pnpm run build:client",
     "build:server": "tsc -p tsconfig.server.json",
     "build:client": "vite build --config vite.config.ts",
     "start": "node dist/server.js",

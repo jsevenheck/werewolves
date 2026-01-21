@@ -1,9 +1,10 @@
-import { schedulePhaseTransition } from '../src/server/managers/phaseManager';
+import { holdDayToNightTransition } from '../src/server/managers/phaseManager';
 import { tryResolveDayVote, resolveDayKill } from '../src/server/managers/voteManager';
 import type { Player, Room, RoleConfig } from '../src/shared/types';
 
 jest.mock('../src/server/managers/phaseManager', () => ({
-  schedulePhaseTransition: jest.fn()
+  schedulePhaseTransition: jest.fn(),
+  holdDayToNightTransition: jest.fn()
 }));
 
 const makeRoom = (players: Record<string, Player>): Room => ({
@@ -88,7 +89,7 @@ describe('voteManager', () => {
 
     tryResolveDayVote(room, broadcastRoom, undefined as never);
 
-    expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'dayToNight', broadcastRoom);
+    expect(holdDayToNightTransition).toHaveBeenCalledWith(room, broadcastRoom);
     expect(room.logs[room.logs.length - 1].text).toBe('Majority abstained. No one eliminated.');
     expect(room.lastDayDeaths).toEqual([]);
     expect(room.lastDayMessage).toBe('No one was eliminated.');
@@ -107,7 +108,7 @@ describe('voteManager', () => {
     tryResolveDayVote(room, broadcastRoom, undefined as never);
 
     expect(room.voteState.votes.c).toBeNull();
-    expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'dayToNight', broadcastRoom);
+    expect(holdDayToNightTransition).toHaveBeenCalledWith(room, broadcastRoom);
     expect(room.logs[room.logs.length - 1].text).toBe('Vote skipped. No one eliminated.');
     expect(room.lastDayMessage).toBe('No one was eliminated.');
   });
