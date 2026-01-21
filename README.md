@@ -15,17 +15,17 @@ Run a multiplayer Werewolf/Mafia party game in the browser with no human moderat
 
 **Production mode:**
 ```bash
-npm install
-npm run build
-npm start
+pnpm install
+pnpm run build
+pnpm start
 ```
 
 Open `http://localhost:3001` (or set `PORT` for another port).
 
 **Development mode** (with hot reload):
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 This runs the backend server on port 3001 and Vite dev server on port 5173 with automatic proxy configuration. Open `http://localhost:5173` for development.
@@ -34,12 +34,12 @@ This runs the backend server on port 3001 and Vite dev server on port 5173 with 
 
 **Type checking:**
 ```bash
-npm run typecheck
+pnpm run typecheck
 ```
 
 **Build:**
 ```bash
-npm run build
+pnpm run build
 ```
 
 This compiles the TypeScript server code to `dist/` and builds the Vite client to `dist/client/`.
@@ -48,13 +48,13 @@ This compiles the TypeScript server code to `dist/` and builds the Vite client t
 
 **Unit tests:**
 ```bash
-npm test
+pnpm test
 ```
 
 **End-to-end tests:**
 ```bash
-npx playwright install
-npm run test:e2e
+pnpm exec playwright install
+pnpm run test:e2e
 ```
 
 ## How to Play

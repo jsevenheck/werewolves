@@ -93,6 +93,32 @@ describe('phaseManager', () => {
     expect(room.phaseStep).toBe('seer');
     expect(room.nextNightStep).toBeNull();
     expect(broadcastRoom).toHaveBeenCalledTimes(2);
+    jest.useRealTimers();
+  });
+
+  test('scheduleNightStep skips seer when none are alive', () => {
+    jest.useFakeTimers();
+    const room = makeRoom();
+    room.phase = 'night';
+    room.phaseStep = 'wolves';
+    room.seerActed = false;
+    room.players = {
+      w1: buildPlayer({ id: 'w1', role: 'witch', alive: true })
+    };
+    const broadcastRoom = jest.fn();
+
+    scheduleNightStep(room, 'seer', broadcastRoom, undefined as never);
+
+    expect(room.phaseStep).toBe('transition');
+    expect(room.nextNightStep).toBe('witch');
+    expect(broadcastRoom).toHaveBeenCalledTimes(1);
+
+    jest.advanceTimersByTime(3000);
+
+    expect(room.phaseStep).toBe('witch');
+    expect(room.nextNightStep).toBeNull();
+    expect(broadcastRoom).toHaveBeenCalledTimes(2);
+    jest.useRealTimers();
   });
 
   test('schedulePhaseTransition moves night to day after delay', () => {

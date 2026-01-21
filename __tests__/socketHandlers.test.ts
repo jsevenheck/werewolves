@@ -1,8 +1,14 @@
 import { getRoom } from '../src/server/models/room';
 import { broadcastRoom } from '../src/server/managers/broadcastManager';
-import { scheduleNightStep, schedulePhaseTransition, startNight, advanceFromReveal } from '../src/server/managers/phaseManager';
+import {
+  scheduleNightStep,
+  schedulePhaseTransition,
+  startNight,
+  advanceFromReveal,
+  holdDayToNightTransition
+} from '../src/server/managers/phaseManager';
 import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../src/server/managers/nightManager';
-import { queueDeath, resolveDeaths, startNextHunterShot } from '../src/server/managers/deathManager';
+import { queueDeath, resolveDeaths, startNextHunterShot, checkWinners } from '../src/server/managers/deathManager';
 import { setupSocketHandlers } from '../src/server/handlers/socketHandlers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../src/shared/events';
 import type { Room } from '../src/shared/types';
@@ -20,6 +26,7 @@ jest.mock('../src/server/managers/broadcastManager', () => ({
 
 jest.mock('../src/server/managers/phaseManager', () => ({
   schedulePhaseTransition: jest.fn(),
+  holdDayToNightTransition: jest.fn(),
   advanceFromReveal: jest.fn(),
   startNight: jest.fn(),
   notifyLovers: jest.fn(),
@@ -35,7 +42,8 @@ jest.mock('../src/server/managers/nightManager', () => ({
 jest.mock('../src/server/managers/deathManager', () => ({
   queueDeath: jest.fn(),
   resolveDeaths: jest.fn(),
-  startNextHunterShot: jest.fn()
+  startNextHunterShot: jest.fn(),
+  checkWinners: jest.fn()
 }));
 
 const makeSocket = () => {
@@ -232,6 +240,61 @@ describe('socketHandlers hostSkipStep', () => {
 
     expect(advanceFromReveal).toHaveBeenCalledWith(room, expect.any(Function));
   });
+
+  test('host skips awaiting hunter shot and advances the phase', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: null,
+      phaseTransition: null,
+      awaitingHunterShot: 'hunter',
+      hunterShotTimer: 123,
+      hunterShotQueue: [],
+      players: {},
+      winner: null
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    (startNextHunterShot as jest.Mock).mockReturnValue(false);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.hostSkipStep({ roomCode: 'ABCD', playerId: 'host' });
+
+    expect(room.awaitingHunterShot).toBeNull();
+    expect(room.hunterShotTimer).toBeNull();
+    expect(startNextHunterShot).toHaveBeenCalledWith(room, expect.any(Function), io);
+    expect(checkWinners).toHaveBeenCalledWith(room);
+    expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'nightToDay', expect.any(Function));
+  });
+
+  test('host skips awaiting hunter shot and starts next hunter shot', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: null,
+      phaseTransition: null,
+      awaitingHunterShot: 'hunter',
+      hunterShotTimer: 456,
+      hunterShotQueue: ['hunter2'],
+      players: {},
+      winner: null
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    (startNextHunterShot as jest.Mock).mockReturnValueOnce(true);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.hostSkipStep({ roomCode: 'ABCD', playerId: 'host' });
+
+    expect(room.awaitingHunterShot).toBeNull();
+    expect(room.hunterShotTimer).toBeNull();
+    expect(startNextHunterShot).toHaveBeenCalledWith(room, expect.any(Function), io);
+    expect(checkWinners).not.toHaveBeenCalled();
+    expect(schedulePhaseTransition).not.toHaveBeenCalled();
+    expect(holdDayToNightTransition).not.toHaveBeenCalled();
+  });
 });
 
 describe('socketHandlers restartGame', () => {
@@ -404,6 +467,6 @@ describe('socketHandlers hunterShoot', () => {
     expect(room.awaitingHunterShot).toBeNull();
     expect(resolveDeaths).toHaveBeenCalledWith(room, 'day', expect.any(Function), io);
     expect(startNextHunterShot).toHaveBeenCalledWith(room, expect.any(Function), io);
-    expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'dayToNight', expect.any(Function));
+    expect(holdDayToNightTransition).toHaveBeenCalledWith(room, expect.any(Function));
   });
 });

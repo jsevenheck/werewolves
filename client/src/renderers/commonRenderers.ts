@@ -69,7 +69,7 @@ function renderPlayersPanel() {
       <div style="margin-top:.35rem;font-size:.9rem;display:flex;flex-wrap:wrap;gap:.35rem;">
         ${player.isHost ? '<span class="tag">Host</span>' : ''}
         ${!player.connected ? '<span class="tag" style="border-color:#fbbf24;color:#fbbf24;">Disconnected</span>' : ''}
-        ${room.phase === 'ended' && roleKey ? `<span class="tag" style="border-color:#38bdf8;color:#38bdf8;">${roleLabel}</span>` : ''}
+        ${(!player.alive || room.phase === 'ended') && roleKey ? `<span class="tag" style="border-color:#38bdf8;color:#38bdf8;">${roleLabel}</span>` : ''}
       </div>
     </div>
   `;

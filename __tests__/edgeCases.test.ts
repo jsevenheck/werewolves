@@ -5,7 +5,8 @@ import { createPlayer } from '../src/server/models/player';
 import type { Player, Room } from '../src/shared/types';
 
 jest.mock('../src/server/managers/phaseManager', () => ({
-  schedulePhaseTransition: jest.fn()
+  schedulePhaseTransition: jest.fn(),
+  holdDayToNightTransition: jest.fn()
 }));
 
 describe('Edge Cases', () => {
@@ -209,8 +210,7 @@ describe('Edge Cases', () => {
   });
 
   describe('Hunter Edge Cases', () => {
-    test('disconnected hunter gets a brief shot window before resolution', () => {
-      jest.useFakeTimers();
+    test('disconnected hunter waits for a shot without auto resolution', () => {
       const room = {
         players: {
           hunter: {
@@ -249,14 +249,10 @@ describe('Edge Cases', () => {
 
       expect(room.awaitingHunterShot).toBe('hunter');
       expect(emit).not.toHaveBeenCalled();
-      jest.advanceTimersByTime(5000);
-      expect(room.awaitingHunterShot).toBeNull();
-      expect(room.winner).not.toBeNull();
-      jest.useRealTimers();
+      expect(room.winner).toBeNull();
     });
 
-    test('hunter without socket gets a brief shot window before resolution', () => {
-      jest.useFakeTimers();
+    test('hunter without socket waits for a shot without auto resolution', () => {
       const room = {
         players: {
           hunter: {
@@ -293,10 +289,7 @@ describe('Edge Cases', () => {
       resolveDeaths(room, 'day', broadcastRoom, io as unknown as never);
 
       expect(room.awaitingHunterShot).toBe('hunter');
-      jest.advanceTimersByTime(5000);
-      expect(room.awaitingHunterShot).toBeNull();
-      expect(room.winner).not.toBeNull();
-      jest.useRealTimers();
+      expect(room.winner).toBeNull();
     });
   });
 });

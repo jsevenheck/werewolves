@@ -126,7 +126,7 @@ function renderNightSection(room: RoomView, self: RoomViewSelf | null) {
     content = '<p>You are dead. Spectating only.</p>';
   }
   const hostControls = room.hostId === state.playerId && ['wolves', 'seer', 'witch', 'transition'].includes(room.phaseStep || '')
-    ? '<div class="actions"><button id="skip-step" type="button">Skip current action</button></div>'
+    ? '<div class="actions host-actions"><button id="skip-step" type="button">Skip current action</button></div>'
     : '';
   return `
     <section class="panel">
@@ -144,10 +144,9 @@ function renderDaySection(room: RoomView, self: RoomViewSelf | null) {
     ? `<ul>${lastNightDeaths.map((entry) => `<li>${entry.name} (${safeRoleDetails[entry.role || 'villager']?.name || entry.role})</li>`).join('')}</ul>`
     : '<p>No one died last night.</p>';
   const yourVote = room?.voteState?.yourVote;
-  const votedValue = yourVote !== undefined ? yourVote : state.pendingVote;
   const voteForm = self?.alive
-    ? votedValue !== undefined
-      ? renderVoteConfirmation(room, votedValue)
+    ? yourVote !== undefined
+      ? renderVoteConfirmation(room, yourVote)
       : renderVoteForm(room)
     : '<p>You are dead and cannot vote.</p>';
   return `
@@ -167,13 +166,15 @@ function renderWolfForm(room: RoomView) {
   }
   const wolfIds = Object.keys(room.wolfVotes || {});
   const votesCast = Object.values(room.wolfVotes || {}).filter((value) => value !== undefined && value !== '').length;
-  const aliveTargets = (room?.players ?? []).filter((p) => p.alive && p.id !== state.playerId);
+  const aliveTargets = (room?.players ?? []).filter((p) => p.alive && !wolfIds.includes(p.id));
   if (!aliveTargets.length) {
     return '<p>No valid targets available.</p>';
   }
   const currentVote = room?.wolfVotes?.[state.playerId];
   const locked = currentVote !== undefined && currentVote !== '';
-  const options = aliveTargets.map((p) => `<option value="${p.id}" ${currentVote === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
+  const pendingVote = locked ? undefined : state.pendingWolfVote;
+  const selectedVote = locked ? currentVote : pendingVote;
+  const options = aliveTargets.map((p) => `<option value="${p.id}" ${selectedVote === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
   const peers = room.wolfPeers?.length ? `<p>Other wolves: ${room.wolfPeers.join(', ')}</p>` : '';
   const voteEntries = Object.entries(room.wolfVotes || {}).filter(([, targetId]) => targetId);
   const targetVoteCounts = voteEntries.reduce<Record<string, number>>((acc, [, targetId]) => {
@@ -188,19 +189,27 @@ function renderWolfForm(room: RoomView) {
           .join(', ')
       }</p>`
     : '';
-  return `
-    <form id="wolf-form" class="actions">
-      ${peers}
-      ${voteSummary}
-      ${locked ? '<p style="color:#4ade80;">Vote submitted. Awaiting other wolves.</p>' : ''}
+  const voteStatus = locked
+    ? `<p style="color:#4ade80;">Vote submitted${currentVote ? `: ${getPlayerName(room, currentVote)}` : ''}. Awaiting other wolves.</p>`
+    : '';
+  const voteControls = locked
+    ? ''
+    : `
       <label>
         <span>Select a victim</span>
-        <select name="target" required ${locked ? 'disabled' : ''}>
+        <select name="target" required>
           <option value="">Pick target</option>
           ${options}
         </select>
       </label>
-      <button type="submit" ${locked ? 'disabled' : ''}>Submit vote</button>
+      <button type="submit">Submit vote</button>
+    `;
+  return `
+    <form id="wolf-form" class="actions">
+      ${peers}
+      ${voteSummary}
+      ${voteStatus}
+      ${voteControls}
       <small>${votesCast} / ${wolfIds.length || 1} votes submitted.</small>
     </form>
   `;
@@ -232,6 +241,7 @@ function renderWitchForm(room: RoomView) {
   const aliveTargets = (room?.players ?? []).filter((p) => p && p.alive && p.id !== state.playerId);
   const options = aliveTargets.map((p) => `<option value="${p.id}">${p.name}</option>`).join('');
   const witchState = room?.witchState ?? { healAvailable: false, poisonAvailable: false };
+  const skipLabel = !witchState.healAvailable ? 'Continue' : 'Skip';
   return `
     <div class="actions">
       <p>${healedText}</p>
@@ -248,7 +258,7 @@ function renderWitchForm(room: RoomView) {
         </div>
         <button type="button" id="poison-btn" ${!witchState.poisonAvailable ? 'disabled' : ''}>Use poison</button>
       </div>
-      <button type="button" id="skip-witch">Skip</button>
+      <button type="button" id="skip-witch">${skipLabel}</button>
     </div>
   `;
 }

@@ -1,6 +1,6 @@
 import type { Server } from 'socket.io';
 import { addLog, clearRoomTimers, getPlayerRoleLabel } from '../utils/helpers';
-import { schedulePhaseTransition } from './phaseManager';
+import { holdDayToNightTransition } from './phaseManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { Room } from '../../shared/types';
 
@@ -34,7 +34,7 @@ function tryResolveDayVote(
     addLog(room, 'Vote skipped. No one eliminated.', 'Vote skipped. No one eliminated.');
     room.lastDayDeaths = [];
     room.lastDayMessage = 'No one was eliminated.';
-    schedulePhaseTransition(room, 'dayToNight', broadcastRoom);
+    holdDayToNightTransition(room, broadcastRoom);
     return;
   }
   entries.sort((a, b) => b[1] - a[1]);
@@ -46,7 +46,7 @@ function tryResolveDayVote(
     addLog(room, 'Majority abstained. No one eliminated.', 'Majority abstained. No one eliminated.');
     room.lastDayDeaths = [];
     room.lastDayMessage = 'No one was eliminated.';
-    schedulePhaseTransition(room, 'dayToNight', broadcastRoom);
+    holdDayToNightTransition(room, broadcastRoom);
     return;
   }
   const tied = entries.filter(([, count]) => count === top[1]).map(([id]) => id);
@@ -94,7 +94,7 @@ function resolveDayKill(
   queueDeath(room, targetId, 'executed by vote');
   resolveDeaths(room, 'day', broadcastRoom, io);
   if (!room.winner && !room.awaitingHunterShot) {
-    schedulePhaseTransition(room, 'dayToNight', broadcastRoom);
+    holdDayToNightTransition(room, broadcastRoom);
   }
 }
 

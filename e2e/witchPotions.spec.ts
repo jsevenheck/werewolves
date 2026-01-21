@@ -7,18 +7,8 @@ import {
   startGameAndReady
 } from './helpers';
 
-const waitForWitchStep = async (host: Page, witch: Page) => {
-  for (let i = 0; i < 50; i += 1) {
-    if (await witch.locator('#heal-btn').isVisible()) {
-      return;
-    }
-    const skipStep = host.locator('#skip-step');
-    if (await skipStep.isVisible()) {
-      await skipStep.click();
-    }
-    await host.waitForTimeout(200);
-  }
-  await expect(witch.locator('#heal-btn')).toBeVisible();
+const waitForWitchStep = async (_host: Page, witch: Page) => {
+  await expect(witch.locator('#heal-btn')).toBeVisible({ timeout: 15000 });
 };
 
 const submitAbstainVotes = async (pages: Page[]) => {
@@ -72,6 +62,9 @@ test('witch can heal and poison across nights', async ({ browser }) => {
 
     await waitForDayOnAllPages(pages);
     await submitAbstainVotes(pages);
+
+    await host.waitForSelector('#host-skip-btn', { timeout: 10000 });
+    await host.click('#host-skip-btn');
 
     await host.waitForSelector('#wolf-form', { timeout: 10000 });
     await host.locator('#wolf-form select[name="target"]').selectOption({ label: names[3] });

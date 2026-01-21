@@ -2,22 +2,22 @@
 
 ## Requirements
 - Node.js (>= 18)
-- npm
+- pnpm (via Corepack or standalone install)
 
 ## Setup
 1. Install dependencies:
    ```bash
-   npm install
+   pnpm install
    ```
 
 2. Build the app:
    ```bash
-   npm run build
+   pnpm run build
    ```
 
 3. Start the server:
    ```bash
-   npm start
+   pnpm start
    ```
 
 4. Open the app:
@@ -26,14 +26,14 @@
 ## Dev Mode
 - Run the backend + Vite dev server together:
   ```bash
-  npm run dev
+  pnpm run dev
   ```
 - The Vite dev server runs at `http://localhost:5173` and proxies to the backend on `3001`.
 
 ## E2E Tests
 ```bash
-npx playwright install  # First time only
-npm run test:e2e
+pnpm exec playwright install  # First time only
+pnpm run test:e2e
 ```
 
 ## Basic Flow

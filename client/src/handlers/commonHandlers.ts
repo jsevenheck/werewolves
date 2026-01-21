@@ -84,6 +84,7 @@ function resetState() {
   state.playerName = '';
   state.hunterPrompt = false;
   state.pendingVote = undefined;
+  state.pendingWolfVote = undefined;
   state.roleVisible = false;
 }
 

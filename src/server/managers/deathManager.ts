@@ -1,6 +1,5 @@
 import type { Server } from 'socket.io';
 import { addLog, clearRoomTimers, getPlayerRoleLabel } from '../utils/helpers';
-import { HUNTER_SHOT_WINDOW_MS } from '../config/constants';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { NightDeathAnnouncement, Room } from '../../shared/types';
 
@@ -37,31 +36,6 @@ function startHunterShot(
   if (socket && hunter?.connected) {
     socket.emit('hunterPrompt', { roomCode: room.code });
   }
-  room.hunterShotTimer = setTimeout(() => {
-    room.hunterShotTimer = null;
-    if (room.awaitingHunterShot !== hunterId) return;
-    room.awaitingHunterShot = null;
-    const nextId = shiftNextValidHunter(room);
-    if (nextId) {
-      startHunterShot(room, nextId, broadcastRoom, io, true);
-      return;
-    }
-    if (!room.winner) {
-      checkWinners(room);
-    }
-    if (!room.winner) {
-      const transition =
-        room.phase === 'night' ? 'nightToDay' :
-        room.phase === 'day' ? 'dayToNight' :
-        null;
-      if (transition) {
-        const { schedulePhaseTransition } = require('./phaseManager');
-        schedulePhaseTransition(room, transition, broadcastRoom);
-        return;
-      }
-    }
-    broadcastRoom(room);
-  }, HUNTER_SHOT_WINDOW_MS);
   if (shouldBroadcast) {
     broadcastRoom(room);
   }
@@ -157,6 +131,11 @@ function checkWinners(room: Room) {
   }
   const others = alive.length - wolves.length;
   if (wolves.length >= others) {
+    const loneWitch = alive.length === 2 && alive.some((p) => p.role === 'witch');
+    const witchHasLastStand = loneWitch && room.witchState.healAvailable && room.witchState.poisonAvailable;
+    if (witchHasLastStand) {
+      return;
+    }
     room.winner = { team: 'wolves', reason: 'Werewolves reached parity.' };
     room.phase = 'ended';
     room.phaseStep = null;

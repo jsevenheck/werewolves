@@ -138,6 +138,10 @@ button:disabled {
   gap: 0.75rem;
 }
 
+.actions.host-actions {
+  margin-top: 1rem;
+}
+
 .notifications {
   display: flex;
   flex-direction: column;

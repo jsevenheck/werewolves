@@ -21,7 +21,7 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     alive: player.alive,
     connected: player.connected,
     isHost: player.isHost,
-    role: player.id === viewerId || room.phase === 'ended' ? player.role : null,
+    role: player.id === viewerId || room.phase === 'ended' || !player.alive ? player.role : null,
     ...(room.phase === 'roleReveal' ? { ready: player.ready } : {})
   }));
   const viewerAlive = viewer ? viewer.alive : false;
