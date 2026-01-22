@@ -5,6 +5,7 @@ import { notify } from '../utils/helpers';
 import { narrator } from '../utils/narrator';
 
 let narratorUnlockInProgress = false;
+let narratorUnlockToken = 0;
 
 function setNarratorButtonDisabled(disabled: boolean) {
   const button = document.getElementById('toggle-narrator');
@@ -58,10 +59,14 @@ function bindCommonHandlers(
     }
 
     narratorUnlockInProgress = true;
+    const unlockToken = ++narratorUnlockToken;
     setNarratorButtonDisabled(true);
 
     try {
       const unlocked = await narrator.unlock();
+      if (unlockToken !== narratorUnlockToken) {
+        return;
+      }
       if (!unlocked) {
         narrator.setEnabled(false);
         notify('Audio is blocked. Tap again and check your mute switch or volume.');
@@ -71,6 +76,9 @@ function bindCommonHandlers(
       narrator.setEnabled(true);
       renderApp();
     } finally {
+      if (unlockToken !== narratorUnlockToken) {
+        return;
+      }
       narratorUnlockInProgress = false;
       setNarratorButtonDisabled(false);
     }
@@ -87,6 +95,7 @@ function resetState() {
   state.pendingWolfVote = undefined;
   state.roleVisible = false;
   narratorUnlockInProgress = false;
+  narratorUnlockToken += 1;
   setNarratorButtonDisabled(false);
 }
 

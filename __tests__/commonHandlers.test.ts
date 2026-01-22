@@ -62,4 +62,32 @@ describe('commonHandlers narrator unlock', () => {
     leave.click();
     expect(toggle.disabled).toBe(false);
   });
+
+  test('ignores stale unlock completion after leaving room', async () => {
+    mockNarrator.isEnabled.mockReturnValue(false);
+    let resolveUnlock: (value: boolean) => void = () => {};
+    mockNarrator.unlock.mockImplementation(
+      () => new Promise<boolean>((resolve) => {
+        resolveUnlock = resolve;
+      })
+    );
+
+    const socket = { emit: jest.fn() } as any;
+    const renderApp = jest.fn();
+    const renderLanding = jest.fn();
+    const clearSession = jest.fn();
+
+    bindCommonHandlers(socket, renderApp, renderLanding, clearSession);
+
+    const toggle = document.getElementById('toggle-narrator') as HTMLButtonElement;
+    const leave = document.getElementById('leave-room') as HTMLButtonElement;
+
+    toggle.click();
+    leave.click();
+    resolveUnlock(true);
+    await Promise.resolve();
+
+    expect(toggle.disabled).toBe(false);
+    expect(mockNarrator.setEnabled).not.toHaveBeenCalled();
+  });
 });
