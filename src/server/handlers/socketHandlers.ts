@@ -126,6 +126,7 @@ function setupSocketHandlers(
     if (!room || room.phase !== 'armor') return;
     const player = getPlayerForSocket(room, playerId, socket.id);
     if (!player || player.role !== 'armor' || !player.alive) return;
+    if (room.lovers) return;
     if (!Array.isArray(targets) || targets.length !== 2) return;
     const [a, b] = targets;
     if (a === b) return;
@@ -160,8 +161,9 @@ function setupSocketHandlers(
     if (!room || room.phase !== 'night' || room.phaseStep !== 'seer') return;
     const player = getPlayerForSocket(room, playerId, socket.id);
     if (!player || player.role !== 'seer' || !player.alive) return;
+    if (targetId === playerId) return;
     const target = room.players[targetId];
-    if (!target) return;
+    if (!target || !target.alive) return;
     const result = target.role === 'werewolf' ? 'Werewolf' : 'Not Werewolf';
     player.seerResult = { name: target.name, result };
     cb?.({ ok: true, name: target.name, result });
@@ -299,6 +301,7 @@ function setupSocketHandlers(
     const player = room.players[playerId];
     if (!player || !player.alive) return;
     if (player.socketId !== socket.id) return;
+    if (room.voteState.votes[playerId] !== undefined) return;
     if (room.voteState.revoteFromTie && targetId && !room.voteState.revoteFromTie.includes(targetId)) {
       return;
     }
@@ -306,6 +309,14 @@ function setupSocketHandlers(
     room.voteState.votes[playerId] = targetId || null;
     tryResolveDayVote(room, (r) => broadcastRoom(r, io), io);
     broadcastRoom(room, io);
+  });
+
+  socket.on('hostFinalizeDayVote', ({ roomCode, playerId }) => {
+    const room = getRoom(roomCode);
+    if (!room || room.phase !== 'day') return;
+    if (room.hostId !== playerId) return;
+    if (!getPlayerForSocket(room, playerId, socket.id)) return;
+    tryResolveDayVote(room, (r) => broadcastRoom(r, io), io, { allowEarly: true });
   });
 
   socket.on('hunterShoot', ({ roomCode, playerId, targetId }) => {
@@ -407,7 +418,7 @@ function setupSocketHandlers(
     if (!player) return;
     player.connected = false;
     addLog(room, `${player.name} disconnected.`);
-    if (room.phase === 'day' && player.alive && player.voteTarget != null) {
+    if (room.phase === 'day' && player.alive) {
       tryResolveDayVote(room, (r) => broadcastRoom(r, io), io);
     }
     broadcastRoom(room, io);

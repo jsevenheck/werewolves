@@ -19,6 +19,7 @@ export interface ClientToServerEvents {
   ) => void;
   submitWitchDecision: (payload: { roomCode: string; playerId: string; action: 'heal' | 'poison' | 'skip'; targetId?: string | null }) => void;
   hostSkipStep: (payload: { roomCode: string; playerId: string }) => void;
+  hostFinalizeDayVote: (payload: { roomCode: string; playerId: string }) => void;
   submitDayVote: (payload: { roomCode: string; playerId: string; targetId?: string | null }) => void;
   hunterShoot: (payload: { roomCode: string; playerId: string; targetId: string }) => void;
   restartGame: (payload: { roomCode: string; playerId: string }) => void;

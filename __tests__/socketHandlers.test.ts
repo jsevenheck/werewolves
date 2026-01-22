@@ -364,6 +364,104 @@ describe('socketHandlers security checks', () => {
   });
 });
 
+describe('socketHandlers mechanics guards', () => {
+  const io = { sockets: { sockets: new Map() } } as unknown as any;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('seer cannot inspect themselves', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'seer',
+      players: {
+        seer: { id: 'seer', role: 'seer', alive: true, socketId: 'socket-1', seerResult: null },
+        v1: { id: 'v1', role: 'villager', alive: true }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.submitSeerInspect({ roomCode: 'ABCD', playerId: 'seer', targetId: 'seer' });
+
+    expect(room.players.seer.seerResult).toBeNull();
+    expect(advanceNightStep).not.toHaveBeenCalled();
+  });
+
+  test('seer cannot inspect dead players', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'seer',
+      players: {
+        seer: { id: 'seer', role: 'seer', alive: true, socketId: 'socket-1', seerResult: null },
+        dead: { id: 'dead', role: 'villager', alive: false }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.submitSeerInspect({ roomCode: 'ABCD', playerId: 'seer', targetId: 'dead' });
+
+    expect(room.players.seer.seerResult).toBeNull();
+    expect(advanceNightStep).not.toHaveBeenCalled();
+  });
+
+  test('day votes are locked after submission', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'day',
+      phaseStep: null,
+      players: {
+        p1: { id: 'p1', role: 'villager', alive: true, socketId: 'socket-1' },
+        p2: { id: 'p2', role: 'villager', alive: true }
+      },
+      voteState: { votes: { p1: 'p2' }, revoteFromTie: null }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.submitDayVote({ roomCode: 'ABCD', playerId: 'p1', targetId: null });
+
+    expect(room.voteState.votes.p1).toBe('p2');
+    expect(broadcastRoom).not.toHaveBeenCalled();
+  });
+
+  test('host can finalize day vote early', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'day',
+      phaseStep: null,
+      players: {
+        host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' },
+        joker: { id: 'joker', role: 'joker', alive: true }
+      },
+      voteState: { votes: { host: 'joker' }, revoteFromTie: null },
+      winner: null,
+      logs: []
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.hostFinalizeDayVote({ roomCode: 'ABCD', playerId: 'host' });
+
+    expect(room.winner).toEqual({
+      team: 'joker',
+      reason: 'Joker was voted out and laughs last!'
+    });
+  });
+});
+
 describe('socketHandlers restartGame', () => {
   const io = { sockets: { sockets: new Map() } } as unknown as any;
 

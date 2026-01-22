@@ -256,6 +256,13 @@ function bindNightHandlers(
 }
 
 function bindDayHandlers(socket: Socket<ServerToClientEvents, ClientToServerEvents>, room: RoomView, renderApp: () => void) {
+  if (room.hostId === state.playerId) {
+    document.getElementById('end-vote-btn')?.addEventListener('click', () => {
+      if (!state.playerId) return;
+      socket.emit('hostFinalizeDayVote', { roomCode: room.code, playerId: state.playerId });
+    });
+  }
+
   if (!room.self?.alive) return;
 
   const voteForm = document.getElementById('vote-form') as HTMLFormElement | null;
