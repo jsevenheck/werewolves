@@ -9,6 +9,13 @@ import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../m
 import { tryResolveDayVote } from '../managers/voteManager';
 import { queueDeath, resolveDeaths, startNextHunterShot, checkWinners } from '../managers/deathManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
+import type { Room } from '../../shared/types';
+
+function getPlayerForSocket(room: Room, playerId: string, socketId: string) {
+  const player = room.players[playerId];
+  if (!player || player.socketId !== socketId) return null;
+  return player;
+}
 
 function setupSocketHandlers(
   io: Server<ClientToServerEvents, ServerToClientEvents>,
@@ -41,6 +48,12 @@ function setupSocketHandlers(
     if (!room) return cb?.({ error: 'Room not found' });
     const player = room.players[playerId];
     if (!player) return cb?.({ error: 'Player not in room' });
+    if (player.socketId && player.socketId !== socket.id) {
+      const existingSocket = io.sockets.sockets.get(player.socketId);
+      if (player.connected && existingSocket) {
+        return cb?.({ error: 'Player already connected' });
+      }
+    }
     player.socketId = socket.id;
     player.connected = true;
     setSocketIndex(socket.id, roomCode, playerId);
@@ -54,6 +67,7 @@ function setupSocketHandlers(
   socket.on('updateRoleConfig', ({ roomCode, playerId, config }) => {
     const room = getRoom(roomCode);
     if (!room) return;
+    if (!getPlayerForSocket(room, playerId, socket.id)) return;
     if (room.hostId !== playerId) return;
     if (room.phase !== 'lobby') return;
     room.roleConfig = normalizeRoleConfig(config);
@@ -69,6 +83,7 @@ function setupSocketHandlers(
   socket.on('startGame', ({ roomCode, playerId }, cb) => {
     const room = getRoom(roomCode);
     if (!room) return cb?.({ error: 'Room missing' });
+    if (!getPlayerForSocket(room, playerId, socket.id)) return cb?.({ error: 'Player missing' });
     if (room.hostId !== playerId) return cb?.({ error: 'Only host can start' });
     if (room.phase !== 'lobby') return cb?.({ error: 'Already started' });
     const validation = validateCounts(room);
@@ -99,6 +114,7 @@ function setupSocketHandlers(
   socket.on('continueAfterReveal', ({ roomCode, playerId }) => {
     const room = getRoom(roomCode);
     if (!room || room.hostId !== playerId) return;
+    if (!getPlayerForSocket(room, playerId, socket.id)) return;
     if (room.phase !== 'roleReveal') return;
     const allReady = Object.values(room.players).every((p) => !p.connected || p.ready);
     if (!allReady) return;
@@ -108,7 +124,7 @@ function setupSocketHandlers(
   socket.on('submitArmor', ({ roomCode, playerId, targets }) => {
     const room = getRoom(roomCode);
     if (!room || room.phase !== 'armor') return;
-    const player = room.players[playerId];
+    const player = getPlayerForSocket(room, playerId, socket.id);
     if (!player || player.role !== 'armor' || !player.alive) return;
     if (!Array.isArray(targets) || targets.length !== 2) return;
     const [a, b] = targets;
@@ -125,7 +141,7 @@ function setupSocketHandlers(
   socket.on('submitWolfVote', ({ roomCode, playerId, targetId }) => {
     const room = getRoom(roomCode);
     if (!room || room.phase !== 'night' || room.phaseStep !== 'wolves') return;
-    const player = room.players[playerId];
+    const player = getPlayerForSocket(room, playerId, socket.id);
     if (!player || player.role !== 'werewolf' || !player.alive) return;
     if (room.wolfVotes[playerId] !== undefined && room.wolfVotes[playerId] !== '') {
       // Inform the client that this vote was rejected because the player has already voted.
@@ -142,7 +158,7 @@ function setupSocketHandlers(
   socket.on('submitSeerInspect', ({ roomCode, playerId, targetId }, cb) => {
     const room = getRoom(roomCode);
     if (!room || room.phase !== 'night' || room.phaseStep !== 'seer') return;
-    const player = room.players[playerId];
+    const player = getPlayerForSocket(room, playerId, socket.id);
     if (!player || player.role !== 'seer' || !player.alive) return;
     const target = room.players[targetId];
     if (!target) return;
@@ -156,7 +172,7 @@ function setupSocketHandlers(
   socket.on('submitWitchDecision', ({ roomCode, playerId, action, targetId }) => {
     const room = getRoom(roomCode);
     if (!room || room.phase !== 'night' || room.phaseStep !== 'witch') return;
-    const player = room.players[playerId];
+    const player = getPlayerForSocket(room, playerId, socket.id);
     if (!player || player.role !== 'witch' || !player.alive) return;
     handleWitchDecision(room, playerId, action, targetId ?? null, (r) => broadcastRoom(r, io), io);
   });
@@ -164,6 +180,7 @@ function setupSocketHandlers(
   socket.on('hostSkipStep', ({ roomCode, playerId }) => {
     const room = getRoom(roomCode);
     if (!room || room.hostId !== playerId) return;
+    if (!getPlayerForSocket(room, playerId, socket.id)) return;
     if (room.phase !== 'night' && !room.phaseTransition && !room.awaitingHunterShot) return;
 
     if (room.awaitingHunterShot) {
@@ -332,6 +349,7 @@ function setupSocketHandlers(
   socket.on('restartGame', ({ roomCode, playerId }) => {
     const room = getRoom(roomCode);
     if (!room || room.hostId !== playerId) return;
+    if (!getPlayerForSocket(room, playerId, socket.id)) return;
     if (room.phase !== 'ended') return;
     clearRoomTimers(room);
     room.phase = 'lobby';

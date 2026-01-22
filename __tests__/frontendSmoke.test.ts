@@ -14,7 +14,8 @@ jest.mock('../client/src/config/constants', () => ({
 }));
 
 jest.mock('../client/src/utils/helpers', () => ({
-  getPlayerName: (room: RoomView, id: string) => room.players.find((p) => p.id === id)?.name || 'Unknown'
+  getPlayerName: (room: RoomView, id: string) => room.players.find((p) => p.id === id)?.name || 'Unknown',
+  escapeHtml: (value: string) => value
 }));
 
 import { bindPhaseHandlers } from '../client/src/handlers/phaseHandlers';

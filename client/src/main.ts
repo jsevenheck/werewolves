@@ -13,7 +13,7 @@ import {
 import { bindCommonHandlers, updateHunterOverlay } from './handlers/commonHandlers';
 import { bindLandingHandlers, enterRoom } from './handlers/landingHandlers';
 import { bindPhaseHandlers } from './handlers/phaseHandlers';
-import { notify } from './utils/helpers';
+import { escapeHtml, notify } from './utils/helpers';
 import { ROLE_DETAILS } from './config/constants';
 import { narrator } from './utils/narrator';
 import type { ClientToServerEvents, ServerToClientEvents } from '@shared/events';
@@ -154,8 +154,8 @@ function renderPhaseSection(room: RoomView) {
     return `
       <section class="panel">
         <h2>Game Over</h2>
-        <p>${room.winner.reason}</p>
-        <p><strong>Winner:</strong> ${room.winner.team.toUpperCase()}</p>
+        <p>${escapeHtml(room.winner.reason)}</p>
+        <p><strong>Winner:</strong> ${escapeHtml(room.winner.team.toUpperCase())}</p>
         ${room.hostId === self?.id ? '<button id="restart-btn" type="button">Return to lobby</button>' : ''}
         ${renderRoleRevealList(room)}
       </section>
@@ -175,11 +175,11 @@ function renderPhaseSection(room: RoomView) {
       ? (() => {
           if (room.lastDayDeaths.length) {
             const items = room.lastDayDeaths
-              .map((entry) => `<li>${entry.name} (${roleDetails[entry.role || 'villager']?.name || entry.role || 'Unknown'})</li>`)
+              .map((entry) => `<li>${escapeHtml(entry.name)} (${roleDetails[entry.role || 'villager']?.name || entry.role || 'Unknown'})</li>`)
               .join('');
             return `<h3>Vote Results</h3><ul>${items}</ul>`;
           }
-          return `<h3>Vote Results</h3><p>${room.lastDayMessage || 'No one was eliminated.'}</p>`;
+          return `<h3>Vote Results</h3><p>${escapeHtml(room.lastDayMessage || 'No one was eliminated.')}</p>`;
         })()
       : '';
     const hostSkipLabel = room.phaseTransition === 'dayToNight' ? 'Start next round' : 'Skip transition';

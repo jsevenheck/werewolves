@@ -28,7 +28,8 @@ jest.mock('../client/src/utils/narrator', () => ({
 }));
 
 jest.mock('../client/src/utils/helpers', () => ({
-  notify
+  notify,
+  escapeHtml: (value: string) => value
 }));
 
 import { bindCommonHandlers } from '../client/src/handlers/commonHandlers';

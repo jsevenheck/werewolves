@@ -1,7 +1,7 @@
 import { state } from '../state/gameState';
 import type { ClientToServerEvents, ServerToClientEvents } from '@shared/events';
 import type { Socket } from 'socket.io-client';
-import { notify } from '../utils/helpers';
+import { escapeHtml, notify } from '../utils/helpers';
 import { narrator } from '../utils/narrator';
 
 let narratorUnlockInProgress = false;
@@ -119,7 +119,7 @@ function updateHunterOverlay(socket: Socket<ServerToClientEvents, ClientToServer
   }
 
   const targets = room.players.filter((player) => player.alive);
-  const options = targets.map((player) => `<option value="${player.id}">${player.name}</option>`).join('');
+  const options = targets.map((player) => `<option value="${player.id}">${escapeHtml(player.name)}</option>`).join('');
   wrapper.innerHTML = `
     <div class="panel">
       <h2>Hunter's Last Shot</h2>
