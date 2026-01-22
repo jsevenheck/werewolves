@@ -188,6 +188,23 @@ describe('narrator playback', () => {
     expect(String(fallbackHowl.options.src)).toMatch(/^data:audio\/mp3;base64/);
   });
 
+  test('resolves fallback playerror after loaderror', async () => {
+    const narrator = createNarrator({ initialEnabled: true, initialUnlocked: true, storage: null });
+    const room = buildRoom({ phase: 'day' });
+
+    narrator.handleRoomUpdate(null, room);
+    const initialHowl = MockHowl.instances[0];
+
+    initialHowl.trigger('loaderror');
+    const fallbackHowl = MockHowl.instances[1];
+
+    fallbackHowl.trigger('playerror');
+    await flushPromises();
+
+    expect(fallbackHowl.load).toHaveBeenCalled();
+    expect(fallbackHowl.play).toHaveBeenCalled();
+  });
+
   test('setEnabled(false) stops playback and unloads cached audio', async () => {
     const narrator = createNarrator({ initialEnabled: true, initialUnlocked: true, storage: null });
     const room = buildRoom({ phase: 'day' });

@@ -232,6 +232,10 @@ class Narrator {
           swapToFallback(false);
         });
         targetHowl.once('playerror', () => {
+          if (attemptedFallback) {
+            finalize(targetHowl);
+            return;
+          }
           swapToFallback(true);
         });
       };

@@ -86,6 +86,8 @@ function resetState() {
   state.pendingVote = undefined;
   state.pendingWolfVote = undefined;
   state.roleVisible = false;
+  narratorUnlockInProgress = false;
+  setNarratorButtonDisabled(false);
 }
 
 function updateHunterOverlay(socket: Socket<ServerToClientEvents, ClientToServerEvents>) {
