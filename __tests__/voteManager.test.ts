@@ -113,6 +113,25 @@ describe('voteManager', () => {
     expect(room.lastDayMessage).toBe('No one was eliminated.');
   });
 
+  test('tryResolveDayVote can resolve early and ignore missing votes', () => {
+    const players = {
+      a: buildPlayer({ id: 'a', alive: true }),
+      b: buildPlayer({ id: 'b', alive: true, role: 'joker', team: 'joker' }),
+      c: buildPlayer({ id: 'c', alive: true }),
+      d: buildPlayer({ id: 'd', alive: true })
+    };
+    const room = makeRoom(players);
+    room.voteState.votes = { a: 'b' };
+    const broadcastRoom = jest.fn();
+
+    tryResolveDayVote(room, broadcastRoom, undefined as never, { allowEarly: true });
+
+    expect(room.winner).toEqual({
+      team: 'joker',
+      reason: 'Joker was voted out and laughs last!'
+    });
+  });
+
   test('resolveDayKill ends the game when Joker is voted out', () => {
     const room = makeRoom({
       joker: buildPlayer({ id: 'joker', alive: true, role: 'joker', name: 'Joker', team: 'joker' })

@@ -7,30 +7,36 @@ import type { Room } from '../../shared/types';
 function tryResolveDayVote(
   room: Room,
   broadcastRoom: (room: Room) => void,
-  io: Server<ClientToServerEvents, ServerToClientEvents>
+  io: Server<ClientToServerEvents, ServerToClientEvents>,
+  options: { allowEarly?: boolean } = {}
 ) {
+  const allowEarly = !!options.allowEarly;
   const alivePlayers = Object.values(room.players).filter((p) => p.alive);
   const connectedAlive = alivePlayers.filter((p) => p.connected);
   const disconnectedAlive = alivePlayers.filter((p) => !p.connected);
-  const everyoneConnectedVoted = connectedAlive.every((p) => room.voteState.votes[p.id] !== undefined);
-  if (connectedAlive.length > 0 && everyoneConnectedVoted && disconnectedAlive.length) {
-    disconnectedAlive.forEach((player) => {
-      if (room.voteState.votes[player.id] === undefined) {
-        room.voteState.votes[player.id] = null;
-      }
-    });
+  if (!allowEarly) {
+    const everyoneConnectedVoted = connectedAlive.every((p) => room.voteState.votes[p.id] !== undefined);
+    if (connectedAlive.length > 0 && everyoneConnectedVoted && disconnectedAlive.length) {
+      disconnectedAlive.forEach((player) => {
+        if (room.voteState.votes[player.id] === undefined) {
+          room.voteState.votes[player.id] = null;
+        }
+      });
+    }
+    const everyoneVoted = alivePlayers.every((p) => room.voteState.votes[p.id] !== undefined);
+    if (!everyoneVoted) return;
   }
-  const everyoneVoted = alivePlayers.every((p) => room.voteState.votes[p.id] !== undefined);
-  if (!everyoneVoted) return;
+
   const tallies: Record<string, number> = {};
   const votes = Object.values(room.voteState.votes);
-  const abstainCount = votes.filter((value) => value === null).length;
-  votes.forEach((targetId) => {
+  const effectiveVotes = allowEarly ? votes.filter((value) => value !== undefined) : votes;
+  const abstainCount = effectiveVotes.filter((value) => value === null).length;
+  effectiveVotes.forEach((targetId) => {
     if (!targetId) return;
     tallies[targetId] = (tallies[targetId] || 0) + 1;
   });
   const entries = Object.entries(tallies);
-  if (!entries.length) {
+  if (!effectiveVotes.length || !entries.length) {
     addLog(room, 'Vote skipped. No one eliminated.', 'Vote skipped. No one eliminated.');
     room.lastDayDeaths = [];
     room.lastDayMessage = 'No one was eliminated.';
@@ -39,10 +45,11 @@ function tryResolveDayVote(
   }
   entries.sort((a, b) => b[1] - a[1]);
   const top = entries[0];
+  const participantCount = allowEarly ? effectiveVotes.length : alivePlayers.length;
   // If a strict majority (> 50%) of alive players abstain (vote null),
   // the vote is considered skipped. The case where everyone abstains is
   // already handled above when entries.length === 0.
-  if (abstainCount > alivePlayers.length / 2) {
+  if (abstainCount > participantCount / 2) {
     addLog(room, 'Majority abstained. No one eliminated.', 'Majority abstained. No one eliminated.');
     room.lastDayDeaths = [];
     room.lastDayMessage = 'No one was eliminated.';

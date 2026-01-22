@@ -1,6 +1,6 @@
 import { ROLE_DETAILS } from '../config/constants';
 import { state } from '../state/gameState';
-import { formatPhase } from '../utils/helpers';
+import { escapeHtml, formatPhase } from '../utils/helpers';
 import { narrator } from '../utils/narrator';
 
 function renderHeader() {
@@ -9,17 +9,17 @@ function renderHeader() {
   const room = state.room;
   const self = room.self;
   const detail = self?.role ? ROLE_DETAILS[self.role] : null;
-  const loverNote = room.loverName ? `<p>Lover: ${room.loverName}</p>` : '';
+  const loverNote = room.loverName ? `<p>Lover: ${escapeHtml(room.loverName)}</p>` : '';
 
   const seerResult = room.seerResult;
   const seerNote = self?.role === 'seer' && seerResult
-    ? `<p>Last vision: ${seerResult.name} is ${seerResult.result}.</p>`
+    ? `<p>Last vision: ${escapeHtml(seerResult.name)} is ${seerResult.result}.</p>`
     : '';
 
   const roleBlock = self?.role && state.roleVisible
     ? `<div class="role-card" style="border-color:${detail?.color || '#f8fafc'};color:${detail?.color || '#f8fafc'}">
-        <strong>${detail?.name || self.role}</strong>
-        <p>${detail?.description || ''}</p>
+        <strong>${escapeHtml(detail?.name || self.role)}</strong>
+        <p>${escapeHtml(detail?.description || '')}</p>
         ${loverNote}
         ${seerNote}
       </div>`
@@ -33,11 +33,11 @@ function renderHeader() {
       <div style="display:flex;flex-direction:column;gap:.5rem;">
         <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;">
           <div>
-            <h1>Room ${room.code}</h1>
+            <h1>Room ${escapeHtml(room.code)}</h1>
             <p>Phase: ${formatPhase(room)}</p>
           </div>
           <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;">
-            <span class="tag">You: ${state.playerName || 'Unknown'}</span>
+            <span class="tag">You: ${escapeHtml(state.playerName || 'Unknown')}</span>
             ${self?.alive ? '<span class="tag" style="border-color:#4ade80;color:#4ade80;">Alive</span>' : '<span class="tag" style="border-color:#ef4444;color:#ef4444;">Dead</span>'}
             ${roleToggle}
             ${narratorToggle}
@@ -65,7 +65,7 @@ function renderPlayersPanel() {
 
     return `
     <div class="player-card ${player.alive ? '' : 'dead'}">
-      <strong>${player.name}</strong>
+      <strong>${escapeHtml(player.name)}</strong>
       <div style="margin-top:.35rem;font-size:.9rem;display:flex;flex-wrap:wrap;gap:.35rem;">
         ${player.isHost ? '<span class="tag">Host</span>' : ''}
         ${!player.connected ? '<span class="tag" style="border-color:#fbbf24;color:#fbbf24;">Disconnected</span>' : ''}
@@ -87,7 +87,7 @@ function renderLogsPanel() {
 
   const room = state.room;
   const logs = (room.logs || [])
-    .map((log) => `<div>${new Date(log.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${log.text}</div>`)
+    .map((log) => `<div>${new Date(log.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${escapeHtml(log.text)}</div>`)
     .join('') || '';
 
   return `
