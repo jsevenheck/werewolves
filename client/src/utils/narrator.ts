@@ -155,8 +155,9 @@ class Narrator {
   }
 
   private async playWithHowler(key: string) {
+    const requestToken = this.disableToken;
     const howl = await this.getHowl(key);
-    if (!this.enabled || !this.unlocked) return;
+    if (!this.enabled || !this.unlocked || this.disableToken !== requestToken) return;
     this.stop();
     this.currentHowl = howl;
     howl.play();
