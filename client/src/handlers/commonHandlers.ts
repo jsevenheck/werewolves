@@ -2,6 +2,17 @@ import { state } from '../state/gameState';
 import type { ClientToServerEvents, ServerToClientEvents } from '@shared/events';
 import type { Socket } from 'socket.io-client';
 import { notify } from '../utils/helpers';
+import { narrator } from '../utils/narrator';
+
+let narratorUnlockInProgress = false;
+let narratorUnlockToken = 0;
+
+function setNarratorButtonDisabled(disabled: boolean) {
+  const button = document.getElementById('toggle-narrator');
+  if (button instanceof HTMLButtonElement) {
+    button.disabled = disabled;
+  }
+}
 
 function bindCommonHandlers(
   socket: Socket<ServerToClientEvents, ClientToServerEvents>,
@@ -33,6 +44,45 @@ function bindCommonHandlers(
     }
     socket.emit('restartGame', { roomCode: state.roomCode, playerId: state.playerId });
   });
+
+  const toggleNarratorBtn = document.getElementById('toggle-narrator');
+  setNarratorButtonDisabled(narratorUnlockInProgress);
+  toggleNarratorBtn?.addEventListener('click', async () => {
+    if (narratorUnlockInProgress) {
+      return;
+    }
+
+    if (narrator.isEnabled()) {
+      narrator.setEnabled(false);
+      renderApp();
+      return;
+    }
+
+    narratorUnlockInProgress = true;
+    const unlockToken = ++narratorUnlockToken;
+    setNarratorButtonDisabled(true);
+
+    try {
+      const unlocked = await narrator.unlock();
+      if (unlockToken !== narratorUnlockToken) {
+        return;
+      }
+      if (!unlocked) {
+        narrator.setEnabled(false);
+        notify('Audio is blocked. Tap again and check your mute switch or volume.');
+        renderApp();
+        return;
+      }
+      narrator.setEnabled(true);
+      renderApp();
+    } finally {
+      if (unlockToken !== narratorUnlockToken) {
+        return;
+      }
+      narratorUnlockInProgress = false;
+      setNarratorButtonDisabled(false);
+    }
+  });
 }
 
 function resetState() {
@@ -44,6 +94,9 @@ function resetState() {
   state.pendingVote = undefined;
   state.pendingWolfVote = undefined;
   state.roleVisible = false;
+  narratorUnlockInProgress = false;
+  narratorUnlockToken += 1;
+  setNarratorButtonDisabled(false);
 }
 
 function updateHunterOverlay(socket: Socket<ServerToClientEvents, ClientToServerEvents>) {

@@ -1,6 +1,7 @@
 import { ROLE_DETAILS } from '../config/constants';
 import { state } from '../state/gameState';
 import { formatPhase } from '../utils/helpers';
+import { narrator } from '../utils/narrator';
 
 function renderHeader() {
   if (!state.room) return '';
@@ -26,6 +27,7 @@ function renderHeader() {
   const roleToggle = self?.role
     ? `<button id="toggle-role" type="button">${state.roleVisible ? 'Hide Role' : 'Reveal Role'}</button>`
     : '';
+  const narratorToggle = `<button id="toggle-narrator" type="button">Narrator: ${narrator.isEnabled() ? 'On' : 'Off'}</button>`;
   return `
     <section class="panel">
       <div style="display:flex;flex-direction:column;gap:.5rem;">
@@ -38,6 +40,7 @@ function renderHeader() {
             <span class="tag">You: ${state.playerName || 'Unknown'}</span>
             ${self?.alive ? '<span class="tag" style="border-color:#4ade80;color:#4ade80;">Alive</span>' : '<span class="tag" style="border-color:#ef4444;color:#ef4444;">Dead</span>'}
             ${roleToggle}
+            ${narratorToggle}
             <button id="leave-room" type="button">Leave Game</button>
           </div>
         </div>

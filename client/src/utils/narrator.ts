@@ -1,0 +1,259 @@
+import { Howl } from 'howler';
+import type { RoomView } from '@shared/types';
+
+type NarrationKey = string | null;
+
+type NarratorOptions = {
+  storage?: Storage | null;
+  initialEnabled?: boolean;
+  initialUnlocked?: boolean;
+  playClip?: (key: string) => void;
+};
+
+const STORAGE_KEY = 'werewolves_narrator_enabled';
+const DEFAULT_VOLUME = 1;
+const PLACEHOLDER_AUDIO = 'data:audio/mp3;base64,SUQzBAAAAAIYBFRJVDIAAAAUAAAAMSBTZWNvbmQgb2YgU2lsZW5jZVRQRTEAAAASAAAAQW5hciBTb2Z0d2FyZSBMTENUQUxCAAAADAAAAEJsYW5rIEF1ZGlvQVBJQwACDwIAAABpbWFnZS9qcGVnAAMAiVBORw0KGgoAAAANSUhEUgAABDgAAAQ4CAYAAADsEGyPAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAg9AAAIPQEFlVW2AAAAB3RJTUUH3woLBRwxA28EdgAAIABJREFUeNrs3XuUVWXdB/DfMAw3AQEvKOqAiVcsU7A0saIyb4FWKt41TVEIM2mVpqaoeeviLTWvpK+AmsvUNA0NQ1m9lnkpvKRkctEQBIERYbiM8/7RWwucmXPOnjln5jwzn89a73pr72c/e+/fs89wzrdn710REfUBAAAAkLBOSgAAAACkTsABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAkT8ABAAAAJE/AAQAAACRPwAEAAAAJE/AQavabLPNYuLEiTF06FDFAAAAoGgqIqJeGWgNe+65Z9x8883Rv3//qKmpicMPPzxmzZqlMAAAALSYGRy0ipNOOinuu+++6N+/f0RE9O7dO6ZOnRrV1dWKAwAAQIuZwUHJnXvuuTFu3LhG17344otxyCGHxNq1axUKAACAZquMiAuVgVKoqKiIH/3oR3Hqqac22WaLLbaIXr16xZNPPqlgAAAANP83aJjBQQlUVlbGT37ykxg9enRB7Y866qiYMWOGwgEAANAsAg6KrlOnTnHDDTfEqFGjCt5mzpw5MWLEiFi9erUCAgAAkJlbVCi6Cy+8MI4++uhM2/Tp0yc+/PDD+OMf/6iAAAAAZGYGB0V18sknx8UXX9ysbdesWRMjRoyIN998UyEBAADIxGtiKZr9998/Jk6c2Oztu3Tp0qLtAQAA6LjM4KAodt9997jvvvuie/fuLe7rS1/6UrzyyiuKCgAAQMHM4KDFttpqq7jjjjuKEm5ERIwbN05RAQAAyMQMDlqkU6dOcd9998Vee+1VtD7r6uriM5/5TMyfP1+BAQAAKOz3qRLQEqeffnpRw42IiMrKyjjttNMUFwAAgIKZwUGz7brrrvHII49EVVVV0fuura2NPffcM5YsWaLQAAAA5GUGB83SrVu3uP7660sSbvyn/69//esKDQAAQEEEHDTL+eefH9tvv31J9zFq1CiFBgAAoCACDjL7whe+EN/4xjdKvp899tgjqqurFRwAAIC8BBxkUlVVFZdeemnR+126dGmjy83iAAAAoBACDjI59thjiz6r4plnnonPfe5zsWjRogbrDjnkEEUHAAAgLwEHBevRo0eceeaZRe3zoYceiiOPPDIWL14cU6dObbB+yJAhsd122yk+AAAAOQk4KNg3v/nN2GyzzYrW3zPPPBPjxo2LNWvWRETE5MmTo76+4VuLzeIAAAAgHwEHBenTp0+MHTu2aP0tXbo0xo4dG3V1df9d9tZbb8WsWbMatB0xYoQBAAAAICcBBwX51re+Fb179y5af2eeeWa88847DZY//vjjDZZ94hOfiK5duxoEAAAAmiTgIK/+/fvHSSedVLT+brvttkaDjIiIadOmNVhWVVUVn/jEJwwEAAAATRJwkNfYsWOjW7duRenr3Xffjcsvv7zJ9bNmzWp0Zseee+5pIAAAAGiSgIPcF0inTjFq1Kii9ffTn/40Pvjgg5xtGpvdIeAAAAAg5+9XJSCXvfbaK/r371+Uvt54442YMmVK3naNBRzDhg0zGAAAADRJwEFOI0eOLFpfP/rRj2LdunV52z399NOxatWqDZYtsskmse222xoQAAAAGiXgoEmVlZVx8MEHF6WvZ599Nh577LGC2q5evTpefPHFBss/9alPGRQAAAAaJeCgSXvvvXdsuummRenroosuytT+lVdeabBsjz32MCgAAAA0SsBBkw455JCi9PPII4/Ec889l2mbl19+ucGygQMHGhQAAAAaJeCgUZ07d46DDjqoxf2sW7cuLr300szbNTaDY6uttjIwAAAANErAQaP22Wef6Nu3b4v7+Z//+Z948803M2/32muvRX19/QbLBgwYYGAAAABolICDRhXjgZ4rVqyIq666qlnbrl69Ot5///0NlnXv3r0ooQsAAADtj4CDRu26664t7uOmm26KxYsXN3v7pUuXNljmNhUAAAAaI+CgUUOGDGnR9mvXro1f/vKXLepj2bJlDZa5TQUAAIDGCDhooE+fPi0OEh566KFYsmRJi/poLOAwgwMAAIDGCDhoYPDgwS3uo6WzNyIiPvjggwbLBBwAAAA0RsBBA/369WvR9rNmzYrnnnuuxcfR2ANFBRwAAAA0RsBBAy19U8mkSZOKchybb755g2WewQEAAEBjBBw00JIZHMuWLYsHHnigKMex2WabNVjWs2dPAwQAAEADAg4a6NOnT7O3vfvuu6O2trbFx9ClS5fo3bt3g+WdO3c2QAAAADQg4KCBysrKZm1XX18fd955Z1GOYbvttivqsQEAANC+CThoYOXKlc3abvr06TFnzpyiHMP+++/f6HIBBwAAAI0RcNBAcwOOYrwa9j8OPPDARpe7RQUAAIDGCDho4IMPPsi8zdy5c+PJJ58syv632mqr+PjHP97oOgEHAAAAjRFw0EBzZnBMnjw5Pvzww6Ls/6CDDmpynVtUAAAAaIyAgwaaE3A89thjRdl3jx49YuzYsU2uF3AAAADQGAEHDWS9RWXOnDnxj3/8oyj7Hj9+fPTv37/J9QIOAAAAGiPgoIGsMzimTZtWlP1uvfXWcdppp+Vs4xkcAAAANEbAQQNZZ3A8/vjjRdnveeedF127ds3ZpljP+QAAAKB9EXDQQJYZHDU1NfGnP/2pxfvcc889Y9SoUXnbLVq0yAABAADQgICDBt55552or68vqO306dNj3bp1LdpfRUVFTJw4saC2//rXvwwQAAAADQg4aGD16tWxcOHCgtoW4/kbhx12WHzyk58sqO2CBQsMEAAAAA0IOGjUnDlz8rZZt25dTJ8+vUX76dGjR/zgBz8ouL2AAwAAgMYIOGjU3Llz87b585//HDU1NS3az7hx43K+FvajBBwAAAA0RsBBowoJOF5//fUW7WOrrbaK008/PdM2nsEBAABAYwQcNKqQW1SWL1/eon1ceeWV0a1bt0zbmMEBAABAYwQcNGrevHl527Qk4DjuuONixIgRmbcTcAAAANCYzkpAYwqZwbFs2bJm9T1w4MC44IILMm+3Zs2aeO+99wwOAADQqioqKpq9LGvbQrdft25dfPjhhwZnPQKO9ey0006x4447tsqFW6rtW/phWn95bW1tzltIdt999+jcuXOmfVVUVMSYMWOiR48emcdnwYIFceKJJ5bkXMtlXMvhD2op9pWlXUrnmtJ1lco16Fzb5+etrceqXM+1FGPV3r6LOFffRXwX8V2kXD4D5ejkk0+ORx991A/59cc0IuqV4d8mTJgQEyZMUAgAAADK2imnnBKPPPKIQqzHDI4iWbx4caO3bNTXN54fZVmetY+mZO27uro6evfu3WR/CxYsiMWLFxd8jN26dYsddtih2Unp7Nmz4/3332/W+bfFOKQwxuVck1THMus+i3GeKYxxudTb5zWMsc+rsexA3xeMsbFsD9+hOvL3+wMOOCDGjRvX5PpOnTxSU8BRItddd13ccsst7eqcvve978WZZ57Z5Pp77703rrjiioL6qqqqit/+9rfNDjfWrFkTX/7yl2P16tUuNgAAoN3baaedcq5P/RabUhD50KS//e1vOdf36dOn4L7OOuusGDJkSLOP5S9/+YtwAwAA6DDyPUDUDI5GaqIENGXWrFk51/ft27egfvbYY4/41re+1aJj+eMf/2hAAACADkPAkZ2K0KS3334752tZC5nB0a1bt7j22mujsrKyRccyc+ZMAwIAAHQY+Z7XIeBopCZKQC65ZnFUV1fn3f68886Lj33sYy06hlWrVsULL7xgMAAAgA7DDI7sVISccj2Ho7q6Orp27drk+uHDh8c3vvGNFh/DzJkzY+3atQYDAADoMPLN4PCQ0YYEHOSUK+Do1KlTk7MzNtlkk7jmmmuK8qG78847DQQAANCh5JvB0dLHALRHAg5yyveg0e23377RD9qNN94YW265ZYv3P2fOnJg+fbqBAAAAOhS3qGSnIuQ0b968WL58eZPrGws4zjnnnBg+fHhR9n/HHXfknZoFAADQ3njIaHYqQl65ZnF8NOA4+OCDY+zYsUXZ76pVq2Lq1KkGAAAA6HDM4MhORcgr13M41g84Bg8eHFdddVXR9nv//fdHTU2NAQAAADqcfAGHh4w21FkJyCdXwLHddttFZWVldO/ePW6//fbo2bNn0fY7adIkxQcAADokMziyUxHyyhVwdOnSJaqrq+Oqq66KwYMHF22ff/rTn+KVV15RfAAAoEMScGSnIuQ1d+7cnLeKXH755XHwwQcXdZ833nijwgMAAB2Wh4xmpyIU9MF66aWXmly/7777FnV/Tz31VEybNk3hAQCADv07LOePeQFHw5oo…8482 tokens truncated…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AAAA7AkOAAAAYE8dHxGaAAAG0UlEQVRwAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAAANgTHAAAAMCe4AAAAAD2BAcAAACwJzgAAACAPcEBAAAA7AkOAAAAYE9wAAAAAHuCAwAA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';
+
+function computeNarrationKey(room: RoomView): NarrationKey {
+  if (room.phaseTransition) {
+    return room.phaseTransition;
+  }
+  if (room.phase === 'night' && room.phaseStep) {
+    return `night_${room.phaseStep}`;
+  }
+  return room.phase;
+}
+
+class Narrator {
+  private enabled = false;
+  private unlocked = false;
+  private lastAnnouncedKey: NarrationKey = null;
+  private currentHowl: Howl | null = null;
+  private readonly howls = new Map<string, Howl>();
+  private readonly howlPromises = new Map<string, Promise<Howl>>();
+  private disableToken = 0;
+  private readonly storage: Storage | null;
+  private readonly playClip: (key: string) => void;
+
+  constructor(options: NarratorOptions = {}) {
+    this.storage = options.storage ?? (typeof localStorage === 'undefined' ? null : localStorage);
+    this.enabled = options.initialEnabled ?? false;
+    this.unlocked = options.initialUnlocked ?? false;
+    this.playClip = options.playClip ?? ((key) => void this.playWithHowler(key));
+  }
+
+  initFromStorage() {
+    if (!this.storage) return;
+    const raw = this.storage.getItem(STORAGE_KEY);
+    this.enabled = raw === 'true';
+  }
+
+  isEnabled() {
+    return this.enabled;
+  }
+
+  isUnlocked() {
+    return this.unlocked;
+  }
+
+  setEnabled(next: boolean) {
+    this.enabled = next;
+    if (this.storage) {
+      this.storage.setItem(STORAGE_KEY, String(next));
+    }
+    if (!next) {
+      this.disableToken += 1;
+      // Stop any currently playing narration
+      this.stop();
+      // Unload and clear all cached Howl instances to free memory
+      for (const howl of this.howls.values()) {
+        howl.unload();
+      }
+      this.howls.clear();
+      this.howlPromises.clear();
+      this.currentHowl = null;
+    }
+  }
+
+  async unlock(): Promise<boolean> {
+    if (this.unlocked) return true;
+    return new Promise((resolve) => {
+      let attemptedFallback = false;
+      let unlockHowl: Howl;
+      const createUnlockHowl = (src: string) =>
+        new Howl({
+          src,
+          html5: true,
+          preload: 'metadata',
+          volume: 0
+        });
+      unlockHowl = createUnlockHowl('/audio/lobby.mp3');
+      const tryFallback = (playAfterSwap: boolean) => {
+        if (attemptedFallback) return;
+        attemptedFallback = true;
+        const fallbackHowl = createUnlockHowl(PLACEHOLDER_AUDIO);
+        unlockHowl.unload();
+        unlockHowl = fallbackHowl;
+        attachListeners(unlockHowl);
+        if (playAfterSwap) {
+          unlockHowl.play();
+          return;
+        }
+        unlockHowl.load();
+      };
+      const cleanup = (howl: Howl) => {
+        howl.off('play');
+        howl.off('playerror');
+        howl.off('loaderror');
+      };
+      const attachListeners = (howl: Howl) => {
+        howl.once('play', () => {
+          this.unlocked = true;
+          howl.stop();
+          cleanup(howl);
+          howl.unload();
+          resolve(true);
+        });
+        howl.once('loaderror', () => {
+          cleanup(howl);
+          if (attemptedFallback) {
+            howl.unload();
+            resolve(false);
+            return;
+          }
+          tryFallback(true);
+        });
+        howl.once('playerror', () => {
+          cleanup(howl);
+          if (!attemptedFallback) {
+            tryFallback(true);
+            return;
+          }
+          howl.unload();
+          resolve(false);
+        });
+      };
+      attachListeners(unlockHowl);
+      unlockHowl.play();
+    });
+  }
+
+  handleRoomUpdate(_prevRoom: RoomView | null, nextRoom: RoomView) {
+    const nextKey = computeNarrationKey(nextRoom);
+    if (!nextKey) return;
+    if (nextKey === this.lastAnnouncedKey) return;
+    this.lastAnnouncedKey = nextKey;
+    if (!this.enabled || !this.unlocked) return;
+    this.playClip(nextKey);
+  }
+
+  private stop() {
+    if (this.currentHowl) {
+      this.currentHowl.stop();
+      this.currentHowl = null;
+    }
+  }
+
+  private async playWithHowler(key: string) {
+    const requestToken = this.disableToken;
+    const howl = await this.getHowl(key);
+    if (!this.enabled || !this.unlocked || this.disableToken !== requestToken) return;
+    this.stop();
+    this.currentHowl = howl;
+    howl.play();
+  }
+
+  private async getHowl(key: string) {
+    const existing = this.howls.get(key);
+    if (existing) return existing;
+    const pending = this.howlPromises.get(key);
+    if (pending) return pending;
+
+    const promise = new Promise<Howl>((resolve) => {
+      let attemptedFallback = false;
+      let resolved = false;
+      const requestToken = this.disableToken;
+      const shouldCache = () => this.enabled && this.disableToken === requestToken;
+      const createHowl = (src: string) =>
+        new Howl({
+          src,
+          html5: true,
+          preload: 'metadata',
+          volume: DEFAULT_VOLUME
+        });
+      let activeHowl = createHowl(`/audio/${key}.mp3`);
+
+      const cleanup = (howl: Howl) => {
+        howl.off('load');
+        howl.off('loaderror');
+        howl.off('playerror');
+      };
+      const finalize = (howl: Howl) => {
+        if (resolved) return;
+        resolved = true;
+        this.howlPromises.delete(key);
+        if (!shouldCache()) {
+          cleanup(howl);
+          howl.unload();
+          resolve(howl);
+          return;
+        }
+        this.howls.set(key, howl);
+        resolve(howl);
+      };
+      const swapToFallback = (playAfterSwap: boolean) => {
+        if (attemptedFallback) return;
+        attemptedFallback = true;
+        const fallbackHowl = createHowl(PLACEHOLDER_AUDIO);
+        cleanup(activeHowl);
+        activeHowl.unload();
+        activeHowl = fallbackHowl;
+        attachListeners(fallbackHowl);
+        if (!shouldCache()) {
+          finalize(fallbackHowl);
+          return;
+        }
+        if (playAfterSwap) {
+          fallbackHowl.play();
+          finalize(fallbackHowl);
+          return;
+        }
+        fallbackHowl.load();
+      };
+      const attachListeners = (targetHowl: Howl) => {
+        targetHowl.once('load', () => {
+          finalize(targetHowl);
+        });
+        targetHowl.once('loaderror', () => {
+          if (attemptedFallback) {
+            finalize(targetHowl);
+            return;
+          }
+          swapToFallback(false);
+        });
+        targetHowl.once('playerror', () => {
+          if (attemptedFallback) {
+            finalize(targetHowl);
+            return;
+          }
+          swapToFallback(true);
+        });
+      };
+
+      attachListeners(activeHowl);
+      activeHowl.load();
+    });
+
+    this.howlPromises.set(key, promise);
+    return promise;
+  }
+}
+
+function createNarrator(options: NarratorOptions = {}) {
+  return new Narrator(options);
+}
+
+const narrator = createNarrator();
+
+export { narrator, createNarrator, computeNarrationKey };
+export type { NarrationKey };
