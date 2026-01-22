@@ -27,6 +27,9 @@ function bindCommonHandlers(
   });
 
   document.getElementById('leave-room')?.addEventListener('click', () => {
+    if (state.roomCode && state.playerId) {
+      socket.emit('leaveRoom', { roomCode: state.roomCode, playerId: state.playerId });
+    }
     resetState();
     clearSession();
     renderLanding();

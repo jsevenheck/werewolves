@@ -17,11 +17,36 @@ function getPlayerForSocket(room: Room, playerId: string, socketId: string) {
   return player;
 }
 
+function detachSocketFromRoom(
+  io: Server<ClientToServerEvents, ServerToClientEvents>,
+  socketId: string,
+  reason?: string
+) {
+  const ref = getSocketIndex(socketId);
+  if (!ref) return;
+  deleteSocketIndex(socketId);
+  const room = getRoom(ref.roomCode);
+  if (!room) return;
+  const player = room.players[ref.playerId];
+  if (!player) return;
+  if (player.socketId !== socketId) return;
+  player.connected = false;
+  player.socketId = null;
+  if (reason) {
+    addLog(room, `${player.name} ${reason}.`);
+  }
+  if (room.phase === 'day' && player.alive) {
+    tryResolveDayVote(room, (r) => broadcastRoom(r, io), io);
+  }
+  broadcastRoom(room, io);
+}
+
 function setupSocketHandlers(
   io: Server<ClientToServerEvents, ServerToClientEvents>,
   socket: Socket<ClientToServerEvents, ServerToClientEvents>
 ) {
   socket.on('createRoom', ({ name }, cb) => {
+    detachSocketFromRoom(io, socket.id, 'left the room');
     const cleanName = sanitizeName(name);
     if (!cleanName) return cb?.({ error: 'Name required' });
     const { room, player } = createRoom(cleanName, socket.id, createPlayer);
@@ -31,6 +56,7 @@ function setupSocketHandlers(
   });
 
   socket.on('joinRoom', ({ name, code }, cb) => {
+    detachSocketFromRoom(io, socket.id, 'left the room');
     const cleanName = sanitizeName(name);
     if (!cleanName) return cb?.({ error: 'Name required' });
     const room = getRoom(code?.toUpperCase());
@@ -44,6 +70,10 @@ function setupSocketHandlers(
   });
 
   socket.on('resumePlayer', ({ roomCode, playerId }, cb) => {
+    const existingRef = getSocketIndex(socket.id);
+    if (existingRef && (existingRef.roomCode !== roomCode || existingRef.playerId !== playerId)) {
+      detachSocketFromRoom(io, socket.id, 'left the room');
+    }
     const room = getRoom(roomCode);
     if (!room) return cb?.({ error: 'Room not found' });
     const player = room.players[playerId];
@@ -400,6 +430,15 @@ function setupSocketHandlers(
     broadcastRoom(room, io);
   });
 
+  socket.on('leaveRoom', ({ roomCode, playerId }, cb) => {
+    const room = getRoom(roomCode);
+    if (!room) return cb?.({ error: 'Room not found' });
+    const player = getPlayerForSocket(room, playerId, socket.id);
+    if (!player) return cb?.({ error: 'Player not found' });
+    detachSocketFromRoom(io, socket.id, 'left the game');
+    cb?.({ ok: true });
+  });
+
   socket.on('requestState', ({ roomCode, playerId }) => {
     const room = getRoom(roomCode);
     if (!room) return;
@@ -409,19 +448,7 @@ function setupSocketHandlers(
   });
 
   socket.on('disconnect', () => {
-    const ref = getSocketIndex(socket.id);
-    if (!ref) return;
-    deleteSocketIndex(socket.id);
-    const room = getRoom(ref.roomCode);
-    if (!room) return;
-    const player = room.players[ref.playerId];
-    if (!player) return;
-    player.connected = false;
-    addLog(room, `${player.name} disconnected.`);
-    if (room.phase === 'day' && player.alive) {
-      tryResolveDayVote(room, (r) => broadcastRoom(r, io), io);
-    }
-    broadcastRoom(room, io);
+    detachSocketFromRoom(io, socket.id, 'disconnected');
   });
 }
 
