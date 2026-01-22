@@ -156,7 +156,7 @@ function setupSocketHandlers(
     if (!room || room.phase !== 'armor') return;
     const player = getPlayerForSocket(room, playerId, socket.id);
     if (!player || player.role !== 'armor' || !player.alive) return;
-    if (room.lovers) return;
+    if (room.loversAssigned) return;
     if (!Array.isArray(targets) || targets.length !== 2) return;
     const [a, b] = targets;
     if (a === b) return;
