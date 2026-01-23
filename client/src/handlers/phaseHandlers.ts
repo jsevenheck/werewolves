@@ -36,6 +36,12 @@ function bindPhaseHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
   } else if (room.phase === 'roleReveal') {
     bindRoleRevealHandlers(socket, room);
   } else if (room.phase === 'armor') {
+    if (room.hostId === state.playerId) {
+      document.getElementById('skip-armor')?.addEventListener('click', () => {
+        if (!state.playerId) return;
+        socket.emit('hostSkipStep', { roomCode: room.code, playerId: state.playerId });
+      });
+    }
     bindArmorHandlers(socket, room);
   } else if (room.phase === 'night') {
     bindNightHandlers(socket, room, renderApp);

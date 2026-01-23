@@ -74,6 +74,9 @@ function renderRoleRevealSection(room: RoomView) {
 }
 
 function renderArmorSection(room: RoomView, self: RoomViewSelf | null) {
+  const hostControls = room.hostId === state.playerId
+    ? '<div class="actions host-actions"><button id="skip-armor" type="button">Skip armor step</button></div>'
+    : '';
   if (self?.role === 'armor' && self.alive && !room.loversAssigned) {
     const alivePlayers = room.players.filter((p) => p.alive && p.id !== self.id);
     const options = alivePlayers.map((player) => `<option value="${player.id}">${escapeHtml(player.name)}</option>`).join('');
@@ -97,6 +100,7 @@ function renderArmorSection(room: RoomView, self: RoomViewSelf | null) {
           </label>
           <button type="submit">Link Lovers</button>
         </form>
+        ${hostControls}
       </section>
     `;
   }
@@ -104,6 +108,7 @@ function renderArmorSection(room: RoomView, self: RoomViewSelf | null) {
     <section class="panel">
       <h2>Armor is working</h2>
       <p>The Armor is selecting two Lovers in secret.</p>
+      ${hostControls}
     </section>
   `;
 }

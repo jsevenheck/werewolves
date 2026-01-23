@@ -384,6 +384,27 @@ describe('socketHandlers security checks', () => {
     expect(broadcastRoom).not.toHaveBeenCalled();
   });
 
+  test('resumePlayer rejects invalid resume tokens', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'lobby',
+      players: {
+        p1: { id: 'p1', name: 'Player', connected: true, socketId: 'socket-old', resumeToken: 'good-token' }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+    const cb = jest.fn();
+
+    handlers.resumePlayer({ roomCode: 'ABCD', playerId: 'p1', resumeToken: 'bad-token', name: 'Player' }, cb);
+
+    expect(cb).toHaveBeenCalledWith({ error: 'Invalid session' });
+    expect(room.players.p1.socketId).toBe('socket-old');
+    expect(room.players.p1.connected).toBe(true);
+  });
+
   test('submitWolfVote rejects socket impersonation', () => {
     const room = {
       code: 'ABCD',
