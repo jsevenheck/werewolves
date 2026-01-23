@@ -93,6 +93,7 @@ function resetState() {
   state.roomCode = '';
   state.playerId = '';
   state.playerName = '';
+  state.resumeToken = '';
   state.hunterPrompt = false;
   state.pendingVote = undefined;
   state.pendingWolfVote = undefined;

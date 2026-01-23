@@ -8,6 +8,7 @@ type EnterRoomParams = {
   roomCode: string;
   playerId: string;
   name: string;
+  resumeToken: string;
 };
 
 function bindLandingHandlers(
@@ -33,8 +34,8 @@ function bindLandingHandlers(
         renderLanding();
         return;
       }
-      if (!payload.roomCode || !payload.playerId) return;
-      enterRoomFn({ roomCode: payload.roomCode, playerId: payload.playerId, name });
+      if (!payload.roomCode || !payload.playerId || !payload.resumeToken) return;
+      enterRoomFn({ roomCode: payload.roomCode, playerId: payload.playerId, name, resumeToken: payload.resumeToken });
     });
   });
 
@@ -52,8 +53,8 @@ function bindLandingHandlers(
         renderLanding();
         return;
       }
-      if (!payload.roomCode || !payload.playerId) return;
-      enterRoomFn({ roomCode: payload.roomCode, playerId: payload.playerId, name });
+      if (!payload.roomCode || !payload.playerId || !payload.resumeToken) return;
+      enterRoomFn({ roomCode: payload.roomCode, playerId: payload.playerId, name, resumeToken: payload.resumeToken });
     });
   });
 
@@ -64,10 +65,11 @@ function bindLandingHandlers(
   });
 }
 
-function enterRoom({ roomCode, playerId, name }: EnterRoomParams, socket: Socket<ServerToClientEvents, ClientToServerEvents>) {
+function enterRoom({ roomCode, playerId, name, resumeToken }: EnterRoomParams, socket: Socket<ServerToClientEvents, ClientToServerEvents>) {
   state.playerId = playerId;
   state.roomCode = roomCode;
   state.playerName = name;
+  state.resumeToken = resumeToken;
   saveSession();
   socket.emit('requestState', { roomCode, playerId });
 }

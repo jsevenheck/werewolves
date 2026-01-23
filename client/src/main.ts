@@ -41,8 +41,13 @@ if (state.storedSession) {
 }
 
 socket.on('connect', () => {
-  if (state.playerId && state.roomCode) {
-    attemptResume({ roomCode: state.roomCode, playerId: state.playerId, name: state.playerName || '' });
+  if (state.playerId && state.roomCode && state.resumeToken) {
+    attemptResume({
+      roomCode: state.roomCode,
+      playerId: state.playerId,
+      name: state.playerName || '',
+      resumeToken: state.resumeToken
+    });
   }
 });
 
@@ -213,6 +218,12 @@ function renderPhaseSection(room: RoomView) {
 }
 
 function attemptResume(saved: StoredSession) {
+  if (!saved.resumeToken) {
+    notify('Saved session expired. Please rejoin the room.');
+    clearSession();
+    renderLandingPage();
+    return;
+  }
   socket.emit('resumePlayer', saved, (res) => {
     if (res && 'error' in res && res.error) {
       notify(res.error);
@@ -222,6 +233,7 @@ function attemptResume(saved: StoredSession) {
       state.playerId = saved.playerId;
       state.roomCode = saved.roomCode;
       state.playerName = saved.name;
+      state.resumeToken = saved.resumeToken;
       saveSession();
       socket.emit('requestState', { roomCode: saved.roomCode, playerId: saved.playerId });
     }

@@ -3,7 +3,7 @@ import { escapeHtml } from '../utils/helpers';
 
 function renderLanding() {
   const saved = loadSession();
-  const resumeBlock = saved
+  const resumeBlock = saved?.resumeToken
     ? `<button id="resume-btn">Resume ${escapeHtml(saved.roomCode)} as ${escapeHtml(saved.name)}</button>`
     : '';
   return `

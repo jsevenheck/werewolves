@@ -39,6 +39,7 @@ export interface Player {
   alive: boolean;
   connected: boolean;
   socketId: string | null;
+  resumeToken?: string;
   isHost: boolean;
   voteTarget: string | null;
   nightAction: { vote: string | null } | null;
@@ -177,4 +178,5 @@ export interface StoredSession {
   roomCode: string;
   playerId: string;
   name: string;
+  resumeToken: string;
 }

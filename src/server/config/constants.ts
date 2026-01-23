@@ -7,6 +7,7 @@ const NIGHT_DELAY_MS = IS_E2E ? 0 : 3000;
 const PHASE_DELAY_MS = IS_E2E ? 0 : 3000;
 const ROOM_CODE = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 4);
 const PLAYER_ID = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 12);
+const RESUME_TOKEN = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 24);
 
 type RoleInfo = Record<Role, { label: string; team: Team; description: string }>;
 
@@ -63,6 +64,7 @@ export {
   PHASE_DELAY_MS,
   ROOM_CODE,
   PLAYER_ID,
+  RESUME_TOKEN,
   ROLE_INFO,
   DEFAULT_ROLE_CONFIG
 };

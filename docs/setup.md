@@ -44,6 +44,26 @@ pnpm run test:e2e
 - Host can skip a night action step if a player is offline or unresponsive.
 - If the host disconnects, another connected player becomes the acting host until the original host reconnects.
 
+## Narrator Audio
+- Place MP3 files in `client/public/audio/` (served as `/audio/*.mp3`).
+- The narrator looks up files by key and falls back to a silent placeholder if missing.
+- Expected keys:
+  - `lobby.mp3` (also used for the initial audio unlock)
+  - `roleReveal.mp3`
+  - `armor.mp3`
+  - `day.mp3`
+  - `night.mp3`
+  - `ended.mp3`
+  - `night_wolves.mp3`
+  - `night_seer.mp3`
+  - `night_witch.mp3`
+  - `night_resolve.mp3`
+  - `night_transition.mp3`
+  - `postReveal.mp3`
+  - `postArmor.mp3`
+  - `nightToDay.mp3`
+  - `dayToNight.mp3`
+
 ## Troubleshooting
 - If players cannot connect, ensure the host firewall allows inbound `3001` (or the `PORT` you set).
 - If you see an empty page in production, confirm the Vite build output (`dist/client`) exists and the server is running.

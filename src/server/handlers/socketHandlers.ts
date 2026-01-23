@@ -1,5 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import { sanitizeName, createVoteState, addLog, clearRoomTimers } from '../utils/helpers';
+import { RESUME_TOKEN } from '../config/constants';
 import { createRoom, getRoom } from '../models/room';
 import { createPlayer, setSocketIndex, getSocketIndex, deleteSocketIndex } from '../models/player';
 import { broadcastRoom, sendStateToPlayer } from '../managers/broadcastManager';
@@ -72,7 +73,7 @@ function setupSocketHandlers(
     if (!cleanName) return cb?.({ error: 'Name required' });
     const { room, player } = createRoom(cleanName, socket.id, createPlayer);
     setSocketIndex(socket.id, room.code, player.id);
-    cb?.({ roomCode: room.code, playerId: player.id });
+    cb?.({ roomCode: room.code, playerId: player.id, resumeToken: player.resumeToken });
     broadcastRoom(room, io);
   });
 
@@ -87,11 +88,11 @@ function setupSocketHandlers(
     room.players[player.id] = player;
     setSocketIndex(socket.id, room.code, player.id);
     updateHostIfNeeded(room);
-    cb?.({ roomCode: room.code, playerId: player.id });
+    cb?.({ roomCode: room.code, playerId: player.id, resumeToken: player.resumeToken });
     broadcastRoom(room, io);
   });
 
-  socket.on('resumePlayer', ({ roomCode, playerId }, cb) => {
+  socket.on('resumePlayer', ({ roomCode, playerId, resumeToken }, cb) => {
     const existingRef = getSocketIndex(socket.id);
     if (existingRef && (existingRef.roomCode !== roomCode || existingRef.playerId !== playerId)) {
       detachSocketFromRoom(io, socket.id, 'left the room');
@@ -100,6 +101,13 @@ function setupSocketHandlers(
     if (!room) return cb?.({ error: 'Room not found' });
     const player = room.players[playerId];
     if (!player) return cb?.({ error: 'Player not in room' });
+    const expectedToken = player.resumeToken ?? RESUME_TOKEN();
+    if (!player.resumeToken) {
+      player.resumeToken = expectedToken;
+    }
+    if (!resumeToken || resumeToken !== expectedToken) {
+      return cb?.({ error: 'Invalid session' });
+    }
     if (player.socketId && player.socketId !== socket.id) {
       const previousSocketId = player.socketId;
       const existingSocket = io.sockets.sockets.get(previousSocketId);
@@ -238,7 +246,7 @@ function setupSocketHandlers(
     const room = getRoom(roomCode);
     if (!room || room.hostId !== playerId) return;
     if (!getPlayerForSocket(room, playerId, socket.id)) return;
-    if (room.phase !== 'night' && !room.phaseTransition && !room.awaitingHunterShot) return;
+    if (room.phase !== 'night' && room.phase !== 'armor' && !room.phaseTransition && !room.awaitingHunterShot) return;
 
     if (room.awaitingHunterShot) {
       room.awaitingHunterShot = null;
@@ -317,6 +325,12 @@ function setupSocketHandlers(
         broadcastRoom(room, io);
         return;
       }
+      return;
+    }
+
+    if (room.phase === 'armor') {
+      addLog(room, 'Armor selection skipped. Moving to night.');
+      schedulePhaseTransition(room, 'postArmor', (r) => broadcastRoom(r, io));
       return;
     }
 

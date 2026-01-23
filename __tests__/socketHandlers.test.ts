@@ -75,7 +75,7 @@ describe('socketHandlers host handoff', () => {
       phaseStep: null,
       phaseTransition: null,
       players: {
-        owner: { id: 'owner', name: 'Owner', isHost: true, connected: true, socketId: 'socket-owner' },
+        owner: { id: 'owner', name: 'Owner', isHost: true, connected: true, socketId: 'socket-owner', resumeToken: 'token-owner' },
         peer: { id: 'peer', name: 'Peer', isHost: false, connected: true, socketId: 'socket-peer' }
       },
       voteState: { votes: {}, revoteFromTie: null },
@@ -96,7 +96,7 @@ describe('socketHandlers host handoff', () => {
     socket2.id = 'socket-owner-2';
     setupSocketHandlers(io, socket2 as any);
 
-    handlers2.resumePlayer({ roomCode: 'ABCD', playerId: 'owner' }, jest.fn());
+    handlers2.resumePlayer({ roomCode: 'ABCD', playerId: 'owner', resumeToken: 'token-owner', name: 'Owner' }, jest.fn());
 
     expect(room.hostId).toBe('owner');
   });

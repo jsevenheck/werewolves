@@ -4,8 +4,8 @@ export type ErrorResponse = { error: string };
 export type OkResponse = { ok: true };
 
 export interface ClientToServerEvents {
-  createRoom: (payload: { name: string }, cb?: (response: { roomCode?: string; playerId?: string } | ErrorResponse) => void) => void;
-  joinRoom: (payload: { name: string; code: string }, cb?: (response: { roomCode?: string; playerId?: string } | ErrorResponse) => void) => void;
+  createRoom: (payload: { name: string }, cb?: (response: { roomCode?: string; playerId?: string; resumeToken?: string } | ErrorResponse) => void) => void;
+  joinRoom: (payload: { name: string; code: string }, cb?: (response: { roomCode?: string; playerId?: string; resumeToken?: string } | ErrorResponse) => void) => void;
   resumePlayer: (payload: StoredSession, cb?: (response: OkResponse | ErrorResponse) => void) => void;
   updateRoleConfig: (payload: { roomCode: string; playerId: string; config: Partial<RoleConfig> & { minPlayers?: number } }) => void;
   startGame: (payload: { roomCode: string; playerId: string }, cb?: (response: OkResponse | ErrorResponse) => void) => void;

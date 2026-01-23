@@ -22,3 +22,19 @@
 ## Narrator Audio Assets
 
 Place MP3 narrator clips in `client/public/audio/` with filenames matching the expected ones (for example, `night_wolves.mp3` or `dayToNight.mp3`) so the narrator continues to map phase changes correctly. The code falls back to an embedded silent clip when files are missing, so adding the real audio files is required for audible narration.
+Expected narrator keys:
+- `lobby.mp3` (also used for the initial audio unlock)
+- `roleReveal.mp3`
+- `armor.mp3`
+- `day.mp3`
+- `night.mp3`
+- `ended.mp3`
+- `night_wolves.mp3`
+- `night_seer.mp3`
+- `night_witch.mp3`
+- `night_resolve.mp3`
+- `night_transition.mp3`
+- `postReveal.mp3`
+- `postArmor.mp3`
+- `nightToDay.mp3`
+- `dayToNight.mp3`

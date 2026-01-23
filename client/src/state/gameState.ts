@@ -6,6 +6,7 @@ type GameState = {
   roomCode: string;
   playerId: string;
   playerName: string;
+  resumeToken: string;
   hunterPrompt: boolean;
   storedSession: StoredSession | null;
   roleVisible: boolean;
@@ -20,6 +21,7 @@ const state: GameState = {
   roomCode: '',
   playerId: '',
   playerName: '',
+  resumeToken: '',
   hunterPrompt: false,
   storedSession: null,
   roleVisible: false,
@@ -38,8 +40,13 @@ function loadSession(): StoredSession | null {
 }
 
 function saveSession() {
-  if (!state.playerId || !state.roomCode) return;
-  const payload: StoredSession = { playerId: state.playerId, roomCode: state.roomCode, name: state.playerName };
+  if (!state.playerId || !state.roomCode || !state.resumeToken) return;
+  const payload: StoredSession = {
+    playerId: state.playerId,
+    roomCode: state.roomCode,
+    name: state.playerName,
+    resumeToken: state.resumeToken
+  };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 }
 
@@ -49,6 +56,7 @@ function clearSession() {
 
 function initializeState() {
   state.storedSession = loadSession();
+  state.resumeToken = state.storedSession?.resumeToken ?? '';
 }
 
 export { state, loadSession, saveSession, clearSession, initializeState };
