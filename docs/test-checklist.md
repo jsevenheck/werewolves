@@ -7,6 +7,7 @@
 - **Hunter dies via Lovers link**: Make Hunter a Lover partner, kill the other Lover (any method), and ensure Hunter still receives the last-shot overlay even though death came from heartbreak.
 - **Werewolf & day vote ties**: Force wolf vote tie to see random target selection, and run a day vote tie to trigger revote UI; verify second tie resolves randomly among tied players.
 - **Role reveal readiness**: During role reveal, each player must click Ready; host can only continue once all connected players are ready.
+- **Host skip armor step**: With an unresponsive or disconnected Armor, host uses Skip armor step and the game continues into night.
 - **Host skip night step**: With an unresponsive or disconnected Witch/Seer/Wolf, host uses Skip current action and the game continues normally.
 - **Transition delays**: Confirm ~3s delay after each night action, and after phase changes (role reveal -> armor/night, armor -> night, night -> day, day -> night).
 - **Witch potion tracking**: Use heal potion once to prevent the wolf kill, confirm potion becomes unavailable later, then poison a target on another night and ensure dead count + Lovers link apply before win checks.
@@ -16,7 +17,7 @@
 - **Disconnect / reconnect**: Join from a browser, disconnect (close tab), reopen and resume via stored session to confirm state restores (including role, death state, and pending prompts like Hunter shot).
 - **Host handoff / reclaim**: Disconnect the host, confirm another connected player becomes Host and can use host actions; reconnect the original host and verify the Host label returns to them.
 - **Endgame reveal**: When a team wins, ensure all roles reveal in the player list and that win condition matches expectations (wolves parity, all wolves dead, or Joker instant win).
-- **Narrator audio toggle**: On mobile Safari/Chrome, tap “Narrator: Off” to enable sound, confirm audio unlock succeeds, and verify announcements only fire on phase/step/transition changes.
+- **Narrator audio toggle**: On mobile Safari/Chrome, tap "Narrator: Off" to enable sound, confirm audio unlock succeeds, and verify announcements only fire on phase/step/transition changes.
 - **Narrator persistence**: Reload the page and confirm the narrator toggle state persists in localStorage.
 
 ## Narrator Audio Assets

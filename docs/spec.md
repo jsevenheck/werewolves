@@ -2,7 +2,8 @@
 
 ### Player
 - `id`: string player id.
-- `socketId`: string socket id for reconnect.
+- `socketId`: string or null active socket id for reconnect.
+- `resumeToken`: random token required to resume a session (stored client-side).
 - `name`: display name shown to others.
 - `role`: enum (`werewolf`, `seer`, `hunter`, `witch`, `armor`, `joker`, `villager`).
 - `team`: derived team id for win logic (`wolves`, `village`, `neutral`).
@@ -52,6 +53,7 @@ loop:
     armor:
       wait for armor player to choose two targets
       set lovers; notify both
+      host may skip armor if the player is offline or unresponsive
       schedule transition to night
     night (step machine):
       if step='wolves':
@@ -107,7 +109,8 @@ onPlayerDisconnect(playerId):
   mark connected=false; keep state for reconnection
   if player was host -> assign acting host to another connected player (if any)
 
-onPlayerResume(playerId):
+onPlayerResume(roomCode, playerId, resumeToken):
+  if resumeToken missing or mismatched -> reject
   mark connected=true
   if player is original host -> set acting host back to owner
 ```
