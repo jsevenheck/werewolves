@@ -1,6 +1,5 @@
 import type { Server, Socket } from 'socket.io';
 import { sanitizeName, createVoteState, addLog, clearRoomTimers } from '../utils/helpers';
-import { RESUME_TOKEN } from '../config/constants';
 import { createRoom, getRoom } from '../models/room';
 import { createPlayer, setSocketIndex, getSocketIndex, deleteSocketIndex } from '../models/player';
 import { broadcastRoom, sendStateToPlayer } from '../managers/broadcastManager';
@@ -101,11 +100,10 @@ function setupSocketHandlers(
     if (!room) return cb?.({ error: 'Room not found' });
     const player = room.players[playerId];
     if (!player) return cb?.({ error: 'Player not in room' });
-    const expectedToken = player.resumeToken ?? RESUME_TOKEN();
     if (!player.resumeToken) {
-      player.resumeToken = expectedToken;
+      return cb?.({ error: 'Invalid session' });
     }
-    if (!resumeToken || resumeToken !== expectedToken) {
+    if (!resumeToken || resumeToken !== player.resumeToken) {
       return cb?.({ error: 'Invalid session' });
     }
     if (player.socketId && player.socketId !== socket.id) {

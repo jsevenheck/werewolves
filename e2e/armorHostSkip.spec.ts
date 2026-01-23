@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { closeContexts, configureRoles, createLobbyWithPlayers, startGameAndReady } from './helpers';
 
 test('host can skip armor selection', async ({ browser }) => {

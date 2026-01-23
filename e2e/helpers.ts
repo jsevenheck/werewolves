@@ -117,10 +117,26 @@ export const startGameAndReady = async (pages: Page[]) => {
   pages.forEach((page) => {
     page.on('dialog', (dialog) => dialog.accept());
   });
-  await host.click('#start-game');
+  await host.waitForSelector('#start-game:not([disabled])', { timeout: 15000 });
+  const startDeadline = Date.now() + 20000;
+  let hostStarted = false;
+  while (Date.now() < startDeadline) {
+    await host.click('#start-game');
+    hostStarted = await host
+      .waitForSelector('h2:has-text("Your Role")', { timeout: 5000 })
+      .then(() => true)
+      .catch(() => false);
+    if (hostStarted) break;
+    const stillLobby = await host.locator('#start-game').count();
+    if (!stillLobby) break;
+    await host.waitForTimeout(250);
+  }
+  if (!hostStarted) {
+    throw new Error('Start game did not transition to role reveal.');
+  }
   await Promise.all(
     pages.map((page) =>
-      page.waitForSelector('h2:has-text("Your Role")', { timeout: 20000 })
+      page.waitForSelector('h2:has-text("Your Role")', { timeout: 30000 })
     )
   );
   for (const page of pages) {

@@ -19,6 +19,7 @@ const makePlayers = (count: number): Record<string, Player> => {
       alive: true,
       connected: true,
       socketId: null,
+      resumeToken: 'token',
       isHost: false,
       voteTarget: null,
       nightAction: null,

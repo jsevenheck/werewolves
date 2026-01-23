@@ -53,6 +53,7 @@ const buildPlayer = (overrides: Partial<Player>): Player => ({
   alive: true,
   connected: true,
   socketId: null,
+  resumeToken: 'token',
   isHost: false,
   voteTarget: null,
   nightAction: null,

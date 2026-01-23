@@ -39,7 +39,7 @@ export interface Player {
   alive: boolean;
   connected: boolean;
   socketId: string | null;
-  resumeToken?: string;
+  resumeToken: string;
   isHost: boolean;
   voteTarget: string | null;
   nightAction: { vote: string | null } | null;
