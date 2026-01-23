@@ -14,6 +14,7 @@
 - **Voting UI**: Ensure vote submit is disabled until a selection is made; choose Abstain explicitly; test majority abstain -> no elimination.
 - **Lobby validation**: Adjust minimum players and attempt to start below it; ensure the backend rejects the start and displays an error alert. Also test too many roles vs player count.
 - **Disconnect / reconnect**: Join from a browser, disconnect (close tab), reopen and resume via stored session to confirm state restores (including role, death state, and pending prompts like Hunter shot).
+- **Host handoff / reclaim**: Disconnect the host, confirm another connected player becomes Host and can use host actions; reconnect the original host and verify the Host label returns to them.
 - **Endgame reveal**: When a team wins, ensure all roles reveal in the player list and that win condition matches expectations (wolves parity, all wolves dead, or Joker instant win).
 - **Narrator audio toggle**: On mobile Safari/Chrome, tap “Narrator: Off” to enable sound, confirm audio unlock succeeds, and verify announcements only fire on phase/step/transition changes.
 - **Narrator persistence**: Reload the page and confirm the narrator toggle state persists in localStorage.

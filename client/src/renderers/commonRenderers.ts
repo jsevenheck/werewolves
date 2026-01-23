@@ -10,6 +10,10 @@ function renderHeader() {
   const self = room.self;
   const detail = self?.role ? ROLE_DETAILS[self.role] : null;
   const loverNote = room.loverName ? `<p>Lover: ${escapeHtml(room.loverName)}</p>` : '';
+  const hostPlayer = room.players.find((player) => player.id === room.hostId);
+  const hostLabel = hostPlayer
+    ? `<span class="tag">Host: ${escapeHtml(hostPlayer.name)}${hostPlayer.connected ? '' : ' (offline)'}</span>`
+    : '';
 
   const seerResult = room.seerResult;
   const seerNote = self?.role === 'seer' && seerResult
@@ -31,13 +35,14 @@ function renderHeader() {
   return `
     <section class="panel">
       <div style="display:flex;flex-direction:column;gap:.5rem;">
-        <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;">
+          <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;">
           <div>
             <h1>Room ${escapeHtml(room.code)}</h1>
             <p>Phase: ${formatPhase(room)}</p>
           </div>
           <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;">
             <span class="tag">You: ${escapeHtml(state.playerName || 'Unknown')}</span>
+            ${hostLabel}
             ${self?.alive ? '<span class="tag" style="border-color:#4ade80;color:#4ade80;">Alive</span>' : '<span class="tag" style="border-color:#ef4444;color:#ef4444;">Dead</span>'}
             ${roleToggle}
             ${narratorToggle}

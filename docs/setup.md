@@ -42,6 +42,7 @@ pnpm run test:e2e
 - Players mark ready; host continues once everyone is ready.
 - Armor links Lovers once, then night/day cycles begin.
 - Host can skip a night action step if a player is offline or unresponsive.
+- If the host disconnects, another connected player becomes the acting host until the original host reconnects.
 
 ## Troubleshooting
 - If players cannot connect, ensure the host firewall allows inbound `3001` (or the `PORT` you set).

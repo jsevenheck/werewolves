@@ -20,7 +20,7 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     name: player.name,
     alive: player.alive,
     connected: player.connected,
-    isHost: player.isHost,
+    isHost: player.id === room.hostId,
     role: player.id === viewerId || room.phase === 'ended' || !player.alive ? player.role : null,
     ...(room.phase === 'roleReveal' ? { ready: player.ready } : {})
   }));

@@ -11,7 +11,7 @@
 - `ready`: boolean for role-reveal readiness.
 - `voteTarget`: legacy field (cleared on death; day voting uses `voteState`).
 - `nightAction`: currently `null` for most roles; werewolves get `{ vote: null }` on assignment (not used by core flow).
-- `isHost`: boolean for UI permissions.
+- `isHost`: boolean for the original host/owner (used to reclaim host on reconnect; UI uses `hostId`).
 - `seerResult`: last inspection result for seer UI (name + alignment).
 
 ### Room
@@ -20,7 +20,7 @@
 - `phaseStep`: helper for night substeps (`wolves`, `seer`, `witch`, `resolve`, `transition`).
 - `dayCount`: starts at 0, increments at each day phase.
 - `players`: map playerId -> Player.
-- `hostId`: player id allowed to configure roles/start.
+- `hostId`: acting host id (may switch on disconnect; reverts to owner when they reconnect).
 - `roleConfig`: counts for each special role; villagers fill remainder automatically.
 - `minPlayers`: configurable minimum players before start (default 5, min 3).
 - `lovers`: `{aId, bId}` or null.
@@ -105,4 +105,9 @@ HunterShot(targetId):
 
 onPlayerDisconnect(playerId):
   mark connected=false; keep state for reconnection
+  if player was host -> assign acting host to another connected player (if any)
+
+onPlayerResume(playerId):
+  mark connected=true
+  if player is original host -> set acting host back to owner
 ```

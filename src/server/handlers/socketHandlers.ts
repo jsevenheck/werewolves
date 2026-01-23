@@ -17,6 +17,26 @@ function getPlayerForSocket(room: Room, playerId: string, socketId: string) {
   return player;
 }
 
+function ensureActingHost(room: Room) {
+  const owner = Object.values(room.players).find((player) => player.isHost);
+  if (owner?.connected && room.hostId !== owner.id) {
+    room.hostId = owner.id;
+    return true;
+  }
+  const currentHost = room.hostId ? room.players[room.hostId] : null;
+  if (currentHost?.connected) return false;
+  const fallback = Object.values(room.players).find((player) => player.connected);
+  if (fallback && room.hostId !== fallback.id) {
+    room.hostId = fallback.id;
+    return true;
+  }
+  return false;
+}
+
+function updateHostIfNeeded(room: Room) {
+  ensureActingHost(room);
+}
+
 function detachSocketFromRoom(
   io: Server<ClientToServerEvents, ServerToClientEvents>,
   socketId: string,
@@ -35,6 +55,7 @@ function detachSocketFromRoom(
   if (reason) {
     addLog(room, `${player.name} ${reason}.`);
   }
+  updateHostIfNeeded(room);
   if (room.phase === 'day' && player.alive) {
     tryResolveDayVote(room, (r) => broadcastRoom(r, io), io);
   }
@@ -65,6 +86,7 @@ function setupSocketHandlers(
     const player = createPlayer(cleanName, socket.id, false);
     room.players[player.id] = player;
     setSocketIndex(socket.id, room.code, player.id);
+    updateHostIfNeeded(room);
     cb?.({ roomCode: room.code, playerId: player.id });
     broadcastRoom(room, io);
   });
@@ -79,14 +101,17 @@ function setupSocketHandlers(
     const player = room.players[playerId];
     if (!player) return cb?.({ error: 'Player not in room' });
     if (player.socketId && player.socketId !== socket.id) {
-      const existingSocket = io.sockets.sockets.get(player.socketId);
-      if (player.connected && existingSocket) {
-        return cb?.({ error: 'Player already connected' });
+      const previousSocketId = player.socketId;
+      const existingSocket = io.sockets.sockets.get(previousSocketId);
+      if (existingSocket) {
+        detachSocketFromRoom(io, previousSocketId);
+        existingSocket.disconnect(true);
       }
     }
     player.socketId = socket.id;
     player.connected = true;
     setSocketIndex(socket.id, roomCode, playerId);
+    updateHostIfNeeded(room);
     cb?.({ ok: true });
     broadcastRoom(room, io);
     if (room.awaitingHunterShot === playerId && player.role === 'hunter' && !player.alive) {
@@ -156,7 +181,7 @@ function setupSocketHandlers(
     if (!room || room.phase !== 'armor') return;
     const player = getPlayerForSocket(room, playerId, socket.id);
     if (!player || player.role !== 'armor' || !player.alive) return;
-    if (room.loversAssigned) return;
+    if (room.lovers) return;
     if (!Array.isArray(targets) || targets.length !== 2) return;
     const [a, b] = targets;
     if (a === b) return;

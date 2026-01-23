@@ -10,6 +10,7 @@ import {
 import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../src/server/managers/nightManager';
 import { queueDeath, resolveDeaths, startNextHunterShot, checkWinners } from '../src/server/managers/deathManager';
 import { setupSocketHandlers } from '../src/server/handlers/socketHandlers';
+import { setSocketIndex, deleteSocketIndex } from '../src/server/models/player';
 import type { ClientToServerEvents, ServerToClientEvents } from '../src/shared/events';
 import type { Room } from '../src/shared/types';
 
@@ -47,16 +48,59 @@ jest.mock('../src/server/managers/deathManager', () => ({
 }));
 
 const makeSocket = () => {
-  const handlers: Record<string, (payload?: any) => void> = {};
+  const handlers: Record<string, (...args: any[]) => void> = {};
   const socket = {
     id: 'socket-1',
     emit: jest.fn(),
-    on: (event: string, handler: (payload?: any) => void) => {
+    on: (event: string, handler: (...args: any[]) => void) => {
       handlers[event] = handler;
     }
   };
   return { handlers, socket };
 };
+
+describe('socketHandlers host handoff', () => {
+  const io = { sockets: { sockets: new Map() } } as unknown as any;
+
+  afterEach(() => {
+    deleteSocketIndex('socket-owner');
+    deleteSocketIndex('socket-owner-2');
+  });
+
+  test('acting host transfers on disconnect and reclaims on resume', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'owner',
+      phase: 'lobby',
+      phaseStep: null,
+      phaseTransition: null,
+      players: {
+        owner: { id: 'owner', name: 'Owner', isHost: true, connected: true, socketId: 'socket-owner' },
+        peer: { id: 'peer', name: 'Peer', isHost: false, connected: true, socketId: 'socket-peer' }
+      },
+      voteState: { votes: {}, revoteFromTie: null },
+      logs: []
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+
+    const { handlers, socket } = makeSocket();
+    socket.id = 'socket-owner';
+    setSocketIndex('socket-owner', room.code, 'owner');
+    setupSocketHandlers(io, socket as any);
+
+    handlers.disconnect();
+
+    expect(room.hostId).toBe('peer');
+
+    const { handlers: handlers2, socket: socket2 } = makeSocket();
+    socket2.id = 'socket-owner-2';
+    setupSocketHandlers(io, socket2 as any);
+
+    handlers2.resumePlayer({ roomCode: 'ABCD', playerId: 'owner' }, jest.fn());
+
+    expect(room.hostId).toBe('owner');
+  });
+});
 
 describe('socketHandlers hostSkipStep', () => {
   const io = { sockets: { sockets: new Map() } } as unknown as any;
