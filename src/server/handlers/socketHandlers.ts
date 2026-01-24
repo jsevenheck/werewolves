@@ -219,12 +219,12 @@ function setupSocketHandlers(
 
   socket.on('submitSeerInspect', ({ roomCode, playerId, targetId }, cb) => {
     const room = getRoom(roomCode);
-    if (!room || room.phase !== 'night' || room.phaseStep !== 'seer') return;
+    if (!room || room.phase !== 'night' || room.phaseStep !== 'seer') return cb?.({ error: 'Invalid room or phase' });
     const player = getPlayerForSocket(room, playerId, socket.id);
-    if (!player || player.role !== 'seer' || !player.alive) return;
-    if (targetId === playerId) return;
+    if (!player || player.role !== 'seer' || !player.alive) return cb?.({ error: 'Invalid player' });
+    if (targetId === playerId) return cb?.({ error: 'Cannot inspect yourself' });
     const target = room.players[targetId];
-    if (!target || !target.alive) return;
+    if (!target || !target.alive) return cb?.({ error: 'Invalid target' });
     const result = target.role === 'werewolf' ? 'Werewolf' : 'Not Werewolf';
     player.seerResult = { name: target.name, result };
     cb?.({ ok: true, name: target.name, result });
