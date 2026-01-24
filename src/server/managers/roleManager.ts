@@ -28,7 +28,7 @@ function validateCounts(room: Room): { ok: true } | { error: string } {
 
 function assignRoles(room: Room) {
   const players = shuffle(Object.values(room.players));
-  const deck: Role[] = [];
+  let deck: Role[] = [];
   for (const [role, count] of Object.entries(room.roleConfig) as [Role, number][]) {
     for (let i = 0; i < count; i += 1) {
       deck.push(role);
@@ -37,7 +37,7 @@ function assignRoles(room: Room) {
   while (deck.length < players.length) {
     deck.push('villager');
   }
-  shuffle(deck);
+  deck = shuffle(deck);
   players.forEach((player, index) => {
     const role = deck[index];
     player.role = role;
