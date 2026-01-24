@@ -1011,7 +1011,7 @@ Watch out for these code smells:
 - **Setup Guide:** `docs/setup.md`
 - **Testing Checklist:** `docs/test-checklist.md`
 - **Adding Roles:** `docs/createNewRoles.md`
-- **This Guide:** `docs/agents.md`
+- **This Guide:** `.agents/agents.md`
 
 ### External Resources
 
