@@ -27,7 +27,8 @@ werewolves/
 |           `-- helpers.ts    # Helper functions
 |-- src/shared/               # Shared types/events for client + server
 |   |-- events.ts             # Socket.IO event contracts
-|   `-- types.ts              # Shared data shapes (room, player, etc.)
+|   |-- types.ts              # Shared data shapes (room, player, etc.)
+|   `-- constants.ts          # Shared timing constants for UI + server
 |-- client/                   # Vite client workspace
 |   |-- index.html            # Main HTML file
 |   `-- src/                  # Client TypeScript modules
@@ -56,6 +57,7 @@ werewolves/
 
 ### Config Layer
 - `constants.ts`: Contains all game constants, role information, and default configurations
+- `src/shared/constants.ts`: Shared timing constants (phase/transition delays) used by client + server
 
 ### Models Layer
 - `room.ts`: Room creation, storage, and retrieval
@@ -80,6 +82,7 @@ Business logic separated by concern:
 
 ### Config Layer
 - `constants.ts`: Role details and UI constants
+- `src/shared/constants.ts`: Timing constants used to display transition durations
 
 ### State Layer
 - `gameState.ts`: Global state management and localStorage session handling
@@ -133,13 +136,15 @@ main.ts
 ### Adding New Features
 
 **Server-side:**
-1. Add constants to `src/server/config/constants.ts`
+1. Add shared timing constants to `src/shared/constants.ts` when both client + server need them
+2. Add server-only constants to `src/server/config/constants.ts`
 2. Update models if new data structures are needed
 3. Add business logic to appropriate manager
 4. Add socket event handlers to `src/server/handlers/socketHandlers.ts`
 
 **Client-side:**
-1. Add constants to `client/src/config/constants.ts`
+1. Add shared timing constants to `src/shared/constants.ts` when both client + server need them
+2. Add client-only constants to `client/src/config/constants.ts`
 2. Update state management if needed
 3. Add rendering functions to appropriate renderer
 4. Add event handlers to appropriate handler module

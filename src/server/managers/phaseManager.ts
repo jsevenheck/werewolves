@@ -1,5 +1,10 @@
 import type { Server } from 'socket.io';
-import { NIGHT_DELAY_MS, PHASE_DELAY_MS } from '../config/constants';
+import {
+  NIGHT_DELAY_MS,
+  PHASE_DELAY_MS,
+  POST_ARMOR_DELAY_MS,
+  POST_REVEAL_DELAY_MS
+} from '../config/constants';
 import { createVoteState, addLog, clearRoomTimers } from '../utils/helpers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { NightStep, PhaseTransition, Room } from '../../shared/types';
@@ -68,6 +73,10 @@ function schedulePhaseTransition(
     room.phaseStep = 'transition';
   }
   broadcastRoom(room);
+  const delayMs =
+    kind === 'postReveal' ? POST_REVEAL_DELAY_MS :
+    kind === 'postArmor' ? POST_ARMOR_DELAY_MS :
+    PHASE_DELAY_MS;
   room.phaseTimer = setTimeout(() => {
     room.phaseTimer = null;
     if (room.winner) return;
@@ -78,7 +87,16 @@ function schedulePhaseTransition(
     }
     if (kind === 'postArmor') {
       startNight(room);
+      room.phaseStep = 'transition';
+      room.nextNightStep = 'wolves';
       broadcastRoom(room);
+      room.transitionTimer = setTimeout(() => {
+        room.transitionTimer = null;
+        if (room.phase !== 'night' || room.phaseStep !== 'transition') return;
+        room.phaseStep = 'wolves';
+        room.nextNightStep = null;
+        broadcastRoom(room);
+      }, NIGHT_DELAY_MS);
       return;
     }
     if (kind === 'nightToDay') {
@@ -95,7 +113,7 @@ function schedulePhaseTransition(
       startNight(room);
       broadcastRoom(room);
     }
-  }, PHASE_DELAY_MS);
+  }, delayMs);
 }
 
 function holdDayToNightTransition(room: Room, broadcastRoom: (room: Room) => void) {

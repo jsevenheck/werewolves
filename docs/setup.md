@@ -64,6 +64,8 @@ pnpm run test:e2e
   - `nightToDay.mp3`
   - `dayToNight.mp3`
 
+See `client/public/audio/README.md` for per-file descriptions and when each clip plays.
+
 ## Troubleshooting
 - If players cannot connect, ensure the host firewall allows inbound `3001` (or the `PORT` you set).
 - If you see an empty page in production, confirm the Vite build output (`dist/client`) exists and the server is running.

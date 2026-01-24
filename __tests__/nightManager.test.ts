@@ -1,6 +1,7 @@
 import { scheduleNightStep, schedulePhaseTransition } from '../src/server/managers/phaseManager';
 import { queueDeath, resolveDeaths } from '../src/server/managers/deathManager';
 import { tryFinalizeWolfVote, handleWitchDecision, resolveNight } from '../src/server/managers/nightManager';
+import { NIGHT_RESOLVE_DELAY_MS } from '../src/server/config/constants';
 import type { Player, Room, RoleConfig } from '../src/shared/types';
 
 jest.mock('../src/server/managers/phaseManager', () => ({
@@ -151,17 +152,24 @@ describe('nightManager', () => {
   });
 
   test('resolveNight queues deaths, resolves, and transitions', () => {
-    const room = makeRoom();
-    room.wolfTarget = 'v1';
-    room.poisonTarget = 'v2';
+    jest.useFakeTimers();
+    try {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.wolfTarget = 'v1';
+      room.poisonTarget = 'v2';
 
-    resolveNight(room, jest.fn(), undefined as never);
+      resolveNight(room, jest.fn(), undefined as never);
 
-    expect(queueDeath).toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
-    expect(queueDeath).toHaveBeenCalledWith(room, 'v2', 'poisoned by Witch');
-    expect(resolveDeaths).toHaveBeenCalledWith(room, 'night', expect.any(Function), undefined);
-    expect(room.healedTarget).toBeNull();
-    expect(room.poisonTarget).toBeNull();
-    expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'nightToDay', expect.any(Function));
+      expect(queueDeath).toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
+      expect(queueDeath).toHaveBeenCalledWith(room, 'v2', 'poisoned by Witch');
+      expect(resolveDeaths).toHaveBeenCalledWith(room, 'night', expect.any(Function), undefined);
+      expect(room.healedTarget).toBeNull();
+      expect(room.poisonTarget).toBeNull();
+      jest.advanceTimersByTime(NIGHT_RESOLVE_DELAY_MS);
+      expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'nightToDay', expect.any(Function));
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

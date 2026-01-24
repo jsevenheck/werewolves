@@ -9,7 +9,7 @@
 - **Role reveal readiness**: During role reveal, each player must click Ready; host can only continue once all connected players are ready.
 - **Host skip armor step**: With an unresponsive or disconnected Armor, host uses Skip armor step and the game continues into night.
 - **Host skip night step**: With an unresponsive or disconnected Witch/Seer/Wolf, host uses Skip current action and the game continues normally.
-- **Transition delays**: Confirm ~3s delay after each night action, and after phase changes (role reveal -> armor/night, armor -> night, night -> day, day -> night).
+- **Transition delays**: Confirm ~3s delay after each night action step, ~5s after role reveal (postReveal), ~10s after armor (postArmor) before night_transition plays, and ~6s after night_resolve before the nightToDay transition.
 - **Witch potion tracking**: Use heal potion once to prevent the wolf kill, confirm potion becomes unavailable later, then poison a target on another night and ensure dead count + Lovers link apply before win checks.
 - **Seer and Witch private info**: Confirm Seer sees the last inspection result only on their device and Witch sees the wolves' target before acting.
 - **Voting UI**: Ensure vote submit is disabled until a selection is made; choose Abstain explicitly; test majority abstain -> no elimination.
@@ -39,3 +39,5 @@ Expected narrator keys:
 - `postArmor.mp3`
 - `nightToDay.mp3`
 - `dayToNight.mp3`
+
+See `client/public/audio/README.md` for per-file meanings and timing.

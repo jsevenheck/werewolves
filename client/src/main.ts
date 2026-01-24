@@ -18,6 +18,11 @@ import { ROLE_DETAILS } from './config/constants';
 import { narrator } from './utils/narrator';
 import type { ClientToServerEvents, ServerToClientEvents } from '@shared/events';
 import type { RoomView, StoredSession } from '@shared/types';
+import {
+  PHASE_DELAY_MS,
+  POST_REVEAL_DELAY_MS,
+  POST_ARMOR_DELAY_MS
+} from '@shared/constants';
 import type { EnterRoomParams } from './handlers/landingHandlers';
 import './style.css';
 
@@ -169,12 +174,21 @@ function renderPhaseSection(room: RoomView) {
 
   if (room.phaseTransition) {
     const transitionMessages: Record<string, string> = {
-      postReveal: 'Preparing for next phase...',
+      postReveal: 'Das Dorf schlaeft ein.',
       postArmor: 'Starting the first night...',
       nightToDay: 'Dawn is breaking. Day phase begins soon...',
       dayToNight: 'Night falls. Close your eyes...'
     };
+    const transitionDurations: Record<string, number> = {
+      postReveal: POST_REVEAL_DELAY_MS,
+      postArmor: POST_ARMOR_DELAY_MS,
+      nightToDay: PHASE_DELAY_MS,
+      dayToNight: PHASE_DELAY_MS
+    };
     const message = transitionMessages[room.phaseTransition] || 'Next phase in a few seconds. Close your eyes if needed.';
+    const durationMs = transitionDurations[room.phaseTransition] ?? PHASE_DELAY_MS;
+    const durationSeconds = Math.round(durationMs / 1000);
+    const durationNote = `<p>Transition duration: ${durationSeconds}s.</p>`;
     const roleDetails = ROLE_DETAILS || {};
     const dayResults = room.phaseTransition === 'dayToNight'
       ? (() => {
@@ -195,6 +209,7 @@ function renderPhaseSection(room: RoomView) {
       <section class="panel">
         <h2>Transitioning...</h2>
         <p>${message}</p>
+        ${durationNote}
         ${dayResults}
         ${hostSkipButtonHtml}
       </section>

@@ -1,4 +1,5 @@
 import { ROLE_DETAILS } from '../config/constants';
+import { NIGHT_DELAY_MS } from '@shared/constants';
 import { state } from '../state/gameState';
 import { escapeHtml, getPlayerName } from '../utils/helpers';
 import type { RoomView, RoomViewSelf } from '@shared/types';
@@ -118,7 +119,8 @@ function renderNightSection(room: RoomView, self: RoomViewSelf | null) {
   let content = '<p>You sleep peacefully.</p>';
   if (room.phaseStep === 'transition') {
     const nextLabel = room.nextNightStep ? room.nextNightStep.toUpperCase() : '...';
-    content = `<p>Transitioning... next: ${nextLabel}.</p>`;
+    const durationSeconds = Math.round(NIGHT_DELAY_MS / 1000);
+    content = `<p>Transitioning... next: ${nextLabel}.</p><p>Transition duration: ${durationSeconds}s.</p>`;
   } else if (self?.alive) {
     if (room.phaseStep === 'wolves' && self.role === 'werewolf') {
       content = renderWolfForm(room);
@@ -302,11 +304,14 @@ function renderVoteForm(room: RoomView) {
 }
 
 function renderVoteConfirmation(room: RoomView, votedValue: string | null) {
+  const submitted = room.voteState?.submitted ?? 0;
+  const required = room.voteState?.required ?? 0;
+  const countNote = `<small>${submitted} / ${required} votes submitted.</small>`;
   if (votedValue === null) {
-    return '<p style="color:#4ade80;">Vote submitted: Abstain.</p>';
+    return `<p style="color:#4ade80;">Vote submitted: Abstain.</p>${countNote}`;
   }
   const name = getPlayerName(room, votedValue);
-  return `<p style="color:#4ade80;">Vote submitted: ${name}.</p>`;
+  return `<p style="color:#4ade80;">Vote submitted: ${name}.</p>${countNote}`;
 }
 
 export {

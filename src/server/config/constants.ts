@@ -1,10 +1,20 @@
 import { customAlphabet } from 'nanoid';
 import type { Role, RoleConfig, Team } from '../../shared/types';
+import {
+  NIGHT_DELAY_MS as BASE_NIGHT_DELAY_MS,
+  PHASE_DELAY_MS as BASE_PHASE_DELAY_MS,
+  POST_REVEAL_DELAY_MS as BASE_POST_REVEAL_DELAY_MS,
+  POST_ARMOR_DELAY_MS as BASE_POST_ARMOR_DELAY_MS,
+  NIGHT_RESOLVE_DELAY_MS as BASE_NIGHT_RESOLVE_DELAY_MS
+} from '../../shared/constants';
 
 const PORT = process.env.PORT ?? 3001;
 const IS_E2E = process.env.E2E_TESTS === '1';
-const NIGHT_DELAY_MS = IS_E2E ? 0 : 3000;
-const PHASE_DELAY_MS = IS_E2E ? 0 : 3000;
+const NIGHT_DELAY_MS = IS_E2E ? 0 : BASE_NIGHT_DELAY_MS;
+const PHASE_DELAY_MS = IS_E2E ? 0 : BASE_PHASE_DELAY_MS;
+const POST_REVEAL_DELAY_MS = IS_E2E ? 0 : BASE_POST_REVEAL_DELAY_MS;
+const POST_ARMOR_DELAY_MS = IS_E2E ? 0 : BASE_POST_ARMOR_DELAY_MS;
+const NIGHT_RESOLVE_DELAY_MS = IS_E2E ? 0 : BASE_NIGHT_RESOLVE_DELAY_MS;
 const ROOM_CODE = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 4);
 const PLAYER_ID = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 12);
 const RESUME_TOKEN = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 24);
@@ -62,6 +72,9 @@ export {
   PORT,
   NIGHT_DELAY_MS,
   PHASE_DELAY_MS,
+  POST_REVEAL_DELAY_MS,
+  POST_ARMOR_DELAY_MS,
+  NIGHT_RESOLVE_DELAY_MS,
   ROOM_CODE,
   PLAYER_ID,
   RESUME_TOKEN,

@@ -74,6 +74,7 @@ Audio files are loaded by key using `/audio/<narrationKey>.mp3` (HTML5 Howler pl
 - Serving `/audio/` from a CDN or asset pipeline routed by your web server.
 
 Narration keys map to filenames as follows:
+For per-file meanings and when each clip plays, see `client/public/audio/README.md`.
 - `phaseTransition` values (e.g. `dayToNight`, `nightToDay`) → `/audio/<phaseTransition>.mp3`
 - Night steps (e.g. `wolves`, `seer`) → `/audio/night_<step>.mp3`
 - Phases (e.g. `day`, `night`, `lobby`) → `/audio/<phase>.mp3`

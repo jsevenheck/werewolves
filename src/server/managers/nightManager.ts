@@ -1,4 +1,5 @@
 import type { Server } from 'socket.io';
+import { NIGHT_RESOLVE_DELAY_MS } from '../config/constants';
 import { scheduleNightStep, schedulePhaseTransition } from './phaseManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { Room } from '../../shared/types';
@@ -119,7 +120,20 @@ function resolveNight(room: Room, broadcastRoom: (room: Room) => void, io: Serve
   room.poisonTarget = null;
   resolveDeaths(room, 'night', broadcastRoom, io);
   if (!room.winner && !room.awaitingHunterShot) {
-    schedulePhaseTransition(room, 'nightToDay', broadcastRoom);
+    if (NIGHT_RESOLVE_DELAY_MS <= 0) {
+      schedulePhaseTransition(room, 'nightToDay', broadcastRoom);
+      return;
+    }
+    if (room.phaseTimer) {
+      clearTimeout(room.phaseTimer);
+      room.phaseTimer = null;
+    }
+    room.phaseTimer = setTimeout(() => {
+      room.phaseTimer = null;
+      if (room.winner || room.awaitingHunterShot) return;
+      if (room.phase !== 'night' || room.phaseStep !== 'resolve') return;
+      schedulePhaseTransition(room, 'nightToDay', broadcastRoom);
+    }, NIGHT_RESOLVE_DELAY_MS);
   }
 }
 
