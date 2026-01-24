@@ -185,7 +185,7 @@ describe('narrator playback', () => {
 
     expect(initialHowl.unload).toHaveBeenCalled();
     expect(fallbackHowl.play).toHaveBeenCalled();
-    expect(String(fallbackHowl.options.src)).toBe('/audio/silence.mp3');
+    expect(String(fallbackHowl.options.src)).toBe('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=');
   });
 
   test('resolves fallback playerror after loaderror', async () => {
