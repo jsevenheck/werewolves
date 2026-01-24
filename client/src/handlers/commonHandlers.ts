@@ -6,6 +6,9 @@ import { narrator } from '../utils/narrator';
 
 let narratorUnlockInProgress = false;
 let narratorUnlockToken = 0;
+let narratorGestureBound = false;
+let narratorLastUnlockAttemptAt = 0;
+const NARRATOR_UNLOCK_COOLDOWN_MS = 1500;
 
 function setNarratorButtonDisabled(disabled: boolean) {
   const button = document.getElementById('toggle-narrator');
@@ -20,6 +23,43 @@ function bindCommonHandlers(
   renderLanding: () => void,
   clearSession: () => void
 ) {
+  const attemptNarratorUnlock = async (force = false) => {
+    if (narratorUnlockInProgress) {
+      return;
+    }
+    if (!narrator.isEnabled() || narrator.isUnlocked()) {
+      return;
+    }
+    const now = Date.now();
+    if (!force && now - narratorLastUnlockAttemptAt < NARRATOR_UNLOCK_COOLDOWN_MS) {
+      return;
+    }
+    narratorLastUnlockAttemptAt = now;
+    narratorUnlockInProgress = true;
+    const unlockToken = ++narratorUnlockToken;
+    setNarratorButtonDisabled(true);
+    try {
+      const unlocked = await narrator.unlock();
+      if (unlockToken !== narratorUnlockToken) {
+        return;
+      }
+      if (!unlocked) {
+        notify('Tap again to enable audio.');
+        renderApp();
+        return;
+      }
+      narrator.setEnabled(true);
+      narrator.announceLatest();
+      renderApp();
+    } finally {
+      if (unlockToken !== narratorUnlockToken) {
+        return;
+      }
+      narratorUnlockInProgress = false;
+      setNarratorButtonDisabled(false);
+    }
+  };
+
   const toggleRoleBtn = document.getElementById('toggle-role');
   toggleRoleBtn?.addEventListener('click', () => {
     state.roleVisible = !state.roleVisible;
@@ -51,41 +91,26 @@ function bindCommonHandlers(
   const toggleNarratorBtn = document.getElementById('toggle-narrator');
   setNarratorButtonDisabled(narratorUnlockInProgress);
   toggleNarratorBtn?.addEventListener('click', async () => {
-    if (narratorUnlockInProgress) {
-      return;
-    }
-
-    if (narrator.isEnabled()) {
+    if (narrator.isEnabled() && narrator.isUnlocked()) {
       narrator.setEnabled(false);
       renderApp();
       return;
     }
 
-    narratorUnlockInProgress = true;
-    const unlockToken = ++narratorUnlockToken;
-    setNarratorButtonDisabled(true);
-
-    try {
-      const unlocked = await narrator.unlock();
-      if (unlockToken !== narratorUnlockToken) {
-        return;
-      }
-      if (!unlocked) {
-        narrator.setEnabled(false);
-        notify('Audio is blocked. Tap again and check your mute switch or volume.');
-        renderApp();
-        return;
-      }
+    if (!narrator.isEnabled()) {
       narrator.setEnabled(true);
       renderApp();
-    } finally {
-      if (unlockToken !== narratorUnlockToken) {
-        return;
-      }
-      narratorUnlockInProgress = false;
-      setNarratorButtonDisabled(false);
     }
+
+    await attemptNarratorUnlock(true);
   });
+
+  if (!narratorGestureBound) {
+    narratorGestureBound = true;
+    document.addEventListener('pointerdown', () => {
+      void attemptNarratorUnlock(false);
+    });
+  }
 }
 
 function resetState() {
@@ -100,6 +125,7 @@ function resetState() {
   state.roleVisible = false;
   narratorUnlockInProgress = false;
   narratorUnlockToken += 1;
+  narratorLastUnlockAttemptAt = 0;
   setNarratorButtonDisabled(false);
 }
 

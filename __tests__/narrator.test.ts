@@ -171,7 +171,7 @@ describe('narrator playback', () => {
     expect(howl.play).not.toHaveBeenCalled();
   });
 
-  test('falls back to placeholder audio on loaderror', async () => {
+  test('falls back to silence audio on loaderror', async () => {
     const narrator = createNarrator({ initialEnabled: true, initialUnlocked: true, storage: null });
     const room = buildRoom({ phase: 'day' });
 
@@ -185,7 +185,7 @@ describe('narrator playback', () => {
 
     expect(initialHowl.unload).toHaveBeenCalled();
     expect(fallbackHowl.play).toHaveBeenCalled();
-    expect(String(fallbackHowl.options.src)).toMatch(/^data:audio\/mp3;base64/);
+    expect(String(fallbackHowl.options.src)).toBe('/audio/silence.mp3');
   });
 
   test('resolves fallback playerror after loaderror', async () => {
@@ -218,6 +218,38 @@ describe('narrator playback', () => {
 
     expect(howl.stop).toHaveBeenCalled();
     expect(howl.unload).toHaveBeenCalled();
+  });
+
+  test('does not play when locked', () => {
+    const playClip = jest.fn();
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: false,
+      storage: null,
+      playClip
+    });
+    const room = buildRoom({ phase: 'day' });
+
+    narrator.handleRoomUpdate(null, room);
+
+    expect(playClip).not.toHaveBeenCalled();
+  });
+
+  test('re-announces after disable then enable', () => {
+    const playClip = jest.fn();
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: true,
+      storage: null,
+      playClip
+    });
+    const room = buildRoom({ phase: 'day' });
+
+    narrator.handleRoomUpdate(null, room);
+    narrator.setEnabled(false);
+    narrator.setEnabled(true);
+
+    expect(playClip).toHaveBeenCalledTimes(2);
   });
 });
 
