@@ -31,7 +31,10 @@ function renderHeader() {
   const roleToggle = self?.role
     ? `<button id="toggle-role" type="button">${state.roleVisible ? 'Hide Role' : 'Reveal Role'}</button>`
     : '';
-  const narratorToggle = `<button id="toggle-narrator" type="button">Narrator: ${narrator.isEnabled() ? 'On' : 'Off'}</button>`;
+  const narratorLabel = narrator.isEnabled()
+    ? (narrator.isUnlocked() ? 'On' : 'Tap to enable audio')
+    : 'Off';
+  const narratorToggle = `<button id="toggle-narrator" type="button">Narrator: ${narratorLabel}</button>`;
   return `
     <section class="panel">
       <div style="display:flex;flex-direction:column;gap:.5rem;">
