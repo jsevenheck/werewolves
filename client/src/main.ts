@@ -174,7 +174,7 @@ function renderPhaseSection(room: RoomView) {
 
   if (room.phaseTransition) {
     const transitionMessages: Record<string, string> = {
-      postReveal: 'Das Dorf schlaeft ein.',
+      postReveal: 'The village falls asleep.',
       postArmor: 'Starting the first night...',
       nightToDay: 'Dawn is breaking. Day phase begins soon...',
       dayToNight: 'Night falls. Close your eyes...'
@@ -188,7 +188,7 @@ function renderPhaseSection(room: RoomView) {
     const message = transitionMessages[room.phaseTransition] || 'Next phase in a few seconds. Close your eyes if needed.';
     const durationMs = transitionDurations[room.phaseTransition] ?? PHASE_DELAY_MS;
     const durationSeconds = Math.round(durationMs / 1000);
-    const durationNote = `<p>Transition duration: ${durationSeconds}s.</p>`;
+    const durationNote = `<p>Duration: ${durationSeconds}s.</p>`;
     const roleDetails = ROLE_DETAILS || {};
     const dayResults = room.phaseTransition === 'dayToNight'
       ? (() => {

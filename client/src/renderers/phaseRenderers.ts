@@ -120,7 +120,7 @@ function renderNightSection(room: RoomView, self: RoomViewSelf | null) {
   if (room.phaseStep === 'transition') {
     const nextLabel = room.nextNightStep ? room.nextNightStep.toUpperCase() : '...';
     const durationSeconds = Math.round(NIGHT_DELAY_MS / 1000);
-    content = `<p>Transitioning... next: ${nextLabel}.</p><p>Transition duration: ${durationSeconds}s.</p>`;
+    content = `<p>Transitioning... next: ${nextLabel}.</p><p>Duration: ${durationSeconds}s.</p>`;
   } else if (self?.alive) {
     if (room.phaseStep === 'wolves' && self.role === 'werewolf') {
       content = renderWolfForm(room);
