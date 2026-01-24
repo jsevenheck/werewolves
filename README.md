@@ -66,18 +66,18 @@ pnpm run test:e2e
 5. Armor links Lovers once, then night/day cycles begin.
 
 ## Narrator Audio (Mobile-Friendly)
-Mobile browsers require a user gesture before audio can play. If a player enables the narrator and sees “Tap to enable audio,” they must tap once to unlock playback (this is a browser autoplay policy requirement).
+Mobile browsers require a user gesture before audio can play. If a player enables the narrator and sees "Tap to enable audio," they must tap once to unlock playback (this is a browser autoplay policy requirement).
 
 Audio files are loaded by key using `/audio/<narrationKey>.mp3` (HTML5 Howler playback). The narrator expects externally provided assets, so you can supply them without committing binaries by:
 - Adding files locally in `client/public/audio/` for development.
-- Copying or mounting audio files into the built app’s `/audio/` directory at deploy time.
+- Copying or mounting audio files into the built app's `/audio/` directory at deploy time.
 - Serving `/audio/` from a CDN or asset pipeline routed by your web server.
 
 Narration keys map to filenames as follows:
 For per-file meanings and when each clip plays, see `client/public/audio/README.md`.
-- `phaseTransition` values (e.g. `dayToNight`, `nightToDay`) → `/audio/<phaseTransition>.mp3`
-- Night steps (e.g. `wolves`, `seer`) → `/audio/night_<step>.mp3`
-- Phases (e.g. `day`, `night`, `lobby`) → `/audio/<phase>.mp3`
+- `phaseTransition` values (e.g. `dayToNight`, `nightToDay`) -> `/audio/<phaseTransition>.mp3`
+- Night steps (e.g. `wolves`, `seer`) -> `/audio/night_<step>.mp3`
+- Phases (e.g. `day`, `night`, `lobby`) -> `/audio/<phase>.mp3`
 
 ## Docker
 
@@ -95,3 +95,4 @@ Note: The Docker image defaults to port 3000. Override with `-e PORT=3001` if ne
 - Data model + phase engine: `docs/spec.md`
 - Manual tests: `docs/test-checklist.md`
 - Codebase structure: `docs/structure.md`
+- Adding roles: `docs/roles.md`

@@ -65,7 +65,7 @@ const DEFAULT_ROLE_CONFIG: RoleConfig = {
   hunter: 1,
   witch: 1,
   armor: 1,
-  joker: 0
+  joker: 1
 };
 
 export {
