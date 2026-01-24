@@ -11,6 +11,32 @@ This guide explains what to update when introducing a new role and where those c
 - Ensure role-specific data is only broadcast to allowed players in `src/server/managers/broadcastManager.ts`.
 - Update tests and docs.
 
+## Flowchart: What to Update Where
+```
+[Define role + rules]
+        |
+        v
+[Shared types: Role/RoleConfig/Team/NightStep/Phase]
+        |
+        v
+[Server constants: ROLE_INFO/DEFAULT_ROLE_CONFIG]
+        |
+        v
+[Client constants: ROLE_DETAILS]
+        |
+        v
+[Server logic: managers/handlers/room state]
+        |
+        v
+[Client UI: renderers/handlers/state]
+        |
+        v
+[Broadcast visibility rules]
+        |
+        v
+[Tests + Docs + E2E]
+```
+
 ## Minimal Path (Passive Role, No Actions)
 1. Types:
    - `src/shared/types.ts`: extend `Role` and `RoleConfig`.
@@ -121,3 +147,4 @@ If the role affects win conditions or death resolution:
 - Update tests with role lists or config changes, e.g. `__tests__/roleManager.test.ts`, `__tests__/phaseManager.test.ts`, `__tests__/nightManager.test.ts`, `__tests__/socketHandlers.test.ts`.
 - Update specs: `docs/spec.md`.
 - Update manual checks: `docs/test-checklist.md`.
+- Integration tests (Playwright): add or extend scenarios in `e2e/`, then run `pnpm run test:e2e` (first time: `pnpm exec playwright install`).
