@@ -15,7 +15,9 @@ type NarratorOptions = {
 
 const STORAGE_KEY = 'werewolves_narrator_enabled';
 const DEFAULT_VOLUME = 1;
-const FALLBACK_AUDIO_URL = '/audio/silence.mp3';
+const FALLBACK_AUDIO_URL =
+  // 1-second silent WAV data URI used as a built-in fallback so no external file is required.
+  'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=';
 const USER_MESSAGE_COOLDOWN_MS = 4000;
 
 function computeNarrationKey(room: RoomView): NarrationKey {
