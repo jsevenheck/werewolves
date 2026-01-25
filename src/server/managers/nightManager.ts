@@ -81,6 +81,8 @@ function handleWitchDecision(
   if (action === 'heal') {
     if (!room.witchState.healAvailable) return;
     if (!room.wolfTarget) return;
+    const target = room.players[room.wolfTarget];
+    if (!target || !target.alive) return;
     room.witchState.healAvailable = false;
     room.healedTarget = room.wolfTarget;
   } else if (action === 'poison') {
