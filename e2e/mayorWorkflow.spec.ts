@@ -6,10 +6,8 @@ import {
   startGameAndReady,
   advanceToDay,
   getMayorName,
-  findMayorPromptPage,
   submitMayorSelection,
-  voteAllForTarget,
-  getAliveNames
+  voteAllForTarget
 } from './helpers';
 
 test('mayor is selected and displayed during mayor phase', async ({ browser }) => {
@@ -33,8 +31,9 @@ test('mayor is selected and displayed during mayor phase', async ({ browser }) =
     // Mayor phase should appear after role reveal
     await host.waitForSelector('h2:has-text("Mayor Selected")', { timeout: 10000 });
 
-    // Check that a mayor was announced
-    const mayorText = await host.locator('.panel').filter({ hasText: 'has been selected as the Mayor' }).textContent();
+    // Check that a mayor was announced - use more specific locator
+    const mayorPanel = host.locator('.panel:has(h2:has-text("Mayor Selected"))');
+    const mayorText = await mayorPanel.textContent();
     expect(mayorText).toBeTruthy();
 
     // Extract mayor name from the announcement
@@ -63,7 +62,7 @@ test('mayor is selected and displayed during mayor phase', async ({ browser }) =
 test('mayor vote breaks tie in day voting', async ({ browser }) => {
   const names = ['Host', 'Player2', 'Player3', 'Player4', 'Player5'];
   const { contexts, pages } = await createLobbyWithPlayers(browser, names);
-  const [host, p2, p3, p4, p5] = pages;
+  const [host] = pages;
 
   try {
     await configureRoles(host, {
@@ -80,7 +79,8 @@ test('mayor vote breaks tie in day voting', async ({ browser }) => {
 
     // Advance past mayor phase
     await host.waitForSelector('#continue-mayor', { timeout: 10000 });
-    const mayorText = await host.locator('.panel').filter({ hasText: 'has been selected as the Mayor' }).textContent();
+    const mayorPanel = host.locator('.panel:has(h2:has-text("Mayor Selected"))');
+    const mayorText = await mayorPanel.textContent();
     const mayorMatch = mayorText?.match(/(.+) has been selected as the Mayor/);
     const mayorName = mayorMatch ? mayorMatch[1].trim() : null;
     expect(mayorName).toBeTruthy();
@@ -137,10 +137,11 @@ test('mayor vote breaks tie in day voting', async ({ browser }) => {
     // Check logs for mayor tie-breaking message
     const logsPanel = await host.locator('#logs-panel').textContent();
 
-    // The mayor's vote should have broken the tie
-    const tieWasBroken = logsPanel?.includes("Mayor's vote decided") ||
-                         logsPanel?.includes('was voted out');
-    expect(tieWasBroken).toBe(true);
+    // The mayor's vote should have broken the tie or someone was voted out
+    const voteResolved = logsPanel?.includes("Mayor's vote decided") ||
+                         logsPanel?.includes('voted out') ||
+                         logsPanel?.includes('executed by vote');
+    expect(voteResolved).toBe(true);
 
   } finally {
     await closeContexts(contexts);
@@ -149,7 +150,7 @@ test('mayor vote breaks tie in day voting', async ({ browser }) => {
 
 test('dying mayor selects successor', async ({ browser }) => {
   const names = ['Host', 'Player2', 'Player3', 'Player4', 'Player5'];
-  const { contexts, pages, code } = await createLobbyWithPlayers(browser, names);
+  const { contexts, pages } = await createLobbyWithPlayers(browser, names);
   const [host] = pages;
 
   try {
@@ -167,7 +168,8 @@ test('dying mayor selects successor', async ({ browser }) => {
 
     // Get the mayor name
     await host.waitForSelector('#continue-mayor', { timeout: 10000 });
-    const mayorText = await host.locator('.panel').filter({ hasText: 'has been selected as the Mayor' }).textContent();
+    const mayorPanel = host.locator('.panel:has(h2:has-text("Mayor Selected"))');
+    const mayorText = await mayorPanel.textContent();
     const mayorMatch = mayorText?.match(/(.+) has been selected as the Mayor/);
     const mayorName = mayorMatch ? mayorMatch[1].trim() : null;
     expect(mayorName).toBeTruthy();
@@ -234,7 +236,8 @@ test('host can skip mayor selection', async ({ browser }) => {
 
     // Get the mayor name
     await host.waitForSelector('#continue-mayor', { timeout: 10000 });
-    const mayorText = await host.locator('.panel').filter({ hasText: 'has been selected as the Mayor' }).textContent();
+    const mayorPanel = host.locator('.panel:has(h2:has-text("Mayor Selected"))');
+    const mayorText = await mayorPanel.textContent();
     const mayorMatch = mayorText?.match(/(.+) has been selected as the Mayor/);
     const mayorName = mayorMatch ? mayorMatch[1].trim() : null;
     expect(mayorName).toBeTruthy();

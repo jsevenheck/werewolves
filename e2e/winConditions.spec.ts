@@ -5,7 +5,9 @@ import {
   configureRoles,
   createLobbyWithPlayers,
   startGameAndReady,
-  voteAllForTarget
+  voteAllForTarget,
+  findMayorPromptPage,
+  submitMayorSelection
 } from './helpers';
 
 test('village wins after the last werewolf is eliminated', async ({ browser }) => {
@@ -30,6 +32,25 @@ test('village wins after the last werewolf is eliminated', async ({ browser }) =
     const dayPage = advanceResult.dayPage || host;
 
     await voteAllForTarget(players, names[0]);
+
+    // Handle potential mayor selection if the werewolf was mayor
+    for (let i = 0; i < 10; i++) {
+      const mayorPage = await findMayorPromptPage(pages);
+      if (mayorPage) {
+        await submitMayorSelection(mayorPage);
+      }
+
+      const gameOver = await dayPage.locator('h2:has-text("Game Over")').isVisible().catch(() => false);
+      if (gameOver) break;
+
+      // Also check for skip button if host needs to skip
+      const skipBtn = host.locator('#skip-mayor-selection');
+      if (await skipBtn.isVisible().catch(() => false)) {
+        await skipBtn.click();
+      }
+
+      await dayPage.waitForTimeout(500);
+    }
 
     await dayPage.waitForSelector('h2:has-text("Game Over")', { timeout: 20000 });
     const panel = dayPage.locator('section.panel:has(h2:has-text("Game Over"))');
@@ -88,6 +109,25 @@ test('joker wins when voted out during the day', async ({ browser }) => {
     const dayPage = advanceResult.dayPage || host;
 
     await voteAllForTarget(players, names[1]);
+
+    // Handle potential mayor selection if the joker was mayor
+    for (let i = 0; i < 10; i++) {
+      const mayorPage = await findMayorPromptPage(pages);
+      if (mayorPage) {
+        await submitMayorSelection(mayorPage);
+      }
+
+      const gameOver = await dayPage.locator('h2:has-text("Game Over")').isVisible().catch(() => false);
+      if (gameOver) break;
+
+      // Also check for skip button if host needs to skip
+      const skipBtn = host.locator('#skip-mayor-selection');
+      if (await skipBtn.isVisible().catch(() => false)) {
+        await skipBtn.click();
+      }
+
+      await dayPage.waitForTimeout(500);
+    }
 
     await dayPage.waitForSelector('h2:has-text("Game Over")', { timeout: 20000 });
     const panel = dayPage.locator('section.panel:has(h2:has-text("Game Over"))');
