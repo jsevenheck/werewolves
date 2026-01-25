@@ -19,6 +19,7 @@ werewolves/
 |       |   |-- phaseManager.ts     # Game phase transitions
 |       |   |-- nightManager.ts     # Night phase logic
 |       |   |-- voteManager.ts      # Day voting logic
+|       |   |-- mayorManager.ts     # Mayor election and succession logic
 |       |   |-- deathManager.ts     # Death resolution and win conditions
 |       |   `-- broadcastManager.ts # Room state broadcasting
 |       |-- handlers/         # Socket event handlers
@@ -68,9 +69,10 @@ Business logic separated by concern:
 - `roleManager.ts`: Role configuration, validation, and assignment
 - `phaseManager.ts`: Phase transitions and scheduling
 - `nightManager.ts`: Night phase actions (wolf votes, seer, witch)
-- `voteManager.ts`: Day voting and elimination
-- `deathManager.ts`: Death queue, resolution, and win condition checking
-- `broadcastManager.ts`: Room state sanitization and broadcasting
+- `voteManager.ts`: Day voting and elimination (includes mayor tie-breaking mechanics)
+- `mayorManager.ts`: Mayor election and succession (includes timeout handling)
+- `deathManager.ts`: Death queue, resolution, hunter shots, and win condition checking
+- `broadcastManager.ts`: Room state sanitization, broadcasting, and activity tracking
 
 ### Handlers Layer
 - `socketHandlers.ts`: All Socket.IO event handlers organized by game phase

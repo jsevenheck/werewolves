@@ -123,6 +123,8 @@ export interface Room {
   phaseTimer: NodeJS.Timeout | null;
   hunterShotTimer: NodeJS.Timeout | null;
   hunterShotQueue: string[];
+  createdAt: number;
+  lastActivityAt: number;
 }
 
 export interface PlayerPublic {

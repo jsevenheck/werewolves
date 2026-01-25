@@ -4,6 +4,9 @@ import { schedulePhaseTransition } from './phaseManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { Room } from '../../shared/types';
 
+const IS_E2E = process.env.E2E_TESTS === '1';
+const MAYOR_SELECTION_TIMEOUT_MS = IS_E2E ? 30 * 1000 : 60 * 1000;
+
 function shiftNextValidMayorSelector(room: Room) {
   while (room.mayorSelectionQueue.length) {
     const nextId = room.mayorSelectionQueue.shift();
@@ -28,11 +31,53 @@ function startMayorSelection(
     clearTimeout(room.mayorSelectionTimer);
     room.mayorSelectionTimer = null;
   }
+
   const dyingMayor = room.players[dyingMayorId];
   const socket = io && dyingMayor?.socketId && io.sockets?.sockets?.get(dyingMayor.socketId);
   if (socket && dyingMayor?.connected) {
     socket.emit('mayorPrompt', { roomCode: room.code });
   }
+
+  // Auto-select random alive player after timeout if no response
+  room.mayorSelectionTimer = setTimeout(() => {
+    if (room.awaitingMayorSelection === dyingMayorId) {
+      const alivePlayers = Object.values(room.players).filter(p => p.alive);
+      if (alivePlayers.length > 0) {
+        const randomSuccessor = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+        room.mayorId = randomSuccessor.id;
+        addLog(
+          room,
+          `Mayor succession timed out. ${randomSuccessor.name} was randomly selected as the new Mayor.`,
+          `Mayor succession timed out. ${randomSuccessor.name} was randomly selected as the new Mayor.`
+        );
+      } else {
+        addLog(room, `Mayor succession timed out. No alive players to select.`);
+        room.mayorId = null;
+      }
+
+      room.awaitingMayorSelection = null;
+      room.mayorSelectionTimer = null;
+
+      // Check for next mayor selection in queue
+      if (!startNextMayorSelection(room, broadcastRoom, io)) {
+        // No more mayor selections, resume game flow
+        const { checkWinners } = require('./deathManager');
+        const { schedulePhaseTransition, holdDayToNightTransition } = require('./phaseManager');
+
+        checkWinners(room);
+        if (!room.winner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
+          if (room.phase === 'day') {
+            holdDayToNightTransition(room, broadcastRoom);
+          } else if (room.phase === 'night' && room.phaseStep === 'resolve') {
+            // Resume night->day transition after mayor succession during night
+            schedulePhaseTransition(room, 'nightToDay', broadcastRoom);
+          }
+        }
+      }
+      broadcastRoom(room);
+    }
+  }, MAYOR_SELECTION_TIMEOUT_MS);
+
   if (shouldBroadcast) {
     broadcastRoom(room);
   }

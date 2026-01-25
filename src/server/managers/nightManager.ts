@@ -15,7 +15,7 @@ function tryFinalizeWolfVote(
     return;
   }
   const pending = wolves.some(
-    (wolf) => room.wolfVotes[wolf.id] === undefined || room.wolfVotes[wolf.id] === ''
+    (wolf) => room.wolfVotes[wolf.id] === undefined || room.wolfVotes[wolf.id] === null
   );
   if (pending) return;
   const tally: Record<string, number> = {};
@@ -78,6 +78,13 @@ function handleWitchDecision(
   broadcastRoom: (room: Room) => void,
   io: Server<ClientToServerEvents, ServerToClientEvents>
 ) {
+  // Handle skip action - advance to resolve step immediately
+  if (action === 'skip') {
+    scheduleNightStep(room, 'resolve', broadcastRoom, io);
+    return;
+  }
+
+  // Apply heal action if valid
   if (action === 'heal') {
     if (!room.witchState.healAvailable) return;
     if (!room.wolfTarget) return;
@@ -85,23 +92,25 @@ function handleWitchDecision(
     if (!target || !target.alive) return;
     room.witchState.healAvailable = false;
     room.healedTarget = room.wolfTarget;
-  } else if (action === 'poison') {
+  }
+
+  // Apply poison action if valid
+  if (action === 'poison') {
     if (!room.witchState.poisonAvailable) return;
     const target = targetId ? room.players[targetId] : null;
     if (!target || !target.alive) return;
     room.witchState.poisonAvailable = false;
     room.poisonTarget = targetId;
   }
-  if (action === 'skip') {
-    scheduleNightStep(room, 'resolve', broadcastRoom, io);
-    return;
-  }
+
+  // Check if witch can still perform actions after applying the current action
   const targetPlayer = room.wolfTarget ? room.players[room.wolfTarget] : null;
   const canHeal =
     room.witchState.healAvailable &&
     !!room.wolfTarget &&
     !!targetPlayer &&
     targetPlayer.alive;
+
   const alivePlayers = Object.values(room.players).filter((p) => p.alive);
   const actingWitch = playerId ? room.players[playerId] : null;
   const canPoison =
@@ -111,10 +120,14 @@ function handleWitchDecision(
     actingWitch.role === 'witch' &&
     actingWitch.alive &&
     alivePlayers.some((p) => p.id !== playerId);
+
+  // If no more actions available, advance to resolve step
   if (!canHeal && !canPoison) {
     scheduleNightStep(room, 'resolve', broadcastRoom, io);
     return;
   }
+
+  // Witch can still act, broadcast updated state
   broadcastRoom(room);
 }
 
