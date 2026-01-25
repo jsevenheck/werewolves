@@ -145,7 +145,7 @@ function resolveDeaths(
     }
   }
   if (announced.length && context === 'night') {
-    room.lastNightDeaths = announced;
+    room.lastNightDeaths = (room.lastNightDeaths || []).concat(announced);
   }
   if (context === 'day') {
     if (announced.length) {
