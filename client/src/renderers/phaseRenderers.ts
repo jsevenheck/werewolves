@@ -1,8 +1,8 @@
-import { ROLE_DETAILS } from '../config/constants';
-import { NIGHT_DELAY_MS } from '@shared/constants';
+import { ROLE_DETAILS, PASSIVE_ROLE_DETAILS } from '../config/constants';
+import { MIN_PLAYERS, NIGHT_DELAY_MS } from '@shared/constants';
 import { state } from '../state/gameState';
 import { escapeHtml, getPlayerName } from '../utils/helpers';
-import type { RoomView, RoomViewSelf } from '@shared/types';
+import type { PassiveRole, RoomView, RoomViewSelf } from '@shared/types';
 
 function renderRoleRevealList(room: RoomView) {
   const players = room?.players ?? [];
@@ -17,26 +17,42 @@ function renderLobbySection(room: RoomView) {
   const villagerSlots = Math.max(playersCount - totals, 0);
   const needsAdjust = totals > playersCount;
   const canStart = state.playerId === room.hostId;
+  const minPlayers = room.minPlayers ?? MIN_PLAYERS;
   const safeRoleDetails = ROLE_DETAILS || {};
+  const passiveRoleConfig = room.passiveRoleConfig || { mayor: true };
+  const passiveRoleDetails = PASSIVE_ROLE_DETAILS || {};
   const roleInputs = Object.entries(room.roleConfig).map(([role, count]) => `
-    <label>
+    <label class="role-row">
       <span>${safeRoleDetails[role as keyof typeof safeRoleDetails]?.name || role}</span>
       <input type="number" class="role-input" data-role="${role}" min="0" value="${count}" />
     </label>
   `).join('');
+  const passiveRoleInputs = Object.entries(passiveRoleConfig).map(([role, enabled]) => {
+    const detail = passiveRoleDetails[role as PassiveRole];
+    const label = detail?.name || role;
+    return `
+      <label class="toggle">
+        <span>${escapeHtml(label)}</span>
+        <input type="checkbox" class="passive-role-input" data-passive-role="${role}" ${enabled ? 'checked' : ''} />
+        <span class="toggle-track" aria-hidden="true"></span>
+      </label>
+    `;
+  }).join('');
   return `
     <section class="panel">
       <h2>Lobby</h2>
       <p>Share this code so friends can join: <strong>${escapeHtml(room.code)}</strong></p>
       ${canStart ? `<form id="role-config" class="actions">
         ${roleInputs}
-        <label>
-          <span>Minimum players required</span>
-          <input type="number" id="min-players" min="3" value="${room.minPlayers || 5}" />
-        </label>
+        <div class="passive-roles">
+          <h3>Passive Roles</h3>
+          <div class="passive-role-list">
+            ${passiveRoleInputs}
+          </div>
+        </div>
       </form>` : '<p>Waiting for host to configure roles.</p>'}
-      <p>Configured roles: ${totals} / ${playersCount}. Villagers auto-fill: ${villagerSlots}</p>
-      <p>Minimum players to start: ${room.minPlayers || 5}</p>
+      <p class="role-summary">Configured roles: ${totals} / ${playersCount}. Villagers auto-fill: ${villagerSlots}</p>
+      <p>Minimum players to start: ${minPlayers}</p>
       ${needsAdjust ? '<p style="color:#fca5a5;">Too many roles for current players.</p>' : ''}
       <button id="start-game" ${!canStart ? 'disabled' : ''}>Start Game</button>
     </section>
@@ -70,6 +86,27 @@ function renderRoleRevealSection(room: RoomView) {
       ${info ? '<p>Tap "Reveal Role" to view your role.</p>' : '<p>Waiting for assignment...</p>'}
       ${actionButton}
       <p>Players ready: ${readyCount} / ${totalCount}</p>
+    </section>
+  `;
+}
+
+function renderMayorSection(room: RoomView) {
+  const self = room.self;
+  const yourVote = room.voteState?.yourVote;
+  const voteForm = self?.alive
+    ? yourVote !== undefined
+      ? renderVoteConfirmation(room, yourVote)
+      : renderMayorVoteForm(room)
+    : '<p>You are dead and cannot vote.</p>';
+  const hostControls = room.hostId === state.playerId
+    ? '<div class="actions host-actions"><button id="end-mayor-vote-btn" type="button">End Mayor Voting</button></div>'
+    : '';
+  return `
+    <section class="panel">
+      <h2>Mayor Election</h2>
+      <p>Vote for the first Mayor. The Mayor's vote will break ties during day voting.</p>
+      ${voteForm}
+      ${hostControls}
     </section>
   `;
 }
@@ -274,6 +311,33 @@ function renderWitchForm(room: RoomView) {
   `;
 }
 
+function renderMayorVoteForm(room: RoomView) {
+  const eligible = room.voteState.revoteFromTie
+    ? room.players.filter((p) => room.voteState.revoteFromTie?.includes(p.id))
+    : room.players.filter((p) => p.alive);
+  const pendingVote = state.pendingMayorVote;
+  const options = eligible
+    .filter((player) => player.alive)
+    .map((player) => `<option value="${player.id}" ${pendingVote === player.id ? 'selected' : ''}>${escapeHtml(player.name)}</option>`)
+    .join('');
+  const submitted = room.voteState.submitted || 0;
+  const info = room.voteState.revoteFromTie ? '<p>Revote among tied candidates.</p>' : '';
+  return `
+    <form id="mayor-vote-form" class="actions">
+      ${info}
+      <label>
+        <span>Choose the Mayor</span>
+        <select name="target" required>
+          <option value="">Select a player</option>
+          ${options}
+        </select>
+      </label>
+      <button type="submit" id="mayor-vote-submit" disabled>Submit vote</button>
+      <small>${submitted} / ${room.voteState.required} votes submitted.</small>
+    </form>
+  `;
+}
+
 function renderVoteForm(room: RoomView) {
   const eligible = room.voteState.revoteFromTie
     ? room.players.filter((p) => room.voteState.revoteFromTie?.includes(p.id))
@@ -314,11 +378,46 @@ function renderVoteConfirmation(room: RoomView, votedValue: string | null) {
   return `<p style="color:#4ade80;">Vote submitted: ${name}.</p>${countNote}`;
 }
 
+function renderPendingActionsPanel(room: RoomView) {
+  const isHost = room.hostId === state.playerId;
+  const panels: string[] = [];
+
+  if (room.mayorSelectionPending && !room.awaitingMayorSelection) {
+    const skipButton = isHost
+      ? '<button id="skip-mayor-selection" type="button">Skip Mayor Selection</button>'
+      : '';
+    panels.push(`
+      <section class="panel">
+        <h2>Awaiting Mayor Selection</h2>
+        <p>The dying Mayor is selecting their successor...</p>
+        ${skipButton}
+      </section>
+    `);
+  }
+
+  if (room.hunterShotPending && !room.awaitingHunterShot) {
+    const skipButton = isHost
+      ? '<button id="skip-hunter-shot" type="button">Skip Hunter Shot</button>'
+      : '';
+    panels.push(`
+      <section class="panel">
+        <h2>Awaiting Hunter's Shot</h2>
+        <p>The Hunter is choosing their final target...</p>
+        ${skipButton}
+      </section>
+    `);
+  }
+
+  return panels.join('');
+}
+
 export {
   renderLobbySection,
   renderRoleRevealSection,
+  renderMayorSection,
   renderArmorSection,
   renderNightSection,
   renderDaySection,
-  renderRoleRevealList
+  renderRoleRevealList,
+  renderPendingActionsPanel
 };

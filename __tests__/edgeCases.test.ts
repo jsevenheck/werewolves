@@ -24,6 +24,7 @@ describe('Edge Cases', () => {
       expect(room.awaitingHunterShot).toBe(null);
       expect(room.hunterShotTimer).toBe(null);
       expect(room.hunterShotQueue).toEqual([]);
+      expect(room.passiveRoleConfig).toEqual({ mayor: true });
     });
   });
 
@@ -38,6 +39,8 @@ describe('Edge Cases', () => {
         pendingDeaths: [],
         logs: [],
         awaitingHunterShot: null,
+        mayorSelectionQueue: [],
+        awaitingMayorSelection: null,
         winner: null,
         phase: 'day',
         phaseStep: null,
@@ -82,6 +85,8 @@ describe('Edge Cases', () => {
         pendingDeaths: [],
         logs: [],
         awaitingHunterShot: null,
+        mayorSelectionQueue: [],
+        awaitingMayorSelection: null,
         winner: null,
         phase: 'day',
         phaseStep: null,
@@ -119,6 +124,8 @@ describe('Edge Cases', () => {
         pendingDeaths: [],
         logs: [],
         awaitingHunterShot: null,
+        mayorSelectionQueue: [],
+        awaitingMayorSelection: null,
         winner: null,
         phase: 'day',
         phaseStep: null,
@@ -150,7 +157,9 @@ describe('Edge Cases', () => {
         logs: [],
         phase: 'day',
         winner: null,
-        hunterShotQueue: []
+        hunterShotQueue: [],
+        mayorSelectionQueue: [],
+        awaitingMayorSelection: null
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -176,6 +185,8 @@ describe('Edge Cases', () => {
         phaseTransition: null,
         winner: null,
         awaitingHunterShot: null,
+        mayorSelectionQueue: [],
+        awaitingMayorSelection: null,
         transitionTimer: null,
         phaseTimer: null,
         hunterShotQueue: []
@@ -199,7 +210,9 @@ describe('Edge Cases', () => {
         logs: [],
         phase: 'day',
         winner: null,
-        hunterShotQueue: []
+        hunterShotQueue: [],
+        mayorSelectionQueue: [],
+        awaitingMayorSelection: null
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -231,6 +244,8 @@ describe('Edge Cases', () => {
         pendingDeaths: [],
         logs: [],
         awaitingHunterShot: null,
+        mayorSelectionQueue: [],
+        awaitingMayorSelection: null,
         winner: null,
         phase: 'day',
         phaseStep: null,
@@ -273,6 +288,8 @@ describe('Edge Cases', () => {
         pendingDeaths: [],
         logs: [],
         awaitingHunterShot: null,
+        mayorSelectionQueue: [],
+        awaitingMayorSelection: null,
         winner: null,
         phase: 'day',
         phaseStep: null,

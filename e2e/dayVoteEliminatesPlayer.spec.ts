@@ -11,7 +11,7 @@ import {
 } from './helpers';
 
 test('day vote eliminates a player', async ({ browser }) => {
-  const names = ['Host', 'Player 2', 'Player 3', 'Player 4'];
+  const names = ['Host', 'Player 2', 'Player 3', 'Player 4', 'Player 5'];
   const { contexts, pages } = await createLobbyWithPlayers(browser, names);
   const [host] = pages;
   const players = pages.map((page, index) => ({ page, name: names[index] }));
@@ -23,8 +23,7 @@ test('day vote eliminates a player', async ({ browser }) => {
       hunter: 0,
       witch: 0,
       armor: 0,
-      joker: 0,
-      minPlayers: 4
+      joker: 0
     });
 
     await startGameAndReady(pages);

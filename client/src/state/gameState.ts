@@ -8,9 +8,11 @@ type GameState = {
   playerName: string;
   resumeToken: string;
   hunterPrompt: boolean;
+  mayorPrompt: boolean;
   storedSession: StoredSession | null;
   roleVisible: boolean;
   pendingVote: string | null | undefined;
+  pendingMayorVote: string | undefined;
   pendingWolfVote: string | undefined;
   updateConfigTimeoutId: number | null;
   readyButtonTimeoutId: number | null;
@@ -23,9 +25,11 @@ const state: GameState = {
   playerName: '',
   resumeToken: '',
   hunterPrompt: false,
+  mayorPrompt: false,
   storedSession: null,
   roleVisible: false,
   pendingVote: undefined,
+  pendingMayorVote: undefined,
   pendingWolfVote: undefined,
   updateConfigTimeoutId: null,
   readyButtonTimeoutId: null

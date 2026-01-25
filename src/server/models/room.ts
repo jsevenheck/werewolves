@@ -1,4 +1,4 @@
-import { ROOM_CODE, DEFAULT_ROLE_CONFIG } from '../config/constants';
+import { ROOM_CODE, DEFAULT_ROLE_CONFIG, DEFAULT_PASSIVE_ROLE_CONFIG, MIN_PLAYERS } from '../config/constants';
 import { createVoteState } from '../utils/helpers';
 import type { Player, Room } from '../../shared/types';
 
@@ -16,8 +16,13 @@ function createRoom(hostName: string, socketId: string, createPlayer: (name: str
     phaseStep: null,
     dayCount: 0,
     players: {},
-    minPlayers: 5,
+    minPlayers: MIN_PLAYERS,
     roleConfig: { ...DEFAULT_ROLE_CONFIG },
+    passiveRoleConfig: { ...DEFAULT_PASSIVE_ROLE_CONFIG },
+    mayorId: null,
+    awaitingMayorSelection: null,
+    mayorSelectionQueue: [],
+    mayorSelectionTimer: null,
     lovers: null,
     witchState: { healAvailable: true, poisonAvailable: true },
     wolfVotes: {},

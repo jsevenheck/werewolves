@@ -1,11 +1,13 @@
 import { customAlphabet } from 'nanoid';
-import type { Role, RoleConfig, Team } from '../../shared/types';
+import type { Role, RoleConfig, PassiveRoleConfig, Team } from '../../shared/types';
 import {
   NIGHT_DELAY_MS as BASE_NIGHT_DELAY_MS,
   PHASE_DELAY_MS as BASE_PHASE_DELAY_MS,
   POST_REVEAL_DELAY_MS as BASE_POST_REVEAL_DELAY_MS,
+  POST_MAYOR_DELAY_MS as BASE_POST_MAYOR_DELAY_MS,
   POST_ARMOR_DELAY_MS as BASE_POST_ARMOR_DELAY_MS,
-  NIGHT_RESOLVE_DELAY_MS as BASE_NIGHT_RESOLVE_DELAY_MS
+  NIGHT_RESOLVE_DELAY_MS as BASE_NIGHT_RESOLVE_DELAY_MS,
+  MIN_PLAYERS as BASE_MIN_PLAYERS
 } from '../../shared/constants';
 
 const PORT = process.env.PORT ?? 3001;
@@ -13,8 +15,10 @@ const IS_E2E = process.env.E2E_TESTS === '1';
 const NIGHT_DELAY_MS = IS_E2E ? 0 : BASE_NIGHT_DELAY_MS;
 const PHASE_DELAY_MS = IS_E2E ? 0 : BASE_PHASE_DELAY_MS;
 const POST_REVEAL_DELAY_MS = IS_E2E ? 0 : BASE_POST_REVEAL_DELAY_MS;
+const POST_MAYOR_DELAY_MS = IS_E2E ? 0 : BASE_POST_MAYOR_DELAY_MS;
 const POST_ARMOR_DELAY_MS = IS_E2E ? 0 : BASE_POST_ARMOR_DELAY_MS;
 const NIGHT_RESOLVE_DELAY_MS = IS_E2E ? 0 : BASE_NIGHT_RESOLVE_DELAY_MS;
+const MIN_PLAYERS = BASE_MIN_PLAYERS;
 const ROOM_CODE = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 4);
 const PLAYER_ID = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 12);
 const RESUME_TOKEN = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 24);
@@ -68,16 +72,23 @@ const DEFAULT_ROLE_CONFIG: RoleConfig = {
   joker: 1
 };
 
+const DEFAULT_PASSIVE_ROLE_CONFIG: PassiveRoleConfig = {
+  mayor: true
+};
+
 export {
   PORT,
   NIGHT_DELAY_MS,
   PHASE_DELAY_MS,
   POST_REVEAL_DELAY_MS,
+  POST_MAYOR_DELAY_MS,
   POST_ARMOR_DELAY_MS,
   NIGHT_RESOLVE_DELAY_MS,
+  MIN_PLAYERS,
   ROOM_CODE,
   PLAYER_ID,
   RESUME_TOKEN,
   ROLE_INFO,
-  DEFAULT_ROLE_CONFIG
+  DEFAULT_ROLE_CONFIG,
+  DEFAULT_PASSIVE_ROLE_CONFIG
 };

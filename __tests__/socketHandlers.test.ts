@@ -10,6 +10,7 @@ import {
 import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../src/server/managers/nightManager';
 import { tryResolveDayVote } from '../src/server/managers/voteManager';
 import { queueDeath, resolveDeaths, startNextHunterShot, checkWinners } from '../src/server/managers/deathManager';
+import { startNextMayorSelection, tryResolveMayorVote } from '../src/server/managers/mayorManager';
 import { setupSocketHandlers } from '../src/server/handlers/socketHandlers';
 import { setSocketIndex, deleteSocketIndex } from '../src/server/models/player';
 import type { ClientToServerEvents, ServerToClientEvents } from '../src/shared/events';
@@ -54,6 +55,12 @@ jest.mock('../src/server/managers/deathManager', () => ({
   resolveDeaths: jest.fn(),
   startNextHunterShot: jest.fn(),
   checkWinners: jest.fn()
+}));
+
+jest.mock('../src/server/managers/mayorManager', () => ({
+  startNextMayorSelection: jest.fn(),
+  startMayorSelection: jest.fn(),
+  tryResolveMayorVote: jest.fn()
 }));
 
 const makeSocket = () => {
@@ -363,6 +370,70 @@ describe('socketHandlers hostSkipStep', () => {
     expect(schedulePhaseTransition).not.toHaveBeenCalled();
     expect(holdDayToNightTransition).not.toHaveBeenCalled();
   });
+
+  test('host skips awaiting mayor selection and advances the phase', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'day',
+      phaseStep: null,
+      phaseTransition: null,
+      awaitingMayorSelection: 'mayor',
+      mayorSelectionTimer: 123,
+      mayorSelectionQueue: [],
+      awaitingHunterShot: null,
+      hunterShotQueue: [],
+      players: {
+        host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' }
+      },
+      winner: null
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    (startNextMayorSelection as jest.Mock).mockReturnValue(false);
+    (startNextHunterShot as jest.Mock).mockReturnValue(false);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.hostSkipStep({ roomCode: 'ABCD', playerId: 'host' });
+
+    expect(room.awaitingMayorSelection).toBeNull();
+    expect(room.mayorSelectionTimer).toBeNull();
+    expect(startNextMayorSelection).toHaveBeenCalledWith(room, expect.any(Function), io);
+    expect(checkWinners).toHaveBeenCalledWith(room);
+    expect(holdDayToNightTransition).toHaveBeenCalledWith(room, expect.any(Function));
+  });
+
+  test('host skips awaiting mayor selection and starts next mayor selection', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'day',
+      phaseStep: null,
+      phaseTransition: null,
+      awaitingMayorSelection: 'mayor1',
+      mayorSelectionTimer: 456,
+      mayorSelectionQueue: ['mayor2'],
+      awaitingHunterShot: null,
+      hunterShotQueue: [],
+      players: {
+        host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' }
+      },
+      winner: null
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    (startNextMayorSelection as jest.Mock).mockReturnValueOnce(true);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.hostSkipStep({ roomCode: 'ABCD', playerId: 'host' });
+
+    expect(room.awaitingMayorSelection).toBeNull();
+    expect(room.mayorSelectionTimer).toBeNull();
+    expect(startNextMayorSelection).toHaveBeenCalledWith(room, expect.any(Function), io);
+    expect(checkWinners).not.toHaveBeenCalled();
+    expect(schedulePhaseTransition).not.toHaveBeenCalled();
+    expect(holdDayToNightTransition).not.toHaveBeenCalled();
+  });
 });
 
 describe('socketHandlers disconnect vote resolution', () => {
@@ -591,6 +662,57 @@ describe('socketHandlers mechanics guards', () => {
       reason: 'Joker was voted out and laughs last!'
     });
   });
+
+  test('mayor votes reject targets outside the revote list', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'mayor',
+      phaseStep: null,
+      phaseTransition: null,
+      mayorId: null,
+      players: {
+        p1: { id: 'p1', role: 'villager', alive: true, socketId: 'socket-1' },
+        p2: { id: 'p2', role: 'villager', alive: true },
+        p3: { id: 'p3', role: 'villager', alive: true }
+      },
+      voteState: { votes: {}, revoteFromTie: ['p2'] }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.submitMayorVote({ roomCode: 'ABCD', playerId: 'p1', targetId: 'p3' });
+
+    expect(room.voteState.votes.p1).toBeUndefined();
+    expect(tryResolveMayorVote).not.toHaveBeenCalled();
+    expect(broadcastRoom).not.toHaveBeenCalled();
+  });
+
+  test('mayor votes reject dead targets', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'mayor',
+      phaseStep: null,
+      phaseTransition: null,
+      mayorId: null,
+      players: {
+        p1: { id: 'p1', role: 'villager', alive: true, socketId: 'socket-1' },
+        p2: { id: 'p2', role: 'villager', alive: false }
+      },
+      voteState: { votes: {}, revoteFromTie: null }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.submitMayorVote({ roomCode: 'ABCD', playerId: 'p1', targetId: 'p2' });
+
+    expect(room.voteState.votes.p1).toBeUndefined();
+    expect(tryResolveMayorVote).not.toHaveBeenCalled();
+    expect(broadcastRoom).not.toHaveBeenCalled();
+  });
 });
 
 describe('socketHandlers restartGame', () => {
@@ -644,6 +766,10 @@ describe('socketHandlers restartGame', () => {
       lastDayDeaths: [{ name: 'host', role: 'werewolf' }],
       lastDayMessage: 'Someone died.',
       awaitingHunterShot: 'host',
+      mayorId: 'p2',
+      awaitingMayorSelection: 'host',
+      mayorSelectionQueue: ['p2'],
+      mayorSelectionTimer: 9,
       logs: [{ ts: 1, text: 'old log', publicText: null }],
       nextNightStep: 'resolve',
       phaseTransition: 'dayToNight',
@@ -675,6 +801,10 @@ describe('socketHandlers restartGame', () => {
     expect(room.lastDayDeaths).toEqual([]);
     expect(room.lastDayMessage).toBeNull();
     expect(room.awaitingHunterShot).toBeNull();
+    expect(room.mayorId).toBeNull();
+    expect(room.awaitingMayorSelection).toBeNull();
+    expect(room.mayorSelectionQueue).toEqual([]);
+    expect(room.mayorSelectionTimer).toBeNull();
     expect(room.nextNightStep).toBeNull();
     expect(room.phaseTransition).toBeNull();
     expect(room.phaseTimer).toBeNull();

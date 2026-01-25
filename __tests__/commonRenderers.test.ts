@@ -37,7 +37,7 @@ describe('commonRenderers narrator label', () => {
       dayCount: 1,
       players: [],
       hostId: null,
-      minPlayers: 4,
+      minPlayers: 5,
       roleConfig: {
         werewolf: 1,
         seer: 1,
@@ -46,6 +46,10 @@ describe('commonRenderers narrator label', () => {
         armor: 0,
         joker: 0
       },
+      passiveRoleConfig: { mayor: true },
+      mayorId: null,
+      awaitingMayorSelection: false,
+      mayorSelectionPending: false,
       loversKnown: false,
       loversAssigned: false,
       loverName: null,
@@ -66,6 +70,7 @@ describe('commonRenderers narrator label', () => {
       lastDayDeaths: [],
       lastDayMessage: null,
       awaitingHunterShot: false,
+      hunterShotPending: false,
       winner: null,
       logs: [],
       self: null

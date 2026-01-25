@@ -1,6 +1,12 @@
 import { expect, type Browser, type Locator, type Page } from '@playwright/test';
+import { MIN_PLAYERS } from '@shared/constants';
+import type { PassiveRole } from '@shared/types';
 
-type NightSubmissionState = { wolf: boolean; seer: boolean; witch: boolean };
+type SubmissionState = { wolf: boolean; seer: boolean; witch: boolean; mayor: boolean };
+
+export type PassiveRoleConfig = Partial<Record<PassiveRole, boolean>>;
+
+type RoleCountKey = 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker';
 
 export type RoleConfig = {
   werewolf: number;
@@ -9,7 +15,7 @@ export type RoleConfig = {
   witch: number;
   armor: number;
   joker: number;
-  minPlayers?: number;
+  passiveRoles?: PassiveRoleConfig;
 };
 
 type AdvanceToDayResult = {
@@ -19,7 +25,7 @@ type AdvanceToDayResult = {
   dayPage?: Page | null;
 };
 
-const ROLE_FIELDS: (keyof RoleConfig)[] = ['werewolf', 'seer', 'hunter', 'witch', 'armor', 'joker'];
+const ROLE_FIELDS: RoleCountKey[] = ['werewolf', 'seer', 'hunter', 'witch', 'armor', 'joker'];
 
 const joinRoom = async (page: Page, name: string, code: string) => {
   await page.goto('/');
@@ -55,12 +61,12 @@ export const createLobbyWithPlayers = async (browser: Browser, names: string[]) 
 
 export const configureRoles = async (host: Page, config: RoleConfig) => {
   await host.waitForSelector('#role-config', { timeout: 10000 });
-  const minPlayers = config.minPlayers || 4;
   const expectedTotal = ROLE_FIELDS.reduce((sum, role) => sum + (config[role] ?? 0), 0);
+  const passiveRoles = config.passiveRoles;
 
   for (let attempt = 0; attempt < 5; attempt += 1) {
     await host.evaluate(
-      ({ desired, min }) => {
+      ({ desired, passive }) => {
         const form = document.getElementById('role-config');
         if (!form) return;
         const roleInputs = form.querySelectorAll<HTMLInputElement>('.role-input');
@@ -68,36 +74,49 @@ export const configureRoles = async (host: Page, config: RoleConfig) => {
           const role = input.dataset.role as keyof typeof desired | undefined;
           if (!role) return;
           input.value = String(desired[role] ?? 0);
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          input.dispatchEvent(new Event('input', { bubbles: true }));
         });
-        const minInput = document.getElementById('min-players') as HTMLInputElement | null;
-        if (minInput) {
-          minInput.value = String(min);
-          minInput.dispatchEvent(new Event('change', { bubbles: true }));
-          minInput.dispatchEvent(new Event('input', { bubbles: true }));
-        } else {
-          form.dispatchEvent(new Event('change', { bubbles: true }));
+        if (passive) {
+          const passiveInputs = form.querySelectorAll<HTMLInputElement>('.passive-role-input');
+          passiveInputs.forEach((input) => {
+            const role = input.dataset.passiveRole as keyof typeof passive | undefined;
+            if (!role || passive[role] === undefined) return;
+            input.checked = Boolean(passive[role]);
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          });
         }
+        form.dispatchEvent(new Event('change', { bubbles: true }));
       },
-      { desired: config, min: minPlayers }
+      { desired: config, passive: passiveRoles }
     );
 
     const applied = await host
       .waitForFunction(
-        ({ total, min }) => {
+        ({ total, min, passive }) => {
           const summary = Array.from(document.querySelectorAll('p')).find((el) =>
             (el.textContent || '').includes('Configured roles:')
           );
           const minText = Array.from(document.querySelectorAll('p')).find((el) =>
             (el.textContent || '').includes('Minimum players to start:')
           );
+          const passiveOk = !passive || Object.entries(passive).every(([role, value]) => {
+            const input = document.querySelector<HTMLInputElement>(
+              `.passive-role-input[data-passive-role="${role}"]`
+            );
+            if (!input) return false;
+            return input.checked === Boolean(value);
+          });
           const summaryText = summary?.textContent || '';
           const minPlayersText = minText?.textContent || '';
           return (
             summaryText.includes(`Configured roles: ${total} /`) &&
-            minPlayersText.includes(`Minimum players to start: ${min}`)
+            minPlayersText.includes(`Minimum players to start: ${min}`) &&
+            passiveOk
           );
         },
-        { total: expectedTotal, min: minPlayers },
+        { total: expectedTotal, min: MIN_PLAYERS, passive: passiveRoles },
         { timeout: 3000 }
       )
       .then(() => true)
@@ -153,11 +172,16 @@ const tryClick = async (locator: Locator) => {
   if ((await locator.count()) === 0) {
     return false;
   }
-  if (!(await locator.first().isVisible())) {
+  const first = locator.first();
+  if (!(await first.isVisible())) {
     return false;
   }
-  await locator.first().click();
-  return true;
+  try {
+    await first.click();
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 const selectFirstOption = async (select: Locator) => {
@@ -175,11 +199,8 @@ const selectOptionByLabel = async (select: Locator, label?: string | null) => {
     return false;
   }
   const option = select.locator('option', { hasText: label }).first();
-  const optionReady = await option
-    .waitFor({ state: 'attached', timeout: 2000 })
-    .then(() => true)
-    .catch(() => false);
-  if (!optionReady) {
+  const optionCount = await option.count().catch(() => 0);
+  if (!optionCount) {
     return false;
   }
   try {
@@ -192,13 +213,13 @@ const selectOptionByLabel = async (select: Locator, label?: string | null) => {
 
 const trySubmitNightActions = async (
   pages: Page[],
-  submissionState: Map<Page, NightSubmissionState>,
+  submissionState: Map<Page, SubmissionState>,
   options: { wolfTargetName?: string } = {}
 ) => {
   const { wolfTargetName } = options;
   let acted = false;
   for (const page of pages) {
-    const state = submissionState.get(page) || { wolf: false, seer: false, witch: false };
+    const state = submissionState.get(page) || { wolf: false, seer: false, witch: false, mayor: false };
 
     const wolfForm = page.locator('#wolf-form');
     if ((await wolfForm.count()) && (await wolfForm.isVisible())) {
@@ -247,6 +268,76 @@ const trySubmitNightActions = async (
   return acted;
 };
 
+const trySubmitMayorVotes = async (
+  pages: Page[],
+  submissionState: Map<Page, SubmissionState>,
+  options: { mayorTargetName?: string } = {}
+) => {
+  const { mayorTargetName } = options;
+  let acted = false;
+  for (const page of pages) {
+    const state = submissionState.get(page) || { wolf: false, seer: false, witch: false, mayor: false };
+    try {
+      const form = page.locator('#mayor-vote-form');
+      if ((await form.count()) && (await form.isVisible())) {
+        if (!state.mayor) {
+        const select = form.locator('select[name="target"]');
+        const picked = mayorTargetName
+          ? await selectOptionByLabel(select, mayorTargetName)
+          : false;
+        if (mayorTargetName && !picked) {
+          continue;
+        }
+        const selected = picked || (await selectFirstOption(select));
+        if (!selected) {
+          continue;
+        }
+          await form.locator('button[type="submit"]').click();
+          state.mayor = true;
+          acted = true;
+        }
+      } else {
+        state.mayor = false;
+      }
+      submissionState.set(page, state);
+    } catch {
+      // Ignore closed pages.
+    }
+  }
+  return acted;
+};
+
+export const completeMayorElection = async (
+  host: Page,
+  pages: Page[],
+  options: { mayorTargetName?: string } = {}
+) => {
+  const submissionState = new Map<Page, SubmissionState>();
+  const deadline = Date.now() + 15000;
+  let formSeen = false;
+  while (Date.now() < deadline) {
+    const formVisible = await host
+      .locator('#mayor-vote-form')
+      .isVisible()
+      .catch(() => false);
+    if (formVisible) {
+      formSeen = true;
+    }
+    if (formSeen && !formVisible) {
+      return;
+    }
+    if (formVisible) {
+      const acted = await trySubmitMayorVotes(pages, submissionState, options);
+      if (!acted) {
+        await host.waitForTimeout(200);
+      }
+      continue;
+    }
+    await host.waitForTimeout(200);
+  }
+  throw new Error('Mayor election did not resolve in time.');
+};
+
 const trySubmitArmor = async (pages: Page[]) => {
   for (const page of pages) {
     const armorForm = page.locator('#armor-form');
@@ -271,13 +362,17 @@ const trySubmitArmor = async (pages: Page[]) => {
 
 const findHunterPromptPage = async (pages: Page[]) => {
   for (const page of pages) {
-    const overlay = page.locator('#hunter-overlay');
-    if (await overlay.count()) {
-      return page;
-    }
-    const form = page.locator('#hunter-form');
-    if (await form.count()) {
-      return page;
+    try {
+      const overlay = page.locator('#hunter-overlay');
+      if (await overlay.count()) {
+        return page;
+      }
+      const form = page.locator('#hunter-form');
+      if (await form.count()) {
+        return page;
+      }
+    } catch {
+      // Ignore closed pages.
     }
   }
   return null;
@@ -385,10 +480,10 @@ const getPhaseText = async (page: Page) => {
 export const advanceToDay = async (
   host: Page,
   pages: Page[],
-  options: { allowHunterStop?: boolean; wolfTargetName?: string } = {}
+  options: { allowHunterStop?: boolean; wolfTargetName?: string; mayorTargetName?: string } = {}
 ): Promise<AdvanceToDayResult> => {
-  const { allowHunterStop = false, wolfTargetName } = options;
-  const submissionState = new Map<Page, NightSubmissionState>();
+  const { allowHunterStop = false, wolfTargetName, mayorTargetName } = options;
+  const submissionState = new Map<Page, SubmissionState>();
   const dayReportSelector = 'h3:has-text("Night Report")';
   const gameOverSelector = 'h2:has-text("Game Over")';
   let hunterShot = false;
@@ -401,6 +496,10 @@ export const advanceToDay = async (
     }
     if (await findVisiblePage(pages, gameOverSelector)) {
       return { hunterShot, gameOver: true, dayVisible: false };
+    }
+    if (await trySubmitMayorVotes(pages, submissionState, { mayorTargetName })) {
+      await host.waitForTimeout(200);
+      continue;
     }
     if (await trySubmitArmor(pages)) {
       await host.waitForTimeout(200);
@@ -426,6 +525,14 @@ export const advanceToDay = async (
       continue;
     }
     if (await tryClick(host.locator('#skip-step'))) {
+      await host.waitForTimeout(150);
+      continue;
+    }
+    if (await tryClick(host.locator('#skip-mayor-selection'))) {
+      await host.waitForTimeout(150);
+      continue;
+    }
+    if (await tryClick(host.locator('#skip-hunter-shot'))) {
       await host.waitForTimeout(150);
       continue;
     }
@@ -478,4 +585,91 @@ export const closeContexts = async (contexts: Array<Awaited<ReturnType<Browser['
       // Ignore contexts already closed during test teardown.
     }
   }
+};
+
+export const findMayorPromptPage = async (pages: Page[]) => {
+  for (const page of pages) {
+    try {
+      const overlay = page.locator('#mayor-overlay');
+      if (await overlay.count()) {
+        return page;
+      }
+      const form = page.locator('#mayor-form');
+      if (await form.count()) {
+        return page;
+      }
+    } catch {
+      // Ignore closed pages.
+    }
+  }
+  return null;
+};
+
+export const submitMayorSelection = async (page: Page, targetName?: string) => {
+  await page.waitForSelector('#mayor-form', { state: 'attached' });
+  const select = page.locator('#mayor-form select[name="target"]');
+  if (targetName) {
+    await selectOptionByLabel(select, targetName);
+  } else {
+    const optionCount = await select.locator('option').count();
+    if (optionCount > 1) {
+      await select.selectOption({ index: 1 });
+    }
+  }
+  await page.click('#mayor-form button[type="submit"]', { force: true });
+  await page.locator('#mayor-overlay').waitFor({ state: 'detached', timeout: 5000 });
+};
+
+export const ensureMayorOverlay = async (page: Page, roomCode?: string) => {
+  const overlay = page.locator('#mayor-overlay');
+  const firstTry = await overlay
+    .waitFor({ state: 'attached', timeout: 8000 })
+    .then(() => true)
+    .catch(() => false);
+  if (firstTry) {
+    return true;
+  }
+  await page.reload();
+  if (roomCode) {
+    const resumeBtn = page.locator('#resume-btn');
+    const hasResume = await resumeBtn
+      .waitFor({ state: 'visible', timeout: 5000 })
+      .then(() => true)
+      .catch(() => false);
+    if (hasResume) {
+      await resumeBtn.click();
+      await page.waitForSelector(`text=Room ${roomCode}`, { timeout: 10000 });
+    }
+  }
+  return overlay
+    .waitFor({ state: 'attached', timeout: 8000 })
+    .then(() => true)
+    .catch(() => false);
+};
+
+export const getMayorName = async (page: Page) => {
+  const mayorBadge = page.locator('.player-card:has(.tag:has-text("Mayor")) strong');
+  const count = await mayorBadge.count();
+  if (count > 0) {
+    return mayorBadge.first().textContent();
+  }
+  return null;
+};
+
+export const waitForMayorSelectionPending = async (pages: Page[], timeout = 10000) => {
+  const startTime = Date.now();
+  while (Date.now() - startTime < timeout) {
+    for (const page of pages) {
+      const overlay = page.locator('#mayor-overlay');
+      if (await overlay.count()) {
+        return page;
+      }
+      const pendingPanel = page.locator('h2:has-text("Awaiting Mayor Selection")');
+      if (await pendingPanel.count()) {
+        return page;
+      }
+    }
+    await pages[0].waitForTimeout(200);
+  }
+  return null;
 };

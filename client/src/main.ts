@@ -5,12 +5,14 @@ import { renderHeader, renderPlayersPanel, renderLogsPanel } from './renderers/c
 import {
   renderLobbySection,
   renderRoleRevealSection,
+  renderMayorSection,
   renderArmorSection,
   renderNightSection,
   renderDaySection,
-  renderRoleRevealList
+  renderRoleRevealList,
+  renderPendingActionsPanel
 } from './renderers/phaseRenderers';
-import { bindCommonHandlers, updateHunterOverlay } from './handlers/commonHandlers';
+import { bindCommonHandlers, updateHunterOverlay, updateMayorOverlay } from './handlers/commonHandlers';
 import { bindLandingHandlers, enterRoom } from './handlers/landingHandlers';
 import { bindPhaseHandlers } from './handlers/phaseHandlers';
 import { escapeHtml, notify } from './utils/helpers';
@@ -21,6 +23,7 @@ import type { RoomView, StoredSession } from '@shared/types';
 import {
   PHASE_DELAY_MS,
   POST_REVEAL_DELAY_MS,
+  POST_MAYOR_DELAY_MS,
   POST_ARMOR_DELAY_MS
 } from '@shared/constants';
 import type { EnterRoomParams } from './handlers/landingHandlers';
@@ -68,8 +71,11 @@ socket.on('roomUpdate', (room) => {
     state.playerName = room.players.find((p) => p.id === room.self?.id)?.name || state.playerName;
     saveSession();
   }
-  if (room.voteState?.yourVote !== undefined) {
+  if (room.voteState?.yourVote !== undefined && room.phase === 'day') {
     state.pendingVote = undefined;
+  }
+  if (room.voteState?.yourVote !== undefined && room.phase === 'mayor') {
+    state.pendingMayorVote = undefined;
   }
   const currentWolfVote = state.playerId ? room.wolfVotes?.[state.playerId] : undefined;
   if (currentWolfVote !== undefined && currentWolfVote !== '') {
@@ -86,6 +92,11 @@ socket.on('roomUpdate', (room) => {
 
 socket.on('hunterPrompt', () => {
   state.hunterPrompt = true;
+  renderApp();
+});
+
+socket.on('mayorPrompt', () => {
+  state.mayorPrompt = true;
   renderApp();
 });
 
@@ -115,8 +126,12 @@ function renderApp() {
     return;
   }
   state.hunterPrompt = !!state.room.awaitingHunterShot;
+  state.mayorPrompt = !!state.room.awaitingMayorSelection;
   if (state.room.phase !== 'day') {
     state.pendingVote = undefined;
+  }
+  if (state.room.phase !== 'mayor') {
+    state.pendingMayorVote = undefined;
   }
   if (state.room.phase !== 'night' || state.room.phaseStep !== 'wolves') {
     state.pendingWolfVote = undefined;
@@ -124,6 +139,7 @@ function renderApp() {
   const sections = [
     renderHeader(),
     renderPhaseSection(state.room),
+    renderPendingActionsPanel(state.room),
     renderPlayersPanel(),
     renderLogsPanel()
   ].filter(Boolean);
@@ -131,6 +147,7 @@ function renderApp() {
   bindCommonHandlers(socket, renderApp, renderLandingPage, clearSession);
   bindPhaseHandlers(socket, renderApp);
   updateHunterOverlay(socket);
+  updateMayorOverlay(socket);
 }
 
 function shouldDeferRoomRender(room: RoomView) {
@@ -175,12 +192,14 @@ function renderPhaseSection(room: RoomView) {
   if (room.phaseTransition) {
     const transitionMessages: Record<string, string> = {
       postReveal: 'The village falls asleep.',
+      postMayor: 'Mayor elected. Preparing the next phase...',
       postArmor: 'Starting the first night...',
       nightToDay: 'Dawn is breaking. Day phase begins soon...',
       dayToNight: 'Night falls. Close your eyes...'
     };
     const transitionDurations: Record<string, number> = {
       postReveal: POST_REVEAL_DELAY_MS,
+      postMayor: POST_MAYOR_DELAY_MS,
       postArmor: POST_ARMOR_DELAY_MS,
       nightToDay: PHASE_DELAY_MS,
       dayToNight: PHASE_DELAY_MS
@@ -221,6 +240,8 @@ function renderPhaseSection(room: RoomView) {
       return renderLobbySection(room);
     case 'roleReveal':
       return renderRoleRevealSection(room);
+    case 'mayor':
+      return renderMayorSection(room);
     case 'armor':
       return renderArmorSection(room, self);
     case 'night':

@@ -12,7 +12,7 @@ const baseRoom = (): RoomView => ({
   dayCount: 0,
   players: [],
   hostId: null,
-  minPlayers: 4,
+  minPlayers: 5,
   roleConfig: {
     werewolf: 1,
     seer: 1,
@@ -21,6 +21,10 @@ const baseRoom = (): RoomView => ({
     armor: 0,
     joker: 0
   },
+  passiveRoleConfig: { mayor: true },
+  mayorId: null,
+  awaitingMayorSelection: false,
+  mayorSelectionPending: false,
   loversKnown: false,
   loversAssigned: false,
   loverName: null,
@@ -41,6 +45,7 @@ const baseRoom = (): RoomView => ({
   lastDayDeaths: [],
   lastDayMessage: null,
   awaitingHunterShot: false,
+  hunterShotPending: false,
   winner: null,
   logs: [],
   self: null

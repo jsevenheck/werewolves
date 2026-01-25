@@ -50,15 +50,15 @@ describe('roleManager', () => {
     expect(validateCounts(tooFew)).toEqual({ error: 'Need at least 5 players' });
 
     const tooManyRoles = {
-      players: makePlayers(3),
-      minPlayers: 3,
-      roleConfig: { ...DEFAULT_ROLE_CONFIG, werewolf: 3, seer: 1 }
+      players: makePlayers(5),
+      minPlayers: 5,
+      roleConfig: { ...DEFAULT_ROLE_CONFIG, werewolf: 3, seer: 2 }
     } as Room;
     expect(validateCounts(tooManyRoles)).toEqual({ error: 'Role count exceeds players' });
 
     const noWolves = {
       players: makePlayers(5),
-      minPlayers: 3,
+      minPlayers: 5,
       roleConfig: { ...DEFAULT_ROLE_CONFIG, werewolf: 0 }
     } as Room;
     expect(validateCounts(noWolves)).toEqual({ error: 'Need at least 1 Werewolf' });

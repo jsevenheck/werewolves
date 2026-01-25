@@ -92,6 +92,14 @@ function resolveDeaths(
         }
       }
     }
+    // Handle mayor succession when mayor dies
+    if (room.mayorId === playerId) {
+      const alreadyQueued =
+        room.awaitingMayorSelection === player.id || room.mayorSelectionQueue.includes(player.id);
+      if (!alreadyQueued) {
+        room.mayorSelectionQueue.push(player.id);
+      }
+    }
     if (room.lovers && (room.lovers.aId === playerId || room.lovers.bId === playerId)) {
       const otherId = room.lovers.aId === playerId ? room.lovers.bId : room.lovers.aId;
       const other = room.players[otherId];
@@ -113,6 +121,10 @@ function resolveDeaths(
   if (!room.awaitingHunterShot && room.hunterShotQueue.length === 0) {
     checkWinners(room);
   }
+  if (!room.winner && !room.awaitingHunterShot && room.hunterShotQueue.length === 0) {
+    const { startNextMayorSelection } = require('./mayorManager');
+    startNextMayorSelection(room, broadcastRoom, io);
+  }
   broadcastRoom(room);
 }
 
@@ -126,6 +138,8 @@ function checkWinners(room: Room) {
     room.phaseStep = null;
     room.nextNightStep = null;
     room.phaseTransition = null;
+    room.awaitingMayorSelection = null;
+    room.mayorSelectionQueue = [];
     clearRoomTimers(room);
     return;
   }
@@ -141,6 +155,8 @@ function checkWinners(room: Room) {
     room.phaseStep = null;
     room.nextNightStep = null;
     room.phaseTransition = null;
+    room.awaitingMayorSelection = null;
+    room.mayorSelectionQueue = [];
     clearRoomTimers(room);
   }
 }

@@ -8,8 +8,8 @@ import {
   waitForDayOnAllPages
 } from './helpers';
 
-test('host can start a 4-player game and reach day', async ({ browser }) => {
-  const names = ['Host', 'Player 2', 'Player 3', 'Player 4'];
+test('host can start a 5-player game and reach day', async ({ browser }) => {
+  const names = ['Host', 'Player 2', 'Player 3', 'Player 4', 'Player 5'];
   const { contexts, pages } = await createLobbyWithPlayers(browser, names);
   const [host] = pages;
 
@@ -20,8 +20,7 @@ test('host can start a 4-player game and reach day', async ({ browser }) => {
       hunter: 0,
       witch: 0,
       armor: 0,
-      joker: 0,
-      minPlayers: 4
+      joker: 0
     });
 
     await startGameAndReady(pages);

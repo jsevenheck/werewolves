@@ -1,4 +1,4 @@
-import { startNight, scheduleNightStep, schedulePhaseTransition } from '../src/server/managers/phaseManager';
+import { startNight, scheduleNightStep, schedulePhaseTransition, advanceFromReveal } from '../src/server/managers/phaseManager';
 import type { Player, Room, RoleConfig } from '../src/shared/types';
 
 const makeRoom = (): Room => ({
@@ -27,8 +27,13 @@ const makeRoom = (): Room => ({
   dayCount: 0,
   logs: [],
   winner: null,
-  minPlayers: 3,
+  minPlayers: 5,
   roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0 } as RoleConfig,
+  passiveRoleConfig: { mayor: true },
+  mayorId: null,
+  awaitingMayorSelection: null,
+  mayorSelectionQueue: [],
+  mayorSelectionTimer: null,
   lovers: null,
   witchState: { healAvailable: true, poisonAvailable: true }
 });
@@ -143,5 +148,39 @@ describe('phaseManager', () => {
     expect(room.voteState).toEqual({ votes: {}, revoteFromTie: null });
     expect(room.logs[room.logs.length - 1].text).toBe('Day 1 has begun.');
     expect(broadcastRoom).toHaveBeenCalledTimes(2);
+  });
+
+  test('advanceFromReveal skips mayor when disabled and armor is alive', () => {
+    const room = makeRoom();
+    room.passiveRoleConfig.mayor = false;
+    room.roleConfig.armor = 1;
+    room.players = {
+      armor: buildPlayer({ id: 'armor', role: 'armor', alive: true }),
+      villager: buildPlayer({ id: 'villager', role: 'villager', alive: true })
+    };
+    const broadcastRoom = jest.fn();
+
+    advanceFromReveal(room, broadcastRoom);
+
+    expect(room.phase).toBe('armor');
+    expect(room.phaseStep).toBeNull();
+    expect(broadcastRoom).toHaveBeenCalledTimes(1);
+  });
+
+  test('advanceFromReveal skips mayor when disabled and no armor is alive', () => {
+    const room = makeRoom();
+    room.passiveRoleConfig.mayor = false;
+    room.roleConfig.armor = 0;
+    room.players = {
+      wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: true }),
+      villager: buildPlayer({ id: 'villager', role: 'villager', alive: true })
+    };
+    const broadcastRoom = jest.fn();
+
+    advanceFromReveal(room, broadcastRoom);
+
+    expect(room.phase).toBe('night');
+    expect(room.phaseStep).toBe('wolves');
+    expect(broadcastRoom).toHaveBeenCalledTimes(1);
   });
 });

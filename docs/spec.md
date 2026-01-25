@@ -17,13 +17,18 @@
 
 ### Room
 - `code`: 4-letter uppercase join code.
-- `phase`: enum (`lobby`, `roleReveal`, `armor`, `night`, `day`, `ended`).
+- `phase`: enum (`lobby`, `roleReveal`, `mayor`, `armor`, `night`, `day`, `ended`).
 - `phaseStep`: helper for night substeps (`wolves`, `seer`, `witch`, `resolve`, `transition`).
 - `dayCount`: starts at 0, increments at each day phase.
 - `players`: map playerId -> Player.
 - `hostId`: acting host id (may switch on disconnect; reverts to owner when they reconnect).
 - `roleConfig`: counts for each special role; villagers fill remainder automatically.
-- `minPlayers`: configurable minimum players before start (default 5, min 3).
+- `minPlayers`: minimum players before start (fixed at 5).
+- `passiveRoleConfig`: `{ mayor: boolean }` feature toggles for passive roles.
+- `mayorId`: playerId of the current Mayor (null before election).
+- `awaitingMayorSelection`: playerId awaiting a mayor succession pick, or null.
+- `mayorSelectionQueue`: queue of mayor succession prompts.
+- `mayorSelectionTimer`: timeout for mayor succession.
 - `lovers`: `{aId, bId}` or null.
 - `witchState`: `{healAvailable: boolean, poisonAvailable: boolean}`.
 - `wolfVotes`: map playerId -> targetId (null for no vote).
@@ -33,7 +38,7 @@
 - `logs`: array of structured entries for UI recap (`{ts, text, publicText}`).
 - `lastNightDeaths`: array of `{name, role}` announced in the day report.
 - `awaitingHunterShot`: playerId awaiting a hunter shot, or null.
-- `phaseTransition`: pending phase transition kind (`postReveal`, `postArmor`, `nightToDay`, `dayToNight`) or null.
+- `phaseTransition`: pending phase transition kind (`postReveal`, `postMayor`, `postArmor`, `nightToDay`, `dayToNight`) or null.
 - `nextNightStep`: when `phaseStep` is `transition`, the next step to enter.
 - `winner`: `{team: 'village' | 'wolves' | 'joker', reason}` when ended.
 
@@ -49,7 +54,13 @@ loop:
       send each player role; wolves get list of other wolves (private UI fields)
       require each player to mark ready
       host continues once all connected players are ready
-      go phase=armor if armor alive else startNight (phase=night, step='wolves')
+      if passiveRoleConfig.mayor -> go phase=mayor
+      else -> go phase=armor if armor alive else startNight (phase=night, step='wolves')
+    mayor:
+      collect votes from alive players to elect the Mayor
+      if tie: revote among tied candidates
+      if tie again: choose random among tied candidates
+      once mayor elected -> go phase=armor if armor alive else startNight (phase=night, step='wolves')
     armor:
       wait for armor player to choose two targets
       set lovers; notify both

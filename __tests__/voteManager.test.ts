@@ -14,8 +14,13 @@ const makeRoom = (players: Record<string, Player>): Room => ({
   phaseStep: null,
   dayCount: 1,
   players,
-  minPlayers: 3,
+  minPlayers: 5,
   roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0 } as RoleConfig,
+  passiveRoleConfig: { mayor: true },
+  mayorId: null,
+  awaitingMayorSelection: null,
+  mayorSelectionQueue: [],
+  mayorSelectionTimer: null,
   lovers: null,
   witchState: { healAvailable: true, poisonAvailable: true },
   wolfVotes: {},
@@ -178,5 +183,106 @@ describe('voteManager', () => {
     expect(room.phaseTimer).toBeNull();
     expect(room.transitionTimer).toBeNull();
     expect(broadcastRoom).toHaveBeenCalledTimes(1);
+  });
+
+  describe('mayor tie-breaking', () => {
+    test('mayor vote breaks initial tie when mayor voted for tied candidate', () => {
+      const players = {
+        a: buildPlayer({ id: 'a', alive: true }),
+        b: buildPlayer({ id: 'b', alive: true }),
+        c: buildPlayer({ id: 'c', alive: true }),
+        d: buildPlayer({ id: 'd', alive: true })
+      };
+      const room = makeRoom(players);
+      room.mayorId = 'a';
+      room.voteState.votes = { a: 'b', b: 'c', c: 'b', d: 'c' }; // 2-2 tie, mayor voted for b
+      const broadcastRoom = jest.fn();
+
+      tryResolveDayVote(room, broadcastRoom, undefined as never);
+
+      expect(room.logs.some(log => log.text.includes('Mayor\'s vote decided'))).toBe(true);
+      expect(room.players.b.alive).toBe(false);
+      expect(room.voteState.revoteFromTie).toBeNull(); // No revote triggered
+    });
+
+    test('mayor vote breaks revote tie', () => {
+      const players = {
+        a: buildPlayer({ id: 'a', alive: true }),
+        b: buildPlayer({ id: 'b', alive: true }),
+        c: buildPlayer({ id: 'c', alive: true }),
+        d: buildPlayer({ id: 'd', alive: true })
+      };
+      const room = makeRoom(players);
+      room.mayorId = 'a';
+      room.voteState.revoteFromTie = ['b', 'c'];
+      room.voteState.votes = { a: 'b', b: 'c', c: 'b', d: 'c' }; // 2-2 tie after revote
+      const broadcastRoom = jest.fn();
+
+      tryResolveDayVote(room, broadcastRoom, undefined as never);
+
+      // Check if mayor's vote broke the tie
+      const mayorDecidedLog = room.logs.find(log => log.text.includes('Mayor\'s vote decided'));
+      expect(mayorDecidedLog).toBeTruthy();
+      expect(room.players.b.alive).toBe(false);
+    });
+
+    test('tie goes to revote when mayor did not vote for tied candidate', () => {
+      const players = {
+        a: buildPlayer({ id: 'a', alive: true }),
+        b: buildPlayer({ id: 'b', alive: true }),
+        c: buildPlayer({ id: 'c', alive: true }),
+        d: buildPlayer({ id: 'd', alive: true }),
+        e: buildPlayer({ id: 'e', alive: true })
+      };
+      const room = makeRoom(players);
+      room.mayorId = 'a';
+      room.voteState.votes = { a: 'e', b: 'c', c: 'b', d: 'c', e: 'b' }; // 2-2 tie between b and c, mayor voted for e
+      const broadcastRoom = jest.fn();
+
+      tryResolveDayVote(room, broadcastRoom, undefined as never);
+
+      expect([...(room.voteState.revoteFromTie || [])].sort()).toEqual(['b', 'c']);
+      expect(room.logs[room.logs.length - 1].text).toBe('Vote tied. Revote among highlighted players.');
+    });
+
+    test('tie goes to revote when mayor abstained', () => {
+      const players = {
+        a: buildPlayer({ id: 'a', alive: true }),
+        b: buildPlayer({ id: 'b', alive: true }),
+        c: buildPlayer({ id: 'c', alive: true }),
+        d: buildPlayer({ id: 'd', alive: true }),
+        e: buildPlayer({ id: 'e', alive: true })
+      };
+      const room = makeRoom(players);
+      room.mayorId = 'a';
+      room.voteState.votes = { a: null, b: 'c', c: 'b', d: 'c', e: 'b' }; // 2-2 tie, mayor abstained
+      const broadcastRoom = jest.fn();
+
+      tryResolveDayVote(room, broadcastRoom, undefined as never);
+
+      expect([...(room.voteState.revoteFromTie || [])].sort()).toEqual(['b', 'c']);
+    });
+
+    test('tie goes to random when mayor dead', () => {
+      const players = {
+        a: buildPlayer({ id: 'a', alive: false }),
+        b: buildPlayer({ id: 'b', alive: true }),
+        c: buildPlayer({ id: 'c', alive: true }),
+        d: buildPlayer({ id: 'd', alive: true })
+      };
+      const room = makeRoom(players);
+      room.mayorId = 'a'; // Mayor is dead
+      room.voteState.revoteFromTie = ['b', 'c'];
+      room.voteState.votes = { b: 'c', c: 'b', d: 'c' }; // Still tied
+      const broadcastRoom = jest.fn();
+
+      tryResolveDayVote(room, broadcastRoom, undefined as never);
+
+      // One of the tied players should be eliminated (random pick)
+      const bDead = !room.players.b.alive;
+      const cDead = !room.players.c.alive;
+      expect(bDead || cDead).toBe(true);
+      expect(bDead && cDead).toBe(false); // Only one should be dead
+    });
   });
 });

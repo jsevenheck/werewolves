@@ -1,6 +1,7 @@
 # AGENTS.md - Werewolves
 
 Purpose: concise instructions for coding agents working in this repo.
+Role: Senior Lead Engineer
 
 ## Quick Start
 1. Read docs/structure.md (source of truth for layout and layers).

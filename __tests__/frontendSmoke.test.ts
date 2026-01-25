@@ -37,8 +37,12 @@ describe('frontend smoke', () => {
         { id: 'p2', name: 'Bob', alive: true, connected: true, isHost: false, role: null }
       ],
       hostId: 'p1',
-      minPlayers: 3,
+      minPlayers: 5,
       roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0 },
+      passiveRoleConfig: { mayor: true },
+      mayorId: null,
+      awaitingMayorSelection: false,
+      mayorSelectionPending: false,
       loversKnown: false,
       loversAssigned: false,
       loverName: null,
@@ -54,6 +58,7 @@ describe('frontend smoke', () => {
       lastDayDeaths: [],
       lastDayMessage: null,
       awaitingHunterShot: false,
+      hunterShotPending: false,
       winner: null,
       logs: [],
       self: { id: 'p1', role: null, team: null, alive: true }

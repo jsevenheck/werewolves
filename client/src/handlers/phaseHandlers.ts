@@ -31,10 +31,34 @@ function bindPhaseHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
     });
   }
 
+  // Handle host skip button for pending mayor selection
+  if (room.mayorSelectionPending && room.hostId === state.playerId) {
+    document.getElementById('skip-mayor-selection')?.addEventListener('click', () => {
+      if (!state.playerId) return;
+      socket.emit('hostSkipStep', { roomCode: room.code, playerId: state.playerId });
+    });
+  }
+
+  // Handle host skip button for pending hunter shot
+  if (room.hunterShotPending && room.hostId === state.playerId) {
+    document.getElementById('skip-hunter-shot')?.addEventListener('click', () => {
+      if (!state.playerId) return;
+      socket.emit('hostSkipStep', { roomCode: room.code, playerId: state.playerId });
+    });
+  }
+
   if (room.phase === 'lobby') {
     bindLobbyHandlers(socket, room);
   } else if (room.phase === 'roleReveal') {
     bindRoleRevealHandlers(socket, room);
+  } else if (room.phase === 'mayor') {
+    if (room.hostId === state.playerId) {
+      document.getElementById('end-mayor-vote-btn')?.addEventListener('click', () => {
+        if (!state.playerId) return;
+        socket.emit('hostFinalizeMayorVote', { roomCode: room.code, playerId: state.playerId });
+      });
+    }
+    bindMayorHandlers(socket, room, renderApp);
   } else if (room.phase === 'armor') {
     if (room.hostId === state.playerId) {
       document.getElementById('skip-armor')?.addEventListener('click', () => {
@@ -57,14 +81,18 @@ function bindLobbyHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
   if (!roleConfigForm) return;
 
   const updateConfig = () => {
-    const config: Record<string, number> & { minPlayers?: number } = {};
+    const config: Record<string, number> & { passiveRoles?: Record<string, boolean> } = {};
     roleConfigForm.querySelectorAll<HTMLInputElement>('.role-input').forEach((field) => {
       if (!field.dataset.role) return;
       config[field.dataset.role] = Number(field.value);
     });
-    const minPlayersInput = document.getElementById('min-players') as HTMLInputElement | null;
-    if (minPlayersInput) {
-      config.minPlayers = Number(minPlayersInput.value);
+    const passiveRoles: Record<string, boolean> = {};
+    roleConfigForm.querySelectorAll<HTMLInputElement>('.passive-role-input').forEach((field) => {
+      if (!field.dataset.passiveRole) return;
+      passiveRoles[field.dataset.passiveRole] = field.checked;
+    });
+    if (Object.keys(passiveRoles).length) {
+      config.passiveRoles = passiveRoles;
     }
     socket.emit('updateRoleConfig', { roomCode: room.code, playerId: state.playerId, config });
   };
@@ -82,14 +110,14 @@ function bindLobbyHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
 
   roleConfigForm.addEventListener('change', (e) => {
     const target = e.target as HTMLElement;
-    if (target.matches('.role-input') || target.matches('#min-players')) {
+    if (target.matches('.role-input') || target.matches('.passive-role-input')) {
       updateConfig();
     }
   });
 
   roleConfigForm.addEventListener('input', (e) => {
     const target = e.target as HTMLElement;
-    if (target.matches('.role-input') || target.matches('#min-players')) {
+    if (target.matches('.role-input') || target.matches('.passive-role-input')) {
       debouncedUpdateConfig();
     }
   });
@@ -160,6 +188,46 @@ function bindRoleRevealHandlers(socket: Socket<ServerToClientEvents, ClientToSer
       socket.emit('continueAfterReveal', { roomCode: room.code, playerId: state.playerId });
     });
   }
+}
+
+function bindMayorHandlers(
+  socket: Socket<ServerToClientEvents, ClientToServerEvents>,
+  room: RoomView,
+  renderApp: () => void
+) {
+  if (!room.self?.alive) return;
+  if (!state.playerId) return;
+
+  const voteForm = document.getElementById('mayor-vote-form') as HTMLFormElement | null;
+  const voteSelect = voteForm?.querySelector('select[name="target"]') as HTMLSelectElement | null;
+  const voteSubmit = document.getElementById('mayor-vote-submit') as HTMLButtonElement | null;
+
+  if (voteSelect && voteSubmit) {
+    voteSubmit.disabled = !voteSelect.value;
+    voteSelect.addEventListener('change', () => {
+      voteSubmit.disabled = !voteSelect.value;
+      state.pendingMayorVote = voteSelect.value || undefined;
+    });
+    voteSelect.addEventListener('blur', () => {
+      window.setTimeout(() => {
+        renderApp();
+      }, 0);
+    });
+  }
+
+  voteForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!voteForm) return;
+    const data = new FormData(voteForm);
+    const targetId = data.get('target');
+    if (!targetId || !state.playerId) {
+      notify('Unable to submit vote: missing player state.');
+      return;
+    }
+    state.pendingMayorVote = String(targetId);
+    renderApp();
+    socket.emit('submitMayorVote', { roomCode: room.code, playerId: state.playerId, targetId: String(targetId) });
+  });
 }
 
 function bindArmorHandlers(socket: Socket<ServerToClientEvents, ClientToServerEvents>, room: RoomView) {
