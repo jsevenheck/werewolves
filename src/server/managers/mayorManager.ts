@@ -8,7 +8,7 @@ function shiftNextValidMayorSelector(room: Room) {
     const nextId = room.mayorSelectionQueue.shift();
     if (!nextId) continue;
     const dyingMayor = room.players[nextId];
-    if (dyingMayor && dyingMayor.id === nextId && !dyingMayor.alive) {
+    if (dyingMayor && !dyingMayor.alive) {
       return nextId;
     }
   }
