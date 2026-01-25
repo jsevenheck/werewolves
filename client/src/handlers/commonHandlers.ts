@@ -199,7 +199,9 @@ function updateMayorOverlay(socket: Socket<ServerToClientEvents, ClientToServerE
     return;
   }
 
-  const targets = room.players.filter((player) => player.alive);
+  const targets = room.players.filter(
+    (player) => player.alive && player.id !== state.playerId
+  );
   const options = targets.map((player) => `<option value="${player.id}">${escapeHtml(player.name)}</option>`).join('');
   wrapper.innerHTML = `
     <div class="panel">
