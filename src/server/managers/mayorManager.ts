@@ -77,6 +77,7 @@ function startMayorSelection(
       broadcastRoom(room);
     }
   }, MAYOR_SELECTION_TIMEOUT_MS);
+  room.mayorSelectionTimer.unref?.();
 
   if (shouldBroadcast) {
     broadcastRoom(room);

@@ -71,6 +71,7 @@ function startHunterShot(
       broadcastRoom(room);
     }
   }, HUNTER_SHOT_TIMEOUT_MS);
+  room.hunterShotTimer.unref?.();
 
   if (shouldBroadcast) {
     broadcastRoom(room);
