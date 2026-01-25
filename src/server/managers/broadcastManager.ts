@@ -40,6 +40,7 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     roleConfig: room.roleConfig,
     mayorId: room.mayorId,
     awaitingMayorSelection: room.awaitingMayorSelection === viewerId,
+    mayorSelectionPending: !!room.awaitingMayorSelection,
     loversKnown: !!room.lovers && (room.lovers.aId === viewerId || room.lovers.bId === viewerId),
     loversAssigned: !!room.lovers,
     loverName: room.lovers
@@ -70,6 +71,7 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     lastDayDeaths: room.lastDayDeaths,
     lastDayMessage: room.lastDayMessage,
     awaitingHunterShot: room.awaitingHunterShot === viewerId,
+    hunterShotPending: !!room.awaitingHunterShot,
     winner: room.winner,
     logs,
     self: viewer

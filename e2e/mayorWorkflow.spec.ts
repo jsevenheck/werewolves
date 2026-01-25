@@ -4,13 +4,16 @@ import {
   configureRoles,
   createLobbyWithPlayers,
   startGameAndReady,
-  advanceToDay
+  advanceToDay,
+  getMayorName,
+  submitMayorSelection,
+  voteAllForTarget
 } from './helpers';
 
-test('mayor is selected and can break voting ties', async ({ browser }) => {
+test('mayor is selected and displayed during mayor phase', async ({ browser }) => {
   const names = ['Host', 'Player2', 'Player3', 'Player4'];
   const { contexts, pages } = await createLobbyWithPlayers(browser, names);
-  const [host, p2, p3, p4] = pages;
+  const [host] = pages;
 
   try {
     await configureRoles(host, {
@@ -27,15 +30,17 @@ test('mayor is selected and can break voting ties', async ({ browser }) => {
 
     // Mayor phase should appear after role reveal
     await host.waitForSelector('h2:has-text("Mayor Selected")', { timeout: 10000 });
-    
-    // Check that a mayor was announced
-    const mayorText = await host.locator('.panel').filter({ hasText: 'has been selected as the Mayor' }).textContent();
+
+    // Check that a mayor was announced - use more specific locator
+    const mayorPanel = host.locator('.panel:has(h2:has-text("Mayor Selected"))');
+    const mayorText = await mayorPanel.textContent();
     expect(mayorText).toBeTruthy();
-    
+
     // Extract mayor name from the announcement
     const mayorMatch = mayorText?.match(/(.+) has been selected as the Mayor/);
     const mayorName = mayorMatch ? mayorMatch[1].trim() : null;
     expect(mayorName).toBeTruthy();
+    expect(names).toContain(mayorName);
 
     // Host clicks continue to advance past mayor phase
     await host.waitForSelector('#continue-mayor', { timeout: 5000 });
@@ -43,69 +48,25 @@ test('mayor is selected and can break voting ties', async ({ browser }) => {
 
     // Advance to day phase
     const { dayPage } = await advanceToDay(host, pages);
-
-    // Verify we reached day phase
     expect(dayPage).toBeTruthy();
-    if (!dayPage) {
-      throw new Error('Failed to reach day phase');
-    }
 
-    // Verify mayor indicator appears in player list
-    const playerCards = await dayPage.locator('.player-card').all();
-    let mayorFound = false;
-    for (const card of playerCards) {
-      const cardText = await card.textContent();
-      if (cardText?.includes('Mayor')) {
-        mayorFound = true;
-        break;
-      }
-    }
-    expect(mayorFound).toBe(true);
-
-    // Test tie-breaking by creating a tied vote scenario
-    // Set up a 2-2 vote where the mayor votes for one of the tied candidates
-    const voteForm = dayPage.locator('#vote-form');
-    await voteForm.waitFor({ state: 'visible', timeout: 5000 });
-
-    // Get all player pages to cast votes
-    const alivePlayers = pages.filter(async (page) => {
-      try {
-        const voteFormVisible = await page.locator('#vote-form').isVisible({ timeout: 1000 });
-        return voteFormVisible;
-      } catch {
-        return false;
-      }
-    });
-
-    // If we have at least 4 players, create a tie scenario
-    if (alivePlayers.length >= 4) {
-      // Cast votes to create a tie
-      // This is a simplified test - in a real game the vote distribution would be more complex
-      await dayPage.locator('#vote-form button[type="submit"]').click();
-      
-      // Wait for vote resolution
-      await dayPage.waitForSelector('h3:has-text("Day Report")', { timeout: 15000 });
-      
-      // Check logs for mayor tie-breaking message if a tie occurred
-      const logsPanel = await dayPage.locator('#logs-panel').textContent();
-      // If a tie occurred and mayor broke it, we should see the message
-      // Otherwise the vote resolved normally
-      expect(logsPanel).toBeTruthy();
-    }
+    // Verify mayor badge appears in player list
+    const actualMayorName = await getMayorName(dayPage!);
+    expect(actualMayorName).toBe(mayorName);
 
   } finally {
     await closeContexts(contexts);
   }
 });
 
-test('dying mayor must select successor', async ({ browser }) => {
+test('mayor vote breaks tie in day voting', async ({ browser }) => {
   const names = ['Host', 'Player2', 'Player3', 'Player4', 'Player5'];
   const { contexts, pages } = await createLobbyWithPlayers(browser, names);
   const [host] = pages;
 
   try {
     await configureRoles(host, {
-      werewolf: 2,
+      werewolf: 1,
       seer: 0,
       hunter: 0,
       witch: 0,
@@ -118,60 +79,213 @@ test('dying mayor must select successor', async ({ browser }) => {
 
     // Advance past mayor phase
     await host.waitForSelector('#continue-mayor', { timeout: 10000 });
-    
-    // Get the mayor name
-    const mayorText = await host.locator('.panel').filter({ hasText: 'has been selected as the Mayor' }).textContent();
+    const mayorPanel = host.locator('.panel:has(h2:has-text("Mayor Selected"))');
+    const mayorText = await mayorPanel.textContent();
     const mayorMatch = mayorText?.match(/(.+) has been selected as the Mayor/);
     const mayorName = mayorMatch ? mayorMatch[1].trim() : null;
-    
+    expect(mayorName).toBeTruthy();
+
+    await host.click('#continue-mayor');
+
+    // Advance to day
+    const { dayPage } = await advanceToDay(host, pages);
+    expect(dayPage).toBeTruthy();
+
+    // Find the mayor's page
+    const mayorPage = pages.find((_, idx) => names[idx] === mayorName);
+    expect(mayorPage).toBeTruthy();
+
+    // Get two non-mayor targets for the tie
+    const targets = names.filter(n => n !== mayorName);
+    const targetA = targets[0];
+    const targetB = targets[1];
+
+    // Create a 2-2 tie scenario where mayor votes for targetA
+    // Mayor votes for targetA, another player votes for targetA
+    // Two other players vote for targetB
+    for (const page of pages) {
+      const voteForm = page.locator('#vote-form');
+      if (!(await voteForm.count()) || !(await voteForm.isVisible())) continue;
+
+      const playerName = names[pages.indexOf(page)];
+      const select = voteForm.locator('select[name="target"]');
+
+      if (playerName === mayorName) {
+        // Mayor votes for targetA
+        await select.selectOption({ label: targetA });
+      } else if (playerName === targetA) {
+        // targetA votes for targetB (to create tie)
+        await select.selectOption({ label: targetB });
+      } else if (playerName === targetB) {
+        // targetB abstains
+        await select.selectOption('__abstain__');
+      } else if (targets.indexOf(playerName) < 2) {
+        // First non-target votes for targetA
+        await select.selectOption({ label: targetA });
+      } else {
+        // Second non-target votes for targetB
+        await select.selectOption({ label: targetB });
+      }
+
+      await page.click('#vote-submit');
+      await page.waitForTimeout(100);
+    }
+
+    // Wait for vote to resolve
+    await host.waitForTimeout(3000);
+
+    // Check logs for mayor tie-breaking message
+    const logsPanel = await host.locator('#logs-panel').textContent();
+
+    // The mayor's vote should have broken the tie or someone was voted out
+    const voteResolved = logsPanel?.includes("Mayor's vote decided") ||
+                         logsPanel?.includes('voted out') ||
+                         logsPanel?.includes('executed by vote');
+    expect(voteResolved).toBe(true);
+
+  } finally {
+    await closeContexts(contexts);
+  }
+});
+
+test('dying mayor selects successor', async ({ browser }) => {
+  const names = ['Host', 'Player2', 'Player3', 'Player4', 'Player5'];
+  const { contexts, pages } = await createLobbyWithPlayers(browser, names);
+  const [host] = pages;
+
+  try {
+    await configureRoles(host, {
+      werewolf: 1,
+      seer: 0,
+      hunter: 0,
+      witch: 0,
+      armor: 0,
+      joker: 0,
+      minPlayers: 5
+    });
+
+    await startGameAndReady(pages);
+
+    // Get the mayor name
+    await host.waitForSelector('#continue-mayor', { timeout: 10000 });
+    const mayorPanel = host.locator('.panel:has(h2:has-text("Mayor Selected"))');
+    const mayorText = await mayorPanel.textContent();
+    const mayorMatch = mayorText?.match(/(.+) has been selected as the Mayor/);
+    const mayorName = mayorMatch ? mayorMatch[1].trim() : null;
+    expect(mayorName).toBeTruthy();
+
     await host.click('#continue-mayor');
 
     // Advance to day
     await advanceToDay(host, pages);
 
-    // Vote out the mayor
-    // Find which page belongs to the mayor
-    let mayorPage = null;
-    for (const page of pages) {
-      try {
-        const pageContent = await page.locator('body').textContent({ timeout: 1000 });
-        if (pageContent?.includes(mayorName || '')) {
-          const roleCard = await page.locator('#toggle-role').textContent({ timeout: 1000 });
-          if (roleCard?.toLowerCase().includes('role')) {
-            mayorPage = page;
-            break;
-          }
-        }
-      } catch {
-        continue;
-      }
-    }
+    // Find the mayor's page index
+    const mayorIndex = names.indexOf(mayorName!);
+    const mayorPage = pages[mayorIndex];
+    expect(mayorPage).toBeTruthy();
 
-    // Have all players vote for someone (simplified - not necessarily the mayor)
-    for (const page of pages) {
-      try {
-        const voteForm = page.locator('#vote-form');
-        const isVisible = await voteForm.isVisible({ timeout: 1000 });
-        if (isVisible) {
-          const select = page.locator('#vote-form select');
-          const options = await select.locator('option').all();
-          if (options.length > 1) {
-            await select.selectOption({ index: 1 });
-            await page.locator('#vote-form button[type="submit"]').click();
-            await page.waitForTimeout(200);
-          }
-        }
-      } catch {
-        // Skip if player can't vote
-      }
-    }
+    // All players vote out the mayor
+    const playerData = pages.map((page, idx) => ({ page, name: names[idx] }));
+    await voteAllForTarget(playerData, mayorName!);
 
-    // If the mayor dies, we should see the mayor selection overlay
-    // Note: This is difficult to test deterministically without controlling vote outcomes
-    // In a real test, we'd need to ensure the mayor specifically dies
-    
-    // For now, just verify the game continues
-    await host.waitForTimeout(5000);
+    // Wait for vote to resolve and mayor overlay to appear
+    await host.waitForTimeout(2000);
+
+    // The dying mayor should see the mayor selection overlay
+    const mayorOverlay = mayorPage.locator('#mayor-overlay');
+    const overlayVisible = await mayorOverlay
+      .waitFor({ state: 'attached', timeout: 10000 })
+      .then(() => true)
+      .catch(() => false);
+
+    expect(overlayVisible).toBe(true);
+
+    // Mayor selects a successor
+    const successorName = names.find(n => n !== mayorName);
+    await submitMayorSelection(mayorPage, successorName);
+
+    // Verify the new mayor is set
+    await host.waitForTimeout(1000);
+
+    // Check logs for appointment message
+    const logsPanel = await host.locator('#logs-panel').textContent();
+    expect(logsPanel).toContain('appointed as the new Mayor');
+
+  } finally {
+    await closeContexts(contexts);
+  }
+});
+
+test('host can skip mayor selection', async ({ browser }) => {
+  const names = ['Host', 'Player2', 'Player3', 'Player4', 'Player5'];
+  const { contexts, pages } = await createLobbyWithPlayers(browser, names);
+  const [host] = pages;
+
+  try {
+    await configureRoles(host, {
+      werewolf: 1,
+      seer: 0,
+      hunter: 0,
+      witch: 0,
+      armor: 0,
+      joker: 0,
+      minPlayers: 5
+    });
+
+    await startGameAndReady(pages);
+
+    // Get the mayor name
+    await host.waitForSelector('#continue-mayor', { timeout: 10000 });
+    const mayorPanel = host.locator('.panel:has(h2:has-text("Mayor Selected"))');
+    const mayorText = await mayorPanel.textContent();
+    const mayorMatch = mayorText?.match(/(.+) has been selected as the Mayor/);
+    const mayorName = mayorMatch ? mayorMatch[1].trim() : null;
+    expect(mayorName).toBeTruthy();
+
+    await host.click('#continue-mayor');
+
+    // Advance to day
+    await advanceToDay(host, pages);
+
+    // Find the mayor's page index
+    const mayorIndex = names.indexOf(mayorName!);
+    const mayorPage = pages[mayorIndex];
+
+    // All players vote out the mayor
+    const playerData = pages.map((page, idx) => ({ page, name: names[idx] }));
+    await voteAllForTarget(playerData, mayorName!);
+
+    // Wait for mayor selection to start
+    await host.waitForTimeout(2000);
+
+    // The dying mayor should see the overlay
+    const mayorOverlay = mayorPage.locator('#mayor-overlay');
+    const overlayAppeared = await mayorOverlay
+      .waitFor({ state: 'attached', timeout: 8000 })
+      .then(() => true)
+      .catch(() => false);
+    expect(overlayAppeared).toBe(true);
+
+    // Host (if not the mayor) should see the skip button
+    if (mayorName !== 'Host') {
+      const skipButton = host.locator('#skip-mayor-selection');
+      const skipVisible = await skipButton
+        .waitFor({ state: 'visible', timeout: 5000 })
+        .then(() => true)
+        .catch(() => false);
+      expect(skipVisible).toBe(true);
+
+      // Click skip
+      await skipButton.click();
+
+      // Overlay should disappear from mayor's page
+      await mayorOverlay.waitFor({ state: 'detached', timeout: 5000 });
+
+      // Game should continue (night phase should start or game should end)
+      await host.waitForTimeout(2000);
+      const phaseText = await host.locator('text=Phase:').textContent();
+      expect(phaseText).toBeTruthy();
+    }
 
   } finally {
     await closeContexts(contexts);

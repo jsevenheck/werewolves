@@ -28,6 +28,7 @@ const baseRoom = (): RoomView => ({
   },
   mayorId: null,
   awaitingMayorSelection: false,
+  mayorSelectionPending: false,
   loversKnown: false,
   loversAssigned: false,
   loverName: null,
@@ -43,6 +44,7 @@ const baseRoom = (): RoomView => ({
   lastDayDeaths: [],
   lastDayMessage: null,
   awaitingHunterShot: false,
+  hunterShotPending: false,
   winner: null,
   logs: [],
   self: null

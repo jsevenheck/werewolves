@@ -9,7 +9,8 @@ import {
   renderArmorSection,
   renderNightSection,
   renderDaySection,
-  renderRoleRevealList
+  renderRoleRevealList,
+  renderPendingActionsPanel
 } from './renderers/phaseRenderers';
 import { bindCommonHandlers, updateHunterOverlay, updateMayorOverlay } from './handlers/commonHandlers';
 import { bindLandingHandlers, enterRoom } from './handlers/landingHandlers';
@@ -132,6 +133,7 @@ function renderApp() {
   const sections = [
     renderHeader(),
     renderPhaseSection(state.room),
+    renderPendingActionsPanel(state.room),
     renderPlayersPanel(),
     renderLogsPanel()
   ].filter(Boolean);
