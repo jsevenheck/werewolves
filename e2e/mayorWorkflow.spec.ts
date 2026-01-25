@@ -44,6 +44,12 @@ test('mayor is selected and can break voting ties', async ({ browser }) => {
     // Advance to day phase
     const { dayPage } = await advanceToDay(host, pages);
 
+    // Verify we reached day phase
+    expect(dayPage).toBeTruthy();
+    if (!dayPage) {
+      throw new Error('Failed to reach day phase');
+    }
+
     // Verify mayor indicator appears in player list
     const playerCards = await dayPage.locator('.player-card').all();
     let mayorFound = false;
