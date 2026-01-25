@@ -38,6 +38,9 @@ This guide explains what to update when introducing a new role and where those c
 ```
 
 ## Minimal Path (Passive Role, No Actions)
+Passive roles are roles without night/day actions or special prompts. They exist only for
+win conditions, role counts, and UI display. Think "Elder" (extra resilience) or a simple
+villager variant with no active abilities.
 1. Types:
    - `src/shared/types.ts`: extend `Role` and `RoleConfig`.
    - Add to `Team` only if you need a new faction.
@@ -49,6 +52,15 @@ This guide explains what to update when introducing a new role and where those c
    - Role labels use `ROLE_INFO` via `getPlayerRoleLabel` in `src/server/utils/helpers.ts`.
 4. Tests:
    - Update any test snapshots or role lists in `__tests__`.
+
+### Passive Role Checklist (Quick Reference)
+- ✅ No new phases or night steps.
+- ✅ No socket events or client handlers needed.
+- ✅ Only update types, constants, and tests.
+- ✅ If the role has *passive effects* (e.g., extra life), implement that in:
+  - `src/server/managers/deathManager.ts` (death resolution), or
+  - `src/server/managers/voteManager.ts` (day voting outcomes), or
+  - `src/server/managers/phaseManager.ts` (flow tweaks without new phases).
 
 ## Active Role (Night/Day/Phase Actions)
 In addition to the "Minimal Path":
