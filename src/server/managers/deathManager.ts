@@ -4,7 +4,7 @@ import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/ev
 import type { NightDeathAnnouncement, Room } from '../../shared/types';
 
 const IS_E2E = process.env.E2E_TESTS === '1';
-const HUNTER_SHOT_TIMEOUT_MS = IS_E2E ? 100 : 60 * 1000;
+const HUNTER_SHOT_TIMEOUT_MS = IS_E2E ? 30 * 1000 : 60 * 1000;
 
 function queueDeath(room: Room, playerId: string, reason: string) {
   room.pendingDeaths.push({ playerId, reason });

@@ -5,7 +5,7 @@ import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/ev
 import type { Room } from '../../shared/types';
 
 const IS_E2E = process.env.E2E_TESTS === '1';
-const MAYOR_SELECTION_TIMEOUT_MS = IS_E2E ? 100 : 60 * 1000;
+const MAYOR_SELECTION_TIMEOUT_MS = IS_E2E ? 30 * 1000 : 60 * 1000;
 
 function shiftNextValidMayorSelector(room: Room) {
   while (room.mayorSelectionQueue.length) {
