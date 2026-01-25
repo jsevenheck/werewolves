@@ -81,6 +81,8 @@ function handleWitchDecision(
   if (action === 'heal') {
     if (!room.witchState.healAvailable) return;
     if (!room.wolfTarget) return;
+    const target = room.players[room.wolfTarget];
+    if (!target || !target.alive) return;
     room.witchState.healAvailable = false;
     room.healedTarget = room.wolfTarget;
   } else if (action === 'poison') {
@@ -94,12 +96,20 @@ function handleWitchDecision(
     scheduleNightStep(room, 'resolve', broadcastRoom, io);
     return;
   }
-  const canHeal = room.witchState.healAvailable && !!room.wolfTarget;
+  const targetPlayer = room.wolfTarget ? room.players[room.wolfTarget] : null;
+  const canHeal =
+    room.witchState.healAvailable &&
+    !!room.wolfTarget &&
+    !!targetPlayer &&
+    targetPlayer.alive;
   const alivePlayers = Object.values(room.players).filter((p) => p.alive);
+  const actingWitch = playerId ? room.players[playerId] : null;
   const canPoison =
     room.witchState.poisonAvailable &&
     // Only allow poison when a real witch is acting; host skips pass null.
-    !!playerId &&
+    !!actingWitch &&
+    actingWitch.role === 'witch' &&
+    actingWitch.alive &&
     alivePlayers.some((p) => p.id !== playerId);
   if (!canHeal && !canPoison) {
     scheduleNightStep(room, 'resolve', broadcastRoom, io);

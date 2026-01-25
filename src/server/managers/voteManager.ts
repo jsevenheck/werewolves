@@ -85,6 +85,11 @@ function tryResolveDayVote(
       return;
     }
     const randomPick = tied[Math.floor(Math.random() * tied.length)];
+    const randomPlayer = room.players[randomPick];
+    const selectionMessage = randomPlayer
+      ? `Vote tied again. Randomly selected ${randomPlayer.name}.`
+      : 'Vote tied again. Randomly selected a player.';
+    addLog(room, selectionMessage, selectionMessage);
     resolveDayKill(room, randomPick, broadcastRoom, io);
   } else {
     resolveDayKill(room, top[0], broadcastRoom, io);

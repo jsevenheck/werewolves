@@ -1,3 +1,5 @@
+import { MockHowl } from './__tests__/mocks/howler';
+
 afterEach(() => {
   jest.useRealTimers();
 });
@@ -5,3 +7,5 @@ afterEach(() => {
 jest.mock('nanoid', () => ({
   customAlphabet: () => () => 'mock-id'
 }));
+
+jest.mock('howler', () => ({ Howl: MockHowl }), { virtual: true });

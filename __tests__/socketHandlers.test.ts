@@ -8,6 +8,7 @@ import {
   holdDayToNightTransition
 } from '../src/server/managers/phaseManager';
 import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../src/server/managers/nightManager';
+import { tryResolveDayVote } from '../src/server/managers/voteManager';
 import { queueDeath, resolveDeaths, startNextHunterShot, checkWinners } from '../src/server/managers/deathManager';
 import { startNextMayorSelection, tryResolveMayorVote } from '../src/server/managers/mayorManager';
 import { setupSocketHandlers } from '../src/server/handlers/socketHandlers';
@@ -40,6 +41,14 @@ jest.mock('../src/server/managers/nightManager', () => ({
   advanceNightStep: jest.fn(),
   handleWitchDecision: jest.fn()
 }));
+
+jest.mock('../src/server/managers/voteManager', () => {
+  const actual = jest.requireActual('../src/server/managers/voteManager');
+  return {
+    ...actual,
+    tryResolveDayVote: jest.fn(actual.tryResolveDayVote)
+  };
+});
 
 jest.mock('../src/server/managers/deathManager', () => ({
   queueDeath: jest.fn(),
@@ -424,6 +433,63 @@ describe('socketHandlers hostSkipStep', () => {
     expect(checkWinners).not.toHaveBeenCalled();
     expect(schedulePhaseTransition).not.toHaveBeenCalled();
     expect(holdDayToNightTransition).not.toHaveBeenCalled();
+  });
+});
+
+describe('socketHandlers disconnect vote resolution', () => {
+  const io = { sockets: { sockets: new Map() } } as unknown as any;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    deleteSocketIndex('socket-1');
+  });
+
+  test('does not resolve day vote during a phase transition', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'day',
+      phaseStep: null,
+      phaseTransition: 'dayToNight',
+      awaitingHunterShot: null,
+      players: {
+        host: { id: 'host', alive: true, connected: true, socketId: 'socket-1' }
+      },
+      voteState: { votes: {}, revoteFromTie: null },
+      logs: []
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    setSocketIndex('socket-1', room.code, 'host');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.disconnect();
+
+    expect(tryResolveDayVote).not.toHaveBeenCalled();
+  });
+
+  test('does not resolve day vote while awaiting a hunter shot', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'day',
+      phaseStep: null,
+      phaseTransition: null,
+      awaitingHunterShot: 'host',
+      players: {
+        host: { id: 'host', alive: true, connected: true, socketId: 'socket-1' }
+      },
+      voteState: { votes: {}, revoteFromTie: null },
+      logs: []
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    setSocketIndex('socket-1', room.code, 'host');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.disconnect();
+
+    expect(tryResolveDayVote).not.toHaveBeenCalled();
   });
 });
 

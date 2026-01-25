@@ -125,10 +125,7 @@ function schedulePhaseTransition(
 }
 
 function holdDayToNightTransition(room: Room, broadcastRoom: (room: Room) => void) {
-  clearRoomTimers(room);
-  room.phaseTransition = 'dayToNight';
-  room.nextNightStep = null;
-  broadcastRoom(room);
+  schedulePhaseTransition(room, 'dayToNight', broadcastRoom);
 }
 
 function resolveNightStep(room: Room, nextStep: NightStep): NightStep {
