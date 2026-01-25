@@ -113,11 +113,13 @@ describe('nightManager', () => {
     room.players = {
       v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: false })
     };
+    const broadcastRoom = jest.fn();
 
-    handleWitchDecision(room, 'w1', 'heal', null, jest.fn(), undefined as never);
+    handleWitchDecision(room, 'w1', 'heal', null, broadcastRoom, undefined as never);
 
     expect(room.witchState.healAvailable).toBe(true);
     expect(room.healedTarget).toBeNull();
+    expect(broadcastRoom).not.toHaveBeenCalled();
     expect(scheduleNightStep).not.toHaveBeenCalled();
   });
 
