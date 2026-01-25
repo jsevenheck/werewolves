@@ -13,7 +13,7 @@ import {
 } from './helpers';
 
 test('hunter prompt allows a follow-up shot', async ({ browser }) => {
-  const names = ['Host', 'Player 2', 'Player 3', 'Player 4'];
+  const names = ['Host', 'Player 2', 'Player 3', 'Player 4', 'Player 5'];
   const { contexts, pages, code } = await createLobbyWithPlayers(browser, names);
   const [host] = pages;
   const players = pages.map((page, index) => ({ page, name: names[index] }));
@@ -25,13 +25,12 @@ test('hunter prompt allows a follow-up shot', async ({ browser }) => {
       hunter: 1,
       witch: 0,
       armor: 0,
-      joker: 0,
-      minPlayers: 4
+      joker: 0
     });
 
     await startGameAndReady(pages);
     const hunterPlayer = players[1];
-    const safeTarget = players[2]?.name || players[3]?.name;
+    const safeTarget = players[2]?.name || players[3]?.name || players[4]?.name;
     const advanceResult = await advanceToDay(host, pages, {
       allowHunterStop: true,
       wolfTargetName: safeTarget

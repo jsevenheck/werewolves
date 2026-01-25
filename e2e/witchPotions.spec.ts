@@ -35,8 +35,7 @@ test('witch can heal and poison across nights', async ({ browser }) => {
       hunter: 0,
       witch: 1,
       armor: 0,
-      joker: 0,
-      minPlayers: 5
+      joker: 0
     });
 
     await startGameAndReady(pages);
@@ -99,8 +98,7 @@ test('witch can heal and poison in the same night', async ({ browser }) => {
       hunter: 0,
       witch: 1,
       armor: 0,
-      joker: 0,
-      minPlayers: 5
+      joker: 0
     });
 
     await startGameAndReady(pages);

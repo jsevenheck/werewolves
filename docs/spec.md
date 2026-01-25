@@ -23,7 +23,7 @@
 - `players`: map playerId -> Player.
 - `hostId`: acting host id (may switch on disconnect; reverts to owner when they reconnect).
 - `roleConfig`: counts for each special role; villagers fill remainder automatically.
-- `minPlayers`: configurable minimum players before start (default 5, min 3).
+- `minPlayers`: minimum players before start (fixed at 5).
 - `passiveRoleConfig`: `{ mayor: boolean }` feature toggles for passive roles.
 - `mayorId`: playerId of the current Mayor (null before election).
 - `awaitingMayorSelection`: playerId awaiting a mayor succession pick, or null.

@@ -60,7 +60,7 @@ pnpm run test:e2e
 
 ## How to Play
 1. Host creates a room and shares the 4-letter code.
-2. Host configures role counts and minimum players, then starts the game.
+2. Host configures role counts, then starts the game (minimum 5 players required).
 3. Players see their private role on their device and click Ready.
 4. Host continues once everyone is ready.
 5. Armor links Lovers once, then night/day cycles begin.

@@ -8,7 +8,7 @@ import {
 } from './helpers';
 
 test('seer can inspect and see the result', async ({ browser }) => {
-  const names = ['Werewolf', 'Seer', 'Villager A', 'Villager B'];
+  const names = ['Werewolf', 'Seer', 'Villager A', 'Villager B', 'Villager C'];
   const { contexts, pages } = await createLobbyWithPlayers(browser, names);
   const [host, seer] = pages;
 
@@ -19,8 +19,7 @@ test('seer can inspect and see the result', async ({ browser }) => {
       hunter: 0,
       witch: 0,
       armor: 0,
-      joker: 0,
-      minPlayers: 4
+      joker: 0
     });
 
     await startGameAndReady(pages);

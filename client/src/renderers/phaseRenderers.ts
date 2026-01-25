@@ -1,5 +1,5 @@
 import { ROLE_DETAILS, PASSIVE_ROLE_DETAILS } from '../config/constants';
-import { NIGHT_DELAY_MS } from '@shared/constants';
+import { MIN_PLAYERS, NIGHT_DELAY_MS } from '@shared/constants';
 import { state } from '../state/gameState';
 import { escapeHtml, getPlayerName } from '../utils/helpers';
 import type { PassiveRole, RoomView, RoomViewSelf } from '@shared/types';
@@ -17,11 +17,12 @@ function renderLobbySection(room: RoomView) {
   const villagerSlots = Math.max(playersCount - totals, 0);
   const needsAdjust = totals > playersCount;
   const canStart = state.playerId === room.hostId;
+  const minPlayers = room.minPlayers ?? MIN_PLAYERS;
   const safeRoleDetails = ROLE_DETAILS || {};
   const passiveRoleConfig = room.passiveRoleConfig || { mayor: true };
   const passiveRoleDetails = PASSIVE_ROLE_DETAILS || {};
   const roleInputs = Object.entries(room.roleConfig).map(([role, count]) => `
-    <label>
+    <label class="role-row">
       <span>${safeRoleDetails[role as keyof typeof safeRoleDetails]?.name || role}</span>
       <input type="number" class="role-input" data-role="${role}" min="0" value="${count}" />
     </label>
@@ -29,40 +30,29 @@ function renderLobbySection(room: RoomView) {
   const passiveRoleInputs = Object.entries(passiveRoleConfig).map(([role, enabled]) => {
     const detail = passiveRoleDetails[role as PassiveRole];
     const label = detail?.name || role;
-    const description = detail?.description ? `<small>${escapeHtml(detail.description)}</small>` : '';
     return `
-      <label>
-        <span>${escapeHtml(label)} (passive)</span>
+      <label class="toggle">
+        <span>${escapeHtml(label)}</span>
         <input type="checkbox" class="passive-role-input" data-passive-role="${role}" ${enabled ? 'checked' : ''} />
+        <span class="toggle-track" aria-hidden="true"></span>
       </label>
-      ${description}
     `;
   }).join('');
-  const passiveSummary = Object.entries(passiveRoleConfig)
-    .map(([role, enabled]) => {
-      const detail = passiveRoleDetails[role as PassiveRole];
-      const label = detail?.name || role;
-      return `${escapeHtml(label)}: ${enabled ? 'On' : 'Off'}`;
-    })
-    .join(', ');
   return `
     <section class="panel">
       <h2>Lobby</h2>
       <p>Share this code so friends can join: <strong>${escapeHtml(room.code)}</strong></p>
       ${canStart ? `<form id="role-config" class="actions">
         ${roleInputs}
-        <label>
-          <span>Minimum players required</span>
-          <input type="number" id="min-players" min="3" value="${room.minPlayers || 5}" />
-        </label>
-        <div style="margin-top:1rem;">
+        <div class="passive-roles">
           <h3>Passive Roles</h3>
-          ${passiveRoleInputs}
+          <div class="passive-role-list">
+            ${passiveRoleInputs}
+          </div>
         </div>
       </form>` : '<p>Waiting for host to configure roles.</p>'}
-      <p>Configured roles: ${totals} / ${playersCount}. Villagers auto-fill: ${villagerSlots}</p>
-      <p>Minimum players to start: ${room.minPlayers || 5}</p>
-      ${passiveSummary ? `<p>Passive roles: ${passiveSummary}</p>` : ''}
+      <p class="role-summary">Configured roles: ${totals} / ${playersCount}. Villagers auto-fill: ${villagerSlots}</p>
+      <p>Minimum players to start: ${minPlayers}</p>
       ${needsAdjust ? '<p style="color:#fca5a5;">Too many roles for current players.</p>' : ''}
       <button id="start-game" ${!canStart ? 'disabled' : ''}>Start Game</button>
     </section>

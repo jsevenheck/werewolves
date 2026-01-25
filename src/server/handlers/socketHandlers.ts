@@ -139,12 +139,6 @@ function setupSocketHandlers(
     if (config.passiveRoles) {
       room.passiveRoleConfig = normalizePassiveRoleConfig(config.passiveRoles);
     }
-    if (config?.minPlayers !== undefined) {
-      const rawMin = Number(config.minPlayers);
-      if (Number.isFinite(rawMin) && rawMin >= 3) {
-        room.minPlayers = Math.floor(rawMin);
-      }
-    }
     broadcastRoom(room, io);
   });
 

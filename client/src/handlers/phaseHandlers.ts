@@ -81,7 +81,7 @@ function bindLobbyHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
   if (!roleConfigForm) return;
 
   const updateConfig = () => {
-    const config: Record<string, number> & { minPlayers?: number; passiveRoles?: Record<string, boolean> } = {};
+    const config: Record<string, number> & { passiveRoles?: Record<string, boolean> } = {};
     roleConfigForm.querySelectorAll<HTMLInputElement>('.role-input').forEach((field) => {
       if (!field.dataset.role) return;
       config[field.dataset.role] = Number(field.value);
@@ -93,10 +93,6 @@ function bindLobbyHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
     });
     if (Object.keys(passiveRoles).length) {
       config.passiveRoles = passiveRoles;
-    }
-    const minPlayersInput = document.getElementById('min-players') as HTMLInputElement | null;
-    if (minPlayersInput) {
-      config.minPlayers = Number(minPlayersInput.value);
     }
     socket.emit('updateRoleConfig', { roomCode: room.code, playerId: state.playerId, config });
   };
@@ -114,14 +110,14 @@ function bindLobbyHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
 
   roleConfigForm.addEventListener('change', (e) => {
     const target = e.target as HTMLElement;
-    if (target.matches('.role-input') || target.matches('.passive-role-input') || target.matches('#min-players')) {
+    if (target.matches('.role-input') || target.matches('.passive-role-input')) {
       updateConfig();
     }
   });
 
   roleConfigForm.addEventListener('input', (e) => {
     const target = e.target as HTMLElement;
-    if (target.matches('.role-input') || target.matches('.passive-role-input') || target.matches('#min-players')) {
+    if (target.matches('.role-input') || target.matches('.passive-role-input')) {
       debouncedUpdateConfig();
     }
   });

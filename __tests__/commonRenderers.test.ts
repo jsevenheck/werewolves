@@ -37,7 +37,7 @@ describe('commonRenderers narrator label', () => {
       dayCount: 1,
       players: [],
       hostId: null,
-      minPlayers: 4,
+      minPlayers: 5,
       roleConfig: {
         werewolf: 1,
         seer: 1,

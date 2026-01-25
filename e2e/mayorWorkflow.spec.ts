@@ -32,7 +32,7 @@ const submitMayorVotes = async (pages: Page[], names: string[], votePlan: VotePl
 };
 
 test('mayor is selected and displayed during mayor phase', async ({ browser }) => {
-  const names = ['Host', 'Player2', 'Player3', 'Player4'];
+  const names = ['Host', 'Player2', 'Player3', 'Player4', 'Player5'];
   const { contexts, pages } = await createLobbyWithPlayers(browser, names);
   const [host] = pages;
 
@@ -43,8 +43,7 @@ test('mayor is selected and displayed during mayor phase', async ({ browser }) =
       hunter: 0,
       witch: 0,
       armor: 0,
-      joker: 0,
-      minPlayers: 4
+      joker: 0
     });
 
     await startGameAndReady(pages);
@@ -63,7 +62,7 @@ test('mayor is selected and displayed during mayor phase', async ({ browser }) =
 });
 
 test('mayor can be disabled in the lobby', async ({ browser }) => {
-  const names = ['Host', 'Player2', 'Player3', 'Player4'];
+  const names = ['Host', 'Player2', 'Player3', 'Player4', 'Player5'];
   const { contexts, pages } = await createLobbyWithPlayers(browser, names);
   const [host] = pages;
 
@@ -75,7 +74,6 @@ test('mayor can be disabled in the lobby', async ({ browser }) => {
       witch: 0,
       armor: 0,
       joker: 0,
-      minPlayers: 4,
       passiveRoles: { mayor: false }
     });
 
@@ -89,7 +87,7 @@ test('mayor can be disabled in the lobby', async ({ browser }) => {
 });
 
 test('mayor election revote resolves a tie', async ({ browser }) => {
-  const names = ['Host', 'Player2', 'Player3', 'Player4'];
+  const names = ['Host', 'Player2', 'Player3', 'Player4', 'Player5'];
   const { contexts, pages } = await createLobbyWithPlayers(browser, names);
   const [host] = pages;
 
@@ -100,8 +98,7 @@ test('mayor election revote resolves a tie', async ({ browser }) => {
       hunter: 0,
       witch: 0,
       armor: 0,
-      joker: 0,
-      minPlayers: 4
+      joker: 0
     });
 
     await startGameAndReady(pages);
@@ -111,7 +108,8 @@ test('mayor election revote resolves a tie', async ({ browser }) => {
       Host: 'Host',
       Player2: 'Player2',
       Player3: 'Host',
-      Player4: 'Player2'
+      Player4: 'Player2',
+      Player5: 'Player3'
     };
     await submitMayorVotes(pages, names, initialPlan);
 
@@ -121,7 +119,8 @@ test('mayor election revote resolves a tie', async ({ browser }) => {
       Host: 'Host',
       Player2: 'Host',
       Player3: 'Host',
-      Player4: 'Host'
+      Player4: 'Host',
+      Player5: 'Host'
     };
     await submitMayorVotes(pages, names, revotePlan);
 
@@ -146,8 +145,7 @@ test('mayor vote breaks tie in day voting', async ({ browser }) => {
       hunter: 0,
       witch: 0,
       armor: 0,
-      joker: 0,
-      minPlayers: 5
+      joker: 0
     });
 
     await startGameAndReady(pages);
@@ -228,7 +226,7 @@ test('mayor vote breaks tie in day voting', async ({ browser }) => {
 });
 
 test('host can finalize mayor vote early', async ({ browser }) => {
-  const names = ['Host', 'Player2', 'Player3', 'Player4'];
+  const names = ['Host', 'Player2', 'Player3', 'Player4', 'Player5'];
   const { contexts, pages } = await createLobbyWithPlayers(browser, names);
   const [host] = pages;
 
@@ -239,8 +237,7 @@ test('host can finalize mayor vote early', async ({ browser }) => {
       hunter: 0,
       witch: 0,
       armor: 0,
-      joker: 0,
-      minPlayers: 4
+      joker: 0
     });
 
     await startGameAndReady(pages);
@@ -280,8 +277,7 @@ test('dying mayor selects successor', async ({ browser }) => {
       hunter: 0,
       witch: 0,
       armor: 0,
-      joker: 0,
-      minPlayers: 5
+      joker: 0
     });
 
     await startGameAndReady(pages);
@@ -342,8 +338,7 @@ test('host can skip mayor selection', async ({ browser }) => {
       hunter: 0,
       witch: 0,
       armor: 0,
-      joker: 0,
-      minPlayers: 5
+      joker: 0
     });
 
     await startGameAndReady(pages);

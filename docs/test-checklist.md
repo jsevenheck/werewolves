@@ -13,7 +13,7 @@
 - **Witch potion tracking**: Use heal potion once to prevent the wolf kill, confirm potion becomes unavailable later, then poison a target on another night and ensure dead count + Lovers link apply before win checks.
 - **Seer and Witch private info**: Confirm Seer sees the last inspection result only on their device and Witch sees the wolves' target before acting.
 - **Voting UI**: Ensure vote submit is disabled until a selection is made; choose Abstain explicitly; test majority abstain -> no elimination.
-- **Lobby validation**: Adjust minimum players and attempt to start below it; ensure the backend rejects the start and displays an error alert. Also test too many roles vs player count.
+- **Lobby validation**: Attempt to start with fewer than 5 players; ensure the backend rejects the start and displays an error alert. Also test too many roles vs player count.
 - **Disconnect / reconnect**: Join from a browser, disconnect (close tab), reopen and resume via stored session to confirm state restores (including role, death state, and pending prompts like Hunter shot).
 - **Host handoff / reclaim**: Disconnect the host, confirm another connected player becomes Host and can use host actions; reconnect the original host and verify the Host label returns to them.
 - **Endgame reveal**: When a team wins, ensure all roles reveal in the player list and that win condition matches expectations (wolves parity, all wolves dead, or Joker instant win).

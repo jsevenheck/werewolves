@@ -2,7 +2,7 @@ import { test } from '@playwright/test';
 import { closeContexts, configureRoles, createLobbyWithPlayers, startGameAndReady, completeMayorElection } from './helpers';
 
 test('host can skip armor selection', async ({ browser }) => {
-  const names = ['Host', 'Player 2', 'Player 3', 'Player 4'];
+  const names = ['Host', 'Player 2', 'Player 3', 'Player 4', 'Player 5'];
   const { contexts, pages } = await createLobbyWithPlayers(browser, names);
   const [host] = pages;
 
@@ -13,8 +13,7 @@ test('host can skip armor selection', async ({ browser }) => {
       seer: 0,
       hunter: 0,
       witch: 0,
-      joker: 0,
-      minPlayers: 4
+      joker: 0
     });
     await startGameAndReady(pages);
     await completeMayorElection(host, pages);

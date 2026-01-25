@@ -1,4 +1,5 @@
 import { expect, type Browser, type Locator, type Page } from '@playwright/test';
+import { MIN_PLAYERS } from '@shared/constants';
 import type { PassiveRole } from '@shared/types';
 
 type SubmissionState = { wolf: boolean; seer: boolean; witch: boolean; mayor: boolean };
@@ -14,7 +15,6 @@ export type RoleConfig = {
   witch: number;
   armor: number;
   joker: number;
-  minPlayers?: number;
   passiveRoles?: PassiveRoleConfig;
 };
 
@@ -61,13 +61,12 @@ export const createLobbyWithPlayers = async (browser: Browser, names: string[]) 
 
 export const configureRoles = async (host: Page, config: RoleConfig) => {
   await host.waitForSelector('#role-config', { timeout: 10000 });
-  const minPlayers = config.minPlayers || 4;
   const expectedTotal = ROLE_FIELDS.reduce((sum, role) => sum + (config[role] ?? 0), 0);
   const passiveRoles = config.passiveRoles;
 
   for (let attempt = 0; attempt < 5; attempt += 1) {
     await host.evaluate(
-      ({ desired, min, passive }) => {
+      ({ desired, passive }) => {
         const form = document.getElementById('role-config');
         if (!form) return;
         const roleInputs = form.querySelectorAll<HTMLInputElement>('.role-input');
@@ -75,6 +74,8 @@ export const configureRoles = async (host: Page, config: RoleConfig) => {
           const role = input.dataset.role as keyof typeof desired | undefined;
           if (!role) return;
           input.value = String(desired[role] ?? 0);
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          input.dispatchEvent(new Event('input', { bubbles: true }));
         });
         if (passive) {
           const passiveInputs = form.querySelectorAll<HTMLInputElement>('.passive-role-input');
@@ -86,16 +87,9 @@ export const configureRoles = async (host: Page, config: RoleConfig) => {
             input.dispatchEvent(new Event('input', { bubbles: true }));
           });
         }
-        const minInput = document.getElementById('min-players') as HTMLInputElement | null;
-        if (minInput) {
-          minInput.value = String(min);
-          minInput.dispatchEvent(new Event('change', { bubbles: true }));
-          minInput.dispatchEvent(new Event('input', { bubbles: true }));
-        } else {
-          form.dispatchEvent(new Event('change', { bubbles: true }));
-        }
+        form.dispatchEvent(new Event('change', { bubbles: true }));
       },
-      { desired: config, min: minPlayers, passive: passiveRoles }
+      { desired: config, passive: passiveRoles }
     );
 
     const applied = await host
@@ -122,7 +116,7 @@ export const configureRoles = async (host: Page, config: RoleConfig) => {
             passiveOk
           );
         },
-        { total: expectedTotal, min: minPlayers, passive: passiveRoles },
+        { total: expectedTotal, min: MIN_PLAYERS, passive: passiveRoles },
         { timeout: 3000 }
       )
       .then(() => true)
