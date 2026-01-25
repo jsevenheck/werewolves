@@ -101,12 +101,31 @@ describe('nightManager', () => {
   test('handleWitchDecision uses heal potion and advances', () => {
     const room = makeRoom();
     room.wolfTarget = 'v1';
+    room.players = {
+      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+    };
 
     handleWitchDecision(room, 'w1', 'heal', null, jest.fn(), undefined as never);
 
     expect(room.witchState.healAvailable).toBe(false);
     expect(room.healedTarget).toBe('v1');
     expect(scheduleNightStep).toHaveBeenCalledWith(room, 'resolve', expect.any(Function), undefined);
+  });
+
+  test('handleWitchDecision does not consume heal when wolf target is invalid', () => {
+    const room = makeRoom();
+    room.wolfTarget = 'v1';
+    room.players = {
+      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: false })
+    };
+    const broadcastRoom = jest.fn();
+
+    handleWitchDecision(room, 'w1', 'heal', null, broadcastRoom, undefined as never);
+
+    expect(room.witchState.healAvailable).toBe(true);
+    expect(room.healedTarget).toBeNull();
+    expect(broadcastRoom).not.toHaveBeenCalled();
+    expect(scheduleNightStep).not.toHaveBeenCalled();
   });
 
   test('handleWitchDecision keeps witch step open when poison remains', () => {

@@ -57,7 +57,7 @@ function detachSocketFromRoom(
     addLog(room, `${player.name} ${reason}.`);
   }
   updateHostIfNeeded(room);
-  if (room.phase === 'day' && player.alive) {
+  if (room.phase === 'day' && player.alive && !room.phaseTransition && !room.awaitingHunterShot) {
     tryResolveDayVote(room, (r) => broadcastRoom(r, io), io);
   }
   if (room.phase === 'mayor' && player.alive) {
