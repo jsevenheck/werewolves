@@ -17,6 +17,9 @@ test('host can skip armor selection', async ({ browser }) => {
       minPlayers: 4
     });
     await startGameAndReady(pages);
+    // Wait for and advance past mayor phase
+    await host.waitForSelector('#continue-mayor', { timeout: 10000 });
+    await host.click('#continue-mayor');
     await host.waitForSelector('#skip-armor', { timeout: 15000 });
     await host.click('#skip-armor');
     await host.waitForSelector('h2:has-text("Night Phase")', { timeout: 15000 });

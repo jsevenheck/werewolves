@@ -1,5 +1,4 @@
 import type { Server } from 'socket.io';
-import { addLog } from '../utils/helpers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { Room } from '../../shared/types';
 
@@ -42,7 +41,7 @@ function startNextMayorSelection(
   broadcastRoom: (room: Room) => void,
   io?: Server<ClientToServerEvents, ServerToClientEvents>
 ) {
-  if (room.awaitingMayorSelection || !room.mayorSelectionQueue.length) {
+  if (room.awaitingMayorSelection || !room.mayorSelectionQueue || !room.mayorSelectionQueue.length) {
     return false;
   }
   const nextId = shiftNextValidMayorSelector(room);

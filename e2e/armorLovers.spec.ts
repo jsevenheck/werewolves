@@ -63,6 +63,10 @@ test('armor can link two lovers', async ({ browser }) => {
 
     await startGameAndReady(pages);
 
+    // Wait for and advance past mayor phase
+    await host.waitForSelector('#continue-mayor', { timeout: 10000 });
+    await host.click('#continue-mayor');
+
     const armorPage: Page = await waitForArmorForm();
     const loverASelect = armorPage.locator('#armor-form select[name="loverA"]');
     const loverBSelect = armorPage.locator('#armor-form select[name="loverB"]');

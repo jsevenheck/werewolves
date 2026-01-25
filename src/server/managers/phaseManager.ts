@@ -159,6 +159,9 @@ function advanceFromReveal(room: Room, broadcastRoom: (room: Room) => void) {
     room.mayorId = alivePlayers[randomIndex].id;
     const mayor = room.players[room.mayorId];
     addLog(room, `${mayor.name} has been selected as the Mayor.`, `${mayor.name} has been selected as the Mayor.`);
+  } else {
+    // Edge case: no alive players (shouldn't happen in normal gameplay)
+    addLog(room, 'No mayor could be selected - no alive players.');
   }
   
   broadcastRoom(room);

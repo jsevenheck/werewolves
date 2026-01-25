@@ -78,6 +78,12 @@ function tryResolveDayVote(
       broadcastRoom(room);
       return;
     }
+    // On revote, also check if mayor can break the tie
+    if (mayorAlive && mayorVote && tied.includes(mayorVote)) {
+      addLog(room, `Revote tied. Mayor's vote decided the outcome.`, `Revote tied. Mayor's vote decided the outcome.`);
+      resolveDayKill(room, mayorVote, broadcastRoom, io);
+      return;
+    }
     const randomPick = tied[Math.floor(Math.random() * tied.length)];
     resolveDayKill(room, randomPick, broadcastRoom, io);
   } else {

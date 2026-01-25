@@ -221,10 +221,6 @@ function setupSocketHandlers(
     }
     
     // Check win conditions and continue
-    const context =
-      room.phase === 'night' ? 'night' :
-      room.phase === 'day' ? 'day' :
-      'general';
     checkWinners(room);
     if (!room.winner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
       if (room.phase === 'day') {
@@ -504,7 +500,12 @@ function setupSocketHandlers(
     if (startNextHunterShot(room, (r) => broadcastRoom(r, io), io)) {
       return;
     }
-    if (!room.winner && !room.awaitingHunterShot) {
+    // After all hunter shots, check for mayor succession
+    const { startNextMayorSelection } = require('../managers/mayorManager');
+    if (startNextMayorSelection(room, (r: Room) => broadcastRoom(r, io), io)) {
+      return;
+    }
+    if (!room.winner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
       const transition =
         room.phase === 'night' ? 'nightToDay' :
         room.phase === 'day' ? 'dayToNight' :
