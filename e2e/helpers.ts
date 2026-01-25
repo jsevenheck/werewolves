@@ -406,6 +406,10 @@ export const advanceToDay = async (
       await host.waitForTimeout(200);
       continue;
     }
+    if (await tryClick(host.locator('#continue-mayor'))) {
+      await host.waitForTimeout(150);
+      continue;
+    }
     const hunterPage = await findHunterPromptPage(pages);
     if (hunterPage) {
       await submitHunterShot(hunterPage);
