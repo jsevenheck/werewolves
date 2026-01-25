@@ -3,6 +3,9 @@ import { addLog, clearRoomTimers, getPlayerRoleLabel } from '../utils/helpers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { NightDeathAnnouncement, Room } from '../../shared/types';
 
+const IS_E2E = process.env.E2E_TESTS === '1';
+const HUNTER_SHOT_TIMEOUT_MS = IS_E2E ? 100 : 60 * 1000;
+
 function queueDeath(room: Room, playerId: string, reason: string) {
   room.pendingDeaths.push({ playerId, reason });
 }
@@ -38,8 +41,7 @@ function startHunterShot(
     socket.emit('hunterPrompt', { roomCode: room.code });
   }
 
-  // Auto-skip hunter shot after 60 seconds if no response
-  const HUNTER_SHOT_TIMEOUT_MS = 60 * 1000;
+  // Auto-skip hunter shot after timeout if no response
   room.hunterShotTimer = setTimeout(() => {
     if (room.awaitingHunterShot === hunterId) {
       addLog(room, `Hunter shot timed out. No target selected.`);

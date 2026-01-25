@@ -4,6 +4,9 @@ import { schedulePhaseTransition } from './phaseManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { Room } from '../../shared/types';
 
+const IS_E2E = process.env.E2E_TESTS === '1';
+const MAYOR_SELECTION_TIMEOUT_MS = IS_E2E ? 100 : 60 * 1000;
+
 function shiftNextValidMayorSelector(room: Room) {
   while (room.mayorSelectionQueue.length) {
     const nextId = room.mayorSelectionQueue.shift();
@@ -35,8 +38,7 @@ function startMayorSelection(
     socket.emit('mayorPrompt', { roomCode: room.code });
   }
 
-  // Auto-select random alive player after 60 seconds if no response
-  const MAYOR_SELECTION_TIMEOUT_MS = 60 * 1000;
+  // Auto-select random alive player after timeout if no response
   room.mayorSelectionTimer = setTimeout(() => {
     if (room.awaitingMayorSelection === dyingMayorId) {
       const alivePlayers = Object.values(room.players).filter(p => p.alive);
