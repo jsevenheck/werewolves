@@ -194,6 +194,26 @@ const selectFirstOption = async (select: Locator) => {
   return false;
 };
 
+const selectFirstOptionAvoidingLabel = async (select: Locator, avoidLabel?: string | null) => {
+  const options = select.locator('option');
+  const count = await options.count();
+  if (count <= 1) {
+    return false;
+  }
+  if (!avoidLabel) {
+    await select.selectOption({ index: 1 });
+    return true;
+  }
+  for (let i = 1; i < count; i += 1) {
+    const text = (await options.nth(i).textContent())?.trim() || '';
+    if (text && text !== avoidLabel) {
+      await select.selectOption({ index: i });
+      return true;
+    }
+  }
+  return false;
+};
+
 const selectOptionByLabel = async (select: Locator, label?: string | null) => {
   if (!label) {
     return false;
@@ -214,9 +234,9 @@ const selectOptionByLabel = async (select: Locator, label?: string | null) => {
 const trySubmitNightActions = async (
   pages: Page[],
   submissionState: Map<Page, SubmissionState>,
-  options: { wolfTargetName?: string } = {}
+  options: { wolfTargetName?: string; avoidWolfTargetName?: string } = {}
 ) => {
-  const { wolfTargetName } = options;
+  const { wolfTargetName, avoidWolfTargetName } = options;
   let acted = false;
   for (const page of pages) {
     const state = submissionState.get(page) || { wolf: false, seer: false, witch: false, mayor: false };
@@ -227,8 +247,9 @@ const trySubmitNightActions = async (
         const select = wolfForm.locator('select[name="target"]');
         const picked = wolfTargetName
           ? await selectOptionByLabel(select, wolfTargetName)
-          : await selectFirstOption(select);
-        if (picked) {
+          : false;
+        const selected = picked || await selectFirstOptionAvoidingLabel(select, avoidWolfTargetName);
+        if (selected) {
           await wolfForm.locator('button[type="submit"]').click();
           state.wolf = true;
           acted = true;
@@ -480,9 +501,9 @@ const getPhaseText = async (page: Page) => {
 export const advanceToDay = async (
   host: Page,
   pages: Page[],
-  options: { allowHunterStop?: boolean; wolfTargetName?: string; mayorTargetName?: string } = {}
+  options: { allowHunterStop?: boolean; wolfTargetName?: string; avoidWolfTargetName?: string; mayorTargetName?: string } = {}
 ): Promise<AdvanceToDayResult> => {
-  const { allowHunterStop = false, wolfTargetName, mayorTargetName } = options;
+  const { allowHunterStop = false, wolfTargetName, avoidWolfTargetName, mayorTargetName } = options;
   const submissionState = new Map<Page, SubmissionState>();
   const dayReportSelector = 'h3:has-text("Night Report")';
   const gameOverSelector = 'h2:has-text("Game Over")';
@@ -516,7 +537,7 @@ export const advanceToDay = async (
       await host.waitForTimeout(200);
       continue;
     }
-    if (await trySubmitNightActions(pages, submissionState, { wolfTargetName })) {
+    if (await trySubmitNightActions(pages, submissionState, { wolfTargetName, avoidWolfTargetName })) {
       await host.waitForTimeout(200);
       continue;
     }

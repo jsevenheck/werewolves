@@ -14,6 +14,28 @@ import {
 
 type VotePlan = Record<string, string>;
 
+const getRoleName = async (page: Page) => {
+  const toggle = page.locator('#toggle-role');
+  await toggle.waitFor({ state: 'visible', timeout: 10000 });
+  const label = (await toggle.textContent())?.toLowerCase() || '';
+  if (label.includes('reveal')) {
+    await toggle.click();
+  }
+  const roleLabel = page.locator('.role-card strong');
+  await roleLabel.waitFor({ state: 'visible', timeout: 5000 });
+  return (await roleLabel.textContent())?.trim() || '';
+};
+
+const pickNonWolfMayor = async (pages: Page[], names: string[]) => {
+  for (let i = 0; i < pages.length; i += 1) {
+    const roleName = await getRoleName(pages[i]);
+    if (roleName.toLowerCase() !== 'werewolf') {
+      return names[i];
+    }
+  }
+  throw new Error('No non-werewolf candidate found for mayor election.');
+};
+
 const submitMayorVotes = async (pages: Page[], names: string[], votePlan: VotePlan) => {
   for (const page of pages) {
     const playerName = names[pages.indexOf(page)];
@@ -268,7 +290,6 @@ test('dying mayor selects successor', async ({ browser }) => {
   const names = ['Host', 'Player2', 'Player3', 'Player4', 'Player5'];
   const { contexts, pages } = await createLobbyWithPlayers(browser, names);
   const [host] = pages;
-  const mayorName = names[1];
 
   try {
     await configureRoles(host, {
@@ -281,10 +302,11 @@ test('dying mayor selects successor', async ({ browser }) => {
     });
 
     await startGameAndReady(pages);
+    const mayorName = await pickNonWolfMayor(pages, names);
 
     // Advance to day
     await advanceToDay(host, pages, {
-      wolfTargetName: names[2],
+      avoidWolfTargetName: mayorName,
       mayorTargetName: mayorName
     });
 
@@ -329,7 +351,6 @@ test('host can skip mayor selection', async ({ browser }) => {
   const names = ['Host', 'Player2', 'Player3', 'Player4', 'Player5'];
   const { contexts, pages } = await createLobbyWithPlayers(browser, names);
   const [host] = pages;
-  const mayorName = names[1];
 
   try {
     await configureRoles(host, {
@@ -342,10 +363,11 @@ test('host can skip mayor selection', async ({ browser }) => {
     });
 
     await startGameAndReady(pages);
+    const mayorName = await pickNonWolfMayor(pages, names);
 
     // Advance to day
     await advanceToDay(host, pages, {
-      wolfTargetName: names[2],
+      avoidWolfTargetName: mayorName,
       mayorTargetName: mayorName
     });
 
