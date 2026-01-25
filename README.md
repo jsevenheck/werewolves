@@ -7,8 +7,11 @@ Run a multiplayer Werewolf/Mafia party game in the browser with no human moderat
 - Private roles per device, werewolf team awareness, and lover linking.
 - Day/night phases with voting and role actions.
 - Joker instant win on day vote; Hunter shot on death.
+- Mayor election with tie-breaking and succession on death.
 - Reconnect support and mobile-friendly UI.
 - Acting host handoff on disconnect, plus skip controls for blocked armor/night steps.
+- Automatic timeouts (60s) for hunter shots and mayor succession to prevent game stalls.
+- Automatic room cleanup (24h idle, 1h after game ends) to prevent memory leaks.
 - Full TypeScript codebase with type-safe Socket.IO events and shared types.
 - Vite-powered client development with hot module replacement.
 

@@ -28,7 +28,7 @@
 - `mayorId`: playerId of the current Mayor (null before election).
 - `awaitingMayorSelection`: playerId awaiting a mayor succession pick, or null.
 - `mayorSelectionQueue`: queue of mayor succession prompts.
-- `mayorSelectionTimer`: timeout for mayor succession.
+- `mayorSelectionTimer`: timeout for mayor succession (60 seconds; auto-selects random alive player on timeout).
 - `lovers`: `{aId, bId}` or null.
 - `witchState`: `{healAvailable: boolean, poisonAvailable: boolean}`.
 - `wolfVotes`: map playerId -> targetId (null for no vote).
@@ -38,9 +38,13 @@
 - `logs`: array of structured entries for UI recap (`{ts, text, publicText}`).
 - `lastNightDeaths`: array of `{name, role}` announced in the day report.
 - `awaitingHunterShot`: playerId awaiting a hunter shot, or null.
+- `hunterShotTimer`: timeout for hunter shot (60 seconds; auto-skips if no target selected).
+- `hunterShotQueue`: queue of hunter death events awaiting shot prompts.
 - `phaseTransition`: pending phase transition kind (`postReveal`, `postMayor`, `postArmor`, `nightToDay`, `dayToNight`) or null.
 - `nextNightStep`: when `phaseStep` is `transition`, the next step to enter.
 - `winner`: `{team: 'village' | 'wolves' | 'joker', reason}` when ended.
+- `createdAt`: timestamp when room was created.
+- `lastActivityAt`: timestamp of last room activity (updated on each broadcast; used for automatic cleanup).
 
 ## Phase Engine Pseudocode
 
@@ -106,7 +110,8 @@ resolveDeaths():
     if already dead continue
     mark dead, append log
     set public log to reveal victim + role only
-    if role is hunter -> request shot target immediately
+    if role is hunter -> add to hunterShotQueue and start hunter shot prompt (60s timeout)
+    if player is mayorId -> add to mayorSelectionQueue and start mayor succession prompt (60s timeout)
     if player is lover -> enqueue other lover death reason='died of heartbreak'
   after queue empty check win conditions:
     if all wolves dead -> endGame('village', 'All wolves dead')
@@ -115,6 +120,14 @@ resolveDeaths():
 HunterShot(targetId):
   enqueue death for target
   resolveDeaths()
+  if no response within 60 seconds:
+    auto-skip hunter shot and resume game flow
+
+MayorSuccession(newMayorId):
+  set mayorId to newMayorId
+  resume game flow
+  if no response within 60 seconds:
+    randomly select an alive player as new mayor and resume game flow
 
 onPlayerDisconnect(playerId):
   mark connected=false; keep state for reconnection
@@ -124,4 +137,14 @@ onPlayerResume(roomCode, playerId, resumeToken):
   if resumeToken missing or mismatched -> reject
   mark connected=true
   if player is original host -> set acting host back to owner
+
+## Room Lifecycle & Cleanup
+
+Rooms are automatically cleaned up to prevent memory leaks:
+- **Ended games**: Deleted 1 hour after the game ends (phase='ended')
+- **Idle rooms**: Deleted after 24 hours of inactivity if:
+  - Room is still in lobby phase, OR
+  - All players are disconnected
+- **Activity tracking**: `lastActivityAt` timestamp updates on every room broadcast
+- **Cleanup interval**: Runs every hour to check and remove stale rooms
 ```

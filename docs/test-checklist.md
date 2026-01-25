@@ -2,6 +2,10 @@
 
 - **Armor assignment & lover notification**: Host starts a game where Armor is alive; confirm Armor screen appears once, picks two players, and both see Lover name in their role card while everyone else sees a waiting message.
 - **Lovers death link**: Create Lovers pair, then (a) vote one Lover out, (b) kill one at night via Werewolves or Witch poison, and (c) let Hunter shoot one; each time ensure the partner dies immediately with "died of heartbreak" log and that chained deaths still trigger Hunter/Joker logic correctly.
+- **Hunter shot timeout**: When a Hunter dies but doesn't select a target within 60 seconds, verify the game auto-skips the hunter shot and continues normally.
+- **Mayor succession**: When the Mayor dies, verify the dying mayor receives a prompt to select a successor. Test both manual selection and 60-second timeout (which randomly selects an alive player).
+- **Mayor succession timeout**: When mayor dies but doesn't select a successor within 60 seconds, verify a random alive player is automatically selected as the new mayor and the game continues.
+- **Mayor tie-breaking in day votes**: During a day vote tie, if the mayor voted for one of the tied candidates, verify the mayor's vote breaks the tie. If the mayor didn't vote for a tied candidate, verify a revote is triggered.
 - **Event log visibility**: While alive, verify logs and night report show victim + role but do not reveal the killer. After death, confirm full log details are visible.
 - **Joker voted out**: Configure a Joker, run a day vote that eliminates them, and verify the game ends instantly with Joker win before Lovers or Hunter effects continue.
 - **Hunter dies via Lovers link**: Make Hunter a Lover partner, kill the other Lover (any method), and ensure Hunter still receives the last-shot overlay even though death came from heartbreak.
