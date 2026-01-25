@@ -433,6 +433,14 @@ export const advanceToDay = async (
       await host.waitForTimeout(150);
       continue;
     }
+    if (await tryClick(host.locator('#skip-mayor-selection'))) {
+      await host.waitForTimeout(150);
+      continue;
+    }
+    if (await tryClick(host.locator('#skip-hunter-shot'))) {
+      await host.waitForTimeout(150);
+      continue;
+    }
     await host.waitForTimeout(200);
   }
   const finalDayPage = await findVisiblePage(pages, dayReportSelector);
@@ -482,4 +490,87 @@ export const closeContexts = async (contexts: Array<Awaited<ReturnType<Browser['
       // Ignore contexts already closed during test teardown.
     }
   }
+};
+
+export const findMayorPromptPage = async (pages: Page[]) => {
+  for (const page of pages) {
+    const overlay = page.locator('#mayor-overlay');
+    if (await overlay.count()) {
+      return page;
+    }
+    const form = page.locator('#mayor-form');
+    if (await form.count()) {
+      return page;
+    }
+  }
+  return null;
+};
+
+export const submitMayorSelection = async (page: Page, targetName?: string) => {
+  await page.waitForSelector('#mayor-form', { state: 'attached' });
+  const select = page.locator('#mayor-form select[name="target"]');
+  if (targetName) {
+    await selectOptionByLabel(select, targetName);
+  } else {
+    const optionCount = await select.locator('option').count();
+    if (optionCount > 1) {
+      await select.selectOption({ index: 1 });
+    }
+  }
+  await page.click('#mayor-form button[type="submit"]', { force: true });
+  await page.locator('#mayor-overlay').waitFor({ state: 'detached', timeout: 5000 });
+};
+
+export const ensureMayorOverlay = async (page: Page, roomCode?: string) => {
+  const overlay = page.locator('#mayor-overlay');
+  const firstTry = await overlay
+    .waitFor({ state: 'attached', timeout: 8000 })
+    .then(() => true)
+    .catch(() => false);
+  if (firstTry) {
+    return true;
+  }
+  await page.reload();
+  if (roomCode) {
+    const resumeBtn = page.locator('#resume-btn');
+    const hasResume = await resumeBtn
+      .waitFor({ state: 'visible', timeout: 5000 })
+      .then(() => true)
+      .catch(() => false);
+    if (hasResume) {
+      await resumeBtn.click();
+      await page.waitForSelector(`text=Room ${roomCode}`, { timeout: 10000 });
+    }
+  }
+  return overlay
+    .waitFor({ state: 'attached', timeout: 8000 })
+    .then(() => true)
+    .catch(() => false);
+};
+
+export const getMayorName = async (page: Page) => {
+  const mayorBadge = page.locator('.player-card:has(.tag:has-text("Mayor")) strong');
+  const count = await mayorBadge.count();
+  if (count > 0) {
+    return mayorBadge.first().textContent();
+  }
+  return null;
+};
+
+export const waitForMayorSelectionPending = async (pages: Page[], timeout = 10000) => {
+  const startTime = Date.now();
+  while (Date.now() - startTime < timeout) {
+    for (const page of pages) {
+      const overlay = page.locator('#mayor-overlay');
+      if (await overlay.count()) {
+        return page;
+      }
+      const pendingPanel = page.locator('h2:has-text("Awaiting Mayor Selection")');
+      if (await pendingPanel.count()) {
+        return page;
+      }
+    }
+    await pages[0].waitForTimeout(200);
+  }
+  return null;
 };

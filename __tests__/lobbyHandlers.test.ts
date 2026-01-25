@@ -51,6 +51,7 @@ describe('lobby handlers', () => {
       roleConfig: { werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 0 },
       mayorId: null,
       awaitingMayorSelection: false,
+      mayorSelectionPending: false,
       loversKnown: false,
       loversAssigned: false,
       loverName: null,
@@ -66,6 +67,7 @@ describe('lobby handlers', () => {
       lastDayDeaths: [],
       lastDayMessage: null,
       awaitingHunterShot: false,
+      hunterShotPending: false,
       winner: null,
       logs: [],
       self: null
@@ -110,6 +112,7 @@ describe('lobby handlers', () => {
       roleConfig: { werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 0 },
       mayorId: null,
       awaitingMayorSelection: false,
+      mayorSelectionPending: false,
       loversKnown: false,
       loversAssigned: false,
       loverName: null,
@@ -125,6 +128,7 @@ describe('lobby handlers', () => {
       lastDayDeaths: [],
       lastDayMessage: null,
       awaitingHunterShot: false,
+      hunterShotPending: false,
       winner: null,
       logs: [],
       self: null

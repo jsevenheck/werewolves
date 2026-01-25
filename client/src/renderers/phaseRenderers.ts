@@ -330,6 +330,39 @@ function renderVoteConfirmation(room: RoomView, votedValue: string | null) {
   return `<p style="color:#4ade80;">Vote submitted: ${name}.</p>${countNote}`;
 }
 
+function renderPendingActionsPanel(room: RoomView) {
+  const isHost = room.hostId === state.playerId;
+  const panels: string[] = [];
+
+  if (room.mayorSelectionPending && !room.awaitingMayorSelection) {
+    const skipButton = isHost
+      ? '<button id="skip-mayor-selection" type="button">Skip Mayor Selection</button>'
+      : '';
+    panels.push(`
+      <section class="panel">
+        <h2>Awaiting Mayor Selection</h2>
+        <p>The dying Mayor is selecting their successor...</p>
+        ${skipButton}
+      </section>
+    `);
+  }
+
+  if (room.hunterShotPending && !room.awaitingHunterShot) {
+    const skipButton = isHost
+      ? '<button id="skip-hunter-shot" type="button">Skip Hunter Shot</button>'
+      : '';
+    panels.push(`
+      <section class="panel">
+        <h2>Awaiting Hunter's Shot</h2>
+        <p>The Hunter is choosing their final target...</p>
+        ${skipButton}
+      </section>
+    `);
+  }
+
+  return panels.join('');
+}
+
 export {
   renderLobbySection,
   renderRoleRevealSection,
@@ -337,5 +370,6 @@ export {
   renderArmorSection,
   renderNightSection,
   renderDaySection,
-  renderRoleRevealList
+  renderRoleRevealList,
+  renderPendingActionsPanel
 };

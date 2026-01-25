@@ -160,6 +160,7 @@ export interface RoomView {
   roleConfig: RoleConfig;
   mayorId: string | null;
   awaitingMayorSelection: boolean;
+  mayorSelectionPending: boolean;
   loversKnown: boolean;
   loversAssigned: boolean;
   loverName: string | null;
@@ -175,6 +176,7 @@ export interface RoomView {
   lastDayDeaths: NightDeathAnnouncement[];
   lastDayMessage: string | null;
   awaitingHunterShot: boolean;
+  hunterShotPending: boolean;
   winner: Winner | null;
   logs: RoomViewLog[];
   self: RoomViewSelf | null;

@@ -31,6 +31,22 @@ function bindPhaseHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
     });
   }
 
+  // Handle host skip button for pending mayor selection
+  if (room.mayorSelectionPending && room.hostId === state.playerId) {
+    document.getElementById('skip-mayor-selection')?.addEventListener('click', () => {
+      if (!state.playerId) return;
+      socket.emit('hostSkipStep', { roomCode: room.code, playerId: state.playerId });
+    });
+  }
+
+  // Handle host skip button for pending hunter shot
+  if (room.hunterShotPending && room.hostId === state.playerId) {
+    document.getElementById('skip-hunter-shot')?.addEventListener('click', () => {
+      if (!state.playerId) return;
+      socket.emit('hostSkipStep', { roomCode: room.code, playerId: state.playerId });
+    });
+  }
+
   if (room.phase === 'lobby') {
     bindLobbyHandlers(socket, room);
   } else if (room.phase === 'roleReveal') {

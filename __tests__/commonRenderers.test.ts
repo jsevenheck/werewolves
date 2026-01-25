@@ -48,6 +48,7 @@ describe('commonRenderers narrator label', () => {
       },
       mayorId: null,
       awaitingMayorSelection: false,
+      mayorSelectionPending: false,
       loversKnown: false,
       loversAssigned: false,
       loverName: null,
@@ -68,6 +69,7 @@ describe('commonRenderers narrator label', () => {
       lastDayDeaths: [],
       lastDayMessage: null,
       awaitingHunterShot: false,
+      hunterShotPending: false,
       winner: null,
       logs: [],
       self: null
