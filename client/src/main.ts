@@ -5,12 +5,13 @@ import { renderHeader, renderPlayersPanel, renderLogsPanel } from './renderers/c
 import {
   renderLobbySection,
   renderRoleRevealSection,
+  renderMayorSection,
   renderArmorSection,
   renderNightSection,
   renderDaySection,
   renderRoleRevealList
 } from './renderers/phaseRenderers';
-import { bindCommonHandlers, updateHunterOverlay } from './handlers/commonHandlers';
+import { bindCommonHandlers, updateHunterOverlay, updateMayorOverlay } from './handlers/commonHandlers';
 import { bindLandingHandlers, enterRoom } from './handlers/landingHandlers';
 import { bindPhaseHandlers } from './handlers/phaseHandlers';
 import { escapeHtml, notify } from './utils/helpers';
@@ -21,6 +22,7 @@ import type { RoomView, StoredSession } from '@shared/types';
 import {
   PHASE_DELAY_MS,
   POST_REVEAL_DELAY_MS,
+  POST_MAYOR_DELAY_MS,
   POST_ARMOR_DELAY_MS
 } from '@shared/constants';
 import type { EnterRoomParams } from './handlers/landingHandlers';
@@ -89,6 +91,11 @@ socket.on('hunterPrompt', () => {
   renderApp();
 });
 
+socket.on('mayorPrompt', () => {
+  state.mayorPrompt = true;
+  renderApp();
+});
+
 socket.on('wolfVoteRejected', (payload) => {
   if (payload.reason === 'already_voted') {
     notify('You already voted.');
@@ -115,6 +122,7 @@ function renderApp() {
     return;
   }
   state.hunterPrompt = !!state.room.awaitingHunterShot;
+  state.mayorPrompt = !!state.room.awaitingMayorSelection;
   if (state.room.phase !== 'day') {
     state.pendingVote = undefined;
   }
@@ -131,6 +139,7 @@ function renderApp() {
   bindCommonHandlers(socket, renderApp, renderLandingPage, clearSession);
   bindPhaseHandlers(socket, renderApp);
   updateHunterOverlay(socket);
+  updateMayorOverlay(socket);
 }
 
 function shouldDeferRoomRender(room: RoomView) {
@@ -221,6 +230,8 @@ function renderPhaseSection(room: RoomView) {
       return renderLobbySection(room);
     case 'roleReveal':
       return renderRoleRevealSection(room);
+    case 'mayor':
+      return renderMayorSection(room);
     case 'armor':
       return renderArmorSection(room, self);
     case 'night':

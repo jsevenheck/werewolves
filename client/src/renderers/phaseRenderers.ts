@@ -74,6 +74,22 @@ function renderRoleRevealSection(room: RoomView) {
   `;
 }
 
+function renderMayorSection(room: RoomView) {
+  const mayorPlayer = room.mayorId ? room.players.find((p) => p.id === room.mayorId) : null;
+  const mayorName = mayorPlayer ? mayorPlayer.name : 'Unknown';
+  const hostControls = room.hostId === state.playerId
+    ? '<div class="actions host-actions"><button id="continue-mayor" type="button">Continue</button></div>'
+    : '';
+  return `
+    <section class="panel">
+      <h2>Mayor Selected</h2>
+      <p><strong>${escapeHtml(mayorName)}</strong> has been selected as the Mayor!</p>
+      <p>The Mayor's vote will break ties during day voting.</p>
+      ${hostControls}
+    </section>
+  `;
+}
+
 function renderArmorSection(room: RoomView, self: RoomViewSelf | null) {
   const hostControls = room.hostId === state.playerId
     ? '<div class="actions host-actions"><button id="skip-armor" type="button">Skip armor step</button></div>'
@@ -317,6 +333,7 @@ function renderVoteConfirmation(room: RoomView, votedValue: string | null) {
 export {
   renderLobbySection,
   renderRoleRevealSection,
+  renderMayorSection,
   renderArmorSection,
   renderNightSection,
   renderDaySection,

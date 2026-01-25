@@ -70,12 +70,14 @@ function renderPlayersPanel() {
     const roleKey = player.role;
     const roleDetail = roleKey ? ROLE_DETAILS[roleKey] : undefined;
     const roleLabel = roleDetail?.name || (roleKey || '');
+    const isMayor = room.mayorId === player.id;
 
     return `
     <div class="player-card ${player.alive ? '' : 'dead'}">
       <strong>${escapeHtml(player.name)}</strong>
       <div style="margin-top:.35rem;font-size:.9rem;display:flex;flex-wrap:wrap;gap:.35rem;">
         ${player.isHost ? '<span class="tag">Host</span>' : ''}
+        ${isMayor ? '<span class="tag" style="border-color:#fbbf24;color:#fbbf24;">Mayor</span>' : ''}
         ${!player.connected ? '<span class="tag" style="border-color:#fbbf24;color:#fbbf24;">Disconnected</span>' : ''}
         ${(!player.alive || room.phase === 'ended') && roleKey ? `<span class="tag" style="border-color:#38bdf8;color:#38bdf8;">${roleLabel}</span>` : ''}
       </div>

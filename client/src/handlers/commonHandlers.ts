@@ -120,6 +120,7 @@ function resetState() {
   state.playerName = '';
   state.resumeToken = '';
   state.hunterPrompt = false;
+  state.mayorPrompt = false;
   state.pendingVote = undefined;
   state.pendingWolfVote = undefined;
   state.roleVisible = false;
@@ -179,4 +180,55 @@ function updateHunterOverlay(socket: Socket<ServerToClientEvents, ClientToServer
   });
 }
 
-export { bindCommonHandlers, updateHunterOverlay };
+function updateMayorOverlay(socket: Socket<ServerToClientEvents, ClientToServerEvents>) {
+  const existing = document.getElementById('mayor-overlay');
+  if (!state.room?.awaitingMayorSelection) {
+    existing?.remove();
+    state.mayorPrompt = false;
+    return;
+  }
+  if (!state.room) return;
+
+  existing?.remove();
+  const wrapper = document.createElement('div');
+  wrapper.id = 'mayor-overlay';
+  wrapper.className = 'mayor-overlay';
+
+  const room = state.room;
+  if (!room || !Array.isArray(room.players)) {
+    return;
+  }
+
+  const targets = room.players.filter((player) => player.alive);
+  const options = targets.map((player) => `<option value="${player.id}">${escapeHtml(player.name)}</option>`).join('');
+  wrapper.innerHTML = `
+    <div class="panel">
+      <h2>Select New Mayor</h2>
+      <p>As the dying Mayor, you must select your successor.</p>
+      <form id="mayor-form" class="actions">
+        <label>
+          <span>Choose the new Mayor</span>
+          <select name="target" required>
+            <option value="">Select player</option>
+            ${options}
+          </select>
+        </label>
+        <button type="submit">Appoint Mayor</button>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(wrapper);
+  const form = document.getElementById('mayor-form') as HTMLFormElement | null;
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!form) return;
+    const data = new FormData(form);
+    const targetId = data.get('target');
+    if (!targetId || !state.room || !state.playerId) return;
+    socket.emit('selectMayor', { roomCode: state.roomCode, playerId: state.playerId, targetId: String(targetId) });
+    state.mayorPrompt = false;
+    wrapper.remove();
+  });
+}
+
+export { bindCommonHandlers, updateHunterOverlay, updateMayorOverlay };

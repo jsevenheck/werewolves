@@ -8,6 +8,7 @@ type GameState = {
   playerName: string;
   resumeToken: string;
   hunterPrompt: boolean;
+  mayorPrompt: boolean;
   storedSession: StoredSession | null;
   roleVisible: boolean;
   pendingVote: string | null | undefined;
@@ -23,6 +24,7 @@ const state: GameState = {
   playerName: '',
   resumeToken: '',
   hunterPrompt: false,
+  mayorPrompt: false,
   storedSession: null,
   roleVisible: false,
   pendingVote: undefined,

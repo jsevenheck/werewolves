@@ -35,6 +35,13 @@ function bindPhaseHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
     bindLobbyHandlers(socket, room);
   } else if (room.phase === 'roleReveal') {
     bindRoleRevealHandlers(socket, room);
+  } else if (room.phase === 'mayor') {
+    if (room.hostId === state.playerId) {
+      document.getElementById('continue-mayor')?.addEventListener('click', () => {
+        if (!state.playerId) return;
+        socket.emit('selectMayor', { roomCode: room.code, playerId: state.playerId, targetId: '' });
+      });
+    }
   } else if (room.phase === 'armor') {
     if (room.hostId === state.playerId) {
       document.getElementById('skip-armor')?.addEventListener('click', () => {
