@@ -23,10 +23,9 @@ app.use(express.static(staticDir));
 app.get('/health', (_, res) => res.json({ ok: true }));
 
 server.listen(PORT, () => {
-  console.log(`Werewolves server running on http://localhost:${PORT}`);
+  // Server started on PORT
 });
 
 io.on('connection', (socket) => {
-  console.log('client connected', socket.id);
   setupSocketHandlers(io, socket);
 });

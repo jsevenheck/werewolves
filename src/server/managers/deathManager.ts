@@ -52,7 +52,18 @@ function startHunterShot(
         checkWinners(room);
         if (!room.winner) {
           const { startNextMayorSelection } = require('./mayorManager');
-          startNextMayorSelection(room, broadcastRoom, io);
+          if (!startNextMayorSelection(room, broadcastRoom, io)) {
+            // No more mayor selections either, resume game flow
+            const { schedulePhaseTransition, holdDayToNightTransition } = require('../managers/phaseManager');
+            if (!room.awaitingHunterShot && !room.awaitingMayorSelection) {
+              if (room.phase === 'day') {
+                holdDayToNightTransition(room, broadcastRoom);
+              } else if (room.phase === 'night' && room.phaseStep === 'resolve') {
+                // Resume night->day transition after hunter shot during night
+                schedulePhaseTransition(room, 'nightToDay', broadcastRoom);
+              }
+            }
+          }
         }
       }
       broadcastRoom(room);

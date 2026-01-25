@@ -106,13 +106,11 @@ function cleanupIdleRooms() {
 
   roomsToDelete.forEach(code => deleteRoom(code));
 
-  if (roomsToDelete.length > 0) {
-    console.log(`Cleaned up ${roomsToDelete.length} idle room(s)`);
-  }
+  // Cleaned up idle rooms (if any)
 }
 
-// Start periodic cleanup
-setInterval(cleanupIdleRooms, CLEANUP_INTERVAL_MS);
+// Start periodic cleanup (unref to prevent test hanging)
+setInterval(cleanupIdleRooms, CLEANUP_INTERVAL_MS).unref();
 
 export {
   createRoom,
