@@ -96,6 +96,9 @@ describe('nightManager', () => {
   test('handleWitchDecision uses heal potion and advances', () => {
     const room = makeRoom();
     room.wolfTarget = 'v1';
+    room.players = {
+      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+    };
 
     handleWitchDecision(room, 'w1', 'heal', null, jest.fn(), undefined as never);
 
