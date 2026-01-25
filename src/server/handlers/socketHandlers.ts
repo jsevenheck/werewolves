@@ -549,6 +549,10 @@ function setupSocketHandlers(
     room.phase = 'lobby';
     room.phaseStep = null;
     room.dayCount = 0;
+    room.mayorId = null;
+    room.awaitingMayorSelection = null;
+    room.mayorSelectionQueue = [];
+    room.mayorSelectionTimer = null;
     room.lovers = null;
     room.witchState = { healAvailable: true, poisonAvailable: true };
     room.wolfVotes = {};

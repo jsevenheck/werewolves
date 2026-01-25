@@ -10,9 +10,9 @@ Each file is triggered by the game phase, phase transition, or night step as des
 - postReveal.mp3
   - Transition after role reveal (e.g. "the village falls asleep") before mayor selection.
 - mayor.mp3
-  - Mayor phase while the Mayor is announced to all players.
+  - Mayor election phase while players vote for the first Mayor.
 - postMayor.mp3
-  - Transition after Mayor announcement before armor or night.
+  - Transition after the Mayor election before armor or night.
 - armor.mp3
   - Armor phase while the Armor chooses Lovers.
 - postArmor.mp3
