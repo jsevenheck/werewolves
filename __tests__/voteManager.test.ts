@@ -76,6 +76,32 @@ describe('voteManager', () => {
     expect(room.logs[room.logs.length - 1].text).toBe('Vote tied. Revote among highlighted players.');
   });
 
+  test('tryResolveDayVote logs random selection on revote tie', () => {
+    const players = {
+      a: buildPlayer({ id: 'a', alive: true, name: 'Alpha' }),
+      b: buildPlayer({ id: 'b', alive: true, name: 'Beta' }),
+      c: buildPlayer({ id: 'c', alive: true, name: 'Charlie' }),
+      d: buildPlayer({ id: 'd', alive: true, name: 'Delta' })
+    };
+    const room = makeRoom(players);
+    room.voteState.revoteFromTie = ['b', 'c'];
+    room.voteState.votes = { a: 'b', b: 'c', c: 'b', d: 'c' };
+    const broadcastRoom = jest.fn();
+    const resolveSpy = jest.spyOn(require('../src/server/managers/voteManager'), 'resolveDayKill')
+      .mockImplementation(() => {});
+    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
+
+    try {
+      tryResolveDayVote(room, broadcastRoom, undefined as never);
+    } finally {
+      resolveSpy.mockRestore();
+      randomSpy.mockRestore();
+    }
+
+    const hasLog = room.logs.some((entry) => entry.text === 'Vote tied again. Randomly selected Beta.');
+    expect(hasLog).toBe(true);
+  });
+
   test('tryResolveDayVote skips elimination on majority abstain', () => {
     const players = {
       a: buildPlayer({ id: 'a', alive: true }),
