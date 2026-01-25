@@ -148,22 +148,11 @@ function resolveNightStep(room: Room, nextStep: NightStep): NightStep {
 }
 
 function advanceFromReveal(room: Room, broadcastRoom: (room: Room) => void) {
-  // Mayor phase: select initial mayor from all alive players
   room.phase = 'mayor';
   room.phaseStep = null;
-  
-  // Select initial mayor randomly from alive players
-  const alivePlayers = Object.values(room.players).filter((p) => p.alive);
-  if (alivePlayers.length > 0) {
-    const randomIndex = Math.floor(Math.random() * alivePlayers.length);
-    room.mayorId = alivePlayers[randomIndex].id;
-    const mayor = room.players[room.mayorId];
-    addLog(room, `${mayor.name} has been selected as the Mayor.`, `${mayor.name} has been selected as the Mayor.`);
-  } else {
-    // Edge case: no alive players (shouldn't happen in normal gameplay)
-    addLog(room, 'No mayor could be selected - no alive players.');
-  }
-  
+  room.mayorId = null;
+  room.voteState = createVoteState();
+  addLog(room, 'Mayor election begins.');
   broadcastRoom(room);
 }
 

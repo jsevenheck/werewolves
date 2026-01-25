@@ -1,6 +1,6 @@
 import { expect, type Browser, type Locator, type Page } from '@playwright/test';
 
-type NightSubmissionState = { wolf: boolean; seer: boolean; witch: boolean };
+type SubmissionState = { wolf: boolean; seer: boolean; witch: boolean; mayor: boolean };
 
 export type RoleConfig = {
   werewolf: number;
@@ -194,13 +194,13 @@ const selectOptionByLabel = async (select: Locator, label?: string | null) => {
 
 const trySubmitNightActions = async (
   pages: Page[],
-  submissionState: Map<Page, NightSubmissionState>,
+  submissionState: Map<Page, SubmissionState>,
   options: { wolfTargetName?: string } = {}
 ) => {
   const { wolfTargetName } = options;
   let acted = false;
   for (const page of pages) {
-    const state = submissionState.get(page) || { wolf: false, seer: false, witch: false };
+    const state = submissionState.get(page) || { wolf: false, seer: false, witch: false, mayor: false };
 
     const wolfForm = page.locator('#wolf-form');
     if ((await wolfForm.count()) && (await wolfForm.isVisible())) {
@@ -247,6 +247,76 @@ const trySubmitNightActions = async (
     submissionState.set(page, state);
   }
   return acted;
+};
+
+const trySubmitMayorVotes = async (
+  pages: Page[],
+  submissionState: Map<Page, SubmissionState>,
+  options: { mayorTargetName?: string } = {}
+) => {
+  const { mayorTargetName } = options;
+  let acted = false;
+  for (const page of pages) {
+    const state = submissionState.get(page) || { wolf: false, seer: false, witch: false, mayor: false };
+    try {
+      const form = page.locator('#mayor-vote-form');
+      if ((await form.count()) && (await form.isVisible())) {
+        if (!state.mayor) {
+        const select = form.locator('select[name="target"]');
+        const picked = mayorTargetName
+          ? await selectOptionByLabel(select, mayorTargetName)
+          : false;
+        if (mayorTargetName && !picked) {
+          continue;
+        }
+        const selected = picked || (await selectFirstOption(select));
+        if (!selected) {
+          continue;
+        }
+          await form.locator('button[type="submit"]').click();
+          state.mayor = true;
+          acted = true;
+        }
+      } else {
+        state.mayor = false;
+      }
+      submissionState.set(page, state);
+    } catch {
+      // Ignore closed pages.
+    }
+  }
+  return acted;
+};
+
+export const completeMayorElection = async (
+  host: Page,
+  pages: Page[],
+  options: { mayorTargetName?: string } = {}
+) => {
+  const submissionState = new Map<Page, SubmissionState>();
+  const deadline = Date.now() + 15000;
+  let formSeen = false;
+  while (Date.now() < deadline) {
+    const formVisible = await host
+      .locator('#mayor-vote-form')
+      .isVisible()
+      .catch(() => false);
+    if (formVisible) {
+      formSeen = true;
+    }
+    if (formSeen && !formVisible) {
+      return;
+    }
+    if (formVisible) {
+      const acted = await trySubmitMayorVotes(pages, submissionState, options);
+      if (!acted) {
+        await host.waitForTimeout(200);
+      }
+      continue;
+    }
+    await host.waitForTimeout(200);
+  }
+  throw new Error('Mayor election did not resolve in time.');
 };
 
 const trySubmitArmor = async (pages: Page[]) => {
@@ -391,10 +461,10 @@ const getPhaseText = async (page: Page) => {
 export const advanceToDay = async (
   host: Page,
   pages: Page[],
-  options: { allowHunterStop?: boolean; wolfTargetName?: string } = {}
+  options: { allowHunterStop?: boolean; wolfTargetName?: string; mayorTargetName?: string } = {}
 ): Promise<AdvanceToDayResult> => {
-  const { allowHunterStop = false, wolfTargetName } = options;
-  const submissionState = new Map<Page, NightSubmissionState>();
+  const { allowHunterStop = false, wolfTargetName, mayorTargetName } = options;
+  const submissionState = new Map<Page, SubmissionState>();
   const dayReportSelector = 'h3:has-text("Night Report")';
   const gameOverSelector = 'h2:has-text("Game Over")';
   let hunterShot = false;
@@ -408,12 +478,12 @@ export const advanceToDay = async (
     if (await findVisiblePage(pages, gameOverSelector)) {
       return { hunterShot, gameOver: true, dayVisible: false };
     }
-    if (await trySubmitArmor(pages)) {
+    if (await trySubmitMayorVotes(pages, submissionState, { mayorTargetName })) {
       await host.waitForTimeout(200);
       continue;
     }
-    if (await tryClick(host.locator('#continue-mayor'))) {
-      await host.waitForTimeout(150);
+    if (await trySubmitArmor(pages)) {
+      await host.waitForTimeout(200);
       continue;
     }
     const hunterPage = await findHunterPromptPage(pages);

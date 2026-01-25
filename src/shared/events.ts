@@ -11,6 +11,8 @@ export interface ClientToServerEvents {
   startGame: (payload: { roomCode: string; playerId: string }, cb?: (response: OkResponse | ErrorResponse) => void) => void;
   markReady: (payload: { roomCode: string; playerId: string }, cb?: (response: OkResponse | ErrorResponse) => void) => void;
   continueAfterReveal: (payload: { roomCode: string; playerId: string }) => void;
+  submitMayorVote: (payload: { roomCode: string; playerId: string; targetId: string }) => void;
+  hostFinalizeMayorVote: (payload: { roomCode: string; playerId: string }) => void;
   selectMayor: (payload: { roomCode: string; playerId: string; targetId: string }) => void;
   submitArmor: (payload: { roomCode: string; playerId: string; targets: [string, string] }) => void;
   submitWolfVote: (payload: { roomCode: string; playerId: string; targetId?: string | null }) => void;

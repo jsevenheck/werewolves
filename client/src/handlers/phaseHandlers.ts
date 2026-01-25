@@ -53,11 +53,12 @@ function bindPhaseHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
     bindRoleRevealHandlers(socket, room);
   } else if (room.phase === 'mayor') {
     if (room.hostId === state.playerId) {
-      document.getElementById('continue-mayor')?.addEventListener('click', () => {
+      document.getElementById('end-mayor-vote-btn')?.addEventListener('click', () => {
         if (!state.playerId) return;
-        socket.emit('selectMayor', { roomCode: room.code, playerId: state.playerId, targetId: '' });
+        socket.emit('hostFinalizeMayorVote', { roomCode: room.code, playerId: state.playerId });
       });
     }
+    bindMayorHandlers(socket, room, renderApp);
   } else if (room.phase === 'armor') {
     if (room.hostId === state.playerId) {
       document.getElementById('skip-armor')?.addEventListener('click', () => {
@@ -183,6 +184,46 @@ function bindRoleRevealHandlers(socket: Socket<ServerToClientEvents, ClientToSer
       socket.emit('continueAfterReveal', { roomCode: room.code, playerId: state.playerId });
     });
   }
+}
+
+function bindMayorHandlers(
+  socket: Socket<ServerToClientEvents, ClientToServerEvents>,
+  room: RoomView,
+  renderApp: () => void
+) {
+  if (!room.self?.alive) return;
+  if (!state.playerId) return;
+
+  const voteForm = document.getElementById('mayor-vote-form') as HTMLFormElement | null;
+  const voteSelect = voteForm?.querySelector('select[name="target"]') as HTMLSelectElement | null;
+  const voteSubmit = document.getElementById('mayor-vote-submit') as HTMLButtonElement | null;
+
+  if (voteSelect && voteSubmit) {
+    voteSubmit.disabled = !voteSelect.value;
+    voteSelect.addEventListener('change', () => {
+      voteSubmit.disabled = !voteSelect.value;
+      state.pendingMayorVote = voteSelect.value || undefined;
+    });
+    voteSelect.addEventListener('blur', () => {
+      window.setTimeout(() => {
+        renderApp();
+      }, 0);
+    });
+  }
+
+  voteForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!voteForm) return;
+    const data = new FormData(voteForm);
+    const targetId = data.get('target');
+    if (!targetId || !state.playerId) {
+      notify('Unable to submit vote: missing player state.');
+      return;
+    }
+    state.pendingMayorVote = String(targetId);
+    renderApp();
+    socket.emit('submitMayorVote', { roomCode: room.code, playerId: state.playerId, targetId: String(targetId) });
+  });
 }
 
 function bindArmorHandlers(socket: Socket<ServerToClientEvents, ClientToServerEvents>, room: RoomView) {

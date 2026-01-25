@@ -6,6 +6,7 @@ import {
   startGameAndReady,
   advanceToDay,
   getMayorName,
+  completeMayorElection,
   submitMayorSelection,
   voteAllForTarget,
   getAliveNames
@@ -29,34 +30,13 @@ test('mayor is selected and displayed during mayor phase', async ({ browser }) =
 
     await startGameAndReady(pages);
 
-    // Mayor phase should appear after role reveal
-    await host.waitForSelector('h2:has-text("Mayor Selected")', { timeout: 10000 });
-
-    // Check that a mayor was announced - use more specific locator
-    const mayorPanel = host.locator('.panel:has(h2:has-text("Mayor Selected"))');
-    const mayorText = await mayorPanel.textContent();
-    expect(mayorText).toBeTruthy();
-
-    // Extract mayor name from the announcement
-    const mayorMatch = mayorText?.match(/(.+) has been selected as the Mayor/);
-    const mayorName = mayorMatch ? mayorMatch[1].trim() : null;
-    expect(mayorName).toBeTruthy();
-    if (!mayorName) {
-      throw new Error('Mayor name missing.');
-    }
-    expect(names).toContain(mayorName);
-
-    // Host clicks continue to advance past mayor phase
-    await host.waitForSelector('#continue-mayor', { timeout: 5000 });
-    await host.click('#continue-mayor');
-
-    // Advance to day phase
-    const { dayPage } = await advanceToDay(host, pages);
-    expect(dayPage).toBeTruthy();
+    await host.waitForSelector('#mayor-vote-form', { timeout: 10000 });
+    const mayorTarget = names[1];
+    await completeMayorElection(host, pages, { mayorTargetName: mayorTarget });
 
     // Verify mayor badge appears in player list
-    const actualMayorName = await getMayorName(dayPage!);
-    expect(actualMayorName).toBe(mayorName);
+    const actualMayorName = await getMayorName(host);
+    expect(actualMayorName).toBe(mayorTarget);
 
   } finally {
     await closeContexts(contexts);
@@ -81,27 +61,14 @@ test('mayor vote breaks tie in day voting', async ({ browser }) => {
 
     await startGameAndReady(pages);
 
-    // Advance past mayor phase
-    await host.waitForSelector('#continue-mayor', { timeout: 10000 });
-    const mayorPanel = host.locator('.panel:has(h2:has-text("Mayor Selected"))');
-    const mayorText = await mayorPanel.textContent();
-    const mayorMatch = mayorText?.match(/(.+) has been selected as the Mayor/);
-    const mayorName = mayorMatch ? mayorMatch[1].trim() : null;
-    expect(mayorName).toBeTruthy();
-    if (!mayorName) {
-      throw new Error('Mayor name missing.');
-    }
-    const mayorNameValue = mayorName;
-
-    await host.click('#continue-mayor');
-
-    const wolfTargetName =
-      names.find((name) => name !== 'Host' && name !== mayorNameValue) ||
-      names.find((name) => name !== mayorNameValue);
-    expect(wolfTargetName).toBeTruthy();
+    const mayorNameValue = names[1];
+    const wolfTargetName = names[2];
 
     // Advance to day
-    const { dayPage } = await advanceToDay(host, pages, { wolfTargetName: wolfTargetName || undefined });
+    const { dayPage } = await advanceToDay(host, pages, {
+      wolfTargetName,
+      mayorTargetName: mayorNameValue
+    });
     expect(dayPage).toBeTruthy();
 
     // Find the mayor's page
@@ -171,60 +138,28 @@ test('mayor vote breaks tie in day voting', async ({ browser }) => {
 
 test('dying mayor selects successor', async ({ browser }) => {
   const names = ['Host', 'Player2', 'Player3', 'Player4', 'Player5'];
-  let contexts: Awaited<ReturnType<typeof createLobbyWithPlayers>>['contexts'] | null = null;
-  let pages: Awaited<ReturnType<typeof createLobbyWithPlayers>>['pages'] | null = null;
-  let host: Awaited<ReturnType<typeof createLobbyWithPlayers>>['pages'][0] | null = null;
-  let mayorName: string | null = null;
+  const { contexts, pages } = await createLobbyWithPlayers(browser, names);
+  const [host] = pages;
+  const mayorName = names[1];
 
   try {
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      const attemptSetup = await createLobbyWithPlayers(browser, names);
-      const attemptHost = attemptSetup.pages[0];
+    await configureRoles(host, {
+      werewolf: 1,
+      seer: 0,
+      hunter: 0,
+      witch: 0,
+      armor: 0,
+      joker: 0,
+      minPlayers: 5
+    });
 
-      await configureRoles(attemptHost, {
-        werewolf: 1,
-        seer: 0,
-        hunter: 0,
-        witch: 0,
-        armor: 0,
-        joker: 0,
-        minPlayers: 5
-      });
-
-      await startGameAndReady(attemptSetup.pages);
-
-      // Get the mayor name
-      await attemptHost.waitForSelector('#continue-mayor', { timeout: 10000 });
-      const mayorPanel = attemptHost.locator('.panel:has(h2:has-text("Mayor Selected"))');
-      const mayorText = await mayorPanel.textContent();
-      const mayorMatch = mayorText?.match(/(.+) has been selected as the Mayor/);
-      mayorName = mayorMatch ? mayorMatch[1].trim() : null;
-      expect(mayorName).toBeTruthy();
-
-      if (mayorName !== 'Host') {
-        contexts = attemptSetup.contexts;
-        pages = attemptSetup.pages;
-        host = attemptHost;
-        break;
-      }
-
-      await closeContexts(attemptSetup.contexts);
-      mayorName = null;
-    }
-
-    if (!contexts || !pages || !host || !mayorName) {
-      throw new Error('Unable to create a game with a non-host mayor in time.');
-    }
-
-    await host.click('#continue-mayor');
-
-    const wolfTargetName =
-      names.find((name) => name !== 'Host' && name !== mayorName) ||
-      names.find((name) => name !== mayorName);
-    expect(wolfTargetName).toBeTruthy();
+    await startGameAndReady(pages);
 
     // Advance to day
-    await advanceToDay(host, pages, { wolfTargetName: wolfTargetName || undefined });
+    await advanceToDay(host, pages, {
+      wolfTargetName: names[2],
+      mayorTargetName: mayorName
+    });
 
     // Find the mayor's page index
     const mayorIndex = names.indexOf(mayorName);
@@ -233,7 +168,7 @@ test('dying mayor selects successor', async ({ browser }) => {
 
     // All players vote out the mayor
     const playerData = pages.map((page, idx) => ({ page, name: names[idx] }));
-    await voteAllForTarget(playerData, mayorName!);
+    await voteAllForTarget(playerData, mayorName);
 
     // Wait for vote to resolve and mayor overlay to appear
     await host.waitForTimeout(2000);
@@ -248,7 +183,7 @@ test('dying mayor selects successor', async ({ browser }) => {
     expect(overlayVisible).toBe(true);
 
     // Mayor selects a successor
-    const successorName = names.find(n => n !== mayorName);
+    const successorName = names.find((n) => n !== mayorName);
     await submitMayorSelection(mayorPage, successorName);
 
     // Verify the new mayor is set
@@ -259,68 +194,34 @@ test('dying mayor selects successor', async ({ browser }) => {
     expect(logsPanel).toContain('appointed as the new Mayor');
 
   } finally {
-    if (contexts) {
-      await closeContexts(contexts);
-    }
+    await closeContexts(contexts);
   }
 });
 
 test('host can skip mayor selection', async ({ browser }) => {
   const names = ['Host', 'Player2', 'Player3', 'Player4', 'Player5'];
-  let contexts: Awaited<ReturnType<typeof createLobbyWithPlayers>>['contexts'] | null = null;
-  let pages: Awaited<ReturnType<typeof createLobbyWithPlayers>>['pages'] | null = null;
-  let host: Awaited<ReturnType<typeof createLobbyWithPlayers>>['pages'][0] | null = null;
-  let mayorName: string | null = null;
+  const { contexts, pages } = await createLobbyWithPlayers(browser, names);
+  const [host] = pages;
+  const mayorName = names[1];
 
   try {
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      const attemptSetup = await createLobbyWithPlayers(browser, names);
-      const attemptHost = attemptSetup.pages[0];
+    await configureRoles(host, {
+      werewolf: 1,
+      seer: 0,
+      hunter: 0,
+      witch: 0,
+      armor: 0,
+      joker: 0,
+      minPlayers: 5
+    });
 
-      await configureRoles(attemptHost, {
-        werewolf: 1,
-        seer: 0,
-        hunter: 0,
-        witch: 0,
-        armor: 0,
-        joker: 0,
-        minPlayers: 5
-      });
-
-      await startGameAndReady(attemptSetup.pages);
-
-      // Get the mayor name
-      await attemptHost.waitForSelector('#continue-mayor', { timeout: 10000 });
-      const mayorPanel = attemptHost.locator('.panel:has(h2:has-text("Mayor Selected"))');
-      const mayorText = await mayorPanel.textContent();
-      const mayorMatch = mayorText?.match(/(.+) has been selected as the Mayor/);
-      mayorName = mayorMatch ? mayorMatch[1].trim() : null;
-      expect(mayorName).toBeTruthy();
-
-      if (mayorName && mayorName !== 'Host') {
-        contexts = attemptSetup.contexts;
-        pages = attemptSetup.pages;
-        host = attemptHost;
-        break;
-      }
-
-      await closeContexts(attemptSetup.contexts);
-      mayorName = null;
-    }
-
-    if (!contexts || !pages || !host || !mayorName) {
-      throw new Error('Unable to create a game with a non-host mayor in time.');
-    }
-
-    await host.click('#continue-mayor');
-
-    const wolfTargetName =
-      names.find((name) => name !== 'Host' && name !== mayorName) ||
-      names.find((name) => name !== mayorName);
-    expect(wolfTargetName).toBeTruthy();
+    await startGameAndReady(pages);
 
     // Advance to day
-    await advanceToDay(host, pages, { wolfTargetName: wolfTargetName || undefined });
+    await advanceToDay(host, pages, {
+      wolfTargetName: names[2],
+      mayorTargetName: mayorName
+    });
 
     // Find the mayor's page index
     const mayorIndex = names.indexOf(mayorName);
@@ -361,8 +262,6 @@ test('host can skip mayor selection', async ({ browser }) => {
     expect(phaseText).toBeTruthy();
 
   } finally {
-    if (contexts) {
-      await closeContexts(contexts);
-    }
+    await closeContexts(contexts);
   }
 });

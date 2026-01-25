@@ -71,8 +71,11 @@ socket.on('roomUpdate', (room) => {
     state.playerName = room.players.find((p) => p.id === room.self?.id)?.name || state.playerName;
     saveSession();
   }
-  if (room.voteState?.yourVote !== undefined) {
+  if (room.voteState?.yourVote !== undefined && room.phase === 'day') {
     state.pendingVote = undefined;
+  }
+  if (room.voteState?.yourVote !== undefined && room.phase === 'mayor') {
+    state.pendingMayorVote = undefined;
   }
   const currentWolfVote = state.playerId ? room.wolfVotes?.[state.playerId] : undefined;
   if (currentWolfVote !== undefined && currentWolfVote !== '') {
@@ -126,6 +129,9 @@ function renderApp() {
   state.mayorPrompt = !!state.room.awaitingMayorSelection;
   if (state.room.phase !== 'day') {
     state.pendingVote = undefined;
+  }
+  if (state.room.phase !== 'mayor') {
+    state.pendingMayorVote = undefined;
   }
   if (state.room.phase !== 'night' || state.room.phaseStep !== 'wolves') {
     state.pendingWolfVote = undefined;
@@ -186,12 +192,14 @@ function renderPhaseSection(room: RoomView) {
   if (room.phaseTransition) {
     const transitionMessages: Record<string, string> = {
       postReveal: 'The village falls asleep.',
+      postMayor: 'Mayor elected. Preparing the next phase...',
       postArmor: 'Starting the first night...',
       nightToDay: 'Dawn is breaking. Day phase begins soon...',
       dayToNight: 'Night falls. Close your eyes...'
     };
     const transitionDurations: Record<string, number> = {
       postReveal: POST_REVEAL_DELAY_MS,
+      postMayor: POST_MAYOR_DELAY_MS,
       postArmor: POST_ARMOR_DELAY_MS,
       nightToDay: PHASE_DELAY_MS,
       dayToNight: PHASE_DELAY_MS

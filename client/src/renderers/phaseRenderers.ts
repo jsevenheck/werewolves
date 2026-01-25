@@ -75,16 +75,21 @@ function renderRoleRevealSection(room: RoomView) {
 }
 
 function renderMayorSection(room: RoomView) {
-  const mayorPlayer = room.mayorId ? room.players.find((p) => p.id === room.mayorId) : null;
-  const mayorName = mayorPlayer ? mayorPlayer.name : 'Unknown';
+  const self = room.self;
+  const yourVote = room.voteState?.yourVote;
+  const voteForm = self?.alive
+    ? yourVote !== undefined
+      ? renderVoteConfirmation(room, yourVote)
+      : renderMayorVoteForm(room)
+    : '<p>You are dead and cannot vote.</p>';
   const hostControls = room.hostId === state.playerId
-    ? '<div class="actions host-actions"><button id="continue-mayor" type="button">Continue</button></div>'
+    ? '<div class="actions host-actions"><button id="end-mayor-vote-btn" type="button">End Mayor Voting</button></div>'
     : '';
   return `
     <section class="panel">
-      <h2>Mayor Selected</h2>
-      <p><strong>${escapeHtml(mayorName)}</strong> has been selected as the Mayor!</p>
-      <p>The Mayor's vote will break ties during day voting.</p>
+      <h2>Mayor Election</h2>
+      <p>Vote for the first Mayor. The Mayor's vote will break ties during day voting.</p>
+      ${voteForm}
       ${hostControls}
     </section>
   `;
@@ -287,6 +292,33 @@ function renderWitchForm(room: RoomView) {
       </div>
       <button type="button" id="skip-witch">${skipLabel}</button>
     </div>
+  `;
+}
+
+function renderMayorVoteForm(room: RoomView) {
+  const eligible = room.voteState.revoteFromTie
+    ? room.players.filter((p) => room.voteState.revoteFromTie?.includes(p.id))
+    : room.players.filter((p) => p.alive);
+  const pendingVote = state.pendingMayorVote;
+  const options = eligible
+    .filter((player) => player.alive)
+    .map((player) => `<option value="${player.id}" ${pendingVote === player.id ? 'selected' : ''}>${escapeHtml(player.name)}</option>`)
+    .join('');
+  const submitted = room.voteState.submitted || 0;
+  const info = room.voteState.revoteFromTie ? '<p>Revote among tied candidates.</p>' : '';
+  return `
+    <form id="mayor-vote-form" class="actions">
+      ${info}
+      <label>
+        <span>Choose the Mayor</span>
+        <select name="target" required>
+          <option value="">Select a player</option>
+          ${options}
+        </select>
+      </label>
+      <button type="submit" id="mayor-vote-submit" disabled>Submit vote</button>
+      <small>${submitted} / ${room.voteState.required} votes submitted.</small>
+    </form>
   `;
 }
 

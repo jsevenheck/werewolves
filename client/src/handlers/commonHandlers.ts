@@ -122,6 +122,7 @@ function resetState() {
   state.hunterPrompt = false;
   state.mayorPrompt = false;
   state.pendingVote = undefined;
+  state.pendingMayorVote = undefined;
   state.pendingWolfVote = undefined;
   state.roleVisible = false;
   narratorUnlockInProgress = false;

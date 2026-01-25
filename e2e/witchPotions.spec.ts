@@ -4,7 +4,8 @@ import {
   closeContexts,
   configureRoles,
   createLobbyWithPlayers,
-  startGameAndReady
+  startGameAndReady,
+  completeMayorElection
 } from './helpers';
 
 const waitForWitchStep = async (_host: Page, witch: Page) => {
@@ -40,9 +41,7 @@ test('witch can heal and poison across nights', async ({ browser }) => {
 
     await startGameAndReady(pages);
 
-    // Handle mayor phase
-    await host.waitForSelector('#continue-mayor', { timeout: 10000 });
-    await host.click('#continue-mayor');
+    await completeMayorElection(host, pages);
 
     await host.waitForSelector('#wolf-form', { timeout: 10000 });
     await host.locator('#wolf-form select[name="target"]').selectOption({ label: names[2] });
@@ -106,9 +105,7 @@ test('witch can heal and poison in the same night', async ({ browser }) => {
 
     await startGameAndReady(pages);
 
-    // Handle mayor phase
-    await host.waitForSelector('#continue-mayor', { timeout: 10000 });
-    await host.click('#continue-mayor');
+    await completeMayorElection(host, pages);
 
     await host.waitForSelector('#wolf-form', { timeout: 10000 });
     await host.locator('#wolf-form select[name="target"]').selectOption({ label: names[2] });

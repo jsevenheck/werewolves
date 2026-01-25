@@ -50,7 +50,8 @@ jest.mock('../src/server/managers/deathManager', () => ({
 
 jest.mock('../src/server/managers/mayorManager', () => ({
   startNextMayorSelection: jest.fn(),
-  startMayorSelection: jest.fn()
+  startMayorSelection: jest.fn(),
+  tryResolveMayorVote: jest.fn()
 }));
 
 const makeSocket = () => {

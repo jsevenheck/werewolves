@@ -1,5 +1,5 @@
 import { test } from '@playwright/test';
-import { closeContexts, configureRoles, createLobbyWithPlayers, startGameAndReady } from './helpers';
+import { closeContexts, configureRoles, createLobbyWithPlayers, startGameAndReady, completeMayorElection } from './helpers';
 
 test('host can skip armor selection', async ({ browser }) => {
   const names = ['Host', 'Player 2', 'Player 3', 'Player 4'];
@@ -17,9 +17,7 @@ test('host can skip armor selection', async ({ browser }) => {
       minPlayers: 4
     });
     await startGameAndReady(pages);
-    // Wait for and advance past mayor phase
-    await host.waitForSelector('#continue-mayor', { timeout: 10000 });
-    await host.click('#continue-mayor');
+    await completeMayorElection(host, pages);
     await host.waitForSelector('#skip-armor', { timeout: 15000 });
     await host.click('#skip-armor');
     await host.waitForSelector('h2:has-text("Night Phase")', { timeout: 15000 });

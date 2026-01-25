@@ -3,7 +3,8 @@ import {
   closeContexts,
   configureRoles,
   createLobbyWithPlayers,
-  startGameAndReady
+  startGameAndReady,
+  completeMayorElection
 } from './helpers';
 
 test('armor can link two lovers', async ({ browser }) => {
@@ -63,9 +64,7 @@ test('armor can link two lovers', async ({ browser }) => {
 
     await startGameAndReady(pages);
 
-    // Wait for and advance past mayor phase
-    await host.waitForSelector('#continue-mayor', { timeout: 10000 });
-    await host.click('#continue-mayor');
+    await completeMayorElection(host, pages);
 
     const armorPage: Page = await waitForArmorForm();
     const loverASelect = armorPage.locator('#armor-form select[name="loverA"]');
