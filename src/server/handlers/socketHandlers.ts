@@ -217,6 +217,9 @@ function setupSocketHandlers(
     if (!room.winner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
       if (room.phase === 'day') {
         holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
+      } else if (room.phase === 'night' && room.phaseStep === 'resolve') {
+        // Resume night->day transition after mayor succession during night
+        schedulePhaseTransition(room, 'nightToDay', (r) => broadcastRoom(r, io));
       }
     }
     broadcastRoom(room, io);
@@ -248,7 +251,8 @@ function setupSocketHandlers(
     if (room.lovers) return;
     if (!Array.isArray(targets) || targets.length !== 2) return;
     const [a, b] = targets;
-    if (a === b) return;
+    // Prevent selecting same player twice or armor selecting themselves
+    if (a === b || a === playerId || b === playerId) return;
     const targetA = room.players[a];
     const targetB = room.players[b];
     if (!targetA || !targetB || !targetA.alive || !targetB.alive) return;
@@ -469,11 +473,14 @@ function setupSocketHandlers(
     if (!player || !player.alive) return;
     if (player.socketId !== socket.id) return;
     if (room.voteState.votes[playerId] !== undefined) return;
+    // Require explicit selection: targetId must be provided (string for player, null for abstain)
+    // Reject undefined which indicates no selection was made
+    if (targetId === undefined) return;
     if (room.voteState.revoteFromTie && targetId && !room.voteState.revoteFromTie.includes(targetId)) {
       return;
     }
     if (targetId && !room.players[targetId]?.alive) return;
-    room.voteState.votes[playerId] = targetId || null;
+    room.voteState.votes[playerId] = targetId;
     tryResolveDayVote(room, (r) => broadcastRoom(r, io), io);
     broadcastRoom(room, io);
   });
