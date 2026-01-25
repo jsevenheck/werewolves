@@ -129,7 +129,7 @@ function resolveNight(room: Room, broadcastRoom: (room: Room) => void, io: Serve
   room.healedTarget = null;
   room.poisonTarget = null;
   resolveDeaths(room, 'night', broadcastRoom, io);
-  if (!room.winner && !room.awaitingHunterShot) {
+  if (!room.winner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
     if (NIGHT_RESOLVE_DELAY_MS <= 0) {
       schedulePhaseTransition(room, 'nightToDay', broadcastRoom);
       return;

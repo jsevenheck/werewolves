@@ -9,7 +9,8 @@ import {
   completeMayorElection,
   submitMayorSelection,
   voteAllForTarget,
-  getAliveNames
+  getAliveNames,
+  waitForDayOnAllPages
 } from './helpers';
 
 type VotePlan = Record<string, string>;
@@ -309,6 +310,7 @@ test('dying mayor selects successor', async ({ browser }) => {
       avoidWolfTargetName: mayorName,
       mayorTargetName: mayorName
     });
+    await waitForDayOnAllPages(pages);
 
     // Find the mayor's page index
     const mayorIndex = names.indexOf(mayorName);
@@ -370,6 +372,7 @@ test('host can skip mayor selection', async ({ browser }) => {
       avoidWolfTargetName: mayorName,
       mayorTargetName: mayorName
     });
+    await waitForDayOnAllPages(pages);
 
     // Find the mayor's page index
     const mayorIndex = names.indexOf(mayorName);

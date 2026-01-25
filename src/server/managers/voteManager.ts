@@ -124,7 +124,7 @@ function resolveDayKill(
   const { queueDeath, resolveDeaths } = require('./deathManager');
   queueDeath(room, targetId, 'executed by vote');
   resolveDeaths(room, 'day', broadcastRoom, io);
-  if (!room.winner && !room.awaitingHunterShot) {
+  if (!room.winner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
     holdDayToNightTransition(room, broadcastRoom);
   }
 }

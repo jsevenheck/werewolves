@@ -26,7 +26,11 @@ const submitAbstainVotes = async (pages: Page[]) => {
 const advanceToNextNight = async (host: Page) => {
   const skipButton = host.locator('#host-skip-btn');
   if (await skipButton.isVisible()) {
-    await skipButton.click();
+    try {
+      await skipButton.click();
+    } catch {
+      // Ignore transition button racing the auto-advance in CI.
+    }
   }
   await host.waitForSelector('#wolf-form', { timeout: 15000 });
 };
