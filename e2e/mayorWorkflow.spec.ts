@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import {
   closeContexts,
   configureRoles,
@@ -11,6 +11,25 @@ import {
   voteAllForTarget,
   getAliveNames
 } from './helpers';
+
+type VotePlan = Record<string, string>;
+
+const submitMayorVotes = async (pages: Page[], names: string[], votePlan: VotePlan) => {
+  for (const page of pages) {
+    const playerName = names[pages.indexOf(page)];
+    if (!playerName) continue;
+    const target = votePlan[playerName];
+    if (!target) continue;
+    const form = page.locator('#mayor-vote-form');
+    await form.waitFor({ state: 'visible', timeout: 10000 });
+    const select = form.locator('select[name="target"]');
+    const option = select.locator('option', { hasText: target }).first();
+    await option.waitFor({ state: 'attached', timeout: 5000 });
+    await select.selectOption({ label: target });
+    await form.locator('button[type="submit"]').click();
+    await page.waitForTimeout(100);
+  }
+};
 
 test('mayor is selected and displayed during mayor phase', async ({ browser }) => {
   const names = ['Host', 'Player2', 'Player3', 'Player4'];
@@ -38,6 +57,52 @@ test('mayor is selected and displayed during mayor phase', async ({ browser }) =
     const actualMayorName = await getMayorName(host);
     expect(actualMayorName).toBe(mayorTarget);
 
+  } finally {
+    await closeContexts(contexts);
+  }
+});
+
+test('mayor election revote resolves a tie', async ({ browser }) => {
+  const names = ['Host', 'Player2', 'Player3', 'Player4'];
+  const { contexts, pages } = await createLobbyWithPlayers(browser, names);
+  const [host] = pages;
+
+  try {
+    await configureRoles(host, {
+      werewolf: 1,
+      seer: 0,
+      hunter: 0,
+      witch: 0,
+      armor: 0,
+      joker: 0,
+      minPlayers: 4
+    });
+
+    await startGameAndReady(pages);
+
+    await host.waitForSelector('#mayor-vote-form', { timeout: 10000 });
+    const initialPlan: VotePlan = {
+      Host: 'Host',
+      Player2: 'Player2',
+      Player3: 'Host',
+      Player4: 'Player2'
+    };
+    await submitMayorVotes(pages, names, initialPlan);
+
+    await host.waitForSelector('text=Revote among tied candidates.', { timeout: 10000 });
+
+    const revotePlan: VotePlan = {
+      Host: 'Host',
+      Player2: 'Host',
+      Player3: 'Host',
+      Player4: 'Host'
+    };
+    await submitMayorVotes(pages, names, revotePlan);
+
+    await host.locator('#mayor-vote-form').waitFor({ state: 'detached', timeout: 10000 });
+
+    const actualMayorName = await getMayorName(host);
+    expect(actualMayorName).toBe('Host');
   } finally {
     await closeContexts(contexts);
   }
@@ -131,6 +196,46 @@ test('mayor vote breaks tie in day voting', async ({ browser }) => {
                          logsPanel?.includes('executed by vote');
     expect(voteResolved).toBe(true);
 
+  } finally {
+    await closeContexts(contexts);
+  }
+});
+
+test('host can finalize mayor vote early', async ({ browser }) => {
+  const names = ['Host', 'Player2', 'Player3', 'Player4'];
+  const { contexts, pages } = await createLobbyWithPlayers(browser, names);
+  const [host] = pages;
+
+  try {
+    await configureRoles(host, {
+      werewolf: 1,
+      seer: 0,
+      hunter: 0,
+      witch: 0,
+      armor: 0,
+      joker: 0,
+      minPlayers: 4
+    });
+
+    await startGameAndReady(pages);
+
+    await host.waitForSelector('#mayor-vote-form', { timeout: 10000 });
+    const votePlan: VotePlan = {
+      Host: 'Player2',
+      Player2: 'Player2'
+    };
+    await submitMayorVotes(pages, names, votePlan);
+
+    const endButton = host.locator('#end-mayor-vote-btn');
+    await endButton.waitFor({ state: 'visible', timeout: 5000 });
+    await endButton.click();
+
+    await host.locator('#mayor-vote-form').waitFor({ state: 'detached', timeout: 10000 });
+
+    const mayorBadge = host.locator('.player-card:has(.tag:has-text("Mayor")) strong');
+    await expect(mayorBadge).toHaveText('Player2', { timeout: 10000 });
+    const actualMayorName = await getMayorName(host);
+    expect(actualMayorName).toBe('Player2');
   } finally {
     await closeContexts(contexts);
   }

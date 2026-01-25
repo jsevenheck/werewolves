@@ -224,5 +224,27 @@ describe('mayorManager', () => {
       expect(room.mayorId).toBe('p3');
       expect(mockSchedulePhaseTransition).toHaveBeenCalledWith(room, 'postMayor', broadcastRoom);
     });
+
+    test('resolves when all connected players vote and some are disconnected', () => {
+      const room = {
+        phase: 'mayor',
+        mayorId: null,
+        voteState: createVoteState(),
+        players: {
+          p1: { id: 'p1', name: 'Player 1', alive: true, connected: true },
+          p2: { id: 'p2', name: 'Player 2', alive: true, connected: true },
+          p3: { id: 'p3', name: 'Player 3', alive: true, connected: false }
+        },
+        logs: []
+      } as unknown as Room;
+      room.voteState.votes = { p1: 'p2', p2: 'p2' };
+      const broadcastRoom = jest.fn();
+
+      const resolved = tryResolveMayorVote(room, broadcastRoom);
+
+      expect(resolved).toBe(true);
+      expect(room.mayorId).toBe('p2');
+      expect(mockSchedulePhaseTransition).toHaveBeenCalledWith(room, 'postMayor', broadcastRoom);
+    });
   });
 });
