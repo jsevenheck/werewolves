@@ -127,6 +127,7 @@ function tryResolveMayorVote(
       broadcastRoom(room);
       return false;
     }
+    // Second tie after a revote resolves by random pick among tied candidates.
     const randomPick = tied[Math.floor(Math.random() * tied.length)];
     return finalizeMayorVote(room, randomPick, broadcastRoom);
   }
