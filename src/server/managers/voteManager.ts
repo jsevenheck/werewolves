@@ -35,8 +35,13 @@ function tryResolveDayVote(
     if (!targetId) return;
     tallies[targetId] = (tallies[targetId] || 0) + 1;
   });
-  
-  // Apply mayor's tie-breaking vote if mayor voted
+
+  // Mayor tie-breaking mechanics:
+  // The mayor's vote is counted in the initial tally like everyone else.
+  // If there's a tie, the mayor's vote ALSO acts as a tie-breaker IF the mayor
+  // voted for one of the tied candidates. This means the mayor has additional
+  // power: their vote both counts normally AND can break ties.
+  // This is intentional game design to give the mayor meaningful authority.
   const mayorAlive = room.mayorId && room.players[room.mayorId]?.alive;
   const mayorVote = mayorAlive ? room.voteState.votes[room.mayorId!] : undefined;
   

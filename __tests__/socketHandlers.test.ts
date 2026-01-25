@@ -138,7 +138,7 @@ describe('socketHandlers hostSkipStep', () => {
         w2: { id: 'w2', role: 'werewolf', alive: true },
         v1: { id: 'v1', role: 'villager', alive: true }
       },
-      wolfVotes: { w1: '', w2: '' }
+      wolfVotes: { w1: null, w2: null }
     } as unknown as Room;
     (getRoom as jest.Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();

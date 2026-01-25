@@ -78,7 +78,7 @@ socket.on('roomUpdate', (room) => {
     state.pendingMayorVote = undefined;
   }
   const currentWolfVote = state.playerId ? room.wolfVotes?.[state.playerId] : undefined;
-  if (currentWolfVote !== undefined && currentWolfVote !== '') {
+  if (currentWolfVote !== undefined && currentWolfVote !== null) {
     state.pendingWolfVote = undefined;
   }
   if (room.phase === 'lobby') {

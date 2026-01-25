@@ -28,11 +28,40 @@ function startMayorSelection(
     clearTimeout(room.mayorSelectionTimer);
     room.mayorSelectionTimer = null;
   }
+
   const dyingMayor = room.players[dyingMayorId];
   const socket = io && dyingMayor?.socketId && io.sockets?.sockets?.get(dyingMayor.socketId);
   if (socket && dyingMayor?.connected) {
     socket.emit('mayorPrompt', { roomCode: room.code });
   }
+
+  // Auto-select random alive player after 60 seconds if no response
+  const MAYOR_SELECTION_TIMEOUT_MS = 60 * 1000;
+  room.mayorSelectionTimer = setTimeout(() => {
+    if (room.awaitingMayorSelection === dyingMayorId) {
+      const alivePlayers = Object.values(room.players).filter(p => p.alive);
+      if (alivePlayers.length > 0) {
+        const randomSuccessor = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+        room.mayorId = randomSuccessor.id;
+        addLog(
+          room,
+          `Mayor succession timed out. ${randomSuccessor.name} was randomly selected as the new Mayor.`,
+          `Mayor succession timed out. ${randomSuccessor.name} was randomly selected as the new Mayor.`
+        );
+      } else {
+        addLog(room, `Mayor succession timed out. No alive players to select.`);
+        room.mayorId = null;
+      }
+
+      room.awaitingMayorSelection = null;
+      room.mayorSelectionTimer = null;
+
+      // Check for next mayor selection in queue
+      startNextMayorSelection(room, broadcastRoom, io);
+      broadcastRoom(room);
+    }
+  }, MAYOR_SELECTION_TIMEOUT_MS);
+
   if (shouldBroadcast) {
     broadcastRoom(room);
   }

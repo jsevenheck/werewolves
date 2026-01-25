@@ -37,7 +37,9 @@ const makeRoom = (): Room => ({
   transitionTimer: null,
   phaseTimer: null,
   hunterShotTimer: null,
-  hunterShotQueue: []
+  hunterShotQueue: [],
+  createdAt: Date.now(),
+  lastActivityAt: Date.now()
 });
 
 const buildPlayer = (overrides: Partial<Player>): Player => ({
@@ -100,7 +102,7 @@ describe('deathManager', () => {
     resolveDeaths(room, 'day', broadcastRoom, io as unknown as never);
 
     expect(room.awaitingHunterShot).toBe('hunter');
-    expect(room.hunterShotTimer).toBeNull();
+    expect(room.hunterShotTimer).not.toBeNull(); // Timer should be set for auto-timeout
     expect(emit).toHaveBeenCalledWith('hunterPrompt', { roomCode: room.code });
     expect(room.winner).toBeNull();
   });

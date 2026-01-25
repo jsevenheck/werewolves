@@ -35,7 +35,9 @@ const makeRoom = (): Room => ({
   mayorSelectionQueue: [],
   mayorSelectionTimer: null,
   lovers: null,
-  witchState: { healAvailable: true, poisonAvailable: true }
+  witchState: { healAvailable: true, poisonAvailable: true },
+  createdAt: Date.now(),
+  lastActivityAt: Date.now()
 });
 
 const buildPlayer = (overrides: Partial<Player>): Player => ({
@@ -68,7 +70,7 @@ describe('phaseManager', () => {
 
     expect(room.phase).toBe('night');
     expect(room.phaseStep).toBe('wolves');
-    expect(room.wolfVotes).toEqual({ w1: '' });
+    expect(room.wolfVotes).toEqual({ w1: null });
     expect(room.wolfTarget).toBeNull();
     expect(room.seerActed).toBe(false);
     expect(room.pendingDeaths).toEqual([]);

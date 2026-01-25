@@ -35,7 +35,9 @@ const makeRoom = (): Room => ({
   phaseTransition: null,
   phaseTimer: null,
   hunterShotTimer: null,
-  hunterShotQueue: []
+  hunterShotQueue: [],
+  createdAt: Date.now(),
+  lastActivityAt: Date.now()
 });
 
 const buildPlayer = (overrides: Partial<Player>): Player => ({

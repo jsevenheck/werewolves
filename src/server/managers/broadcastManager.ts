@@ -1,8 +1,10 @@
 import type { Server } from 'socket.io';
+import { updateRoomActivity } from '../models/room';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { Room, RoomView, Player } from '../../shared/types';
 
 function broadcastRoom(room: Room, io: Server<ClientToServerEvents, ServerToClientEvents>) {
+  updateRoomActivity(room);
   Object.values(room.players).forEach((player) => sendStateToPlayer(room, player, io));
 }
 

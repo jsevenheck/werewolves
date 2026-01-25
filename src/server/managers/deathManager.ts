@@ -31,11 +31,34 @@ function startHunterShot(
     clearTimeout(room.hunterShotTimer);
     room.hunterShotTimer = null;
   }
+
   const hunter = room.players[hunterId];
   const socket = io && hunter?.socketId && io.sockets?.sockets?.get(hunter.socketId);
   if (socket && hunter?.connected) {
     socket.emit('hunterPrompt', { roomCode: room.code });
   }
+
+  // Auto-skip hunter shot after 60 seconds if no response
+  const HUNTER_SHOT_TIMEOUT_MS = 60 * 1000;
+  room.hunterShotTimer = setTimeout(() => {
+    if (room.awaitingHunterShot === hunterId) {
+      addLog(room, `Hunter shot timed out. No target selected.`);
+      room.awaitingHunterShot = null;
+      room.hunterShotTimer = null;
+
+      // Check for next hunter in queue
+      if (!startNextHunterShot(room, broadcastRoom, io)) {
+        // No more hunters, check win conditions
+        checkWinners(room);
+        if (!room.winner) {
+          const { startNextMayorSelection } = require('./mayorManager');
+          startNextMayorSelection(room, broadcastRoom, io);
+        }
+      }
+      broadcastRoom(room);
+    }
+  }, HUNTER_SHOT_TIMEOUT_MS);
+
   if (shouldBroadcast) {
     broadcastRoom(room);
   }

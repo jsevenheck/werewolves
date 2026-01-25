@@ -213,13 +213,13 @@ function renderWolfForm(room: RoomView) {
     return '<p>No game data available.</p>';
   }
   const wolfIds = Object.keys(room.wolfVotes || {});
-  const votesCast = Object.values(room.wolfVotes || {}).filter((value) => value !== undefined && value !== '').length;
+  const votesCast = Object.values(room.wolfVotes || {}).filter((value) => value !== undefined && value !== null).length;
   const aliveTargets = (room?.players ?? []).filter((p) => p.alive && !wolfIds.includes(p.id));
   if (!aliveTargets.length) {
     return '<p>No valid targets available.</p>';
   }
   const currentVote = room?.wolfVotes?.[state.playerId];
-  const locked = currentVote !== undefined && currentVote !== '';
+  const locked = currentVote !== undefined && currentVote !== null;
   const pendingVote = locked ? undefined : state.pendingWolfVote;
   const selectedVote = locked ? currentVote : pendingVote;
   const options = aliveTargets.map((p) => `<option value="${p.id}" ${selectedVote === p.id ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join('');

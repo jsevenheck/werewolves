@@ -263,7 +263,7 @@ function setupSocketHandlers(
     if (!room || room.phase !== 'night' || room.phaseStep !== 'wolves') return;
     const player = getPlayerForSocket(room, playerId, socket.id);
     if (!player || player.role !== 'werewolf' || !player.alive) return;
-    if (room.wolfVotes[playerId] !== undefined && room.wolfVotes[playerId] !== '') {
+    if (room.wolfVotes[playerId] !== undefined && room.wolfVotes[playerId] !== null) {
       // Inform the client that this vote was rejected because the player has already voted.
       socket.emit('wolfVoteRejected', { reason: 'already_voted' });
       return;
@@ -441,7 +441,7 @@ function setupSocketHandlers(
         return;
       }
       livingWolves.forEach((wolf) => {
-        if (room.wolfVotes[wolf.id] === undefined || room.wolfVotes[wolf.id] === '') {
+        if (room.wolfVotes[wolf.id] === undefined || room.wolfVotes[wolf.id] === null) {
           room.wolfVotes[wolf.id] = null;
         }
       });
