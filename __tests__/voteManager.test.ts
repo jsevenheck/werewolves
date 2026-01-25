@@ -16,6 +16,7 @@ const makeRoom = (players: Record<string, Player>): Room => ({
   players,
   minPlayers: 3,
   roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0 } as RoleConfig,
+  passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: null,
   mayorSelectionQueue: [],

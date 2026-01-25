@@ -24,6 +24,7 @@
 - `hostId`: acting host id (may switch on disconnect; reverts to owner when they reconnect).
 - `roleConfig`: counts for each special role; villagers fill remainder automatically.
 - `minPlayers`: configurable minimum players before start (default 5, min 3).
+- `passiveRoleConfig`: `{ mayor: boolean }` feature toggles for passive roles.
 - `mayorId`: playerId of the current Mayor (null before election).
 - `awaitingMayorSelection`: playerId awaiting a mayor succession pick, or null.
 - `mayorSelectionQueue`: queue of mayor succession prompts.
@@ -53,7 +54,8 @@ loop:
       send each player role; wolves get list of other wolves (private UI fields)
       require each player to mark ready
       host continues once all connected players are ready
-      go phase=mayor
+      if passiveRoleConfig.mayor -> go phase=mayor
+      else -> go phase=armor if armor alive else startNight (phase=night, step='wolves')
     mayor:
       collect votes from alive players to elect the Mayor
       if tie: revote among tied candidates

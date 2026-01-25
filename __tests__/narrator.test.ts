@@ -55,6 +55,7 @@ const baseRoom = (): RoomView => ({
     armor: 0,
     joker: 0
   },
+  passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: false,
   mayorSelectionPending: false,

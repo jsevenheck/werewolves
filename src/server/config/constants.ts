@@ -1,5 +1,5 @@
 import { customAlphabet } from 'nanoid';
-import type { Role, RoleConfig, Team } from '../../shared/types';
+import type { Role, RoleConfig, PassiveRoleConfig, Team } from '../../shared/types';
 import {
   NIGHT_DELAY_MS as BASE_NIGHT_DELAY_MS,
   PHASE_DELAY_MS as BASE_PHASE_DELAY_MS,
@@ -70,6 +70,10 @@ const DEFAULT_ROLE_CONFIG: RoleConfig = {
   joker: 1
 };
 
+const DEFAULT_PASSIVE_ROLE_CONFIG: PassiveRoleConfig = {
+  mayor: true
+};
+
 export {
   PORT,
   NIGHT_DELAY_MS,
@@ -82,5 +86,6 @@ export {
   PLAYER_ID,
   RESUME_TOKEN,
   ROLE_INFO,
-  DEFAULT_ROLE_CONFIG
+  DEFAULT_ROLE_CONFIG,
+  DEFAULT_PASSIVE_ROLE_CONFIG
 };

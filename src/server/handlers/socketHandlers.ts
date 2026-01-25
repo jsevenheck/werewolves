@@ -3,7 +3,7 @@ import { sanitizeName, createVoteState, addLog, clearRoomTimers } from '../utils
 import { createRoom, getRoom } from '../models/room';
 import { createPlayer, setSocketIndex, getSocketIndex, deleteSocketIndex } from '../models/player';
 import { broadcastRoom, sendStateToPlayer } from '../managers/broadcastManager';
-import { normalizeRoleConfig, validateCounts, assignRoles } from '../managers/roleManager';
+import { normalizeRoleConfig, normalizePassiveRoleConfig, validateCounts, assignRoles } from '../managers/roleManager';
 import { schedulePhaseTransition, advanceFromReveal, advanceFromMayor, startNight, notifyLovers, holdDayToNightTransition } from '../managers/phaseManager';
 import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../managers/nightManager';
 import { tryResolveDayVote } from '../managers/voteManager';
@@ -136,6 +136,9 @@ function setupSocketHandlers(
     if (room.hostId !== playerId) return;
     if (room.phase !== 'lobby') return;
     room.roleConfig = normalizeRoleConfig(config);
+    if (config.passiveRoles) {
+      room.passiveRoleConfig = normalizePassiveRoleConfig(config.passiveRoles);
+    }
     if (config?.minPlayers !== undefined) {
       const rawMin = Number(config.minPlayers);
       if (Number.isFinite(rawMin) && rawMin >= 3) {

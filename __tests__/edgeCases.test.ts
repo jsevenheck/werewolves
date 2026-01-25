@@ -24,6 +24,7 @@ describe('Edge Cases', () => {
       expect(room.awaitingHunterShot).toBe(null);
       expect(room.hunterShotTimer).toBe(null);
       expect(room.hunterShotQueue).toEqual([]);
+      expect(room.passiveRoleConfig).toEqual({ mayor: true });
     });
   });
 

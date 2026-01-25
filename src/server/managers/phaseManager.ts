@@ -148,11 +148,22 @@ function resolveNightStep(room: Room, nextStep: NightStep): NightStep {
 }
 
 function advanceFromReveal(room: Room, broadcastRoom: (room: Room) => void) {
-  room.phase = 'mayor';
+  const mayorEnabled = room.passiveRoleConfig?.mayor !== false;
   room.phaseStep = null;
   room.mayorId = null;
   room.voteState = createVoteState();
-  addLog(room, 'Mayor election begins.');
+  if (mayorEnabled) {
+    room.phase = 'mayor';
+    addLog(room, 'Mayor election begins.');
+    broadcastRoom(room);
+    return;
+  }
+  addLog(room, 'Mayor role disabled. Skipping election.');
+  if (room.roleConfig.armor > 0 && Object.values(room.players).some((p) => p.role === 'armor' && p.alive)) {
+    room.phase = 'armor';
+  } else {
+    startNight(room);
+  }
   broadcastRoom(room);
 }
 

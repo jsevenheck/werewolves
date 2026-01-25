@@ -3,6 +3,7 @@ export type Team = 'wolves' | 'village' | 'neutral' | 'joker';
 export type Phase = 'lobby' | 'roleReveal' | 'mayor' | 'armor' | 'night' | 'day' | 'ended';
 export type NightStep = 'wolves' | 'seer' | 'witch' | 'resolve' | 'transition' | null;
 export type PhaseTransition = 'postReveal' | 'postMayor' | 'postArmor' | 'nightToDay' | 'dayToNight' | null;
+export type PassiveRole = 'mayor';
 
 export interface RoleConfig {
   werewolf: number;
@@ -11,6 +12,10 @@ export interface RoleConfig {
   witch: number;
   armor: number;
   joker: number;
+}
+
+export interface PassiveRoleConfig {
+  mayor: boolean;
 }
 
 export interface SeerResult {
@@ -92,6 +97,7 @@ export interface Room {
   players: Record<string, Player>;
   minPlayers: number;
   roleConfig: RoleConfig;
+  passiveRoleConfig: PassiveRoleConfig;
   mayorId: string | null;
   awaitingMayorSelection: string | null;
   mayorSelectionQueue: string[];
@@ -158,6 +164,7 @@ export interface RoomView {
   hostId: string | null;
   minPlayers: number;
   roleConfig: RoleConfig;
+  passiveRoleConfig: PassiveRoleConfig;
   mayorId: string | null;
   awaitingMayorSelection: boolean;
   mayorSelectionPending: boolean;

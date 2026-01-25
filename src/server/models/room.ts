@@ -1,4 +1,4 @@
-import { ROOM_CODE, DEFAULT_ROLE_CONFIG } from '../config/constants';
+import { ROOM_CODE, DEFAULT_ROLE_CONFIG, DEFAULT_PASSIVE_ROLE_CONFIG } from '../config/constants';
 import { createVoteState } from '../utils/helpers';
 import type { Player, Room } from '../../shared/types';
 
@@ -18,6 +18,7 @@ function createRoom(hostName: string, socketId: string, createPlayer: (name: str
     players: {},
     minPlayers: 5,
     roleConfig: { ...DEFAULT_ROLE_CONFIG },
+    passiveRoleConfig: { ...DEFAULT_PASSIVE_ROLE_CONFIG },
     mayorId: null,
     awaitingMayorSelection: null,
     mayorSelectionQueue: [],

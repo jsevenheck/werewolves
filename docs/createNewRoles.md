@@ -37,6 +37,21 @@ This guide explains what to update when introducing a new role and where those c
 [Tests + Docs + E2E]
 ```
 
+## Passive System Roles (On/Off Toggles)
+Some roles are passive system features (e.g., Mayor) and are not part of `RoleConfig`
+counts. These are single-instance toggles:
+1. Types:
+   - `src/shared/types.ts`: add to `PassiveRole` and `PassiveRoleConfig`.
+2. Defaults + room state:
+   - `src/server/config/constants.ts`: update `DEFAULT_PASSIVE_ROLE_CONFIG`.
+   - `src/server/models/room.ts`: initialize `passiveRoleConfig`.
+3. Lobby UI + updates:
+   - `client/src/renderers/phaseRenderers.ts`: add a toggle input.
+   - `client/src/handlers/phaseHandlers.ts`: send `passiveRoles` in `updateRoleConfig`.
+   - `src/server/handlers/socketHandlers.ts`: normalize `passiveRoles`.
+4. Flow:
+   - `src/server/managers/phaseManager.ts`: gate the phase(s) with the toggle.
+
 ## Minimal Path (Passive Role, No Actions)
 Passive roles are roles without night/day actions or special prompts. They exist only for
 win conditions, role counts, and UI display. Think "Elder" (extra resilience) or a simple

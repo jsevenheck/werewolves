@@ -1,4 +1,4 @@
-import type { Role } from '@shared/types';
+import type { Role, PassiveRole } from '@shared/types';
 
 type RoleDetail = {
   name: string;
@@ -44,6 +44,18 @@ const ROLE_DETAILS: Record<Role, RoleDetail> = {
   }
 };
 
+type PassiveRoleDetail = {
+  name: string;
+  description: string;
+};
+
+const PASSIVE_ROLE_DETAILS: Record<PassiveRole, PassiveRoleDetail> = {
+  mayor: {
+    name: 'Mayor',
+    description: 'Breaks ties during day voting.'
+  }
+};
+
 const STORAGE_KEY = 'werewolves.session';
 
-export { ROLE_DETAILS, STORAGE_KEY };
+export { ROLE_DETAILS, PASSIVE_ROLE_DETAILS, STORAGE_KEY };

@@ -62,6 +62,32 @@ test('mayor is selected and displayed during mayor phase', async ({ browser }) =
   }
 });
 
+test('mayor can be disabled in the lobby', async ({ browser }) => {
+  const names = ['Host', 'Player2', 'Player3', 'Player4'];
+  const { contexts, pages } = await createLobbyWithPlayers(browser, names);
+  const [host] = pages;
+
+  try {
+    await configureRoles(host, {
+      werewolf: 1,
+      seer: 0,
+      hunter: 0,
+      witch: 0,
+      armor: 0,
+      joker: 0,
+      minPlayers: 4,
+      passiveRoles: { mayor: false }
+    });
+
+    await startGameAndReady(pages);
+
+    await expect(host.locator('#mayor-vote-form')).toHaveCount(0, { timeout: 2000 });
+    await host.waitForSelector('text=Phase: Night', { timeout: 10000 });
+  } finally {
+    await closeContexts(contexts);
+  }
+});
+
 test('mayor election revote resolves a tie', async ({ browser }) => {
   const names = ['Host', 'Player2', 'Player3', 'Player4'];
   const { contexts, pages } = await createLobbyWithPlayers(browser, names);

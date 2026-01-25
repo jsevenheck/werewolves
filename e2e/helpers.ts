@@ -1,6 +1,11 @@
 import { expect, type Browser, type Locator, type Page } from '@playwright/test';
+import type { PassiveRole } from '@shared/types';
 
 type SubmissionState = { wolf: boolean; seer: boolean; witch: boolean; mayor: boolean };
+
+export type PassiveRoleConfig = Partial<Record<PassiveRole, boolean>>;
+
+type RoleCountKey = 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker';
 
 export type RoleConfig = {
   werewolf: number;
@@ -10,6 +15,7 @@ export type RoleConfig = {
   armor: number;
   joker: number;
   minPlayers?: number;
+  passiveRoles?: PassiveRoleConfig;
 };
 
 type AdvanceToDayResult = {
@@ -19,7 +25,7 @@ type AdvanceToDayResult = {
   dayPage?: Page | null;
 };
 
-const ROLE_FIELDS: (keyof RoleConfig)[] = ['werewolf', 'seer', 'hunter', 'witch', 'armor', 'joker'];
+const ROLE_FIELDS: RoleCountKey[] = ['werewolf', 'seer', 'hunter', 'witch', 'armor', 'joker'];
 
 const joinRoom = async (page: Page, name: string, code: string) => {
   await page.goto('/');
@@ -57,10 +63,11 @@ export const configureRoles = async (host: Page, config: RoleConfig) => {
   await host.waitForSelector('#role-config', { timeout: 10000 });
   const minPlayers = config.minPlayers || 4;
   const expectedTotal = ROLE_FIELDS.reduce((sum, role) => sum + (config[role] ?? 0), 0);
+  const passiveRoles = config.passiveRoles;
 
   for (let attempt = 0; attempt < 5; attempt += 1) {
     await host.evaluate(
-      ({ desired, min }) => {
+      ({ desired, min, passive }) => {
         const form = document.getElementById('role-config');
         if (!form) return;
         const roleInputs = form.querySelectorAll<HTMLInputElement>('.role-input');
@@ -69,6 +76,16 @@ export const configureRoles = async (host: Page, config: RoleConfig) => {
           if (!role) return;
           input.value = String(desired[role] ?? 0);
         });
+        if (passive) {
+          const passiveInputs = form.querySelectorAll<HTMLInputElement>('.passive-role-input');
+          passiveInputs.forEach((input) => {
+            const role = input.dataset.passiveRole as keyof typeof passive | undefined;
+            if (!role || passive[role] === undefined) return;
+            input.checked = Boolean(passive[role]);
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          });
+        }
         const minInput = document.getElementById('min-players') as HTMLInputElement | null;
         if (minInput) {
           minInput.value = String(min);
@@ -78,26 +95,34 @@ export const configureRoles = async (host: Page, config: RoleConfig) => {
           form.dispatchEvent(new Event('change', { bubbles: true }));
         }
       },
-      { desired: config, min: minPlayers }
+      { desired: config, min: minPlayers, passive: passiveRoles }
     );
 
     const applied = await host
       .waitForFunction(
-        ({ total, min }) => {
+        ({ total, min, passive }) => {
           const summary = Array.from(document.querySelectorAll('p')).find((el) =>
             (el.textContent || '').includes('Configured roles:')
           );
           const minText = Array.from(document.querySelectorAll('p')).find((el) =>
             (el.textContent || '').includes('Minimum players to start:')
           );
+          const passiveOk = !passive || Object.entries(passive).every(([role, value]) => {
+            const input = document.querySelector<HTMLInputElement>(
+              `.passive-role-input[data-passive-role="${role}"]`
+            );
+            if (!input) return false;
+            return input.checked === Boolean(value);
+          });
           const summaryText = summary?.textContent || '';
           const minPlayersText = minText?.textContent || '';
           return (
             summaryText.includes(`Configured roles: ${total} /`) &&
-            minPlayersText.includes(`Minimum players to start: ${min}`)
+            minPlayersText.includes(`Minimum players to start: ${min}`) &&
+            passiveOk
           );
         },
-        { total: expectedTotal, min: minPlayers },
+        { total: expectedTotal, min: minPlayers, passive: passiveRoles },
         { timeout: 3000 }
       )
       .then(() => true)

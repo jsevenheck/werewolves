@@ -1,8 +1,8 @@
-import { ROLE_DETAILS } from '../config/constants';
+import { ROLE_DETAILS, PASSIVE_ROLE_DETAILS } from '../config/constants';
 import { NIGHT_DELAY_MS } from '@shared/constants';
 import { state } from '../state/gameState';
 import { escapeHtml, getPlayerName } from '../utils/helpers';
-import type { RoomView, RoomViewSelf } from '@shared/types';
+import type { PassiveRole, RoomView, RoomViewSelf } from '@shared/types';
 
 function renderRoleRevealList(room: RoomView) {
   const players = room?.players ?? [];
@@ -18,12 +18,33 @@ function renderLobbySection(room: RoomView) {
   const needsAdjust = totals > playersCount;
   const canStart = state.playerId === room.hostId;
   const safeRoleDetails = ROLE_DETAILS || {};
+  const passiveRoleConfig = room.passiveRoleConfig || { mayor: true };
+  const passiveRoleDetails = PASSIVE_ROLE_DETAILS || {};
   const roleInputs = Object.entries(room.roleConfig).map(([role, count]) => `
     <label>
       <span>${safeRoleDetails[role as keyof typeof safeRoleDetails]?.name || role}</span>
       <input type="number" class="role-input" data-role="${role}" min="0" value="${count}" />
     </label>
   `).join('');
+  const passiveRoleInputs = Object.entries(passiveRoleConfig).map(([role, enabled]) => {
+    const detail = passiveRoleDetails[role as PassiveRole];
+    const label = detail?.name || role;
+    const description = detail?.description ? `<small>${escapeHtml(detail.description)}</small>` : '';
+    return `
+      <label>
+        <span>${escapeHtml(label)} (passive)</span>
+        <input type="checkbox" class="passive-role-input" data-passive-role="${role}" ${enabled ? 'checked' : ''} />
+      </label>
+      ${description}
+    `;
+  }).join('');
+  const passiveSummary = Object.entries(passiveRoleConfig)
+    .map(([role, enabled]) => {
+      const detail = passiveRoleDetails[role as PassiveRole];
+      const label = detail?.name || role;
+      return `${escapeHtml(label)}: ${enabled ? 'On' : 'Off'}`;
+    })
+    .join(', ');
   return `
     <section class="panel">
       <h2>Lobby</h2>
@@ -34,9 +55,14 @@ function renderLobbySection(room: RoomView) {
           <span>Minimum players required</span>
           <input type="number" id="min-players" min="3" value="${room.minPlayers || 5}" />
         </label>
+        <div style="margin-top:1rem;">
+          <h3>Passive Roles</h3>
+          ${passiveRoleInputs}
+        </div>
       </form>` : '<p>Waiting for host to configure roles.</p>'}
       <p>Configured roles: ${totals} / ${playersCount}. Villagers auto-fill: ${villagerSlots}</p>
       <p>Minimum players to start: ${room.minPlayers || 5}</p>
+      ${passiveSummary ? `<p>Passive roles: ${passiveSummary}</p>` : ''}
       ${needsAdjust ? '<p style="color:#fca5a5;">Too many roles for current players.</p>' : ''}
       <button id="start-game" ${!canStart ? 'disabled' : ''}>Start Game</button>
     </section>

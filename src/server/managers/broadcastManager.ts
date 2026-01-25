@@ -38,6 +38,7 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     hostId: room.hostId,
     minPlayers: room.minPlayers,
     roleConfig: room.roleConfig,
+    passiveRoleConfig: room.passiveRoleConfig,
     mayorId: room.mayorId,
     awaitingMayorSelection: room.awaitingMayorSelection === viewerId,
     mayorSelectionPending: !!room.awaitingMayorSelection,
