@@ -39,6 +39,8 @@ describe('frontend smoke', () => {
       hostId: 'p1',
       minPlayers: 3,
       roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0 },
+      mayorId: null,
+      awaitingMayorSelection: false,
       loversKnown: false,
       loversAssigned: false,
       loverName: null,

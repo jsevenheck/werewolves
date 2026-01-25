@@ -38,7 +38,7 @@ function tryResolveDayVote(
   
   // Apply mayor's tie-breaking vote if mayor voted
   const mayorAlive = room.mayorId && room.players[room.mayorId]?.alive;
-  const mayorVote = mayorAlive ? room.voteState.votes[room.mayorId] : undefined;
+  const mayorVote = mayorAlive && room.mayorId ? room.voteState.votes[room.mayorId] : undefined;
   
   const entries = Object.entries(tallies);
   if (!effectiveVotes.length || !entries.length) {

@@ -26,6 +26,8 @@ const baseRoom = (): RoomView => ({
     armor: 0,
     joker: 0
   },
+  mayorId: null,
+  awaitingMayorSelection: false,
   loversKnown: false,
   loversAssigned: false,
   loverName: null,
