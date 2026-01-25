@@ -92,6 +92,18 @@ function resolveDeaths(
         }
       }
     }
+    // Handle mayor succession when mayor dies
+    if (room.mayorId === playerId) {
+      const alreadyQueued =
+        room.awaitingMayorSelection === player.id || room.mayorSelectionQueue.includes(player.id);
+      if (!alreadyQueued) {
+        room.mayorSelectionQueue.push(player.id);
+      }
+      if (!room.awaitingMayorSelection && !room.awaitingHunterShot) {
+        const { startNextMayorSelection } = require('./mayorManager');
+        startNextMayorSelection(room, broadcastRoom, io);
+      }
+    }
     if (room.lovers && (room.lovers.aId === playerId || room.lovers.bId === playerId)) {
       const otherId = room.lovers.aId === playerId ? room.lovers.bId : room.lovers.aId;
       const other = room.players[otherId];
@@ -110,7 +122,7 @@ function resolveDeaths(
       room.lastDayMessage = null;
     }
   }
-  if (!room.awaitingHunterShot && room.hunterShotQueue.length === 0) {
+  if (!room.awaitingHunterShot && room.hunterShotQueue.length === 0 && !room.awaitingMayorSelection && room.mayorSelectionQueue.length === 0) {
     checkWinners(room);
   }
   broadcastRoom(room);

@@ -4,10 +4,11 @@ import { createRoom, getRoom } from '../models/room';
 import { createPlayer, setSocketIndex, getSocketIndex, deleteSocketIndex } from '../models/player';
 import { broadcastRoom, sendStateToPlayer } from '../managers/broadcastManager';
 import { normalizeRoleConfig, validateCounts, assignRoles } from '../managers/roleManager';
-import { schedulePhaseTransition, advanceFromReveal, startNight, notifyLovers, holdDayToNightTransition } from '../managers/phaseManager';
+import { schedulePhaseTransition, advanceFromReveal, advanceFromMayor, startNight, notifyLovers, holdDayToNightTransition } from '../managers/phaseManager';
 import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../managers/nightManager';
 import { tryResolveDayVote } from '../managers/voteManager';
 import { queueDeath, resolveDeaths, startNextHunterShot, checkWinners } from '../managers/deathManager';
+import { startNextMayorSelection } from '../managers/mayorManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { Room } from '../../shared/types';
 
@@ -182,6 +183,57 @@ function setupSocketHandlers(
     schedulePhaseTransition(room, 'postReveal', (r) => broadcastRoom(r, io));
   });
 
+  socket.on('selectMayor', ({ roomCode, playerId, targetId }) => {
+    const room = getRoom(roomCode);
+    if (!room) return;
+    const player = room.players[playerId];
+    if (!player) return;
+    if (player.socketId !== socket.id) return;
+    
+    // Allow selection during mayor phase (initial selection by host) or during mayor succession
+    if (room.phase === 'mayor') {
+      // Initial mayor selection - only host can trigger transition
+      if (room.hostId !== playerId) return;
+      schedulePhaseTransition(room, 'postMayor', (r) => broadcastRoom(r, io));
+      return;
+    }
+    
+    // Mayor succession - dying mayor selects successor
+    if (room.awaitingMayorSelection !== playerId) return;
+    const target = room.players[targetId];
+    if (!target || !target.alive) return;
+    if (room.mayorSelectionTimer) {
+      clearTimeout(room.mayorSelectionTimer);
+      room.mayorSelectionTimer = null;
+    }
+    room.mayorId = targetId;
+    addLog(room, `${target.name} has been appointed as the new Mayor by ${player.name}.`, `${target.name} has been appointed as the new Mayor.`);
+    room.awaitingMayorSelection = null;
+    
+    // Check if there are more mayor selections pending
+    if (startNextMayorSelection(room, (r) => broadcastRoom(r, io), io)) {
+      return;
+    }
+    
+    // Continue with hunter shots if any are pending
+    if (startNextHunterShot(room, (r) => broadcastRoom(r, io), io)) {
+      return;
+    }
+    
+    // Check win conditions and continue
+    const context =
+      room.phase === 'night' ? 'night' :
+      room.phase === 'day' ? 'day' :
+      'general';
+    checkWinners(room);
+    if (!room.winner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
+      if (room.phase === 'day') {
+        holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
+      }
+    }
+    broadcastRoom(room, io);
+  });
+
   socket.on('submitArmor', ({ roomCode, playerId, targets }) => {
     const room = getRoom(roomCode);
     if (!room || room.phase !== 'armor') return;
@@ -244,7 +296,40 @@ function setupSocketHandlers(
     const room = getRoom(roomCode);
     if (!room || room.hostId !== playerId) return;
     if (!getPlayerForSocket(room, playerId, socket.id)) return;
-    if (room.phase !== 'night' && room.phase !== 'armor' && !room.phaseTransition && !room.awaitingHunterShot) return;
+    if (room.phase !== 'night' && room.phase !== 'mayor' && room.phase !== 'armor' && !room.phaseTransition && !room.awaitingHunterShot && !room.awaitingMayorSelection) return;
+
+    if (room.awaitingMayorSelection) {
+      room.awaitingMayorSelection = null;
+      if (room.mayorSelectionTimer) {
+        clearTimeout(room.mayorSelectionTimer);
+        room.mayorSelectionTimer = null;
+      }
+      if (startNextMayorSelection(room, (r) => broadcastRoom(r, io), io)) {
+        return;
+      }
+      if (startNextHunterShot(room, (r) => broadcastRoom(r, io), io)) {
+        return;
+      }
+      if (!room.winner) {
+        checkWinners(room);
+      }
+      if (!room.winner) {
+        const transition =
+          room.phase === 'night' ? 'nightToDay' :
+          room.phase === 'day' ? 'dayToNight' :
+          null;
+        if (transition) {
+          if (transition === 'dayToNight') {
+            holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
+          } else {
+            schedulePhaseTransition(room, transition, (r) => broadcastRoom(r, io));
+          }
+          return;
+        }
+      }
+      broadcastRoom(room, io);
+      return;
+    }
 
     if (room.awaitingHunterShot) {
       room.awaitingHunterShot = null;
@@ -318,11 +403,21 @@ function setupSocketHandlers(
         advanceFromReveal(room, (r) => broadcastRoom(r, io));
         return;
       }
+      if (kind === 'postMayor') {
+        advanceFromMayor(room, (r) => broadcastRoom(r, io));
+        return;
+      }
       if (kind === 'postArmor') {
         startNight(room);
         broadcastRoom(room, io);
         return;
       }
+      return;
+    }
+
+    if (room.phase === 'mayor') {
+      addLog(room, 'Mayor selection confirmed. Moving forward.');
+      schedulePhaseTransition(room, 'postMayor', (r) => broadcastRoom(r, io));
       return;
     }
 

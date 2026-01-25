@@ -38,6 +38,8 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     hostId: room.hostId,
     minPlayers: room.minPlayers,
     roleConfig: room.roleConfig,
+    mayorId: room.mayorId,
+    awaitingMayorSelection: room.awaitingMayorSelection === viewerId,
     loversKnown: !!room.lovers && (room.lovers.aId === viewerId || room.lovers.bId === viewerId),
     loversAssigned: !!room.lovers,
     loverName: room.lovers

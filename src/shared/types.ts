@@ -1,8 +1,8 @@
 export type Role = 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'villager';
 export type Team = 'wolves' | 'village' | 'neutral' | 'joker';
-export type Phase = 'lobby' | 'roleReveal' | 'armor' | 'night' | 'day' | 'ended';
+export type Phase = 'lobby' | 'roleReveal' | 'mayor' | 'armor' | 'night' | 'day' | 'ended';
 export type NightStep = 'wolves' | 'seer' | 'witch' | 'resolve' | 'transition' | null;
-export type PhaseTransition = 'postReveal' | 'postArmor' | 'nightToDay' | 'dayToNight' | null;
+export type PhaseTransition = 'postReveal' | 'postMayor' | 'postArmor' | 'nightToDay' | 'dayToNight' | null;
 
 export interface RoleConfig {
   werewolf: number;
@@ -92,6 +92,10 @@ export interface Room {
   players: Record<string, Player>;
   minPlayers: number;
   roleConfig: RoleConfig;
+  mayorId: string | null;
+  awaitingMayorSelection: string | null;
+  mayorSelectionQueue: string[];
+  mayorSelectionTimer: NodeJS.Timeout | null;
   lovers: LoverPair | null;
   witchState: WitchState;
   wolfVotes: Record<string, string | null>;
@@ -154,6 +158,8 @@ export interface RoomView {
   hostId: string | null;
   minPlayers: number;
   roleConfig: RoleConfig;
+  mayorId: string | null;
+  awaitingMayorSelection: boolean;
   loversKnown: boolean;
   loversAssigned: boolean;
   loverName: string | null;

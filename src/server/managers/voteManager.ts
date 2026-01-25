@@ -35,6 +35,11 @@ function tryResolveDayVote(
     if (!targetId) return;
     tallies[targetId] = (tallies[targetId] || 0) + 1;
   });
+  
+  // Apply mayor's tie-breaking vote if mayor voted
+  const mayorAlive = room.mayorId && room.players[room.mayorId]?.alive;
+  const mayorVote = mayorAlive ? room.voteState.votes[room.mayorId] : undefined;
+  
   const entries = Object.entries(tallies);
   if (!effectiveVotes.length || !entries.length) {
     addLog(room, 'Vote skipped. No one eliminated.', 'Vote skipped. No one eliminated.');
@@ -58,6 +63,14 @@ function tryResolveDayVote(
   }
   const tied = entries.filter(([, count]) => count === top[1]).map(([id]) => id);
   if (tied.length > 1) {
+    // Check if mayor voted for one of the tied candidates
+    if (mayorAlive && mayorVote && tied.includes(mayorVote)) {
+      // Mayor's vote breaks the tie
+      addLog(room, `Vote tied. Mayor's vote decided the outcome.`, `Vote tied. Mayor's vote decided the outcome.`);
+      resolveDayKill(room, mayorVote, broadcastRoom, io);
+      return;
+    }
+    
     if (!room.voteState.revoteFromTie) {
       room.voteState.revoteFromTie = tied;
       room.voteState.votes = {};

@@ -3,6 +3,7 @@ import {
   NIGHT_DELAY_MS,
   PHASE_DELAY_MS,
   POST_ARMOR_DELAY_MS,
+  POST_MAYOR_DELAY_MS,
   POST_REVEAL_DELAY_MS
 } from '../config/constants';
 import { createVoteState, addLog, clearRoomTimers } from '../utils/helpers';
@@ -16,6 +17,7 @@ function startNight(room: Room) {
   room.phaseTransition = null;
   clearRoomTimers(room);
   room.hunterShotQueue = [];
+  room.mayorSelectionQueue = [];
   room.wolfVotes = {};
   Object.values(room.players).forEach((player) => {
     if (player.role === 'werewolf' && player.alive) {
@@ -30,6 +32,7 @@ function startNight(room: Room) {
   room.lastDayMessage = null;
   room.voteState = createVoteState();
   room.awaitingHunterShot = null;
+  room.awaitingMayorSelection = null;
 }
 
 function scheduleNightStep(
@@ -75,6 +78,7 @@ function schedulePhaseTransition(
   broadcastRoom(room);
   const delayMs =
     kind === 'postReveal' ? POST_REVEAL_DELAY_MS :
+    kind === 'postMayor' ? POST_MAYOR_DELAY_MS :
     kind === 'postArmor' ? POST_ARMOR_DELAY_MS :
     PHASE_DELAY_MS;
   room.phaseTimer = setTimeout(() => {
@@ -83,6 +87,10 @@ function schedulePhaseTransition(
     room.phaseTransition = null;
     if (kind === 'postReveal') {
       advanceFromReveal(room, broadcastRoom);
+      return;
+    }
+    if (kind === 'postMayor') {
+      advanceFromMayor(room, broadcastRoom);
       return;
     }
     if (kind === 'postArmor') {
@@ -140,6 +148,23 @@ function resolveNightStep(room: Room, nextStep: NightStep): NightStep {
 }
 
 function advanceFromReveal(room: Room, broadcastRoom: (room: Room) => void) {
+  // Mayor phase: select initial mayor from all alive players
+  room.phase = 'mayor';
+  room.phaseStep = null;
+  
+  // Select initial mayor randomly from alive players
+  const alivePlayers = Object.values(room.players).filter((p) => p.alive);
+  if (alivePlayers.length > 0) {
+    const randomIndex = Math.floor(Math.random() * alivePlayers.length);
+    room.mayorId = alivePlayers[randomIndex].id;
+    const mayor = room.players[room.mayorId];
+    addLog(room, `${mayor.name} has been selected as the Mayor.`, `${mayor.name} has been selected as the Mayor.`);
+  }
+  
+  broadcastRoom(room);
+}
+
+function advanceFromMayor(room: Room, broadcastRoom: (room: Room) => void) {
   if (room.roleConfig.armor > 0 && Object.values(room.players).some((p) => p.role === 'armor' && p.alive)) {
     room.phase = 'armor';
     room.phaseStep = null;
@@ -164,5 +189,6 @@ export {
   schedulePhaseTransition,
   holdDayToNightTransition,
   advanceFromReveal,
+  advanceFromMayor,
   notifyLovers
 };
