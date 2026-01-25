@@ -99,10 +99,6 @@ function resolveDeaths(
       if (!alreadyQueued) {
         room.mayorSelectionQueue.push(player.id);
       }
-      if (!room.awaitingMayorSelection && !room.awaitingHunterShot) {
-        const { startNextMayorSelection } = require('./mayorManager');
-        startNextMayorSelection(room, broadcastRoom, io);
-      }
     }
     if (room.lovers && (room.lovers.aId === playerId || room.lovers.bId === playerId)) {
       const otherId = room.lovers.aId === playerId ? room.lovers.bId : room.lovers.aId;
@@ -122,8 +118,12 @@ function resolveDeaths(
       room.lastDayMessage = null;
     }
   }
-  if (!room.awaitingHunterShot && room.hunterShotQueue.length === 0 && !room.awaitingMayorSelection && room.mayorSelectionQueue.length === 0) {
+  if (!room.awaitingHunterShot && room.hunterShotQueue.length === 0) {
     checkWinners(room);
+  }
+  if (!room.winner && !room.awaitingHunterShot && room.hunterShotQueue.length === 0) {
+    const { startNextMayorSelection } = require('./mayorManager');
+    startNextMayorSelection(room, broadcastRoom, io);
   }
   broadcastRoom(room);
 }
@@ -138,6 +138,8 @@ function checkWinners(room: Room) {
     room.phaseStep = null;
     room.nextNightStep = null;
     room.phaseTransition = null;
+    room.awaitingMayorSelection = null;
+    room.mayorSelectionQueue = [];
     clearRoomTimers(room);
     return;
   }
@@ -153,6 +155,8 @@ function checkWinners(room: Room) {
     room.phaseStep = null;
     room.nextNightStep = null;
     room.phaseTransition = null;
+    room.awaitingMayorSelection = null;
+    room.mayorSelectionQueue = [];
     clearRoomTimers(room);
   }
 }

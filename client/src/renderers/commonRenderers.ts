@@ -101,7 +101,7 @@ function renderLogsPanel() {
     .join('') || '';
 
   return `
-    <section class="panel">
+    <section class="panel" id="logs-panel">
       <h2>Events</h2>
       <div class="logs">${logs || '<p>No events yet.</p>'}</div>
     </section>

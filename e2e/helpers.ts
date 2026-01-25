@@ -153,11 +153,16 @@ const tryClick = async (locator: Locator) => {
   if ((await locator.count()) === 0) {
     return false;
   }
-  if (!(await locator.first().isVisible())) {
+  const first = locator.first();
+  if (!(await first.isVisible())) {
     return false;
   }
-  await locator.first().click();
-  return true;
+  try {
+    await first.click();
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 const selectFirstOption = async (select: Locator) => {
@@ -175,11 +180,8 @@ const selectOptionByLabel = async (select: Locator, label?: string | null) => {
     return false;
   }
   const option = select.locator('option', { hasText: label }).first();
-  const optionReady = await option
-    .waitFor({ state: 'attached', timeout: 2000 })
-    .then(() => true)
-    .catch(() => false);
-  if (!optionReady) {
+  const optionCount = await option.count().catch(() => 0);
+  if (!optionCount) {
     return false;
   }
   try {
@@ -271,13 +273,17 @@ const trySubmitArmor = async (pages: Page[]) => {
 
 const findHunterPromptPage = async (pages: Page[]) => {
   for (const page of pages) {
-    const overlay = page.locator('#hunter-overlay');
-    if (await overlay.count()) {
-      return page;
-    }
-    const form = page.locator('#hunter-form');
-    if (await form.count()) {
-      return page;
+    try {
+      const overlay = page.locator('#hunter-overlay');
+      if (await overlay.count()) {
+        return page;
+      }
+      const form = page.locator('#hunter-form');
+      if (await form.count()) {
+        return page;
+      }
+    } catch {
+      // Ignore closed pages.
     }
   }
   return null;
@@ -494,13 +500,17 @@ export const closeContexts = async (contexts: Array<Awaited<ReturnType<Browser['
 
 export const findMayorPromptPage = async (pages: Page[]) => {
   for (const page of pages) {
-    const overlay = page.locator('#mayor-overlay');
-    if (await overlay.count()) {
-      return page;
-    }
-    const form = page.locator('#mayor-form');
-    if (await form.count()) {
-      return page;
+    try {
+      const overlay = page.locator('#mayor-overlay');
+      if (await overlay.count()) {
+        return page;
+      }
+      const form = page.locator('#mayor-form');
+      if (await form.count()) {
+        return page;
+      }
+    } catch {
+      // Ignore closed pages.
     }
   }
   return null;
