@@ -88,7 +88,7 @@ The Dockerfile uses a multi-stage build to compile TypeScript and bundle the cli
 
 ```bash
 docker build -t werewolves .
-docker run --rm -p 3000:3000 werewolves
+docker run --rm -p 3001:3001 werewolves
 ```
 
 Note: The Docker image defaults to port 3000. Override with `-e PORT=3001` if needed.
