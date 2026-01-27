@@ -130,6 +130,8 @@ function bindCommonHandlers(
 }
 
 function resetState() {
+  document.getElementById('hunter-overlay')?.remove();
+  clearHunterTimer();
   state.room = null;
   state.roomCode = '';
   state.playerId = '';

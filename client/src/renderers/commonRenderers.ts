@@ -109,6 +109,10 @@ function renderPlayersPanel() {
   `;
 }
 
+function isDeathLogForName(logText: string, name: string) {
+  return logText.startsWith(`${name} died`) || logText.startsWith(`${name} was voted out`);
+}
+
 function renderLogsPanel() {
   if (!state.room) return '';
 
@@ -123,7 +127,7 @@ function renderLogsPanel() {
   const logs = (room.logs || [])
     .filter((log) => {
       if (!hideNewDeaths || !newlyDeadNames.length) return true;
-      return !newlyDeadNames.some((name) => log.text.includes(name));
+      return !newlyDeadNames.some((name) => isDeathLogForName(log.text, name));
     })
     .map((log) => `<div>${new Date(log.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${escapeHtml(log.text)}</div>`)
     .join('') || '';

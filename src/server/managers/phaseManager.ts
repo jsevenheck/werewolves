@@ -1,7 +1,8 @@
 import type { Server } from 'socket.io';
 import {
   NIGHT_DELAY_MS,
-  PHASE_DELAY_MS,
+  NIGHT_TO_DAY_DELAY_MS,
+  DAY_TO_NIGHT_DELAY_MS,
   POST_ARMOR_DELAY_MS,
   POST_MAYOR_DELAY_MS,
   POST_REVEAL_DELAY_MS
@@ -83,7 +84,9 @@ function schedulePhaseTransition(
     kind === 'postReveal' ? POST_REVEAL_DELAY_MS :
     kind === 'postMayor' ? POST_MAYOR_DELAY_MS :
     kind === 'postArmor' ? POST_ARMOR_DELAY_MS :
-    PHASE_DELAY_MS;
+    kind === 'nightToDay' ? NIGHT_TO_DAY_DELAY_MS :
+    kind === 'dayToNight' ? DAY_TO_NIGHT_DELAY_MS :
+    NIGHT_TO_DAY_DELAY_MS;
   room.phaseTimer = setTimeout(() => {
     room.phaseTimer = null;
     if (room.winner) return;

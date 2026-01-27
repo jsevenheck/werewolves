@@ -1,5 +1,6 @@
 import type { Server } from 'socket.io';
 import { addLog, createVoteState } from '../utils/helpers';
+import { MAYOR_SUCCESSION_DELAY_MS } from '../config/constants';
 import { schedulePhaseTransition } from './phaseManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { Room } from '../../shared/types';
@@ -62,15 +63,31 @@ function startMayorSelection(
       if (!startNextMayorSelection(room, broadcastRoom, io)) {
         // No more mayor selections, resume game flow
         const { checkWinners } = require('./deathManager');
-        const { schedulePhaseTransition, holdDayToNightTransition } = require('./phaseManager');
-
         checkWinners(room);
         if (!room.winner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
-          if (room.phase === 'day') {
-            holdDayToNightTransition(room, broadcastRoom);
-          } else if (room.phase === 'night' && room.phaseStep === 'resolve') {
-            // Resume night->day transition after mayor succession during night
-            schedulePhaseTransition(room, 'nightToDay', broadcastRoom);
+          const resumeAfterDelay = () => {
+            if (room.winner || room.awaitingHunterShot || room.awaitingMayorSelection) {
+              return;
+            }
+            const { schedulePhaseTransition, holdDayToNightTransition } = require('./phaseManager');
+            if (room.phase === 'day') {
+              holdDayToNightTransition(room, broadcastRoom);
+            } else if (room.phase === 'night' && room.phaseStep === 'resolve') {
+              // Resume night->day transition after mayor succession during night
+              schedulePhaseTransition(room, 'nightToDay', broadcastRoom);
+            }
+          };
+          if (MAYOR_SUCCESSION_DELAY_MS > 0) {
+            if (room.phaseTimer) {
+              clearTimeout(room.phaseTimer);
+              room.phaseTimer = null;
+            }
+            room.phaseTimer = setTimeout(() => {
+              room.phaseTimer = null;
+              resumeAfterDelay();
+            }, MAYOR_SUCCESSION_DELAY_MS);
+          } else {
+            resumeAfterDelay();
           }
         }
       }

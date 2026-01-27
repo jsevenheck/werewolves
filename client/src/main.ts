@@ -21,7 +21,8 @@ import { narrator } from './utils/narrator';
 import type { ClientToServerEvents, ServerToClientEvents } from '@shared/events';
 import type { RoomView, StoredSession } from '@shared/types';
 import {
-  PHASE_DELAY_MS,
+  NIGHT_TO_DAY_DELAY_MS,
+  DAY_TO_NIGHT_DELAY_MS,
   POST_REVEAL_DELAY_MS,
   POST_MAYOR_DELAY_MS,
   POST_ARMOR_DELAY_MS
@@ -229,11 +230,11 @@ function renderPhaseSection(room: RoomView) {
       postReveal: POST_REVEAL_DELAY_MS,
       postMayor: POST_MAYOR_DELAY_MS,
       postArmor: POST_ARMOR_DELAY_MS,
-      nightToDay: PHASE_DELAY_MS,
-      dayToNight: PHASE_DELAY_MS
+      nightToDay: NIGHT_TO_DAY_DELAY_MS,
+      dayToNight: DAY_TO_NIGHT_DELAY_MS
     };
     const message = transitionMessages[room.phaseTransition] || 'Next phase in a few seconds. Close your eyes if needed.';
-    const durationMs = transitionDurations[room.phaseTransition] ?? PHASE_DELAY_MS;
+    const durationMs = transitionDurations[room.phaseTransition] ?? NIGHT_TO_DAY_DELAY_MS;
     const durationSeconds = Math.round(durationMs / 1000);
     const durationNote = `<p>Duration: ${durationSeconds}s.</p>`;
     const roleDetails = ROLE_DETAILS || {};
