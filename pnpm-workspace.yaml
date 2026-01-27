@@ -1,6 +1,6 @@
 packages:
-  - '.'
-  - 'client-vue'
+  - "."
+  - "client"
 
 ignoredBuiltDependencies:
   - esbuild

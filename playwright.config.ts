@@ -1,30 +1,30 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
-  testDir: 'e2e',
+  testDir: "e2e",
   timeout: 60000,
   use: {
-    baseURL: 'http://localhost:5173',
-    headless: true
+    baseURL: "http://localhost:5173",
+    headless: true,
   },
   webServer: [
     {
-      command: 'tsx server.ts',
+      command: "tsx server.ts",
       port: 3001,
       reuseExistingServer: !process.env.CI,
       env: {
-        E2E_TESTS: '1'
-      }
+        E2E_TESTS: "1",
+      },
     },
     {
-      command: 'vite --config vite.config.ts',
+      command: "pnpm --filter werewolves-client dev",
       port: 5173,
       reuseExistingServer: !process.env.CI,
-      stdout: 'pipe',  
-      stderr: 'pipe',  
+      stdout: "pipe",
+      stderr: "pipe",
       env: {
-        E2E_TESTS: '1'
-      }
-    }
-  ]
+        E2E_TESTS: "1",
+      },
+    },
+  ],
 });

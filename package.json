@@ -10,18 +10,14 @@
   "scripts": {
     "dev": "concurrently \"pnpm run dev:server\" \"pnpm run dev:client\"",
     "dev:server": "tsx watch server.ts",
-    "dev:client": "vite --config vite.config.ts",
+    "dev:client": "pnpm --filter werewolves-client dev",
     "build": "pnpm run build:server && pnpm run build:client",
     "build:server": "tsc -p tsconfig.server.json",
-    "build:client": "vite build --config vite.config.ts",
-    "dev:client-vue": "pnpm --filter client-vue dev",
-    "build:client-vue": "pnpm --filter client-vue build",
-    "typecheck:client-vue": "pnpm --filter client-vue typecheck",
+    "build:client": "pnpm --filter werewolves-client build",
     "start": "node dist/server.js",
     "typecheck": "tsc -p tsconfig.json",
     "test": "jest",
-    "test:e2e": "playwright test",
-    "test:e2e:vue": "playwright test --config playwright.vue.config.ts"
+    "test:e2e": "playwright test"
   },
   "keywords": [],
   "author": "",

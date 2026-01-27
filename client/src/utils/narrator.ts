@@ -5,6 +5,7 @@ import { notify } from './helpers';
 type NarrationKey = string | null;
 
 type NarratorOptions = {
+  basePath?: string;
   storage?: Storage | null;
   initialEnabled?: boolean;
   initialUnlocked?: boolean;
@@ -16,7 +17,6 @@ type NarratorOptions = {
 const STORAGE_KEY = 'werewolves_narrator_enabled';
 const DEFAULT_VOLUME = 1;
 const FALLBACK_AUDIO_URL =
-  // 1-second silent WAV data URI used as a built-in fallback so no external file is required.
   'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=';
 const USER_MESSAGE_COOLDOWN_MS = 4000;
 
@@ -42,12 +42,14 @@ class Narrator {
   private disableToken = 0;
   private lastPlayAttemptAt = 0;
   private lastUserMessageAt = 0;
+  private readonly basePath: string;
   private readonly storage: Storage | null;
   private readonly playClip: (key: string) => void;
   private readonly notify: (message: string) => void;
   private readonly playDebounceMs: number;
 
   constructor(options: NarratorOptions = {}) {
+    this.basePath = options.basePath ?? '/audio';
     this.storage = options.storage ?? (typeof localStorage === 'undefined' ? null : localStorage);
     this.enabled = options.initialEnabled ?? false;
     this.unlocked = options.initialUnlocked ?? false;
@@ -80,9 +82,7 @@ class Narrator {
       this.lastAnnouncedKey = null;
       this.pendingKey = null;
       this.disableToken += 1;
-      // Stop any currently playing narration
       this.stop();
-      // Unload and clear all cached Howl instances to free memory
       for (const howl of this.howls.values()) {
         howl.unload();
       }
@@ -109,7 +109,7 @@ class Narrator {
           preload: 'metadata',
           volume: 0
         });
-      unlockHowl = createUnlockHowl('/audio/lobby.mp3');
+      unlockHowl = createUnlockHowl(`${this.basePath}/lobby.mp3`);
       const tryFallback = (playAfterSwap: boolean) => {
         if (!FALLBACK_AUDIO_URL) {
           cleanup(unlockHowl);
@@ -231,7 +231,7 @@ class Narrator {
           preload: 'metadata',
           volume: DEFAULT_VOLUME
         });
-      let activeHowl = createHowl(`/audio/${key}.mp3`);
+      let activeHowl = createHowl(`${this.basePath}/${key}.mp3`);
 
       const cleanup = (howl: Howl) => {
         howl.off('load');
@@ -342,7 +342,5 @@ function createNarrator(options: NarratorOptions = {}) {
   return new Narrator(options);
 }
 
-const narrator = createNarrator({ notify });
-
-export { narrator, createNarrator, computeNarrationKey };
-export type { NarrationKey };
+export { createNarrator, computeNarrationKey };
+export type { NarrationKey, Narrator, NarratorOptions };
