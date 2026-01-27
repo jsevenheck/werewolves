@@ -90,6 +90,13 @@ describe('roleManager', () => {
       roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 2, joker: 0, guard: 0 }
     } as Room;
     expect(validateCounts(tooManyArmors)).toEqual({ error: 'Only 1 Armor is supported' });
+
+    const capShouldWinOverTotalCount = {
+      players: makePlayers(5),
+      minPlayers: 5,
+      roleConfig: { werewolf: 5, seer: 2, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0 }
+    } as Room;
+    expect(validateCounts(capShouldWinOverTotalCount)).toEqual({ error: 'Only 1 Seer is supported' });
   });
 
   test('assignRoles sets roles, teams, and night actions', () => {
