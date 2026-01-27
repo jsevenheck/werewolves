@@ -289,7 +289,7 @@ function renderWitchForm(room: RoomView) {
   const aliveTargets = (room?.players ?? []).filter((p) => p && p.alive && p.id !== state.playerId);
   const options = aliveTargets.map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
   const witchState = room?.witchState ?? { healAvailable: false, poisonAvailable: false };
-  const skipLabel = !witchState.healAvailable ? 'Continue' : 'Skip';
+  const skipLabel = !witchState.healAvailable || !witchState.poisonAvailable ? 'Continue' : 'Skip';
   return `
     <div class="actions">
       <p>${healedText}</p>

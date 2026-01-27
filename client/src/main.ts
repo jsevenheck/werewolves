@@ -61,6 +61,7 @@ socket.on('connect', () => {
 
 socket.on('roomUpdate', (room) => {
   narrator.handleRoomUpdate(previousRoom, room);
+  updateNewlyDeadIds(previousRoom, room);
   previousRoom = room;
   state.room = room;
   state.roomCode = room.code;
@@ -89,6 +90,25 @@ socket.on('roomUpdate', (room) => {
   }
   renderApp();
 });
+
+function updateNewlyDeadIds(previous: RoomView | null, current: RoomView) {
+  const isNightResolve = current.phase === 'night' && current.phaseStep === 'resolve';
+  const isNightToDayTransition = current.phaseTransition === 'nightToDay';
+  if (!isNightResolve && !isNightToDayTransition) {
+    state.newlyDeadIds.clear();
+    return;
+  }
+  if (!previous) {
+    state.newlyDeadIds.clear();
+    return;
+  }
+  const prevAlive = new Map(previous.players.map((player) => [player.id, player.alive]));
+  current.players.forEach((player) => {
+    if (prevAlive.get(player.id) && !player.alive) {
+      state.newlyDeadIds.add(player.id);
+    }
+  });
+}
 
 socket.on('hunterPrompt', () => {
   state.hunterPrompt = true;
@@ -124,6 +144,9 @@ function renderApp() {
   if (!state.room) {
     renderLandingPage();
     return;
+  }
+  if (state.room.phase === 'lobby' && !state.narratorToggled && narrator.isEnabled()) {
+    narrator.setEnabled(false);
   }
   state.hunterPrompt = !!state.room.awaitingHunterShot;
   state.mayorPrompt = !!state.room.awaitingMayorSelection;
@@ -190,9 +213,14 @@ function renderPhaseSection(room: RoomView) {
   }
 
   if (room.phaseTransition) {
+    const mayorName = room.mayorId
+      ? room.players.find((player) => player.id === room.mayorId)?.name
+      : null;
     const transitionMessages: Record<string, string> = {
       postReveal: 'The village falls asleep.',
-      postMayor: 'Mayor elected. Preparing the next phase...',
+      postMayor: mayorName
+        ? `Mayor elected: ${escapeHtml(mayorName)}. Preparing the next phase...`
+        : 'Mayor elected. Preparing the next phase...',
       postArmor: 'Starting the first night...',
       nightToDay: 'Dawn is breaking. Day phase begins soon...',
       dayToNight: 'Night falls. Close your eyes...'
