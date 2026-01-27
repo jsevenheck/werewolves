@@ -327,6 +327,25 @@ function bindNightHandlers(
       socket.emit('submitWitchDecision', { roomCode: room.code, playerId: state.playerId, action: 'skip' });
     });
   }
+
+  if (room.phaseStep === 'guard' && room.self?.role === 'guard' && room.self.alive) {
+    const guardForm = document.getElementById('guard-form') as HTMLFormElement | null;
+    guardForm?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!guardForm) return;
+      const data = new FormData(guardForm);
+      const targetId = data.get('target');
+      if (!targetId || !state.playerId) return;
+      socket.emit('submitGuardProtection',
+        { roomCode: room.code, playerId: state.playerId, targetId: String(targetId) },
+        (res) => {
+          if (res && 'error' in res && res.error) {
+            notify(`Error: ${res.error}`);
+          }
+        }
+      );
+    });
+  }
 }
 
 function bindDayHandlers(socket: Socket<ServerToClientEvents, ClientToServerEvents>, room: RoomView, renderApp: () => void) {

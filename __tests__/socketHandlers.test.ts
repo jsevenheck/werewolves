@@ -158,6 +158,9 @@ describe('socketHandlers hostSkipStep', () => {
       phaseStep: 'seer',
       phaseTransition: null,
       seerActed: false,
+      guardedTarget: null,
+      lastGuardedTarget: null,
+      guardActed: false,
       players: {
         host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' },
         s1: { id: 's1', role: 'seer', alive: true },
@@ -506,7 +509,7 @@ describe('socketHandlers security checks', () => {
       hostId: 'host',
       phase: 'lobby',
       minPlayers: 5,
-      roleConfig: { werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 0 },
+      roleConfig: { werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 0, guard: 0 },
       players: {
         host: { id: 'host', socketId: 'socket-host' }
       }

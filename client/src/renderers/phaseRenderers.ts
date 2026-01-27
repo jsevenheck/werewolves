@@ -165,11 +165,13 @@ function renderNightSection(room: RoomView, self: RoomViewSelf | null) {
       content = renderSeerForm(room);
     } else if (room.phaseStep === 'witch' && self.role === 'witch') {
       content = renderWitchForm(room);
+    } else if (room.phaseStep === 'guard' && self.role === 'guard') {
+      content = renderGuardForm(room);
     }
   } else {
     content = '<p>You are dead. Spectating only.</p>';
   }
-  const hostControls = room.hostId === state.playerId && ['wolves', 'seer', 'witch', 'transition'].includes(room.phaseStep || '')
+  const hostControls = room.hostId === state.playerId && ['wolves', 'seer', 'witch', 'guard', 'transition'].includes(room.phaseStep || '')
     ? '<div class="actions host-actions"><button id="skip-step" type="button">Skip current action</button></div>'
     : '';
   return `
@@ -308,6 +310,40 @@ function renderWitchForm(room: RoomView) {
       </div>
       <button type="button" id="skip-witch">${skipLabel}</button>
     </div>
+  `;
+}
+
+function renderGuardForm(room: RoomView) {
+  if (!room) return '<p>Room data unavailable.</p>';
+
+  const targets = (room?.players ?? []).filter((p) =>
+    p.alive &&
+    p.id !== state.playerId &&
+    p.id !== room.lastGuardedTarget
+  );
+
+  if (!targets.length) return '<p>No valid targets to protect.</p>';
+
+  const options = targets.map((p) =>
+    `<option value="${p.id}">${escapeHtml(p.name)}</option>`
+  ).join('');
+
+  const lastProtectedNote = room.lastGuardedTarget
+    ? `<p>Last night you protected ${getPlayerName(room, room.lastGuardedTarget)}. You cannot protect them again tonight.</p>`
+    : '';
+
+  return `
+    <form id="guard-form" class="actions">
+      ${lastProtectedNote}
+      <label>
+        <span>Protect a player</span>
+        <select name="target" required>
+          <option value="">Select target</option>
+          ${options}
+        </select>
+      </label>
+      <button type="submit">Protect player</button>
+    </form>
   `;
 }
 

@@ -1,7 +1,7 @@
-export type Role = 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'villager';
+export type Role = 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'guard' | 'villager';
 export type Team = 'wolves' | 'village' | 'neutral' | 'joker';
 export type Phase = 'lobby' | 'roleReveal' | 'mayor' | 'armor' | 'night' | 'day' | 'ended';
-export type NightStep = 'wolves' | 'seer' | 'witch' | 'resolve' | 'transition' | null;
+export type NightStep = 'wolves' | 'seer' | 'witch' | 'guard' | 'resolve' | 'transition' | null;
 export type PhaseTransition = 'postReveal' | 'postMayor' | 'postArmor' | 'nightToDay' | 'dayToNight' | null;
 export type PassiveRole = 'mayor';
 
@@ -12,6 +12,7 @@ export interface RoleConfig {
   witch: number;
   armor: number;
   joker: number;
+  guard: number;
 }
 
 export interface PassiveRoleConfig {
@@ -109,6 +110,9 @@ export interface Room {
   healedTarget: string | null;
   poisonTarget: string | null;
   seerActed: boolean;
+  guardedTarget: string | null;
+  lastGuardedTarget: string | null;
+  guardActed: boolean;
   voteState: VoteState;
   pendingDeaths: PendingDeath[];
   winner: Winner | null;
@@ -177,6 +181,8 @@ export interface RoomView {
   wolfVotes: Record<string, string | null> | null;
   wolfTarget: string | null;
   wolfPeers: string[];
+  guardedTarget: string | null;
+  lastGuardedTarget: string | null;
   nextNightStep: NightStep;
   phaseTransition: PhaseTransition;
   seerResult: SeerResult | null;

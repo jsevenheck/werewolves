@@ -7,6 +7,7 @@ Run a multiplayer Werewolf/Mafia party game in the browser with no human moderat
 - Private roles per device, werewolf team awareness, and lover linking.
 - Day/night phases with voting and role actions.
 - Joker instant win on day vote; Hunter shot on death.
+- Guard role: nightly protection with consecutive-target restriction.
 - Mayor election with tie-breaking and succession on death.
 - Reconnect support and mobile-friendly UI.
 - Acting host handoff on disconnect, plus skip controls for blocked armor/night steps.

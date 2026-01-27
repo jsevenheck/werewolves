@@ -26,6 +26,9 @@ function startNight(room: Room) {
   });
   room.wolfTarget = null;
   room.seerActed = false;
+  room.lastGuardedTarget = room.guardedTarget;
+  room.guardedTarget = null;
+  room.guardActed = false;
   room.pendingDeaths = [];
   room.lastNightDeaths = [];
   room.lastDayDeaths = [];
@@ -55,7 +58,7 @@ function scheduleNightStep(
     if (resolvedStep === 'resolve') {
       const { resolveNight } = require('./nightManager');
       resolveNight(room, broadcastRoom, io);
-    } else if (resolvedStep === 'seer' || resolvedStep === 'witch') {
+    } else if (resolvedStep === 'seer' || resolvedStep === 'witch' || resolvedStep === 'guard') {
       const { advanceNightStep } = require('./nightManager');
       advanceNightStep(room, broadcastRoom, io);
     } else {
@@ -138,6 +141,12 @@ function resolveNightStep(room: Room, nextStep: NightStep): NightStep {
   if (nextStep === 'witch') {
     const witchAlive = Object.values(room.players).some((p) => p.role === 'witch' && p.alive);
     if (!witchAlive) {
+      return resolveNightStep(room, 'guard');
+    }
+  }
+  if (nextStep === 'guard') {
+    const guardAlive = Object.values(room.players).some((p) => p.role === 'guard' && p.alive);
+    if (!guardAlive) {
       return 'resolve';
     }
   }

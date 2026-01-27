@@ -56,6 +56,11 @@ const ROLE_INFO: RoleInfo = {
     team: 'neutral',
     description: 'If you are voted out during the day, you instantly win.'
   },
+  guard: {
+    label: 'Guard',
+    team: 'village',
+    description: 'Each night protect one player from all attacks. Cannot protect the same player two nights in a row.'
+  },
   villager: {
     label: 'Villager',
     team: 'village',
@@ -69,7 +74,8 @@ const DEFAULT_ROLE_CONFIG: RoleConfig = {
   hunter: 1,
   witch: 1,
   armor: 1,
-  joker: 1
+  joker: 1,
+  guard: 0
 };
 
 const DEFAULT_PASSIVE_ROLE_CONFIG: PassiveRoleConfig = {

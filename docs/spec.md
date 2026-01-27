@@ -5,7 +5,7 @@
 - `socketId`: string or null active socket id for reconnect.
 - `resumeToken`: random token required to resume a session (stored client-side).
 - `name`: display name shown to others.
-- `role`: enum (`werewolf`, `seer`, `hunter`, `witch`, `armor`, `joker`, `villager`).
+- `role`: enum (`werewolf`, `seer`, `hunter`, `witch`, `armor`, `joker`, `guard`, `villager`).
 - `team`: derived team id for win logic (`wolves`, `village`, `neutral`).
 - `alive`: boolean.
 - `connected`: boolean for reconnect tracking.
@@ -18,7 +18,7 @@
 ### Room
 - `code`: 4-letter uppercase join code.
 - `phase`: enum (`lobby`, `roleReveal`, `mayor`, `armor`, `night`, `day`, `ended`).
-- `phaseStep`: helper for night substeps (`wolves`, `seer`, `witch`, `resolve`, `transition`).
+- `phaseStep`: helper for night substeps (`wolves`, `seer`, `witch`, `guard`, `resolve`, `transition`).
 - `dayCount`: starts at 0, increments at each day phase.
 - `players`: map playerId -> Player.
 - `hostId`: acting host id (may switch on disconnect; reverts to owner when they reconnect).
@@ -84,12 +84,17 @@ loop:
         if witch alive:
           show wolves' target; let witch save/poison (one potion per night)
           update potion flags
+        advance step='guard'
+      if step='guard':
+        if guard alive:
+          wait for guard to select target (cannot be self, cannot be lastGuardedTarget)
+          store guardedTarget, update lastGuardedTarget for next night
         advance step='resolve'
       wait ~3 seconds between all phase transitions and night steps to allow players to reset
       host may skip current step if a player is offline or unresponsive
       if step='resolve':
-        apply wolf target unless healed -> queue death
-        apply poison death (if any)
+        apply wolf target unless healed OR guarded -> queue death
+        apply poison death unless guarded (if any)
         process queued deaths with `resolveDeaths()`
         increment day count, update phase='day', reset votes
     day:

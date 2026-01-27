@@ -67,7 +67,7 @@ describe('roleManager', () => {
   test('assignRoles sets roles, teams, and night actions', () => {
     const room = {
       players: makePlayers(3),
-      roleConfig: { werewolf: 1, seer: 1, hunter: 0, witch: 0, armor: 0, joker: 0 } as RoleConfig
+      roleConfig: { werewolf: 1, seer: 1, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0 } as RoleConfig
     } as Room;
     assignRoles(room);
     const assigned = Object.values(room.players);

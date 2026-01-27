@@ -62,6 +62,16 @@ function advanceNightStep(room: Room, broadcastRoom: (room: Room) => void, io: S
   if (room.phaseStep === 'witch') {
     const witchAlive = Object.values(room.players).some((p) => p.role === 'witch' && p.alive);
     if (!witchAlive) {
+      scheduleNightStep(room, 'guard', broadcastRoom, io);
+      return;
+    }
+    broadcastRoom(room);
+    return;
+  }
+  if (room.phaseStep === 'guard') {
+    const guardAlive = Object.values(room.players).some((p) => p.role === 'guard' && p.alive);
+    if (!guardAlive || room.guardActed) {
+      room.guardActed = false;
       scheduleNightStep(room, 'resolve', broadcastRoom, io);
       return;
     }
@@ -78,9 +88,9 @@ function handleWitchDecision(
   broadcastRoom: (room: Room) => void,
   io: Server<ClientToServerEvents, ServerToClientEvents>
 ) {
-  // Handle skip action - advance to resolve step immediately
+  // Handle skip action - advance to guard step immediately
   if (action === 'skip') {
-    scheduleNightStep(room, 'resolve', broadcastRoom, io);
+    scheduleNightStep(room, 'guard', broadcastRoom, io);
     return;
   }
 
@@ -121,9 +131,9 @@ function handleWitchDecision(
     actingWitch.alive &&
     alivePlayers.some((p) => p.id !== playerId);
 
-  // If no more actions available, advance to resolve step
+  // If no more actions available, advance to guard step
   if (!canHeal && !canPoison) {
-    scheduleNightStep(room, 'resolve', broadcastRoom, io);
+    scheduleNightStep(room, 'guard', broadcastRoom, io);
     return;
   }
 
@@ -133,10 +143,12 @@ function handleWitchDecision(
 
 function resolveNight(room: Room, broadcastRoom: (room: Room) => void, io: Server<ClientToServerEvents, ServerToClientEvents>) {
   const { queueDeath, resolveDeaths } = require('./deathManager');
-  if (room.wolfTarget && room.healedTarget !== room.wolfTarget) {
+  // Wolf kill - blocked by heal OR guard
+  if (room.wolfTarget && room.healedTarget !== room.wolfTarget && room.guardedTarget !== room.wolfTarget) {
     queueDeath(room, room.wolfTarget, 'eaten by Werewolves');
   }
-  if (room.poisonTarget) {
+  // Poison - blocked by guard protection
+  if (room.poisonTarget && room.guardedTarget !== room.poisonTarget) {
     queueDeath(room, room.poisonTarget, 'poisoned by Witch');
   }
   room.healedTarget = null;
