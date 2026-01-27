@@ -30,22 +30,7 @@ export default defineConfig({
   },
 
   build: {
-    lib: {
-      entry: path.resolve(__dirname, "src/index.ts"),
-      name: "WerewolvesGame",
-      formats: ["es", "umd"],
-      fileName: (format) => `werewolves-game.${format}.js`,
-    },
-    rollupOptions: {
-      external: ["vue", "pinia", "socket.io-client"],
-      output: {
-        globals: {
-          vue: "Vue",
-          pinia: "Pinia",
-          "socket.io-client": "io",
-        },
-        assetFileNames: "werewolves-game.[ext]",
-      },
-    },
+    outDir: "dist",
+    emptyOutDir: true,
   },
 });

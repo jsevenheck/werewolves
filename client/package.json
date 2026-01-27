@@ -3,21 +3,22 @@
   "version": "1.0.0",
   "type": "module",
   "files": [
-    "dist"
+    "dist-lib"
   ],
-  "main": "./dist/werewolves-game.umd.js",
-  "module": "./dist/werewolves-game.es.js",
+  "main": "./dist-lib/werewolves-game.umd.js",
+  "module": "./dist-lib/werewolves-game.es.js",
   "exports": {
     ".": {
-      "import": "./dist/werewolves-game.es.js",
-      "require": "./dist/werewolves-game.umd.js"
+      "import": "./dist-lib/werewolves-game.es.js",
+      "require": "./dist-lib/werewolves-game.umd.js"
     },
-    "./dist/style.css": "./dist/werewolves-game.css"
+    "./dist/style.css": "./dist-lib/werewolves-game.css"
   },
   "private": true,
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
+    "build:lib": "vue-tsc --noEmit && vite build --config vite.lib.config.ts",
     "typecheck": "vue-tsc --noEmit",
     "preview": "vite preview"
   },
