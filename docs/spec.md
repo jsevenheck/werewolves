@@ -22,7 +22,7 @@
 - `dayCount`: starts at 0, increments at each day phase.
 - `players`: map playerId -> Player.
 - `hostId`: acting host id (may switch on disconnect; reverts to owner when they reconnect).
-- `roleConfig`: counts for each special role; villagers fill remainder automatically. Guard is currently capped at 1 by validation.
+- `roleConfig`: counts for each special role; villagers fill remainder automatically. Seer, Witch, Armor, and Guard are currently capped at 1 by validation.
 - `minPlayers`: minimum players before start (fixed at 5).
 - `passiveRoleConfig`: `{ mayor: boolean }` feature toggles for passive roles.
 - `mayorId`: playerId of the current Mayor (null before election).
@@ -88,7 +88,7 @@ loop:
       if step='guard':
         if guard alive:
           wait for guard to select target (cannot be self, cannot be lastGuardedTarget)
-          store guardedTarget, update lastGuardedTarget for next night
+          store guardedTarget (lastGuardedTarget is updated at the start of the next night)
         advance step='resolve'
       wait ~3 seconds between all phase transitions and night steps to allow players to reset
       host may skip current step if a player is offline or unresponsive

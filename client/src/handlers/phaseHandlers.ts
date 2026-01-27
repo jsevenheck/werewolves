@@ -4,6 +4,37 @@ import type { ClientToServerEvents, ServerToClientEvents } from '@shared/events'
 import type { RoomView } from '@shared/types';
 import type { Socket } from 'socket.io-client';
 
+function getLobbyConfigError(room: RoomView): string | null {
+  const playersCount = room.players.length;
+  if (playersCount < room.minPlayers) {
+    return `Need at least ${room.minPlayers} players`;
+  }
+
+  const { roleConfig } = room;
+  if (roleConfig.werewolf < 1) {
+    return 'Need at least 1 Werewolf';
+  }
+  if (roleConfig.seer > 1) {
+    return 'Only 1 Seer is supported';
+  }
+  if (roleConfig.witch > 1) {
+    return 'Only 1 Witch is supported';
+  }
+  if (roleConfig.armor > 1) {
+    return 'Only 1 Armor is supported';
+  }
+  if (roleConfig.guard > 1) {
+    return 'Only 1 Guard is supported';
+  }
+
+  const configured = Object.values(roleConfig).reduce((sum, count) => sum + count, 0);
+  if (configured > playersCount) {
+    return 'Role count exceeds players';
+  }
+
+  return null;
+}
+
 function bindPhaseHandlers(socket: Socket<ServerToClientEvents, ClientToServerEvents>, renderApp: () => void) {
   if (!state.room) return;
   const room = state.room;
@@ -89,7 +120,12 @@ function bindLobbyHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
       if (!Number.isFinite(value) || value < 0) {
         value = 0;
       }
-      if (role === 'guard') {
+      const isSingletonRole =
+        role === 'seer' ||
+        role === 'witch' ||
+        role === 'armor' ||
+        role === 'guard';
+      if (isSingletonRole) {
         value = Math.min(value, 1);
         if (Number(field.value) !== value) {
           field.value = String(value);
@@ -135,6 +171,12 @@ function bindLobbyHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
 
   document.getElementById('start-game')?.addEventListener('click', () => {
     if (!state.playerId) {
+      return;
+    }
+    const currentRoom = state.room ?? room;
+    const configError = getLobbyConfigError(currentRoom);
+    if (configError) {
+      notify(configError);
       return;
     }
     const playerId = state.playerId;
