@@ -9,6 +9,7 @@ This guide explains what to update when introducing a new role and where those c
 - Update server flow (managers + handlers) for actions, win/lose, and validation.
 - Update client UI + handlers for the role's actions.
 - Ensure role-specific data is only broadcast to allowed players in `src/server/managers/broadcastManager.ts`.
+- Update narrator handling and narrator audio for any new active steps/phases/transitions.
 - Update tests and docs.
 
 ## Flowchart: What to Update Where
@@ -93,8 +94,9 @@ In addition to the "Minimal Path":
    - `client/src/handlers/phaseHandlers.ts`: send the action to the server.
    - `client/src/state/gameState.ts`: add any local pending state if needed.
    - `client/src/main.ts`: handle new phases/transitions in rendering.
-4. Audio (optional):
+4. Audio and narrator (required for active roles):
    - Add narrator files for new steps or phases in `client/public/audio/` (see `client/public/audio/README.md`).
+   - Extend narrator handling for any new active role step, phase, or transition.
 
 ## Example 1: Passive Role "Elder"
 Goal: add a village role with no active ability.
@@ -139,8 +141,9 @@ Goal: the Guard picks a player at night to protect from wolves for that night.
 6. Client UI
    - `client/src/renderers/phaseRenderers.ts`: render the Guard selection form on the `guard` step.
    - `client/src/handlers/phaseHandlers.ts`: emit `submitGuard`.
-7. Audio (optional)
+7. Audio and narrator (required)
    - Add `client/public/audio/night_guard.mp3`.
+   - Ensure narrator handling covers the new `guard` step/transition.
 8. Tests
    - Update `__tests__/nightManager.test.ts`, `__tests__/phaseManager.test.ts`, `__tests__/socketHandlers.test.ts`.
 
