@@ -114,7 +114,7 @@ describe('nightManager', () => {
 
     expect(room.witchState.healAvailable).toBe(false);
     expect(room.healedTarget).toBe('v1');
-    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'resolve', expect.any(Function), undefined);
+    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'guard', expect.any(Function), undefined);
   });
 
   test('handleWitchDecision does not consume heal when wolf target is invalid', () => {
@@ -177,7 +177,7 @@ describe('nightManager', () => {
 
     expect(room.witchState.poisonAvailable).toBe(false);
     expect(room.poisonTarget).toBe('v2');
-    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'resolve', expect.any(Function), undefined);
+    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'guard', expect.any(Function), undefined);
   });
 
   test('resolveNight queues deaths, resolves, and transitions', () => {
