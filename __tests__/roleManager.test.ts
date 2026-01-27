@@ -62,6 +62,13 @@ describe('roleManager', () => {
       roleConfig: { ...DEFAULT_ROLE_CONFIG, werewolf: 0 }
     } as Room;
     expect(validateCounts(noWolves)).toEqual({ error: 'Need at least 1 Werewolf' });
+
+    const tooManyGuards = {
+      players: makePlayers(5),
+      minPlayers: 5,
+      roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 2 }
+    } as Room;
+    expect(validateCounts(tooManyGuards)).toEqual({ error: 'Only 1 Guard is supported' });
   });
 
   test('assignRoles sets roles, teams, and night actions', () => {

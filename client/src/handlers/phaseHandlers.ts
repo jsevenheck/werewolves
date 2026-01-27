@@ -84,7 +84,18 @@ function bindLobbyHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
     const config: Record<string, number> & { passiveRoles?: Record<string, boolean> } = {};
     roleConfigForm.querySelectorAll<HTMLInputElement>('.role-input').forEach((field) => {
       if (!field.dataset.role) return;
-      config[field.dataset.role] = Number(field.value);
+      const role = field.dataset.role;
+      let value = Number(field.value);
+      if (!Number.isFinite(value) || value < 0) {
+        value = 0;
+      }
+      if (role === 'guard') {
+        value = Math.min(value, 1);
+        if (Number(field.value) !== value) {
+          field.value = String(value);
+        }
+      }
+      config[role] = value;
     });
     const passiveRoles: Record<string, boolean> = {};
     roleConfigForm.querySelectorAll<HTMLInputElement>('.passive-role-input').forEach((field) => {

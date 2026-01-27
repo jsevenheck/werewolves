@@ -32,6 +32,9 @@ function validateCounts(room: Room): { ok: true } | { error: string } {
   if (room.roleConfig.werewolf < 1) {
     return { error: 'Need at least 1 Werewolf' };
   }
+  if (room.roleConfig.guard > 1) {
+    return { error: 'Only 1 Guard is supported' };
+  }
   return { ok: true };
 }
 

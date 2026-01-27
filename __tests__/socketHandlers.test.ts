@@ -576,6 +576,60 @@ describe('socketHandlers mechanics guards', () => {
     jest.clearAllMocks();
   });
 
+  test('guard cannot protect themselves', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'guard',
+      guardedTarget: null,
+      lastGuardedTarget: null,
+      guardActed: false,
+      players: {
+        guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket-1' },
+        v1: { id: 'v1', role: 'villager', alive: true }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+    const cb = jest.fn();
+
+    handlers.submitGuardProtection({ roomCode: 'ABCD', playerId: 'guard', targetId: 'guard' }, cb);
+
+    expect(cb).toHaveBeenCalledWith({ error: 'Cannot protect yourself' });
+    expect(room.guardActed).toBe(false);
+    expect(room.guardedTarget).toBeNull();
+    expect(advanceNightStep).not.toHaveBeenCalled();
+  });
+
+  test('guard cannot protect the same target on consecutive nights', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'guard',
+      guardedTarget: null,
+      lastGuardedTarget: 'v1',
+      guardActed: false,
+      players: {
+        guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket-1' },
+        v1: { id: 'v1', role: 'villager', alive: true }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+    const cb = jest.fn();
+
+    handlers.submitGuardProtection({ roomCode: 'ABCD', playerId: 'guard', targetId: 'v1' }, cb);
+
+    expect(cb).toHaveBeenCalledWith({ error: 'Cannot protect the same player two nights in a row' });
+    expect(room.guardActed).toBe(false);
+    expect(room.guardedTarget).toBeNull();
+    expect(advanceNightStep).not.toHaveBeenCalled();
+  });
+
   test('seer cannot inspect themselves', () => {
     const room = {
       code: 'ABCD',

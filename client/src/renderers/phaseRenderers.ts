@@ -21,12 +21,15 @@ function renderLobbySection(room: RoomView) {
   const safeRoleDetails = ROLE_DETAILS || {};
   const passiveRoleConfig = room.passiveRoleConfig || { mayor: true };
   const passiveRoleDetails = PASSIVE_ROLE_DETAILS || {};
-  const roleInputs = Object.entries(room.roleConfig).map(([role, count]) => `
+  const roleInputs = Object.entries(room.roleConfig).map(([role, count]) => {
+    const maxAttr = role === 'guard' ? ' max="1"' : '';
+    return `
     <label class="role-row">
       <span>${safeRoleDetails[role as keyof typeof safeRoleDetails]?.name || role}</span>
-      <input type="number" class="role-input" data-role="${role}" min="0" value="${count}" />
+      <input type="number" class="role-input" data-role="${role}" min="0"${maxAttr} value="${count}" />
     </label>
-  `).join('');
+  `;
+  }).join('');
   const passiveRoleInputs = Object.entries(passiveRoleConfig).map(([role, enabled]) => {
     const detail = passiveRoleDetails[role as PassiveRole];
     const label = detail?.name || role;

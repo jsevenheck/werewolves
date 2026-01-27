@@ -22,7 +22,7 @@
 - `dayCount`: starts at 0, increments at each day phase.
 - `players`: map playerId -> Player.
 - `hostId`: acting host id (may switch on disconnect; reverts to owner when they reconnect).
-- `roleConfig`: counts for each special role; villagers fill remainder automatically.
+- `roleConfig`: counts for each special role; villagers fill remainder automatically. Guard is currently capped at 1 by validation.
 - `minPlayers`: minimum players before start (fixed at 5).
 - `passiveRoleConfig`: `{ mayor: boolean }` feature toggles for passive roles.
 - `mayorId`: playerId of the current Mayor (null before election).
