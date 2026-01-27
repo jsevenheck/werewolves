@@ -20,7 +20,8 @@
     "start": "node dist/server.js",
     "typecheck": "tsc -p tsconfig.json",
     "test": "jest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:vue": "playwright test --config playwright.vue.config.ts"
   },
   "keywords": [],
   "author": "",

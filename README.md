@@ -99,3 +99,44 @@ Note: The Docker image defaults to port 3000. Override with `-e PORT=3001` if ne
 - Manual tests: `docs/test-checklist.md`
 - Codebase structure: `docs/structure.md`
 - Adding roles: `docs/createNewRoles.md`
+
+## Vue Client (Embeddable)
+
+A Vue 3 + Pinia client is available in `client-vue/`. It is designed to be embeddable in other Vue applications (e.g. Game Hub).
+
+**Development:**
+```bash
+pnpm run dev:client-vue
+```
+Runs Vue dev server on port 5174.
+
+**Build for Library:**
+```bash
+pnpm run build:client-vue
+```
+Outputs UMD/ESM bundles to `client-vue/dist/`.
+
+**E2E Tests:**
+```bash
+pnpm run test:e2e:vue
+```
+Runs Playwright tests against the Vue client.
+
+**Embedding usage:**
+```typescript
+import { installWerewolvesGame } from 'werewolves-game-vue';
+import 'werewolves-game-vue/dist/style.css'; // if applicable
+
+app.use(installWerewolvesGame, {
+  socketUrl: 'https://your-server.com',
+  socketPath: '/socket.io',
+  assetsBasePath: '/audio',
+  standalone: false
+});
+```
+
+**Configuration Props:**
+- `socketUrl`: URL of the backend server (default: same origin)
+- `socketPath`: Socket.IO path (default: `/socket.io`)
+- `assetsBasePath`: Base path for audio files (default: `/audio`)
+- `standalone`: If true, applies full page styling. If false (embed mode), avoids polluting global styles (default: `true`).

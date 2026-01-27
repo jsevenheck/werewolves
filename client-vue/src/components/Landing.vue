@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useGameStore } from '@/stores/game';
 import { pushNotification, notify } from '@/utils/helpers';
 import type { TypedSocket } from '@/composables/useSocket';
@@ -16,7 +17,7 @@ const createName = ref('');
 const joinName = ref('');
 const joinCode = ref('');
 
-const savedSession = store.loadSession();
+const { storedSession: savedSession } = storeToRefs(store);
 
 function enterRoom(params: { roomCode: string; playerId: string; name: string; resumeToken: string }) {
   store.setPlayer(params.playerId, params.name, params.resumeToken);
@@ -74,8 +75,8 @@ function joinRoom() {
 }
 
 function resumeSession() {
-  if (savedSession) {
-    attemptResume(savedSession);
+  if (savedSession.value) {
+    attemptResume(savedSession.value);
   }
 }
 </script>
