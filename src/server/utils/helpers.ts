@@ -41,6 +41,7 @@ function clearRoomTimers(room: Room) {
     clearTimeout(room.hunterShotTimer);
     room.hunterShotTimer = null;
   }
+  room.hunterShotEndsAt = null;
   if (room.mayorSelectionTimer) {
     clearTimeout(room.mayorSelectionTimer);
     room.mayorSelectionTimer = null;

@@ -77,6 +77,7 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     lastDayMessage: room.lastDayMessage,
     awaitingHunterShot: room.awaitingHunterShot === viewerId,
     hunterShotPending: !!room.awaitingHunterShot,
+    hunterShotEndsAt: room.awaitingHunterShot === viewerId ? room.hunterShotEndsAt : null,
     winner: room.winner,
     logs,
     self: viewer

@@ -126,6 +126,7 @@ export interface Room {
   phaseTransition: PhaseTransition;
   phaseTimer: NodeJS.Timeout | null;
   hunterShotTimer: NodeJS.Timeout | null;
+  hunterShotEndsAt: number | null;
   hunterShotQueue: string[];
   createdAt: number;
   lastActivityAt: number;
@@ -192,6 +193,7 @@ export interface RoomView {
   lastDayMessage: string | null;
   awaitingHunterShot: boolean;
   hunterShotPending: boolean;
+  hunterShotEndsAt: number | null;
   winner: Winner | null;
   logs: RoomViewLog[];
   self: RoomViewSelf | null;

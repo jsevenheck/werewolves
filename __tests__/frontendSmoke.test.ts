@@ -61,6 +61,7 @@ describe('frontend smoke', () => {
       lastDayMessage: null,
       awaitingHunterShot: false,
       hunterShotPending: false,
+      hunterShotEndsAt: null,
       winner: null,
       logs: [],
       self: { id: 'p1', role: null, team: null, alive: true }

@@ -11,7 +11,8 @@ jest.mock('../client/src/state/gameState', () => ({
 }));
 
 jest.mock('../client/src/config/constants', () => ({
-  ROLE_DETAILS: {}
+  ROLE_DETAILS: {},
+  PASSIVE_ROLE_DETAILS: { mayor: { name: 'Mayor', description: '' } }
 }));
 
 jest.mock('../client/src/utils/helpers', () => ({
@@ -74,6 +75,7 @@ describe('commonRenderers narrator label', () => {
       lastDayMessage: null,
       awaitingHunterShot: false,
       hunterShotPending: false,
+      hunterShotEndsAt: null,
       winner: null,
       logs: [],
       self: null

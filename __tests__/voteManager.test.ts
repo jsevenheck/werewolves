@@ -39,6 +39,7 @@ const makeRoom = (players: Record<string, Player>): Room => ({
   phaseTimer: null,
   transitionTimer: null,
   hunterShotTimer: null,
+  hunterShotEndsAt: null,
   hunterShotQueue: [],
   lastNightDeaths: [],
   lastDayDeaths: [],
