@@ -45,8 +45,27 @@ const props = withDefaults(defineProps<Props>(), {
 const injectedConfig = inject<WerewolvesGameConfig>('werewolvesConfig', {});
 const effectiveSocketUrl = props.socketUrl || injectedConfig.socketUrl || '';
 const effectiveSocketPath = props.socketPath || injectedConfig.socketPath || '/socket.io';
-const effectiveAssetsBasePath = props.assetsBasePath || injectedConfig.assetsBasePath || '/audio';
+const effectiveAssetsBasePath = normalizeAssetsBasePath(
+  props.assetsBasePath || injectedConfig.assetsBasePath || '/audio'
+);
 const effectiveStandalone = props.standalone ?? injectedConfig.standalone ?? true;
+
+function normalizeAssetsBasePath(path: string) {
+  const trimmed = path.trim();
+  if (!trimmed) return '/audio';
+  const normalized = trimmed.replace(/\/+$/, '');
+  if (
+    normalized.startsWith('/') ||
+    normalized.startsWith('http://') ||
+    normalized.startsWith('https://')
+  ) {
+    return normalized;
+  }
+  const baseUrl = import.meta.env.BASE_URL || '/';
+  const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  const relative = normalized.replace(/^\/+/, '');
+  return `${base}/${relative}`;
+}
 
 const store = useGameStore();
 const socket = useSocket({ url: effectiveSocketUrl, path: effectiveSocketPath });

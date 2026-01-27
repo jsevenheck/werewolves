@@ -24,15 +24,34 @@ const submitAbstainVotes = async (pages: Page[]) => {
 };
 
 const advanceToNextNight = async (host: Page) => {
-  const skipButton = host.locator("#host-skip-btn");
-  if (await skipButton.isVisible()) {
-    try {
-      await skipButton.click();
-    } catch {
-      // Ignore transition button racing the auto-advance in CI.
+  const deadline = Date.now() + 45000;
+  while (Date.now() < deadline) {
+    const wolfForm = host.locator("#wolf-form");
+    if (await wolfForm.isVisible().catch(() => false)) {
+      return;
     }
+
+    const endVoteButton = host.locator("#end-vote-btn");
+    if (await endVoteButton.isVisible().catch(() => false)) {
+      try {
+        await endVoteButton.click();
+      } catch {
+        // Ignore race conditions if voting ends automatically.
+      }
+    }
+
+    const skipButton = host.locator("#host-skip-btn");
+    if (await skipButton.isVisible().catch(() => false)) {
+      try {
+        await skipButton.click();
+      } catch {
+        // Ignore transition button racing the auto-advance in CI.
+      }
+    }
+
+    await host.waitForTimeout(250);
   }
-  await host.waitForSelector("#wolf-form", { timeout: 30000 });
+  await host.waitForSelector("#wolf-form", { timeout: 1000 });
 };
 
 test("witch can heal and poison across nights", async ({ browser }) => {

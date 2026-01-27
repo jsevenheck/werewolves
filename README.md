@@ -34,6 +34,17 @@ pnpm run dev
 
 This runs the backend server on port 3001 and Vite dev server on port 5173 with automatic proxy configuration. Open `http://localhost:5173` for development.
 
+## Dev workflow
+
+- Run `pnpm run dev` from the repo root to start **both** the server and the Vite client.
+- The Vite dev server serves the client on port 5173 and proxies to the server on port 3001.
+- Running the server alone (e.g. `pnpm run dev:server` or `pnpm start`) is **not** equivalent to running the client dev server.
+
+The Vue client lives in the `client/` package (pnpm workspace). You can run only the client with:
+```bash
+pnpm --filter werewolves-client dev
+```
+
 ## Development
 
 **Type checking:**
@@ -47,6 +58,12 @@ pnpm run build
 ```
 
 This compiles the TypeScript server code to `dist/` and builds the Vite client to `dist/client/`.
+
+## Production build & static hosting
+
+- The client build output goes to `dist/client/` (from Vite `outDir`).
+- The server serves built assets via `express.static` pointing at the built client directory.
+- As a result, `/audio/*` is available in production once the client is built and audio files exist in the build output.
 
 ## Tests
 
@@ -68,19 +85,14 @@ pnpm run test:e2e
 4. Host continues once everyone is ready.
 5. Armor links Lovers once, then night/day cycles begin.
 
-## Narrator Audio (Mobile-Friendly)
-Mobile browsers require a user gesture before audio can play. If a player enables the narrator and sees "Tap to enable audio," they must tap once to unlock playback (this is a browser autoplay policy requirement).
+## Narrator Audio Files
 
-Audio files are loaded by key using `/audio/<narrationKey>.mp3` (HTML5 Howler playback). The narrator expects externally provided assets, so you can supply them without committing binaries by:
-- Adding files locally in `client/public/audio/` for development.
-- Copying or mounting audio files into the built app's `/audio/` directory at deploy time.
-- Serving `/audio/` from a CDN or asset pipeline routed by your web server.
+Mobile browsers require a user gesture before audio can play. If a player enables the narrator and sees "Tap to enable audio," they must tap once to unlock playback (browser autoplay policy requirement).
 
-Narration keys map to filenames as follows:
-For per-file meanings and when each clip plays, see `client/public/audio/README.md`.
-- `phaseTransition` values (e.g. `dayToNight`, `nightToDay`) -> `/audio/<phaseTransition>.mp3`
-- Night steps (e.g. `wolves`, `seer`) -> `/audio/night_<step>.mp3`
-- Phases (e.g. `day`, `night`, `lobby`) -> `/audio/<phase>.mp3`
+- Canonical location: `client/public/audio/`
+- Runtime URL expectation: `/audio/<name>.mp3`
+- Vite serves files in `client/public/` at `/` during development and copies them into the build output as-is (so `client/public/audio/*.mp3` becomes `dist/client/audio/*.mp3`).
+- See `client/public/audio/README.md` for per-file meanings and when each clip plays.
 
 ## Docker
 
@@ -100,43 +112,26 @@ Note: The Docker image defaults to port 3000. Override with `-e PORT=3001` if ne
 - Codebase structure: `docs/structure.md`
 - Adding roles: `docs/createNewRoles.md`
 
-## Vue Client (Embeddable)
+## Embedding / host integration notes
 
-A Vue 3 + Pinia client is available in `client-vue/`. It is designed to be embeddable in other Vue applications (e.g. Game Hub).
+- The Vue client lives in `client/` and can be built as a library with:
+  ```bash
+  pnpm --filter werewolves-client build:lib
+  ```
+  This outputs UMD/ESM bundles to `client/dist-lib/`.
+- The Socket.IO `path` must match between client and server unless a proxy rewrites it.
+- Configuration options (when embedding via `installWerewolvesGame`):
+  - `socketUrl` (default: same origin)
+  - `socketPath` (default: `/socket.io`)
+  - `assetsBasePath` (default: `/audio`)
+  - `standalone` (default: `true`)
+- Relative `assetsBasePath` values are resolved against Vite's base URL (`import.meta.env.BASE_URL`) for non-root deployments.
 
-**Development:**
-```bash
-pnpm run dev:client-vue
-```
-Runs Vue dev server on port 5174.
+## Migration / removal caveat
 
-**Build for Library:**
-```bash
-pnpm run build:client-vue
-```
-Outputs UMD/ESM bundles to `client-vue/dist/`.
-
-**E2E Tests:**
-```bash
-pnpm run test:e2e:vue
-```
-Runs Playwright tests against the Vue client.
-
-**Embedding usage:**
-```typescript
-import { installWerewolvesGame } from 'werewolves-game-vue';
-import 'werewolves-game-vue/dist/style.css'; // if applicable
-
-app.use(installWerewolvesGame, {
-  socketUrl: 'https://your-server.com',
-  socketPath: '/socket.io',
-  assetsBasePath: '/audio',
-  standalone: false
-});
-```
-
-**Configuration Props:**
-- `socketUrl`: URL of the backend server (default: same origin)
-- `socketPath`: Socket.IO path (default: `/socket.io`)
-- `assetsBasePath`: Base path for audio files (default: `/audio`)
-- `standalone`: If true, applies full page styling. If false (embed mode), avoids polluting global styles (default: `true`).
+- The legacy vanilla frontend has been removed; there is no parallel fallback client.
+- Correctness now relies on tests and E2E coverage:
+  - `pnpm run typecheck`
+  - `pnpm test`
+  - `pnpm run test:e2e`
+- If a future migration needs a fallback, it must reintroduce a parallel client directory.
