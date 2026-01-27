@@ -2,7 +2,8 @@
 
 ### Player
 - `id`: string player id.
-- `socketId`: string socket id for reconnect.
+- `socketId`: string or null active socket id for reconnect.
+- `resumeToken`: random token required to resume a session (stored client-side).
 - `name`: display name shown to others.
 - `role`: enum (`werewolf`, `seer`, `hunter`, `witch`, `armor`, `joker`, `villager`).
 - `team`: derived team id for win logic (`wolves`, `village`, `neutral`).
@@ -11,18 +12,23 @@
 - `ready`: boolean for role-reveal readiness.
 - `voteTarget`: legacy field (cleared on death; day voting uses `voteState`).
 - `nightAction`: currently `null` for most roles; werewolves get `{ vote: null }` on assignment (not used by core flow).
-- `isHost`: boolean for UI permissions.
+- `isHost`: boolean for the original host/owner (used to reclaim host on reconnect; UI uses `hostId`).
 - `seerResult`: last inspection result for seer UI (name + alignment).
 
 ### Room
 - `code`: 4-letter uppercase join code.
-- `phase`: enum (`lobby`, `roleReveal`, `armor`, `night`, `day`, `ended`).
+- `phase`: enum (`lobby`, `roleReveal`, `mayor`, `armor`, `night`, `day`, `ended`).
 - `phaseStep`: helper for night substeps (`wolves`, `seer`, `witch`, `resolve`, `transition`).
 - `dayCount`: starts at 0, increments at each day phase.
 - `players`: map playerId -> Player.
-- `hostId`: player id allowed to configure roles/start.
+- `hostId`: acting host id (may switch on disconnect; reverts to owner when they reconnect).
 - `roleConfig`: counts for each special role; villagers fill remainder automatically.
-- `minPlayers`: configurable minimum players before start (default 5, min 3).
+- `minPlayers`: minimum players before start (fixed at 5).
+- `passiveRoleConfig`: `{ mayor: boolean }` feature toggles for passive roles.
+- `mayorId`: playerId of the current Mayor (null before election).
+- `awaitingMayorSelection`: playerId awaiting a mayor succession pick, or null.
+- `mayorSelectionQueue`: queue of mayor succession prompts.
+- `mayorSelectionTimer`: timeout for mayor succession (60 seconds; auto-selects random alive player on timeout).
 - `lovers`: `{aId, bId}` or null.
 - `witchState`: `{healAvailable: boolean, poisonAvailable: boolean}`.
 - `wolfVotes`: map playerId -> targetId (null for no vote).
@@ -32,9 +38,13 @@
 - `logs`: array of structured entries for UI recap (`{ts, text, publicText}`).
 - `lastNightDeaths`: array of `{name, role}` announced in the day report.
 - `awaitingHunterShot`: playerId awaiting a hunter shot, or null.
-- `phaseTransition`: pending phase transition kind (`postReveal`, `postArmor`, `nightToDay`, `dayToNight`) or null.
+- `hunterShotTimer`: timeout for hunter shot (60 seconds; auto-skips if no target selected).
+- `hunterShotQueue`: queue of hunter death events awaiting shot prompts.
+- `phaseTransition`: pending phase transition kind (`postReveal`, `postMayor`, `postArmor`, `nightToDay`, `dayToNight`) or null.
 - `nextNightStep`: when `phaseStep` is `transition`, the next step to enter.
 - `winner`: `{team: 'village' | 'wolves' | 'joker', reason}` when ended.
+- `createdAt`: timestamp when room was created.
+- `lastActivityAt`: timestamp of last room activity (updated on each broadcast; used for automatic cleanup).
 
 ## Phase Engine Pseudocode
 
@@ -48,10 +58,17 @@ loop:
       send each player role; wolves get list of other wolves (private UI fields)
       require each player to mark ready
       host continues once all connected players are ready
-      go phase=armor if armor alive else startNight (phase=night, step='wolves')
+      if passiveRoleConfig.mayor -> go phase=mayor
+      else -> go phase=armor if armor alive else startNight (phase=night, step='wolves')
+    mayor:
+      collect votes from alive players to elect the Mayor
+      if tie: revote among tied candidates
+      if tie again: choose random among tied candidates
+      once mayor elected -> go phase=armor if armor alive else startNight (phase=night, step='wolves')
     armor:
       wait for armor player to choose two targets
       set lovers; notify both
+      host may skip armor if the player is offline or unresponsive
       schedule transition to night
     night (step machine):
       if step='wolves':
@@ -93,7 +110,8 @@ resolveDeaths():
     if already dead continue
     mark dead, append log
     set public log to reveal victim + role only
-    if role is hunter -> request shot target immediately
+    if role is hunter -> add to hunterShotQueue and start hunter shot prompt (60s timeout)
+    if player is mayorId -> add to mayorSelectionQueue and start mayor succession prompt (60s timeout)
     if player is lover -> enqueue other lover death reason='died of heartbreak'
   after queue empty check win conditions:
     if all wolves dead -> endGame('village', 'All wolves dead')
@@ -102,7 +120,31 @@ resolveDeaths():
 HunterShot(targetId):
   enqueue death for target
   resolveDeaths()
+  if no response within 60 seconds:
+    auto-skip hunter shot and resume game flow
+
+MayorSuccession(newMayorId):
+  set mayorId to newMayorId
+  resume game flow
+  if no response within 60 seconds:
+    randomly select an alive player as new mayor and resume game flow
 
 onPlayerDisconnect(playerId):
   mark connected=false; keep state for reconnection
+  if player was host -> assign acting host to another connected player (if any)
+
+onPlayerResume(roomCode, playerId, resumeToken):
+  if resumeToken missing or mismatched -> reject
+  mark connected=true
+  if player is original host -> set acting host back to owner
+
+## Room Lifecycle & Cleanup
+
+Rooms are automatically cleaned up to prevent memory leaks:
+- **Ended games**: Deleted 1 hour after the game ends (phase='ended')
+- **Idle rooms**: Deleted after 24 hours of inactivity if:
+  - Room is still in lobby phase, OR
+  - All players are disconnected
+- **Activity tracking**: `lastActivityAt` timestamp updates on every room broadcast
+- **Cleanup interval**: Runs every hour to check and remove stale rooms
 ```

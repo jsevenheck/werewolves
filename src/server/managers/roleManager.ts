@@ -1,12 +1,21 @@
-import { DEFAULT_ROLE_CONFIG, ROLE_INFO } from '../config/constants';
+import { DEFAULT_ROLE_CONFIG, DEFAULT_PASSIVE_ROLE_CONFIG, ROLE_INFO } from '../config/constants';
 import { shuffle } from '../utils/helpers';
-import type { Room, RoleConfig, Role } from '../../shared/types';
+import type { Room, RoleConfig, PassiveRoleConfig, Role } from '../../shared/types';
 
 function normalizeRoleConfig(config: Partial<RoleConfig> = {}): RoleConfig {
   const normalized: RoleConfig = { ...DEFAULT_ROLE_CONFIG };
   for (const key of Object.keys(DEFAULT_ROLE_CONFIG) as (keyof RoleConfig)[]) {
     const raw = Number(config[key]);
     normalized[key] = Number.isFinite(raw) && raw >= 0 ? Math.floor(raw) : DEFAULT_ROLE_CONFIG[key];
+  }
+  return normalized;
+}
+
+function normalizePassiveRoleConfig(config: Partial<PassiveRoleConfig> = {}): PassiveRoleConfig {
+  const normalized: PassiveRoleConfig = { ...DEFAULT_PASSIVE_ROLE_CONFIG };
+  for (const key of Object.keys(DEFAULT_PASSIVE_ROLE_CONFIG) as (keyof PassiveRoleConfig)[]) {
+    const raw = config[key];
+    normalized[key] = typeof raw === 'boolean' ? raw : DEFAULT_PASSIVE_ROLE_CONFIG[key];
   }
   return normalized;
 }
@@ -28,7 +37,7 @@ function validateCounts(room: Room): { ok: true } | { error: string } {
 
 function assignRoles(room: Room) {
   const players = shuffle(Object.values(room.players));
-  const deck: Role[] = [];
+  let deck: Role[] = [];
   for (const [role, count] of Object.entries(room.roleConfig) as [Role, number][]) {
     for (let i = 0; i < count; i += 1) {
       deck.push(role);
@@ -37,7 +46,7 @@ function assignRoles(room: Room) {
   while (deck.length < players.length) {
     deck.push('villager');
   }
-  shuffle(deck);
+  deck = shuffle(deck);
   players.forEach((player, index) => {
     const role = deck[index];
     player.role = role;
@@ -54,6 +63,7 @@ function assignRoles(room: Room) {
 
 export {
   normalizeRoleConfig,
+  normalizePassiveRoleConfig,
   validateCounts,
   assignRoles
 };

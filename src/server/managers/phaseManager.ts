@@ -1,5 +1,11 @@
 import type { Server } from 'socket.io';
-import { NIGHT_DELAY_MS, PHASE_DELAY_MS } from '../config/constants';
+import {
+  NIGHT_DELAY_MS,
+  PHASE_DELAY_MS,
+  POST_ARMOR_DELAY_MS,
+  POST_MAYOR_DELAY_MS,
+  POST_REVEAL_DELAY_MS
+} from '../config/constants';
 import { createVoteState, addLog, clearRoomTimers } from '../utils/helpers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { NightStep, PhaseTransition, Room } from '../../shared/types';
@@ -11,10 +17,11 @@ function startNight(room: Room) {
   room.phaseTransition = null;
   clearRoomTimers(room);
   room.hunterShotQueue = [];
+  room.mayorSelectionQueue = [];
   room.wolfVotes = {};
   Object.values(room.players).forEach((player) => {
     if (player.role === 'werewolf' && player.alive) {
-      room.wolfVotes[player.id] = '';
+      room.wolfVotes[player.id] = null;
     }
   });
   room.wolfTarget = null;
@@ -25,6 +32,7 @@ function startNight(room: Room) {
   room.lastDayMessage = null;
   room.voteState = createVoteState();
   room.awaitingHunterShot = null;
+  room.awaitingMayorSelection = null;
 }
 
 function scheduleNightStep(
@@ -68,6 +76,11 @@ function schedulePhaseTransition(
     room.phaseStep = 'transition';
   }
   broadcastRoom(room);
+  const delayMs =
+    kind === 'postReveal' ? POST_REVEAL_DELAY_MS :
+    kind === 'postMayor' ? POST_MAYOR_DELAY_MS :
+    kind === 'postArmor' ? POST_ARMOR_DELAY_MS :
+    PHASE_DELAY_MS;
   room.phaseTimer = setTimeout(() => {
     room.phaseTimer = null;
     if (room.winner) return;
@@ -76,9 +89,22 @@ function schedulePhaseTransition(
       advanceFromReveal(room, broadcastRoom);
       return;
     }
+    if (kind === 'postMayor') {
+      advanceFromMayor(room, broadcastRoom);
+      return;
+    }
     if (kind === 'postArmor') {
       startNight(room);
+      room.phaseStep = 'transition';
+      room.nextNightStep = 'wolves';
       broadcastRoom(room);
+      room.transitionTimer = setTimeout(() => {
+        room.transitionTimer = null;
+        if (room.phase !== 'night' || room.phaseStep !== 'transition') return;
+        room.phaseStep = 'wolves';
+        room.nextNightStep = null;
+        broadcastRoom(room);
+      }, NIGHT_DELAY_MS);
       return;
     }
     if (kind === 'nightToDay') {
@@ -95,14 +121,11 @@ function schedulePhaseTransition(
       startNight(room);
       broadcastRoom(room);
     }
-  }, PHASE_DELAY_MS);
+  }, delayMs);
 }
 
 function holdDayToNightTransition(room: Room, broadcastRoom: (room: Room) => void) {
-  clearRoomTimers(room);
-  room.phaseTransition = 'dayToNight';
-  room.nextNightStep = null;
-  broadcastRoom(room);
+  schedulePhaseTransition(room, 'dayToNight', broadcastRoom);
 }
 
 function resolveNightStep(room: Room, nextStep: NightStep): NightStep {
@@ -122,6 +145,26 @@ function resolveNightStep(room: Room, nextStep: NightStep): NightStep {
 }
 
 function advanceFromReveal(room: Room, broadcastRoom: (room: Room) => void) {
+  const mayorEnabled = room.passiveRoleConfig?.mayor !== false;
+  room.phaseStep = null;
+  room.mayorId = null;
+  room.voteState = createVoteState();
+  if (mayorEnabled) {
+    room.phase = 'mayor';
+    addLog(room, 'Mayor election begins.');
+    broadcastRoom(room);
+    return;
+  }
+  addLog(room, 'Mayor role disabled. Skipping election.');
+  if (room.roleConfig.armor > 0 && Object.values(room.players).some((p) => p.role === 'armor' && p.alive)) {
+    room.phase = 'armor';
+  } else {
+    startNight(room);
+  }
+  broadcastRoom(room);
+}
+
+function advanceFromMayor(room: Room, broadcastRoom: (room: Room) => void) {
   if (room.roleConfig.armor > 0 && Object.values(room.players).some((p) => p.role === 'armor' && p.alive)) {
     room.phase = 'armor';
     room.phaseStep = null;
@@ -146,5 +189,6 @@ export {
   schedulePhaseTransition,
   holdDayToNightTransition,
   advanceFromReveal,
+  advanceFromMayor,
   notifyLovers
 };

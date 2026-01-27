@@ -32,7 +32,7 @@ describe('lobby handlers', () => {
         <label><input type="number" class="role-input" data-role="witch" value="1" /></label>
         <label><input type="number" class="role-input" data-role="armor" value="1" /></label>
         <label><input type="number" class="role-input" data-role="joker" value="0" /></label>
-        <label><input type="number" id="min-players" value="5" /></label>
+        <label><input type="checkbox" class="passive-role-input" data-passive-role="mayor" checked /></label>
       </form>
       <button id="start-game" type="button">Start Game</button>
     `;
@@ -49,6 +49,10 @@ describe('lobby handlers', () => {
       hostId: 'host',
       minPlayers: 5,
       roleConfig: { werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 0 },
+      passiveRoleConfig: { mayor: true },
+      mayorId: null,
+      awaitingMayorSelection: false,
+      mayorSelectionPending: false,
       loversKnown: false,
       loversAssigned: false,
       loverName: null,
@@ -64,6 +68,7 @@ describe('lobby handlers', () => {
       lastDayDeaths: [],
       lastDayMessage: null,
       awaitingHunterShot: false,
+      hunterShotPending: false,
       winner: null,
       logs: [],
       self: null
@@ -74,9 +79,7 @@ describe('lobby handlers', () => {
     bindPhaseHandlers(socket as never, jest.fn());
 
     const werewolfInput = document.querySelector('input[data-role="werewolf"]') as HTMLInputElement;
-    const minPlayersInput = document.querySelector('#min-players') as HTMLInputElement;
     werewolfInput.value = '1';
-    minPlayersInput.value = '3';
     werewolfInput.dispatchEvent(new Event('change', { bubbles: true }));
 
     expect(socket.emit).toHaveBeenCalledWith('updateRoleConfig', {
@@ -89,7 +92,7 @@ describe('lobby handlers', () => {
         witch: 1,
         armor: 1,
         joker: 0,
-        minPlayers: 3
+        passiveRoles: { mayor: true }
       }
     });
   });
@@ -106,6 +109,10 @@ describe('lobby handlers', () => {
       hostId: 'host',
       minPlayers: 5,
       roleConfig: { werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 0 },
+      passiveRoleConfig: { mayor: true },
+      mayorId: null,
+      awaitingMayorSelection: false,
+      mayorSelectionPending: false,
       loversKnown: false,
       loversAssigned: false,
       loverName: null,
@@ -121,6 +128,7 @@ describe('lobby handlers', () => {
       lastDayDeaths: [],
       lastDayMessage: null,
       awaitingHunterShot: false,
+      hunterShotPending: false,
       winner: null,
       logs: [],
       self: null
@@ -148,7 +156,7 @@ describe('lobby handlers', () => {
         witch: 1,
         armor: 1,
         joker: 0,
-        minPlayers: 5
+        passiveRoles: { mayor: true }
       }
     });
   });

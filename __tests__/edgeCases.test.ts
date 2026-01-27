@@ -24,6 +24,7 @@ describe('Edge Cases', () => {
       expect(room.awaitingHunterShot).toBe(null);
       expect(room.hunterShotTimer).toBe(null);
       expect(room.hunterShotQueue).toEqual([]);
+      expect(room.passiveRoleConfig).toEqual({ mayor: true });
     });
   });
 
@@ -31,13 +32,15 @@ describe('Edge Cases', () => {
     test('lover dies of heartbreak when partner is voted out', () => {
       const room = {
         players: {
-          a: { id: 'a', name: 'A', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null },
-          b: { id: 'b', name: 'B', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null }
+          a: { id: 'a', name: 'A', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, resumeToken: 'token-a', isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null },
+          b: { id: 'b', name: 'B', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, resumeToken: 'token-b', isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null }
         },
         lovers: { aId: 'a', bId: 'b' },
         pendingDeaths: [],
         logs: [],
         awaitingHunterShot: null,
+        mayorSelectionQueue: [],
+        awaitingMayorSelection: null,
         winner: null,
         phase: 'day',
         phaseStep: null,
@@ -76,12 +79,14 @@ describe('Edge Cases', () => {
             ready: false,
             seerResult: null
           },
-          lover: { id: 'lover', name: 'Lover', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null }
+          lover: { id: 'lover', name: 'Lover', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, resumeToken: 'token-lover', isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null }
         },
         lovers: { aId: 'hunter', bId: 'lover' },
         pendingDeaths: [],
         logs: [],
         awaitingHunterShot: null,
+        mayorSelectionQueue: [],
+        awaitingMayorSelection: null,
         winner: null,
         phase: 'day',
         phaseStep: null,
@@ -112,13 +117,15 @@ describe('Edge Cases', () => {
     test('both lovers dead - no repeated death processing', () => {
       const room = {
         players: {
-          a: { id: 'a', name: 'A', role: 'villager', team: 'village', alive: false, connected: true, socketId: null, isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null },
-          b: { id: 'b', name: 'B', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null }
+          a: { id: 'a', name: 'A', role: 'villager', team: 'village', alive: false, connected: true, socketId: null, resumeToken: 'token-a', isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null },
+          b: { id: 'b', name: 'B', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, resumeToken: 'token-b', isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null }
         },
         lovers: { aId: 'a', bId: 'b' },
         pendingDeaths: [],
         logs: [],
         awaitingHunterShot: null,
+        mayorSelectionQueue: [],
+        awaitingMayorSelection: null,
         winner: null,
         phase: 'day',
         phaseStep: null,
@@ -141,8 +148,8 @@ describe('Edge Cases', () => {
   describe('Vote Edge Cases', () => {
     test('single player voting themselves creates tie', () => {
       const players: Record<string, Player> = {
-        a: { id: 'a', name: 'A', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null },
-        b: { id: 'b', name: 'B', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null }
+        a: { id: 'a', name: 'A', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, resumeToken: 'token-a', isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null },
+        b: { id: 'b', name: 'B', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, resumeToken: 'token-b', isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null }
       };
       const room = {
         players,
@@ -150,7 +157,9 @@ describe('Edge Cases', () => {
         logs: [],
         phase: 'day',
         winner: null,
-        hunterShotQueue: []
+        hunterShotQueue: [],
+        mayorSelectionQueue: [],
+        awaitingMayorSelection: null
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -161,9 +170,9 @@ describe('Edge Cases', () => {
 
     test('unanimous vote resolves immediately', () => {
       const players: Record<string, Player> = {
-        a: { id: 'a', name: 'A', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null },
-        b: { id: 'b', name: 'B', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null },
-        c: { id: 'c', name: 'C', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null }
+        a: { id: 'a', name: 'A', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, resumeToken: 'token-a', isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null },
+        b: { id: 'b', name: 'B', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, resumeToken: 'token-b', isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null },
+        c: { id: 'c', name: 'C', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, resumeToken: 'token-c', isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null }
       };
       const room = {
         players,
@@ -176,6 +185,8 @@ describe('Edge Cases', () => {
         phaseTransition: null,
         winner: null,
         awaitingHunterShot: null,
+        mayorSelectionQueue: [],
+        awaitingMayorSelection: null,
         transitionTimer: null,
         phaseTimer: null,
         hunterShotQueue: []
@@ -189,9 +200,9 @@ describe('Edge Cases', () => {
 
     test('all players abstain - no elimination', () => {
       const players: Record<string, Player> = {
-        a: { id: 'a', name: 'A', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null },
-        b: { id: 'b', name: 'B', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null },
-        c: { id: 'c', name: 'C', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null }
+        a: { id: 'a', name: 'A', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, resumeToken: 'token-a', isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null },
+        b: { id: 'b', name: 'B', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, resumeToken: 'token-b', isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null },
+        c: { id: 'c', name: 'C', role: 'villager', team: 'village', alive: true, connected: true, socketId: null, resumeToken: 'token-c', isHost: false, voteTarget: null, nightAction: null, ready: false, seerResult: null }
       };
       const room = {
         players,
@@ -199,7 +210,9 @@ describe('Edge Cases', () => {
         logs: [],
         phase: 'day',
         winner: null,
-        hunterShotQueue: []
+        hunterShotQueue: [],
+        mayorSelectionQueue: [],
+        awaitingMayorSelection: null
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -231,6 +244,8 @@ describe('Edge Cases', () => {
         pendingDeaths: [],
         logs: [],
         awaitingHunterShot: null,
+        mayorSelectionQueue: [],
+        awaitingMayorSelection: null,
         winner: null,
         phase: 'day',
         phaseStep: null,
@@ -273,6 +288,8 @@ describe('Edge Cases', () => {
         pendingDeaths: [],
         logs: [],
         awaitingHunterShot: null,
+        mayorSelectionQueue: [],
+        awaitingMayorSelection: null,
         winner: null,
         phase: 'day',
         phaseStep: null,

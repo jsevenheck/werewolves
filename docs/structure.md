@@ -19,6 +19,7 @@ werewolves/
 |       |   |-- phaseManager.ts     # Game phase transitions
 |       |   |-- nightManager.ts     # Night phase logic
 |       |   |-- voteManager.ts      # Day voting logic
+|       |   |-- mayorManager.ts     # Mayor election and succession logic
 |       |   |-- deathManager.ts     # Death resolution and win conditions
 |       |   `-- broadcastManager.ts # Room state broadcasting
 |       |-- handlers/         # Socket event handlers
@@ -27,7 +28,8 @@ werewolves/
 |           `-- helpers.ts    # Helper functions
 |-- src/shared/               # Shared types/events for client + server
 |   |-- events.ts             # Socket.IO event contracts
-|   `-- types.ts              # Shared data shapes (room, player, etc.)
+|   |-- types.ts              # Shared data shapes (room, player, etc.)
+|   `-- constants.ts          # Shared timing constants for UI + server
 |-- client/                   # Vite client workspace
 |   |-- index.html            # Main HTML file
 |   `-- src/                  # Client TypeScript modules
@@ -56,6 +58,7 @@ werewolves/
 
 ### Config Layer
 - `constants.ts`: Contains all game constants, role information, and default configurations
+- `src/shared/constants.ts`: Shared timing constants (phase/transition delays) used by client + server
 
 ### Models Layer
 - `room.ts`: Room creation, storage, and retrieval
@@ -66,9 +69,10 @@ Business logic separated by concern:
 - `roleManager.ts`: Role configuration, validation, and assignment
 - `phaseManager.ts`: Phase transitions and scheduling
 - `nightManager.ts`: Night phase actions (wolf votes, seer, witch)
-- `voteManager.ts`: Day voting and elimination
-- `deathManager.ts`: Death queue, resolution, and win condition checking
-- `broadcastManager.ts`: Room state sanitization and broadcasting
+- `voteManager.ts`: Day voting and elimination (includes mayor tie-breaking mechanics)
+- `mayorManager.ts`: Mayor election and succession (includes timeout handling)
+- `deathManager.ts`: Death queue, resolution, hunter shots, and win condition checking
+- `broadcastManager.ts`: Room state sanitization, broadcasting, and activity tracking
 
 ### Handlers Layer
 - `socketHandlers.ts`: All Socket.IO event handlers organized by game phase
@@ -80,6 +84,7 @@ Business logic separated by concern:
 
 ### Config Layer
 - `constants.ts`: Role details and UI constants
+- `src/shared/constants.ts`: Timing constants used to display transition durations
 
 ### State Layer
 - `gameState.ts`: Global state management and localStorage session handling
@@ -133,13 +138,15 @@ main.ts
 ### Adding New Features
 
 **Server-side:**
-1. Add constants to `src/server/config/constants.ts`
+1. Add shared timing constants to `src/shared/constants.ts` when both client + server need them
+2. Add server-only constants to `src/server/config/constants.ts`
 2. Update models if new data structures are needed
 3. Add business logic to appropriate manager
 4. Add socket event handlers to `src/server/handlers/socketHandlers.ts`
 
 **Client-side:**
-1. Add constants to `client/src/config/constants.ts`
+1. Add shared timing constants to `src/shared/constants.ts` when both client + server need them
+2. Add client-only constants to `client/src/config/constants.ts`
 2. Update state management if needed
 3. Add rendering functions to appropriate renderer
 4. Add event handlers to appropriate handler module

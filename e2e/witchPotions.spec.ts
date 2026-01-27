@@ -4,7 +4,8 @@ import {
   closeContexts,
   configureRoles,
   createLobbyWithPlayers,
-  startGameAndReady
+  startGameAndReady,
+  completeMayorElection
 } from './helpers';
 
 const waitForWitchStep = async (_host: Page, witch: Page) => {
@@ -22,6 +23,18 @@ const submitAbstainVotes = async (pages: Page[]) => {
   }
 };
 
+const advanceToNextNight = async (host: Page) => {
+  const skipButton = host.locator('#host-skip-btn');
+  if (await skipButton.isVisible()) {
+    try {
+      await skipButton.click();
+    } catch {
+      // Ignore transition button racing the auto-advance in CI.
+    }
+  }
+  await host.waitForSelector('#wolf-form', { timeout: 15000 });
+};
+
 test('witch can heal and poison across nights', async ({ browser }) => {
   const names = ['Werewolf', 'Witch', 'Villager A', 'Villager B', 'Villager C'];
   const { contexts, pages } = await createLobbyWithPlayers(browser, names);
@@ -34,11 +47,12 @@ test('witch can heal and poison across nights', async ({ browser }) => {
       hunter: 0,
       witch: 1,
       armor: 0,
-      joker: 0,
-      minPlayers: 5
+      joker: 0
     });
 
     await startGameAndReady(pages);
+
+    await completeMayorElection(host, pages);
 
     await host.waitForSelector('#wolf-form', { timeout: 10000 });
     await host.locator('#wolf-form select[name="target"]').selectOption({ label: names[2] });
@@ -62,11 +76,7 @@ test('witch can heal and poison across nights', async ({ browser }) => {
 
     await waitForDayOnAllPages(pages);
     await submitAbstainVotes(pages);
-
-    await host.waitForSelector('#host-skip-btn', { timeout: 10000 });
-    await host.click('#host-skip-btn');
-
-    await host.waitForSelector('#wolf-form', { timeout: 10000 });
+    await advanceToNextNight(host);
     await host.locator('#wolf-form select[name="target"]').selectOption({ label: names[3] });
     await host.locator('#wolf-form button[type="submit"]').click();
     await host.locator('#wolf-form').waitFor({ state: 'detached' });
@@ -96,11 +106,12 @@ test('witch can heal and poison in the same night', async ({ browser }) => {
       hunter: 0,
       witch: 1,
       armor: 0,
-      joker: 0,
-      minPlayers: 5
+      joker: 0
     });
 
     await startGameAndReady(pages);
+
+    await completeMayorElection(host, pages);
 
     await host.waitForSelector('#wolf-form', { timeout: 10000 });
     await host.locator('#wolf-form select[name="target"]').selectOption({ label: names[2] });

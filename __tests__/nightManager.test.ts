@@ -1,6 +1,7 @@
 import { scheduleNightStep, schedulePhaseTransition } from '../src/server/managers/phaseManager';
 import { queueDeath, resolveDeaths } from '../src/server/managers/deathManager';
 import { tryFinalizeWolfVote, handleWitchDecision, resolveNight } from '../src/server/managers/nightManager';
+import { NIGHT_RESOLVE_DELAY_MS } from '../src/server/config/constants';
 import type { Player, Room, RoleConfig } from '../src/shared/types';
 
 jest.mock('../src/server/managers/phaseManager', () => ({
@@ -20,8 +21,13 @@ const makeRoom = (): Room => ({
   phaseStep: 'wolves',
   dayCount: 0,
   players: {},
-  minPlayers: 3,
+  minPlayers: 5,
   roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0 } as RoleConfig,
+  passiveRoleConfig: { mayor: true },
+  mayorId: null,
+  awaitingMayorSelection: null,
+  mayorSelectionQueue: [],
+  mayorSelectionTimer: null,
   lovers: null,
   witchState: { healAvailable: true, poisonAvailable: true },
   wolfVotes: {},
@@ -42,7 +48,9 @@ const makeRoom = (): Room => ({
   lastDayDeaths: [],
   lastDayMessage: null,
   awaitingHunterShot: null,
-  winner: null
+  winner: null,
+  createdAt: Date.now(),
+  lastActivityAt: Date.now()
 });
 
 const buildPlayer = (overrides: Partial<Player>): Player => ({
@@ -53,6 +61,7 @@ const buildPlayer = (overrides: Partial<Player>): Player => ({
   alive: true,
   connected: true,
   socketId: null,
+  resumeToken: 'token',
   isHost: false,
   voteTarget: null,
   nightAction: null,
@@ -94,12 +103,31 @@ describe('nightManager', () => {
   test('handleWitchDecision uses heal potion and advances', () => {
     const room = makeRoom();
     room.wolfTarget = 'v1';
+    room.players = {
+      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+    };
 
     handleWitchDecision(room, 'w1', 'heal', null, jest.fn(), undefined as never);
 
     expect(room.witchState.healAvailable).toBe(false);
     expect(room.healedTarget).toBe('v1');
     expect(scheduleNightStep).toHaveBeenCalledWith(room, 'resolve', expect.any(Function), undefined);
+  });
+
+  test('handleWitchDecision does not consume heal when wolf target is invalid', () => {
+    const room = makeRoom();
+    room.wolfTarget = 'v1';
+    room.players = {
+      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: false })
+    };
+    const broadcastRoom = jest.fn();
+
+    handleWitchDecision(room, 'w1', 'heal', null, broadcastRoom, undefined as never);
+
+    expect(room.witchState.healAvailable).toBe(true);
+    expect(room.healedTarget).toBeNull();
+    expect(broadcastRoom).not.toHaveBeenCalled();
+    expect(scheduleNightStep).not.toHaveBeenCalled();
   });
 
   test('handleWitchDecision keeps witch step open when poison remains', () => {
@@ -150,17 +178,24 @@ describe('nightManager', () => {
   });
 
   test('resolveNight queues deaths, resolves, and transitions', () => {
-    const room = makeRoom();
-    room.wolfTarget = 'v1';
-    room.poisonTarget = 'v2';
+    jest.useFakeTimers();
+    try {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.wolfTarget = 'v1';
+      room.poisonTarget = 'v2';
 
-    resolveNight(room, jest.fn(), undefined as never);
+      resolveNight(room, jest.fn(), undefined as never);
 
-    expect(queueDeath).toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
-    expect(queueDeath).toHaveBeenCalledWith(room, 'v2', 'poisoned by Witch');
-    expect(resolveDeaths).toHaveBeenCalledWith(room, 'night', expect.any(Function), undefined);
-    expect(room.healedTarget).toBeNull();
-    expect(room.poisonTarget).toBeNull();
-    expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'nightToDay', expect.any(Function));
+      expect(queueDeath).toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
+      expect(queueDeath).toHaveBeenCalledWith(room, 'v2', 'poisoned by Witch');
+      expect(resolveDeaths).toHaveBeenCalledWith(room, 'night', expect.any(Function), undefined);
+      expect(room.healedTarget).toBeNull();
+      expect(room.poisonTarget).toBeNull();
+      jest.advanceTimersByTime(NIGHT_RESOLVE_DELAY_MS);
+      expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'nightToDay', expect.any(Function));
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

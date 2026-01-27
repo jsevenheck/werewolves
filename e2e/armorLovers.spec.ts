@@ -3,13 +3,14 @@ import {
   closeContexts,
   configureRoles,
   createLobbyWithPlayers,
-  startGameAndReady
+  startGameAndReady,
+  completeMayorElection
 } from './helpers';
 
 test('armor can link two lovers', async ({ browser }) => {
-  const names = ['Werewolf', 'Armor', 'Lover A', 'Lover B'];
+  const names = ['Werewolf', 'Armor', 'Lover A', 'Lover B', 'Villager'];
   const { contexts, pages } = await createLobbyWithPlayers(browser, names);
-  const [host, , loverA, loverB] = pages;
+  const [host] = pages;
 
   const waitForArmorForm = async () => {
     const deadline = Date.now() + 10000;
@@ -57,11 +58,12 @@ test('armor can link two lovers', async ({ browser }) => {
       hunter: 0,
       witch: 0,
       armor: 1,
-      joker: 0,
-      minPlayers: 4
+      joker: 0
     });
 
     await startGameAndReady(pages);
+
+    await completeMayorElection(host, pages);
 
     const armorPage: Page = await waitForArmorForm();
     const loverASelect = armorPage.locator('#armor-form select[name="loverA"]');

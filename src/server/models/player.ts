@@ -1,4 +1,4 @@
-import { PLAYER_ID } from '../config/constants';
+import { PLAYER_ID, RESUME_TOKEN } from '../config/constants';
 import type { Player } from '../../shared/types';
 
 const socketIndex = new Map<string, { roomCode: string; playerId: string }>();
@@ -12,6 +12,7 @@ function createPlayer(name: string, socketId: string, isHost: boolean): Player {
     alive: true,
     connected: true,
     socketId,
+    resumeToken: RESUME_TOKEN(),
     isHost: !!isHost,
     voteTarget: null,
     nightAction: null,

@@ -25,6 +25,7 @@
   "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1",
+    "howler": "^2.2.4",
     "nanoid": "^5.1.6",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3"
@@ -32,6 +33,7 @@
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "@types/express": "^5.0.6",
+    "@types/howler": "^2.2.12",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.19.7",
     "concurrently": "^9.2.1",
@@ -46,5 +48,5 @@
   "overrides": {
     "diff": "^8.0.3",
     "esbuild": ">=0.25.0"
-}
+  }
 }

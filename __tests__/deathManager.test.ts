@@ -10,8 +10,13 @@ const makeRoom = (): Room => ({
   phaseStep: 'wolves',
   dayCount: 1,
   players: {},
-  minPlayers: 3,
+  minPlayers: 5,
   roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0 } as RoleConfig,
+  passiveRoleConfig: { mayor: true },
+  mayorId: null,
+  awaitingMayorSelection: null,
+  mayorSelectionQueue: [],
+  mayorSelectionTimer: null,
   lovers: null,
   witchState: { healAvailable: true, poisonAvailable: true },
   wolfVotes: {},
@@ -32,7 +37,9 @@ const makeRoom = (): Room => ({
   transitionTimer: null,
   phaseTimer: null,
   hunterShotTimer: null,
-  hunterShotQueue: []
+  hunterShotQueue: [],
+  createdAt: Date.now(),
+  lastActivityAt: Date.now()
 });
 
 const buildPlayer = (overrides: Partial<Player>): Player => ({
@@ -43,6 +50,7 @@ const buildPlayer = (overrides: Partial<Player>): Player => ({
   alive: true,
   connected: true,
   socketId: null,
+  resumeToken: 'token',
   isHost: false,
   voteTarget: null,
   nightAction: null,
@@ -94,7 +102,7 @@ describe('deathManager', () => {
     resolveDeaths(room, 'day', broadcastRoom, io as unknown as never);
 
     expect(room.awaitingHunterShot).toBe('hunter');
-    expect(room.hunterShotTimer).toBeNull();
+    expect(room.hunterShotTimer).not.toBeNull(); // Timer should be set for auto-timeout
     expect(emit).toHaveBeenCalledWith('hunterPrompt', { roomCode: room.code });
     expect(room.winner).toBeNull();
   });

@@ -4,6 +4,9 @@ module.exports = {
   testEnvironment: 'node',
   clearMocks: true,
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  moduleNameMapper: {
+    '^@shared/(.*)$': '<rootDir>/src/shared/$1'
+  },
   testMatch: ['**/__tests__/**/*.test.ts'],
   transform: {
     '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.jest.json' }]

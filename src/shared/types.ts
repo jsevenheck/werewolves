@@ -1,8 +1,9 @@
 export type Role = 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'villager';
 export type Team = 'wolves' | 'village' | 'neutral' | 'joker';
-export type Phase = 'lobby' | 'roleReveal' | 'armor' | 'night' | 'day' | 'ended';
+export type Phase = 'lobby' | 'roleReveal' | 'mayor' | 'armor' | 'night' | 'day' | 'ended';
 export type NightStep = 'wolves' | 'seer' | 'witch' | 'resolve' | 'transition' | null;
-export type PhaseTransition = 'postReveal' | 'postArmor' | 'nightToDay' | 'dayToNight' | null;
+export type PhaseTransition = 'postReveal' | 'postMayor' | 'postArmor' | 'nightToDay' | 'dayToNight' | null;
+export type PassiveRole = 'mayor';
 
 export interface RoleConfig {
   werewolf: number;
@@ -11,6 +12,10 @@ export interface RoleConfig {
   witch: number;
   armor: number;
   joker: number;
+}
+
+export interface PassiveRoleConfig {
+  mayor: boolean;
 }
 
 export interface SeerResult {
@@ -39,6 +44,7 @@ export interface Player {
   alive: boolean;
   connected: boolean;
   socketId: string | null;
+  resumeToken: string;
   isHost: boolean;
   voteTarget: string | null;
   nightAction: { vote: string | null } | null;
@@ -91,6 +97,11 @@ export interface Room {
   players: Record<string, Player>;
   minPlayers: number;
   roleConfig: RoleConfig;
+  passiveRoleConfig: PassiveRoleConfig;
+  mayorId: string | null;
+  awaitingMayorSelection: string | null;
+  mayorSelectionQueue: string[];
+  mayorSelectionTimer: NodeJS.Timeout | null;
   lovers: LoverPair | null;
   witchState: WitchState;
   wolfVotes: Record<string, string | null>;
@@ -112,6 +123,8 @@ export interface Room {
   phaseTimer: NodeJS.Timeout | null;
   hunterShotTimer: NodeJS.Timeout | null;
   hunterShotQueue: string[];
+  createdAt: number;
+  lastActivityAt: number;
 }
 
 export interface PlayerPublic {
@@ -153,6 +166,10 @@ export interface RoomView {
   hostId: string | null;
   minPlayers: number;
   roleConfig: RoleConfig;
+  passiveRoleConfig: PassiveRoleConfig;
+  mayorId: string | null;
+  awaitingMayorSelection: boolean;
+  mayorSelectionPending: boolean;
   loversKnown: boolean;
   loversAssigned: boolean;
   loverName: string | null;
@@ -168,6 +185,7 @@ export interface RoomView {
   lastDayDeaths: NightDeathAnnouncement[];
   lastDayMessage: string | null;
   awaitingHunterShot: boolean;
+  hunterShotPending: boolean;
   winner: Winner | null;
   logs: RoomViewLog[];
   self: RoomViewSelf | null;
@@ -177,4 +195,5 @@ export interface StoredSession {
   roomCode: string;
   playerId: string;
   name: string;
+  resumeToken: string;
 }

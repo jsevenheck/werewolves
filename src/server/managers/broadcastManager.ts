@@ -1,8 +1,10 @@
 import type { Server } from 'socket.io';
+import { updateRoomActivity } from '../models/room';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { Room, RoomView, Player } from '../../shared/types';
 
 function broadcastRoom(room: Room, io: Server<ClientToServerEvents, ServerToClientEvents>) {
+  updateRoomActivity(room);
   Object.values(room.players).forEach((player) => sendStateToPlayer(room, player, io));
 }
 
@@ -20,7 +22,7 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     name: player.name,
     alive: player.alive,
     connected: player.connected,
-    isHost: player.isHost,
+    isHost: player.id === room.hostId,
     role: player.id === viewerId || room.phase === 'ended' || !player.alive ? player.role : null,
     ...(room.phase === 'roleReveal' ? { ready: player.ready } : {})
   }));
@@ -38,6 +40,10 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     hostId: room.hostId,
     minPlayers: room.minPlayers,
     roleConfig: room.roleConfig,
+    passiveRoleConfig: room.passiveRoleConfig,
+    mayorId: room.mayorId,
+    awaitingMayorSelection: room.awaitingMayorSelection === viewerId,
+    mayorSelectionPending: !!room.awaitingMayorSelection,
     loversKnown: !!room.lovers && (room.lovers.aId === viewerId || room.lovers.bId === viewerId),
     loversAssigned: !!room.lovers,
     loverName: room.lovers
@@ -68,6 +74,7 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     lastDayDeaths: room.lastDayDeaths,
     lastDayMessage: room.lastDayMessage,
     awaitingHunterShot: room.awaitingHunterShot === viewerId,
+    hunterShotPending: !!room.awaitingHunterShot,
     winner: room.winner,
     logs,
     self: viewer

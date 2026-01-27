@@ -3,6 +3,9 @@ import { addLog, clearRoomTimers, getPlayerRoleLabel } from '../utils/helpers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../shared/events';
 import type { NightDeathAnnouncement, Room } from '../../shared/types';
 
+const IS_E2E = process.env.E2E_TESTS === '1';
+const HUNTER_SHOT_TIMEOUT_MS = IS_E2E ? 30 * 1000 : 60 * 1000;
+
 function queueDeath(room: Room, playerId: string, reason: string) {
   room.pendingDeaths.push({ playerId, reason });
 }
@@ -31,11 +34,45 @@ function startHunterShot(
     clearTimeout(room.hunterShotTimer);
     room.hunterShotTimer = null;
   }
+
   const hunter = room.players[hunterId];
   const socket = io && hunter?.socketId && io.sockets?.sockets?.get(hunter.socketId);
   if (socket && hunter?.connected) {
     socket.emit('hunterPrompt', { roomCode: room.code });
   }
+
+  // Auto-skip hunter shot after timeout if no response
+  room.hunterShotTimer = setTimeout(() => {
+    if (room.awaitingHunterShot === hunterId) {
+      addLog(room, `Hunter shot timed out. No target selected.`);
+      room.awaitingHunterShot = null;
+      room.hunterShotTimer = null;
+
+      // Check for next hunter in queue
+      if (!startNextHunterShot(room, broadcastRoom, io)) {
+        // No more hunters, check win conditions
+        checkWinners(room);
+        if (!room.winner) {
+          const { startNextMayorSelection } = require('./mayorManager');
+          if (!startNextMayorSelection(room, broadcastRoom, io)) {
+            // No more mayor selections either, resume game flow
+            const { schedulePhaseTransition, holdDayToNightTransition } = require('../managers/phaseManager');
+            if (!room.awaitingHunterShot && !room.awaitingMayorSelection) {
+              if (room.phase === 'day') {
+                holdDayToNightTransition(room, broadcastRoom);
+              } else if (room.phase === 'night' && room.phaseStep === 'resolve') {
+                // Resume night->day transition after hunter shot during night
+                schedulePhaseTransition(room, 'nightToDay', broadcastRoom);
+              }
+            }
+          }
+        }
+      }
+      broadcastRoom(room);
+    }
+  }, HUNTER_SHOT_TIMEOUT_MS);
+  room.hunterShotTimer.unref?.();
+
   if (shouldBroadcast) {
     broadcastRoom(room);
   }
@@ -92,6 +129,14 @@ function resolveDeaths(
         }
       }
     }
+    // Handle mayor succession when mayor dies
+    if (room.mayorId === playerId) {
+      const alreadyQueued =
+        room.awaitingMayorSelection === player.id || room.mayorSelectionQueue.includes(player.id);
+      if (!alreadyQueued) {
+        room.mayorSelectionQueue.push(player.id);
+      }
+    }
     if (room.lovers && (room.lovers.aId === playerId || room.lovers.bId === playerId)) {
       const otherId = room.lovers.aId === playerId ? room.lovers.bId : room.lovers.aId;
       const other = room.players[otherId];
@@ -101,7 +146,7 @@ function resolveDeaths(
     }
   }
   if (announced.length && context === 'night') {
-    room.lastNightDeaths = announced;
+    room.lastNightDeaths = (room.lastNightDeaths || []).concat(announced);
   }
   if (context === 'day') {
     if (announced.length) {
@@ -112,6 +157,10 @@ function resolveDeaths(
   }
   if (!room.awaitingHunterShot && room.hunterShotQueue.length === 0) {
     checkWinners(room);
+  }
+  if (!room.winner && !room.awaitingHunterShot && room.hunterShotQueue.length === 0) {
+    const { startNextMayorSelection } = require('./mayorManager');
+    startNextMayorSelection(room, broadcastRoom, io);
   }
   broadcastRoom(room);
 }
@@ -126,6 +175,8 @@ function checkWinners(room: Room) {
     room.phaseStep = null;
     room.nextNightStep = null;
     room.phaseTransition = null;
+    room.awaitingMayorSelection = null;
+    room.mayorSelectionQueue = [];
     clearRoomTimers(room);
     return;
   }
@@ -141,6 +192,8 @@ function checkWinners(room: Room) {
     room.phaseStep = null;
     room.nextNightStep = null;
     room.phaseTransition = null;
+    room.awaitingMayorSelection = null;
+    room.mayorSelectionQueue = [];
     clearRoomTimers(room);
   }
 }
