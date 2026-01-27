@@ -5,9 +5,10 @@ This guide explains what to update when introducing a new role and where those c
 ## Quick Checklist
 - Add the role to shared types in `src/shared/types.ts` (Role union, RoleConfig, optional Team/NightStep/Phase).
 - Add server role metadata and defaults in `src/server/config/constants.ts` (ROLE_INFO, DEFAULT_ROLE_CONFIG).
-- Add client role metadata in `client/src/config/constants.ts` (ROLE_DETAILS).
+- Update client role labels/details in Vue components (e.g., `client/src/components/RoleReveal.vue`,
+  `client/src/components/Lobby.vue`, `client/src/components/overlays/RoleCard.vue`).
 - Update server flow (managers + handlers) for actions, win/lose, and validation.
-- Update client UI + handlers for the role's actions.
+- Update client UI + interaction for the role's actions.
 - Ensure role-specific data is only broadcast to allowed players in `src/server/managers/broadcastManager.ts`.
 - Update tests and docs.
 
@@ -22,13 +23,13 @@ This guide explains what to update when introducing a new role and where those c
 [Server constants: ROLE_INFO/DEFAULT_ROLE_CONFIG]
         |
         v
-[Client constants: ROLE_DETAILS]
+[Client role labels/details]
         |
         v
 [Server logic: managers/handlers/room state]
         |
         v
-[Client UI: renderers/handlers/state]
+[Client UI: Vue components/composables/stores]
         |
         v
 [Broadcast visibility rules]
@@ -46,8 +47,8 @@ counts. These are single-instance toggles:
    - `src/server/config/constants.ts`: update `DEFAULT_PASSIVE_ROLE_CONFIG`.
    - `src/server/models/room.ts`: initialize `passiveRoleConfig`.
 3. Lobby UI + updates:
-   - `client/src/renderers/phaseRenderers.ts`: add a toggle input.
-   - `client/src/handlers/phaseHandlers.ts`: send `passiveRoles` in `updateRoleConfig`.
+   - `client/src/components/Lobby.vue`: add a toggle input.
+   - `client/src/components/Lobby.vue`: send `passiveRoles` in `updateRoleConfig`.
    - `src/server/handlers/socketHandlers.ts`: normalize `passiveRoles`.
 4. Flow:
    - `src/server/managers/phaseManager.ts`: gate the phase(s) with the toggle.
@@ -61,7 +62,9 @@ villager variant with no active abilities.
    - Add to `Team` only if you need a new faction.
 2. Config:
    - `src/server/config/constants.ts`: add to `ROLE_INFO` and `DEFAULT_ROLE_CONFIG`.
-   - `client/src/config/constants.ts`: add to `ROLE_DETAILS` (name, description, color).
+   - Update role details in UI components that display role labels/descriptions
+     (e.g., `client/src/components/RoleReveal.vue`, `client/src/components/overlays/RoleCard.vue`,
+     `client/src/components/panels/Header.vue`).
 3. Assignment and display:
    - Role assignment uses `ROLE_INFO` and `RoleConfig` in `src/server/managers/roleManager.ts`.
    - Role labels use `ROLE_INFO` via `getPlayerRoleLabel` in `src/server/utils/helpers.ts`.
@@ -69,10 +72,10 @@ villager variant with no active abilities.
    - Update any test snapshots or role lists in `__tests__`.
 
 ### Passive Role Checklist (Quick Reference)
-- ✅ No new phases or night steps.
-- ✅ No socket events or client handlers needed.
-- ✅ Only update types, constants, and tests.
-- ✅ If the role has *passive effects* (e.g., extra life), implement that in:
+- No new phases or night steps.
+- No socket events or client interaction needed.
+- Only update types, constants, and tests.
+- If the role has *passive effects* (e.g., extra life), implement that in:
   - `src/server/managers/deathManager.ts` (death resolution), or
   - `src/server/managers/voteManager.ts` (day voting outcomes), or
   - `src/server/managers/phaseManager.ts` (flow tweaks without new phases).
@@ -89,10 +92,10 @@ In addition to the "Minimal Path":
 2. Broadcast:
    - `src/server/managers/broadcastManager.ts`: expose role-specific data only to the right players.
 3. Client UI/interaction:
-   - `client/src/renderers/phaseRenderers.ts`: render the new action form/UX.
-   - `client/src/handlers/phaseHandlers.ts`: send the action to the server.
-   - `client/src/state/gameState.ts`: add any local pending state if needed.
-   - `client/src/main.ts`: handle new phases/transitions in rendering.
+   - `client/src/components/NightPhase.vue`: render the new action form/UX.
+   - `client/src/components/*Phase.vue`: emit the action to the server.
+   - `client/src/stores/game.ts`: add any local pending state if needed.
+   - `client/src/App.vue`: handle new phases/transitions in rendering.
 4. Audio (optional):
    - Add narrator files for new steps or phases in `client/public/audio/` (see `client/public/audio/README.md`).
 
@@ -105,8 +108,8 @@ Goal: add a village role with no active ability.
 2. `src/server/config/constants.ts`
    - Add `elder` to `ROLE_INFO` with team `village` and a description.
    - Add `elder` to `DEFAULT_ROLE_CONFIG` with a default count (often 0).
-3. `client/src/config/constants.ts`
-   - Add `elder` to `ROLE_DETAILS` (name/description/color).
+3. `client/src/components/overlays/RoleCard.vue`
+   - Add `elder` to the role details used for name/description/color.
 4. Tests
    - Update role list and default config expectations in `__tests__/roleManager.test.ts` and any other role-specific tests.
 
@@ -137,8 +140,8 @@ Goal: the Guard picks a player at night to protect from wolves for that night.
 5. Broadcast
    - `src/server/managers/broadcastManager.ts`: only the Guard should see `guardedTarget`.
 6. Client UI
-   - `client/src/renderers/phaseRenderers.ts`: render the Guard selection form on the `guard` step.
-   - `client/src/handlers/phaseHandlers.ts`: emit `submitGuard`.
+   - `client/src/components/NightPhase.vue`: render the Guard selection form on the `guard` step.
+   - `client/src/components/NightPhase.vue`: emit `submitGuard`.
 7. Audio (optional)
    - Add `client/public/audio/night_guard.mp3`.
 8. Tests
@@ -152,14 +155,15 @@ If the role affects win conditions or death resolution:
 ## File Reference (Short List)
 - Shared types: `src/shared/types.ts`
 - Server constants: `src/server/config/constants.ts`
-- Client constants: `client/src/config/constants.ts`
+- Client UI root: `client/src/App.vue`
 - Role assignment: `src/server/managers/roleManager.ts`
 - Room state: `src/server/models/room.ts`
 - Phase/night flow: `src/server/managers/phaseManager.ts`, `src/server/managers/nightManager.ts`
 - Socket events: `src/shared/events.ts`, `src/server/handlers/socketHandlers.ts`
 - Broadcast visibility: `src/server/managers/broadcastManager.ts`
-- UI render: `client/src/renderers/phaseRenderers.ts`, `client/src/renderers/commonRenderers.ts`
-- UI handlers: `client/src/handlers/phaseHandlers.ts`, `client/src/handlers/commonHandlers.ts`
+- UI screens: `client/src/components/Lobby.vue`, `client/src/components/NightPhase.vue`, `client/src/components/DayPhase.vue`
+- Role overlays/panels: `client/src/components/overlays/RoleCard.vue`, `client/src/components/panels/Header.vue`
+- Client state: `client/src/stores/game.ts`
 - Audio: `client/public/audio/README.md`
 - Tests: `__tests__/*.test.ts`
 
@@ -175,3 +179,4 @@ If the role affects win conditions or death resolution:
 - Update specs: `docs/spec.md`.
 - Update manual checks: `docs/test-checklist.md`.
 - Integration tests (Playwright): add or extend scenarios in `e2e/`, then run `pnpm run test:e2e` (first time: `pnpm exec playwright install`).
+

@@ -78,6 +78,12 @@ pnpm exec playwright install
 pnpm run test:e2e
 ```
 
+## Workspace scripts
+- `pnpm dev`: runs server + client together.
+- `pnpm build`: builds server + client for production.
+- `pnpm test`: runs unit tests.
+- `pnpm test:e2e`: runs Playwright. The Playwright config starts the server (`tsx server.ts`) and the client package (`pnpm --filter werewolves-client dev`).
+
 ## How to Play
 1. Host creates a room and shares the 4-letter code.
 2. Host configures role counts, then starts the game (minimum 5 players required).
@@ -92,6 +98,7 @@ Mobile browsers require a user gesture before audio can play. If a player enable
 - Canonical location: `client/public/audio/`
 - Runtime URL expectation: `/audio/<name>.mp3`
 - Vite serves files in `client/public/` at `/` during development and copies them into the build output as-is (so `client/public/audio/*.mp3` becomes `dist/client/audio/*.mp3`).
+- MP3 files are not stored in git; provide them locally for development or via deployment artifacts.
 - See `client/public/audio/README.md` for per-file meanings and when each clip plays.
 
 ## Docker

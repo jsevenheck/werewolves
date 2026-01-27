@@ -30,25 +30,17 @@ werewolves/
 |   |-- events.ts             # Socket.IO event contracts
 |   |-- types.ts              # Shared data shapes (room, player, etc.)
 |   `-- constants.ts          # Shared timing constants for UI + server
-|-- client/                   # Vite client workspace
+|-- client/                   # Vite client workspace package
 |   |-- index.html            # Main HTML file
-|   `-- src/                  # Client TypeScript modules
-|       |-- main.ts           # Main client entry point
-|       |-- style.css         # Styles
-|       |-- config/           # Client configuration
-|       |   `-- constants.ts  # Role details and constants
-|       |-- state/            # State management
-|       |   `-- gameState.ts  # Global game state and session storage
-|       |-- renderers/        # UI rendering functions
-|       |   |-- landingRenderer.ts  # Landing page renderer
-|       |   |-- commonRenderers.ts  # Header, players, logs renderers
-|       |   `-- phaseRenderers.ts   # Game phase renderers
-|       |-- handlers/         # Event handlers
-|       |   |-- landingHandlers.ts  # Landing page event handlers
-|       |   |-- commonHandlers.ts   # Common UI event handlers
-|       |   `-- phaseHandlers.ts    # Game phase event handlers
-|       `-- utils/            # Utility functions
-|           `-- helpers.ts    # Client helper functions
+|   `-- src/                  # Vue client source
+|       |-- App.vue           # Root app + phase switching
+|       |-- main.ts           # Client entry point (Vue mount)
+|       |-- assets/           # Global styles/assets
+|       |-- components/       # Phase screens + UI panels/overlays
+|       |-- composables/      # Reusable client logic (socket, narrator)
+|       |-- stores/           # Pinia stores
+|       |-- types/            # Client-only types
+|       `-- utils/            # Client helpers
 |-- docs/                     # Documentation
 |-- package.json              # Dependencies and scripts
 `-- README.md                 # Project README
@@ -82,27 +74,20 @@ Business logic separated by concern:
 
 ## Client-Side Architecture
 
-### Config Layer
-- `constants.ts`: Role details and UI constants
-- `src/shared/constants.ts`: Timing constants used to display transition durations
+### Components
+Phase-specific screens live in `client/src/components/*Phase.vue` (Lobby, RoleReveal,
+MayorPhase, ArmorPhase, NightPhase, DayPhase). Shared UI lives under
+`client/src/components/panels` and `client/src/components/overlays`.
 
-### State Layer
-- `gameState.ts`: Global state management and localStorage session handling
+### Composables
+Reusable client logic (socket setup, narrator audio, etc.) lives in
+`client/src/composables/`.
 
-### Renderers Layer
-UI rendering functions organized by screen:
-- `landingRenderer.ts`: Initial landing page
-- `commonRenderers.ts`: Header, players list, event logs
-- `phaseRenderers.ts`: All game phase-specific UI (lobby, roleReveal, armor, night, day)
+### Stores
+Pinia stores live in `client/src/stores/` (game/session state, pending actions).
 
-### Handlers Layer
-Event handlers separated by functionality:
-- `landingHandlers.ts`: Room creation, joining, resuming
-- `commonHandlers.ts`: Common actions (toggle role, leave game, hunter overlay)
-- `phaseHandlers.ts`: Phase-specific interactions (voting, role actions)
-
-### Utils Layer
-- `helpers.ts`: Helper functions for notifications and formatting
+### Utils
+Helper functions for notifications and formatting live in `client/src/utils/`.
 
 ## Module Dependencies
 
@@ -118,10 +103,11 @@ server.ts
 ### Client Dependencies
 ```
 main.ts
-  -> state/gameState.ts
-  -> renderers/ (landing, common, phase)
-  -> handlers/ (landing, common, phase)
-  -> utils/helpers.ts
+  -> App.vue
+       -> stores/ (game)
+       -> composables/ (socket, narrator)
+       -> components/ (phases, panels, overlays)
+       -> utils/helpers.ts
 ```
 
 ## Benefits of This Structure
@@ -146,10 +132,9 @@ main.ts
 
 **Client-side:**
 1. Add shared timing constants to `src/shared/constants.ts` when both client + server need them
-2. Add client-only constants to `client/src/config/constants.ts`
-2. Update state management if needed
-3. Add rendering functions to appropriate renderer
-4. Add event handlers to appropriate handler module
+2. Update client state in `client/src/stores/` if needed
+3. Add UI in `client/src/components/` and wiring in `client/src/App.vue`
+4. Add client-only helpers in `client/src/utils/` or `client/src/composables/`
 5. Update `client/src/main.ts` if new top-level functionality is needed
 
 ### Module Export/Import Pattern
@@ -171,3 +156,7 @@ export { functionName };
 // Importing
 import { functionName } from './path/to/module';
 ```
+
+## Workspace Layout Notes
+- This repo is a pnpm workspace with a dedicated Vite client package at `client/`.
+- In development, the Vite dev server runs on port 5173 and proxies `/socket.io` to the server on port 3001.
