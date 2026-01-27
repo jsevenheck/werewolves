@@ -1,3 +1,7 @@
+packages:
+  - '.'
+  - 'client-vue'
+
 ignoredBuiltDependencies:
   - esbuild
   - unrs-resolver
