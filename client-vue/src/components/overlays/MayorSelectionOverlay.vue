@@ -32,7 +32,7 @@ function submitSelection() {
 </script>
 
 <template>
-  <div class="mayor-overlay">
+  <div id="mayor-overlay" class="mayor-overlay">
     <div class="panel">
       <h2>Select New Mayor</h2>
       <p>As the dying Mayor, you must select your successor.</p>

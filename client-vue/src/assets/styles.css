@@ -1,21 +1,18 @@
-:root {
+/* Component styles scoped under .werewolves-root.
+   Safe to import in both standalone and embedded (library) mode. */
+
+.werewolves-root {
   font-family: 'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif;
-  color: #101828;
-  background: #030712;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: radial-gradient(circle at top, #1f2937, #030712);
   color: #f8fafc;
 }
 
-.app {
+.werewolves-root *,
+.werewolves-root *::before,
+.werewolves-root *::after {
+  box-sizing: border-box;
+}
+
+.werewolves-root.app {
   max-width: 960px;
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
@@ -24,7 +21,7 @@ body {
   gap: 1.5rem;
 }
 
-.panel {
+.werewolves-root .panel {
   background: rgba(15, 23, 42, 0.85);
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 16px;
@@ -33,33 +30,33 @@ body {
   backdrop-filter: blur(8px);
 }
 
-h1,
-h2,
-h3 {
+.werewolves-root h1,
+.werewolves-root h2,
+.werewolves-root h3 {
   margin: 0 0 0.5rem;
   line-height: 1.2;
 }
 
-p {
+.werewolves-root p {
   margin: 0.5rem 0;
 }
 
-form {
+.werewolves-root form {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-input,
-select,
-button,
-textarea {
+.werewolves-root input,
+.werewolves-root select,
+.werewolves-root button,
+.werewolves-root textarea {
   font: inherit;
 }
 
-input,
-select,
-button {
+.werewolves-root input,
+.werewolves-root select,
+.werewolves-root button {
   padding: 0.65rem 0.85rem;
   border-radius: 10px;
   border: 1px solid rgba(148, 163, 184, 0.4);
@@ -67,14 +64,14 @@ button {
   color: inherit;
 }
 
-input:focus,
-select:focus,
-button:focus {
+.werewolves-root input:focus,
+.werewolves-root select:focus,
+.werewolves-root button:focus {
   outline: 2px solid #f97316;
   outline-offset: 2px;
 }
 
-button {
+.werewolves-root button {
   cursor: pointer;
   font-weight: 600;
   background: linear-gradient(135deg, #f97316, #ea580c);
@@ -83,31 +80,31 @@ button {
   transition: opacity 0.2s ease;
 }
 
-button:disabled {
+.werewolves-root button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.players-list {
+.werewolves-root .players-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 0.75rem;
   margin-top: 1rem;
 }
 
-.player-card {
+.werewolves-root .player-card {
   padding: 0.75rem;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(148, 163, 184, 0.2);
 }
 
-.player-card.dead {
+.werewolves-root .player-card.dead {
   opacity: 0.55;
   text-decoration: line-through;
 }
 
-.tag {
+.werewolves-root .tag {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -118,56 +115,56 @@ button:disabled {
   border: 1px solid rgba(248, 197, 144, 0.4);
 }
 
-.logs {
+.werewolves-root .logs {
   max-height: 180px;
   overflow-y: auto;
   font-size: 0.9rem;
   opacity: 0.85;
 }
 
-.role-card {
+.werewolves-root .role-card {
   background: rgba(248, 197, 144, 0.11);
   border: 1px solid rgba(248, 197, 144, 0.5);
   padding: 1rem;
   border-radius: 12px;
 }
 
-.actions {
+.werewolves-root .actions {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.actions.host-actions {
+.werewolves-root .actions.host-actions {
   margin-top: 1rem;
 }
 
-.passive-roles {
+.werewolves-root .passive-roles {
   margin-top: 0.75rem;
   margin-bottom: 0.75rem;
 }
 
-.passive-role-list {
+.werewolves-root .passive-role-list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.toggle {
+.werewolves-root .toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.toggle input {
+.werewolves-root .toggle input {
   position: absolute;
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-.toggle-track {
+.werewolves-root .toggle-track {
   position: relative;
   width: 46px;
   height: 26px;
@@ -178,7 +175,7 @@ button:disabled {
   flex-shrink: 0;
 }
 
-.toggle-track::after {
+.werewolves-root .toggle-track::after {
   content: '';
   position: absolute;
   top: 3px;
@@ -190,25 +187,25 @@ button:disabled {
   transition: transform 0.2s ease;
 }
 
-.toggle input:focus + .toggle-track {
+.werewolves-root .toggle input:focus + .toggle-track {
   outline: 2px solid #f97316;
   outline-offset: 2px;
 }
 
-.toggle input:checked + .toggle-track {
+.werewolves-root .toggle input:checked + .toggle-track {
   background: rgba(249, 115, 22, 0.9);
   border-color: rgba(249, 115, 22, 0.9);
 }
 
-.toggle input:checked + .toggle-track::after {
+.werewolves-root .toggle input:checked + .toggle-track::after {
   transform: translateX(20px);
 }
 
-.role-summary {
+.werewolves-root .role-summary {
   margin-top: 1rem;
 }
 
-.role-row {
+.werewolves-root .role-row {
   display: grid;
   grid-template-columns: minmax(120px, 200px) minmax(160px, 1fr);
   align-items: center;
@@ -216,22 +213,39 @@ button:disabled {
   width: 100%;
 }
 
-.role-row input {
+.werewolves-root .role-row input {
   width: 100%;
 }
 
-.notifications {
+.werewolves-root .notifications {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.notification {
+.werewolves-root .notification {
   background: rgba(252, 211, 77, 0.2);
   border: 1px solid rgba(252, 211, 77, 0.5);
   padding: 0.75rem;
   border-radius: 12px;
 }
+
+@media (max-width: 640px) {
+  .werewolves-root .panel {
+    padding: 1.1rem;
+  }
+
+  .werewolves-root .role-row {
+    grid-template-columns: 1fr;
+  }
+
+  .werewolves-root .players-list {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  }
+}
+
+/* Overlay styles - not scoped under .werewolves-root because
+   overlays are teleported to <body> */
 
 .hunter-overlay {
   position: fixed;
@@ -242,11 +256,55 @@ button:disabled {
   justify-content: center;
   padding: 1.5rem;
   z-index: 100;
+  font-family: 'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif;
+  color: #f8fafc;
 }
 
 .hunter-overlay .panel {
   max-width: 420px;
   width: 100%;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+}
+
+.hunter-overlay .panel h2 {
+  margin: 0 0 0.5rem;
+  line-height: 1.2;
+}
+
+.hunter-overlay .panel p {
+  margin: 0.5rem 0;
+}
+
+.hunter-overlay .panel select,
+.hunter-overlay .panel button {
+  font: inherit;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  color: inherit;
+}
+
+.hunter-overlay .panel select {
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.hunter-overlay .panel button {
+  cursor: pointer;
+  font-weight: 600;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  border: none;
+  color: #fff;
+}
+
+.hunter-overlay .actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .mayor-overlay {
@@ -258,23 +316,53 @@ button:disabled {
   justify-content: center;
   padding: 1.5rem;
   z-index: 100;
+  font-family: 'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif;
+  color: #f8fafc;
 }
 
 .mayor-overlay .panel {
   max-width: 420px;
   width: 100%;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
 }
 
-@media (max-width: 640px) {
-  .panel {
-    padding: 1.1rem;
-  }
+.mayor-overlay .panel h2 {
+  margin: 0 0 0.5rem;
+  line-height: 1.2;
+}
 
-  .role-row {
-    grid-template-columns: 1fr;
-  }
+.mayor-overlay .panel p {
+  margin: 0.5rem 0;
+}
 
-  .players-list {
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  }
+.mayor-overlay .panel select,
+.mayor-overlay .panel button {
+  font: inherit;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  color: inherit;
+}
+
+.mayor-overlay .panel select {
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.mayor-overlay .panel button {
+  cursor: pointer;
+  font-weight: 600;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  border: none;
+  color: #fff;
+}
+
+.mayor-overlay .actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }

@@ -45,11 +45,12 @@ const props = withDefaults(defineProps<Props>(), {
 const injectedConfig = inject<WerewolvesGameConfig>('werewolvesConfig', {});
 const effectiveSocketUrl = props.socketUrl || injectedConfig.socketUrl || '';
 const effectiveSocketPath = props.socketPath || injectedConfig.socketPath || '/socket.io';
+const effectiveAssetsBasePath = props.assetsBasePath || injectedConfig.assetsBasePath || '/audio';
 const effectiveStandalone = props.standalone ?? injectedConfig.standalone ?? true;
 
 const store = useGameStore();
 const socket = useSocket({ url: effectiveSocketUrl, path: effectiveSocketPath });
-const { enabled: narratorEnabled, unlocked: narratorUnlocked, unlockInProgress: narratorUnlockInProgress, toggle: toggleNarrator, resetNarrator, bindGestureUnlock } = useNarrator();
+const { enabled: narratorEnabled, unlocked: narratorUnlocked, unlockInProgress: narratorUnlockInProgress, toggle: toggleNarrator, resetNarrator, bindGestureUnlock } = useNarrator(effectiveAssetsBasePath);
 
 const phase = computed(() => store.room?.phase || null);
 const hasRoom = computed(() => !!store.room);
@@ -187,7 +188,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div :class="effectiveStandalone ? 'app' : ''">
+  <div class="werewolves-root" :class="{ app: effectiveStandalone }">
     <!-- Landing page (no room) -->
     <Landing v-if="!hasRoom" :socket="socket" />
 
@@ -199,6 +200,7 @@ onMounted(() => {
         :narrator-unlocked="narratorUnlocked"
         :narrator-unlock-in-progress="narratorUnlockInProgress"
         :on-toggle-narrator="toggleNarrator"
+        :on-reset-narrator="resetNarrator"
       />
 
       <!-- Phase transition -->

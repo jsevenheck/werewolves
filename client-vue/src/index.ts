@@ -2,6 +2,7 @@ import { type App } from 'vue';
 import { createPinia } from 'pinia';
 import WerewolvesGameRoot from './App.vue';
 import type { WerewolvesGameConfig } from './types/config';
+import './assets/styles.css';
 
 export function installWerewolvesGame(app: App, config: WerewolvesGameConfig = {}) {
   const pinia = createPinia();

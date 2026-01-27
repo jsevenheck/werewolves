@@ -8,11 +8,11 @@ import type { RoomView } from '@shared/types';
 
 const NARRATOR_UNLOCK_COOLDOWN_MS = 1500;
 
-export function useNarrator() {
+export function useNarrator(basePath = '/audio') {
   const store = useGameStore();
   const { room } = storeToRefs(store);
 
-  const narrator: Narrator = createNarrator({ notify });
+  const narrator: Narrator = createNarrator({ notify, basePath });
 
   const enabled = ref(false);
   const unlocked = ref(false);

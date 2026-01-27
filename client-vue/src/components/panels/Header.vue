@@ -11,6 +11,7 @@ interface Props {
   narratorUnlocked: boolean;
   narratorUnlockInProgress: boolean;
   onToggleNarrator: () => void;
+  onResetNarrator: () => void;
 }
 
 const props = defineProps<Props>();
@@ -48,6 +49,7 @@ function leaveRoom() {
   if (store.roomCode && store.playerId) {
     props.socket.emit('leaveRoom', { roomCode: store.roomCode, playerId: store.playerId });
   }
+  props.onResetNarrator();
   store.resetState();
   store.clearSession();
 }

@@ -30,7 +30,7 @@ function submitShot() {
 </script>
 
 <template>
-  <div class="hunter-overlay">
+  <div id="hunter-overlay" class="hunter-overlay">
     <div class="panel">
       <h2>Hunter's Last Shot</h2>
       <form id="hunter-form" class="actions" @submit.prevent="submitShot">

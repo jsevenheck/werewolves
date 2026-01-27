@@ -73,7 +73,6 @@ export const useGameStore = defineStore('game', {
 
     clearSession() {
       localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem('werewolves_narrator_enabled');
     },
 
     resetState() {
