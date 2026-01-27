@@ -268,13 +268,13 @@ const roomView = {
 Use these commands to find test files that need updates:
 ```bash
 # Find all RoleConfig instances
-grep -r "roleConfig.*werewolf.*seer" __tests__/
+rg -n "roleConfig.*werewolf.*seer" __tests__/
 
 # Find all Room state initializations
-grep -r "seerActed.*false" __tests__/
+rg -n "seerActed.*false" __tests__/
 
 # Find all RoomView mocks
-grep -r "wolfPeers.*\[\]" __tests__/
+rg -n "wolfPeers.*\[\]" __tests__/
 ```
 
 ## File Reference (Short List)
@@ -299,13 +299,13 @@ grep -r "wolfPeers.*\[\]" __tests__/
    - **Problem**: TypeScript errors about missing properties in test files
    - **Solution**: Search codebase for `RoleConfig` and add `yourRole: 0` to ALL instances
    - **Files**: Usually 10-15 test files need updates
-   - **How to Find**: `grep -r "roleConfig:" __tests__/ | grep -v "yourRole"`
+   - **How to Find**: `rg -n "roleConfig:" __tests__/ | rg -v "yourRole"`
 
 2. **Incomplete Room/RoomView Updates** ⚠️
    - **Problem**: Type errors or runtime crashes
    - **Solution**: Add fields to BOTH `Room` interface AND `RoomView` interface
    - **Files**: `src/shared/types.ts` (2 places), `src/server/models/room.ts`, `broadcastManager.ts`
-   - **Pattern**: Every field in `Room` needs corresponding visibility logic in `RoomView`
+   - **Pattern**: Any server state the client needs must be represented in `RoomView` with explicit visibility logic in `broadcastManager.ts`
 
 3. **Outdated Test Expectations** ⚠️
    - **Problem**: Tests fail even though implementation is correct
@@ -397,13 +397,13 @@ Before committing your new role, verify:
 Run these to catch common mistakes:
 ```bash
 # Check all RoleConfigs include your role
-grep -r "roleConfig.*werewolf" __tests__/ | grep -v "yourRole"
+rg -n "roleConfig.*werewolf" __tests__/ | rg -v "yourRole"
 
 # Check all Room mocks include your state
-grep -r "seerActed" __tests__/ | grep -v "yourRoleActed"
+rg -n "seerActed" __tests__/ | rg -v "yourRoleActed"
 
 # Check phase step handling
-grep -r "phaseStep ===" client/src/renderers/ | grep -v "yourStep"
+rg -n "phaseStep ===" client/src/renderers/ | rg -v "yourStep"
 ```
 
 ## Tests and Docs
