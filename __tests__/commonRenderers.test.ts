@@ -44,7 +44,8 @@ describe('commonRenderers narrator label', () => {
         hunter: 0,
         witch: 0,
         armor: 0,
-        joker: 0
+        joker: 0,
+        guard: 0
       },
       passiveRoleConfig: { mayor: true },
       mayorId: null,
@@ -57,6 +58,8 @@ describe('commonRenderers narrator label', () => {
       wolfVotes: null,
       wolfTarget: null,
       wolfPeers: [],
+      guardedTarget: null,
+      lastGuardedTarget: null,
       nextNightStep: null,
       phaseTransition: null,
       seerResult: null,
