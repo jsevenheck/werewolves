@@ -49,6 +49,7 @@ function createRoom(hostName: string, socketId: string, createPlayer: (name: str
     phaseTransition: null,
     phaseTimer: null,
     hunterShotTimer: null,
+    hunterShotEndsAt: null,
     hunterShotQueue: [],
     createdAt: now,
     lastActivityAt: now

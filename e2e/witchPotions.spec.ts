@@ -24,6 +24,14 @@ const submitAbstainVotes = async (pages: Page[]) => {
 };
 
 const advanceToNextNight = async (host: Page) => {
+  const endVoteButton = host.locator('#end-vote-btn');
+  if (await endVoteButton.isVisible()) {
+    try {
+      await endVoteButton.click();
+    } catch {
+      // Ignore rapid transition racing the host finalize.
+    }
+  }
   const skipButton = host.locator('#host-skip-btn');
   if (await skipButton.isVisible()) {
     try {

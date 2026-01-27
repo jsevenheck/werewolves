@@ -34,6 +34,7 @@ function startHunterShot(
     clearTimeout(room.hunterShotTimer);
     room.hunterShotTimer = null;
   }
+  room.hunterShotEndsAt = Date.now() + HUNTER_SHOT_TIMEOUT_MS;
 
   const hunter = room.players[hunterId];
   const socket = io && hunter?.socketId && io.sockets?.sockets?.get(hunter.socketId);
@@ -47,6 +48,7 @@ function startHunterShot(
       addLog(room, `Hunter shot timed out. No target selected.`);
       room.awaitingHunterShot = null;
       room.hunterShotTimer = null;
+      room.hunterShotEndsAt = null;
 
       // Check for next hunter in queue
       if (!startNextHunterShot(room, broadcastRoom, io)) {

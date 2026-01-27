@@ -69,6 +69,7 @@ describe('lobby handlers', () => {
       lastDayMessage: null,
       awaitingHunterShot: false,
       hunterShotPending: false,
+      hunterShotEndsAt: null,
       winner: null,
       logs: [],
       self: null
@@ -129,6 +130,7 @@ describe('lobby handlers', () => {
       lastDayMessage: null,
       awaitingHunterShot: false,
       hunterShotPending: false,
+      hunterShotEndsAt: null,
       winner: null,
       logs: [],
       self: null

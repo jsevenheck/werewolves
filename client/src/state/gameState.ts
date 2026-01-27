@@ -16,6 +16,8 @@ type GameState = {
   pendingWolfVote: string | undefined;
   updateConfigTimeoutId: number | null;
   readyButtonTimeoutId: number | null;
+  newlyDeadIds: Set<string>;
+  narratorToggled: boolean;
 };
 
 const state: GameState = {
@@ -32,7 +34,9 @@ const state: GameState = {
   pendingMayorVote: undefined,
   pendingWolfVote: undefined,
   updateConfigTimeoutId: null,
-  readyButtonTimeoutId: null
+  readyButtonTimeoutId: null,
+  newlyDeadIds: new Set(),
+  narratorToggled: false
 };
 
 function loadSession(): StoredSession | null {
