@@ -618,6 +618,9 @@ function setupSocketHandlers(
     room.healedTarget = null;
     room.poisonTarget = null;
     room.seerActed = false;
+    room.guardedTarget = null;
+    room.lastGuardedTarget = null;
+    room.guardActed = false;
     room.voteState = createVoteState();
     room.pendingDeaths = [];
     room.winner = null;

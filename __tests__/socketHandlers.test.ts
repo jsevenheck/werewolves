@@ -816,6 +816,9 @@ describe('socketHandlers restartGame', () => {
       healedTarget: 'host',
       poisonTarget: 'p2',
       seerActed: true,
+      guardedTarget: 'p2',
+      lastGuardedTarget: 'host',
+      guardActed: true,
       voteState: { votes: { host: 'p2' }, revoteFromTie: ['p2'] },
       pendingDeaths: [{ playerId: 'p2', reason: 'executed by vote' }],
       winner: { team: 'wolves', reason: 'Werewolves reached parity.' },
@@ -851,6 +854,9 @@ describe('socketHandlers restartGame', () => {
     expect(room.healedTarget).toBeNull();
     expect(room.poisonTarget).toBeNull();
     expect(room.seerActed).toBe(false);
+    expect(room.guardedTarget).toBeNull();
+    expect(room.lastGuardedTarget).toBeNull();
+    expect(room.guardActed).toBe(false);
     expect(room.voteState).toEqual({ votes: {}, revoteFromTie: null });
     expect(room.pendingDeaths).toEqual([]);
     expect(room.winner).toBeNull();
