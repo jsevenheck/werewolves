@@ -17,7 +17,6 @@
   "include": [
     "server.ts",
     "src/**/*.ts",
-    "client/src/**/*.ts",
     "__tests__/**/*.ts",
     "e2e/**/*.ts",
     "jest.setup.ts",
