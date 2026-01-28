@@ -115,8 +115,9 @@ export const GameComponent = App; // Vue component
 
 ### 2.5 Removed workspace artifacts
 
-- Deleted `pnpm-workspace.yaml`
-- Deleted `pnpm-lock.yaml`
+- Deleted `pnpm-workspace.yaml` (hub will have its own workspace config)
+- Lockfiles (`pnpm-lock.yaml`, `ui-vue/pnpm-lock.yaml`) kept for standalone CI;
+  these will be superseded by the hub's root lockfile after integration
 - Updated scripts to use `pnpm -C ui-vue` instead of `pnpm --filter`
 
 ### 2.6 Socket.IO types changed to Namespace
@@ -230,8 +231,8 @@ the `name` fields in:
 - [x] Pinia not created in the shared module entry
 - [x] Socket.IO handlers use `Namespace` type (not `Server`)
 - [x] `useSocket` composable supports `auth` option for namespace handshake
-- [x] Deleted `pnpm-workspace.yaml`
-- [x] Deleted `pnpm-lock.yaml`
+- [x] Deleted `pnpm-workspace.yaml` (hub provides its own)
+- [x] Lockfiles kept for standalone CI (will be superseded by hub's root lockfile)
 - [x] Standalone server entry preserved (`server/src/standalone.ts`)
 - [x] All test imports updated
 - [x] All config files updated (tsconfig, jest, playwright, CI, Dockerfile)
@@ -340,8 +341,9 @@ graceful shutdown.
 | `src/types/howler.d.ts` | `ui-vue/src/types/howler.d.ts` |
 | `client/*` | `ui-vue/*` |
 | `server.ts` | `server.ts` (now delegates to `server/src/standalone.ts`) |
-| `pnpm-workspace.yaml` | **Deleted** |
-| `pnpm-lock.yaml` | **Deleted** |
+| `pnpm-workspace.yaml` | **Deleted** (hub provides its own) |
+| `pnpm-lock.yaml` | Kept for standalone CI (superseded by hub) |
+| `ui-vue/pnpm-lock.yaml` | Kept for standalone CI (superseded by hub) |
 
 New files:
 - `core/src/index.ts` – barrel re-exports
