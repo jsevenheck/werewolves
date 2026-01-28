@@ -1,4 +1,8 @@
 {
+
+  "claude.defaultModel": "claude-sonnet-4-5-20250929",
+  "claude.autoApproveEdits": true,
+
   "permissions": {
     "allow": [
       
