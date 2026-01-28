@@ -3,14 +3,14 @@
 - **Armor assignment & lover notification**: Host starts a game where Armor is alive; confirm Armor screen appears once, picks two players, and both see Lover name in their role card while everyone else sees a waiting message.
 - **Lovers death link**: Create Lovers pair, then (a) vote one Lover out, (b) kill one at night via Werewolves or Witch poison, and (c) let Hunter shoot one; each time ensure the partner dies immediately with "died of heartbreak" log and that chained deaths still trigger Hunter/Joker logic correctly.
 - **Hunter shot timeout**: When a Hunter dies but doesn't select a target within 60 seconds, verify the game auto-skips the hunter shot and continues normally.
-- **Mayor succession**: When the Mayor dies, verify the dying mayor receives a prompt to select a successor. Test both manual selection and 60-second timeout (which randomly selects an alive player).
+- **Mayor succession**: When the Mayor dies, verify the dying mayor receives a prompt to select a successor. Test both manual selection and 60-second timeout (which randomly selects an alive player). Confirm that mayor succession happens BEFORE win condition checks, allowing the new mayor's potential tie-breaking vote to matter in close games.
 - **Mayor succession timeout**: When mayor dies but doesn't select a successor within 60 seconds, verify a random alive player is automatically selected as the new mayor and the game continues.
 - **Mayor tie-breaking in day votes**: During a day vote tie, if the mayor voted for one of the tied candidates, verify the mayor's vote breaks the tie. If the mayor didn't vote for a tied candidate, verify a revote is triggered.
 - **Event log visibility**: While alive, verify logs and night report show victim + role but do not reveal the killer. After death, confirm full log details are visible.
 - **Joker voted out**: Configure a Joker, run a day vote that eliminates them, and verify the game ends instantly with Joker win before Lovers or Hunter effects continue.
 - **Hunter dies via Lovers link**: Make Hunter a Lover partner, kill the other Lover (any method), and ensure Hunter still receives the last-shot overlay even though death came from heartbreak.
 - **Werewolf & day vote ties**: Force wolf vote tie to see random target selection, and run a day vote tie to trigger revote UI; verify second tie resolves randomly among tied players.
-- **Role reveal readiness**: During role reveal, each player must click Ready; host can only continue once all connected players are ready.
+- **Role reveal readiness**: During role reveal, each player must click Ready; host can only continue once all connected players are ready. Disconnected players do not block progression and do not receive roles.
 - **Host skip armor step**: With an unresponsive or disconnected Armor, host uses Skip armor step and the game continues into night.
 - **Host skip night step**: With an unresponsive or disconnected Witch/Seer/Wolf, host uses Skip current action and the game continues normally.
 - **Transition delays**: Confirm ~3s delay after each night action step, ~5s after role reveal (postReveal), ~10s after armor (postArmor) before night_transition plays, and ~6s after night_resolve before the nightToDay transition.
@@ -21,6 +21,7 @@
 - **Disconnect / reconnect**: Join from a browser, disconnect (close tab), reopen and resume via stored session to confirm state restores (including role, death state, and pending prompts like Hunter shot).
 - **Host handoff / reclaim**: Disconnect the host, confirm another connected player becomes Host and can use host actions; reconnect the original host and verify the Host label returns to them.
 - **Endgame reveal**: When a team wins, ensure all roles reveal in the player list and that win condition matches expectations (wolves parity, all wolves dead, or Joker instant win).
+- **Win condition with special abilities**: In a 2v2 scenario (2 wolves vs 2 village), verify the game does NOT end if village has a living Hunter or a Witch with poison remaining, as these abilities can still turn the tide. The game should only end when wolves truly have overwhelming advantage.
 - **Narrator audio toggle**: On mobile Safari/Chrome, tap "Narrator: Off" to enable sound, confirm audio unlock succeeds, and verify announcements only fire on phase/step/transition changes.
 - **Narrator persistence**: Reload the page and confirm the narrator toggle state persists in localStorage.
 

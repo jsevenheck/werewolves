@@ -58,6 +58,7 @@ loop:
       send each player role; wolves get list of other wolves (private UI fields)
       require each player to mark ready
       host continues once all connected players are ready
+      note: disconnected players do not block progression; only connected players must be ready
       if passiveRoleConfig.mayor -> go phase=mayor
       else -> go phase=armor if armor alive else startNight (phase=night, step='wolves')
     mayor:
@@ -113,9 +114,16 @@ resolveDeaths():
     if role is hunter -> add to hunterShotQueue and start hunter shot prompt (60s timeout)
     if player is mayorId -> add to mayorSelectionQueue and start mayor succession prompt (60s timeout)
     if player is lover -> enqueue other lover death reason='died of heartbreak'
-  after queue empty check win conditions:
-    if all wolves dead -> endGame('village', 'All wolves dead')
-    else if wolves >= others -> endGame('wolves', 'Parity reached')
+  after queue empty:
+    if no hunters pending and no hunter shots queued:
+      process mayor succession queue (if any)
+      after mayor selections complete:
+        check win conditions:
+          if all wolves dead -> endGame('village', 'All wolves dead')
+          else if wolves >= others:
+            check for special village abilities that could still turn the tide:
+              if hunter alive OR witch has poison available -> continue game (village still has chance)
+              else -> endGame('wolves', 'Parity reached')
 
 HunterShot(targetId):
   enqueue death for target
@@ -126,6 +134,8 @@ HunterShot(targetId):
 MayorSuccession(newMayorId):
   set mayorId to newMayorId
   resume game flow
+  note: mayor succession is processed BEFORE win condition checks
+  this allows the mayor's potential tie-breaking vote to affect outcomes in close games
   if no response within 60 seconds:
     randomly select an alive player as new mayor and resume game flow
 

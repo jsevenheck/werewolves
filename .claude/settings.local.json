@@ -25,6 +25,7 @@
       
       
       "EditFile(**/*.ts)",
+      "EditFile(**/*.vue)",
       "EditFile(**/*.tsx)",
       "EditFile(**/*.js)",
       "EditFile(**/*.json)",
