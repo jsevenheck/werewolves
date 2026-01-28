@@ -967,6 +967,8 @@ describe('socketHandlers hunterShoot', () => {
 });
 
 describe('submitGuardProtection', () => {
+  const io = { sockets: { sockets: new Map() } } as unknown as any;
+
   beforeEach(() => {
     jest.clearAllMocks();
   });

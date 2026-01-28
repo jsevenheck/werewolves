@@ -105,7 +105,7 @@ describe('roleManager', () => {
       minPlayers: 5,
       roleConfig: { ...DEFAULT_ROLE_CONFIG, guard: 2 }
     } as Room;
-    expect(validateCounts(tooManyGuards)).toEqual({ error: 'Maximum 1 Guard allowed' });
+    expect(validateCounts(tooManyGuards)).toEqual({ error: 'Only 1 Guard is supported' });
   });
 
   test('assignRoles sets roles, teams, and night actions', () => {

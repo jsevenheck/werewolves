@@ -297,8 +297,7 @@ describe('nightManager', () => {
 
       // Player survives (both protections applied, though only one needed)
       expect(queueDeath).not.toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
-      // Both heal and guard were "used" (healedTarget was set by witch)
-      expect(room.healedTarget).toBe('v1');
+      // Guard protection persists (healedTarget is cleared after resolution)
       expect(room.guardedTarget).toBe('v1');
     });
   });
