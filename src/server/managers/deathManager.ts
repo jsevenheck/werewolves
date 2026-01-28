@@ -52,12 +52,13 @@ function startHunterShot(
 
       // Check for next hunter in queue
       if (!startNextHunterShot(room, broadcastRoom, io)) {
-        // No more hunters, check win conditions
-        checkWinners(room);
-        if (!room.winner) {
-          const { startNextMayorSelection } = require('./mayorManager');
-          if (!startNextMayorSelection(room, broadcastRoom, io)) {
-            // No more mayor selections either, resume game flow
+        // No more hunters, check for mayor selections before checking win conditions
+        const { startNextMayorSelection } = require('./mayorManager');
+        if (!startNextMayorSelection(room, broadcastRoom, io)) {
+          // No more mayor selections, check win conditions
+          checkWinners(room);
+          if (!room.winner) {
+            // No winner, resume game flow
             const { schedulePhaseTransition, holdDayToNightTransition } = require('../managers/phaseManager');
             if (!room.awaitingHunterShot && !room.awaitingMayorSelection) {
               if (room.phase === 'day') {
@@ -158,11 +159,13 @@ function resolveDeaths(
     }
   }
   if (!room.awaitingHunterShot && room.hunterShotQueue.length === 0) {
-    checkWinners(room);
-  }
-  if (!room.winner && !room.awaitingHunterShot && room.hunterShotQueue.length === 0) {
     const { startNextMayorSelection } = require('./mayorManager');
-    startNextMayorSelection(room, broadcastRoom, io);
+    const hasMoreMayorSelections = startNextMayorSelection(room, broadcastRoom, io);
+    // Check winners if no new mayor selections were started
+    // If a mayor selection is already in progress, we'll check winners after it completes
+    if (!hasMoreMayorSelections) {
+      checkWinners(room);
+    }
   }
   broadcastRoom(room);
 }
@@ -184,11 +187,15 @@ function checkWinners(room: Room) {
   }
   const others = alive.length - wolves.length;
   if (wolves.length >= others) {
-    const loneWitch = alive.length === 2 && alive.some((p) => p.role === 'witch');
-    const witchHasLastStand = loneWitch && room.witchState.healAvailable && room.witchState.poisonAvailable;
-    if (witchHasLastStand) {
+    // Check if village has special abilities that could still turn the tide
+    const hunterAlive = alive.some((p) => p.role === 'hunter');
+    const witchWithPoison = alive.some((p) => p.role === 'witch') && room.witchState.poisonAvailable;
+    
+    // If there's a hunter alive or witch with poison, village still has a chance
+    if (hunterAlive || witchWithPoison) {
       return;
     }
+    
     room.winner = { team: 'wolves', reason: 'Werewolves reached parity.' };
     room.phase = 'ended';
     room.phaseStep = null;

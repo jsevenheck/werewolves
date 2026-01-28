@@ -19,11 +19,7 @@ function startNight(room: Room) {
   room.hunterShotQueue = [];
   room.mayorSelectionQueue = [];
   room.wolfVotes = {};
-  Object.values(room.players).forEach((player) => {
-    if (player.role === 'werewolf' && player.alive) {
-      room.wolfVotes[player.id] = null;
-    }
-  });
+  // Don't pre-initialize wolf votes - leave them undefined until wolves actually vote
   room.wolfTarget = null;
   room.seerActed = false;
   room.pendingDeaths = [];
