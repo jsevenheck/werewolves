@@ -15,6 +15,10 @@
 - **Host skip night step**: With an unresponsive or disconnected Witch/Seer/Wolf, host uses Skip current action and the game continues normally.
 - **Transition delays**: Confirm ~3s delay after each night action step, ~5s after role reveal (postReveal), ~10s after armor (postArmor) before night_transition plays, and ~6s after night_resolve before the nightToDay transition.
 - **Witch potion tracking**: Use heal potion once to prevent the wolf kill, confirm potion becomes unavailable later, then poison a target on another night and ensure dead count + Lovers link apply before win checks.
+- **Guard protection from wolves**: Guard selects a player at night; if wolves target that same player, confirm the player survives and appears in no death report.
+- **Guard protection from poison**: Guard selects a player that the Witch poisons; confirm the player survives the poison.
+- **Guard consecutive protection restriction**: Guard protects player A on night 1; on night 2, confirm player A is not available in the target list (guard cannot protect the same player two nights in a row).
+- **Guard cannot self-protect**: Confirm guard cannot select themselves as protection target.
 - **Seer and Witch private info**: Confirm Seer sees the last inspection result only on their device and Witch sees the wolves' target before acting.
 - **Voting UI**: Ensure vote submit is disabled until a selection is made; choose Abstain explicitly; test majority abstain -> no elimination.
 - **Lobby validation**: Attempt to start with fewer than 5 players; ensure the backend rejects the start and displays an error alert. Also test too many roles vs player count.
@@ -37,6 +41,7 @@ Expected narrator keys:
 - `night_wolves.mp3`
 - `night_seer.mp3`
 - `night_witch.mp3`
+- `night_guard.mp3`
 - `night_resolve.mp3`
 - `night_transition.mp3`
 - `postReveal.mp3`

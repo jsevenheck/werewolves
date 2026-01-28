@@ -5,7 +5,7 @@
 - `socketId`: string or null active socket id for reconnect.
 - `resumeToken`: random token required to resume a session (stored client-side).
 - `name`: display name shown to others.
-- `role`: enum (`werewolf`, `seer`, `hunter`, `witch`, `armor`, `joker`, `villager`).
+- `role`: enum (`werewolf`, `seer`, `hunter`, `witch`, `armor`, `joker`, `guard`, `villager`).
 - `team`: derived team id for win logic (`wolves`, `village`, `neutral`).
 - `alive`: boolean.
 - `connected`: boolean for reconnect tracking.
@@ -31,6 +31,9 @@
 - `mayorSelectionTimer`: timeout for mayor succession (60 seconds; auto-selects random alive player on timeout).
 - `lovers`: `{aId, bId}` or null.
 - `witchState`: `{healAvailable: boolean, poisonAvailable: boolean}`.
+- `guardedTarget`: player protected by guard this night, or null.
+- `lastGuardedTarget`: player protected by guard last night (for consecutive protection rule), or null.
+- `guardActed`: boolean, true if guard has submitted protection this night.
 - `wolfVotes`: map playerId -> targetId (null for no vote).
 - `wolfTarget`: chosen target after wolf vote resolves.
 - `voteState`: `{votes: map playerId -> targetId|null, revoteFromTie: array|null}`.
@@ -84,12 +87,18 @@ loop:
         if witch alive:
           show wolves' target; let witch save/poison (one potion per night)
           update potion flags
+        advance step='guard'
+      if step='guard':
+        if guard alive:
+          wait for guard to select a target to protect
+          guard cannot protect same player two nights in a row
+          guard cannot protect themselves
         advance step='resolve'
       wait ~3 seconds between all phase transitions and night steps to allow players to reset
       host may skip current step if a player is offline or unresponsive
       if step='resolve':
-        apply wolf target unless healed -> queue death
-        apply poison death (if any)
+        apply wolf target unless healed or guarded -> queue death
+        apply poison death (if any) unless guarded -> queue death
         process queued deaths with `resolveDeaths()`
         increment day count, update phase='day', reset votes
     day:

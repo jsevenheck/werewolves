@@ -139,6 +139,12 @@ function resolveNightStep(room: Room, nextStep: NightStep): NightStep {
   if (nextStep === 'witch') {
     const witchAlive = Object.values(room.players).some((p) => p.role === 'witch' && p.alive);
     if (!witchAlive) {
+      return resolveNightStep(room, 'guard');
+    }
+  }
+  if (nextStep === 'guard') {
+    const guardAlive = Object.values(room.players).some((p) => p.role === 'guard' && p.alive);
+    if (!guardAlive) {
       return 'resolve';
     }
   }

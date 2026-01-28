@@ -40,13 +40,6 @@ test("guard can protect a player from wolf attack", async ({ browser }) => {
     await host.locator('#wolf-form button[type="submit"]').click();
     await host.locator("#wolf-form").waitFor({ state: "detached" });
 
-    // Debug: Wait longer and check what both players see
-    await guard.waitForTimeout(3000);
-    const hostHtml = await host.locator('body').innerHTML();
-    const guardHtml = await guard.locator('body').innerHTML();
-    console.log('HOST page:', hostHtml.substring(0, 1500));
-    console.log('GUARD page:', guardHtml.substring(0, 1500));
-
     // Guard protects Villager A
     await guard.waitForSelector("#guard-form", { timeout: 10000 });
     await guard
@@ -105,17 +98,18 @@ test("guard cannot protect the same player two nights in a row", async ({
     await guard.locator('#guard-form button[type="submit"]').click();
     await guard.locator("#guard-form").waitFor({ state: "detached" });
 
-    // Wait for day and skip voting
+    // Wait for day and skip voting (abstain)
     await host.waitForSelector('h3:has-text("Night Report")', {
       timeout: 15000,
     });
     await host.waitForSelector("#vote-form", { timeout: 10000 });
 
-    // All players skip voting
+    // All players abstain from voting
     for (const page of pages) {
-      const skipBtn = page.locator("#skip-vote");
-      if (await skipBtn.isVisible()) {
-        await skipBtn.click();
+      const form = page.locator('#vote-form');
+      if (await form.isVisible()) {
+        await form.locator('select[name="target"]').selectOption('__abstain__');
+        await page.locator('#vote-submit').click();
       }
     }
 
@@ -190,6 +184,8 @@ test("guard can protect against witch poison", async ({ browser }) => {
     await witch.waitForSelector("#poison-select", { timeout: 10000 });
     await witch.locator("#poison-select").selectOption({ label: names[4] });
     await witch.locator("#poison-btn").click();
+    // After poisoning, witch needs to skip to proceed (she still has heal available)
+    await witch.locator("#skip-witch").click();
 
     // Guard protects Villager B (poison target)
     await guard.waitForSelector("#guard-form", { timeout: 10000 });
@@ -203,14 +199,15 @@ test("guard can protect against witch poison", async ({ browser }) => {
     await host.waitForSelector('h3:has-text("Night Report")', {
       timeout: 15000,
     });
-    const report = host.locator(
-      'section.panel:has(h3:has-text("Night Report"))'
-    );
+    
+    // Find the death list specifically (ul after Night Report header or the "No one died" message)
+    const nightReportSection = host.locator('section.panel:has(h3:has-text("Night Report"))');
+    const deathList = nightReportSection.locator('h3:has-text("Night Report") + ul, h3:has-text("Night Report") + p');
     
     // Villager A should have died from wolf attack
-    await expect(report).toContainText(names[3]);
+    await expect(deathList).toContainText(names[3]);
     // Villager B should have survived (not in death report)
-    await expect(report).not.toContainText(names[4]);
+    await expect(deathList).not.toContainText(names[4]);
   } finally {
     await Promise.all(contexts.map((ctx) => ctx.close()));
   }
