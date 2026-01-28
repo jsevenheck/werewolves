@@ -35,6 +35,10 @@ export const GameComponent = WerewolvesGameRoot;
 export { installWerewolvesGame } from './install';
 
 // ── Re-exported types ──────────────────────────────────────────────
-export type { WerewolvesGameConfig } from './types/config';
+export type {
+  WerewolvesGameConfig,
+  HubIntegrationProps,
+  GameComponentProps,
+} from './types/config';
 export type { RoomView, Player, Role } from '@shared/types';
 export type { ClientToServerEvents, ServerToClientEvents } from '@shared/events';

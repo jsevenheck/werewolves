@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.server.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "outDir": "../dist/standalone-server"
+  },
+  "include": [
+    "src/**/*.ts",
+    "../server/src/**/*.ts",
+    "../core/src/**/*.ts"
+  ]
+}
