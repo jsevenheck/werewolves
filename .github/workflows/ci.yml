@@ -26,13 +26,25 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install && pnpm -C ui-vue install
+        run: |
+          pnpm install
+          pnpm -C ui-vue install
+          pnpm -C standalone-server install
+          pnpm -C standalone-web install
 
       - name: Typecheck
         run: pnpm run typecheck
 
+      - name: Typecheck standalone wrappers
+        run: |
+          cd standalone-server && npx tsc --noEmit
+          cd ../standalone-web && pnpm exec vue-tsc --noEmit
+
       - name: Build
         run: pnpm run build
+
+      - name: Build standalone-web
+        run: pnpm -C standalone-web build
 
       - name: Unit tests
         run: pnpm test
