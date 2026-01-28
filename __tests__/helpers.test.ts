@@ -1,5 +1,5 @@
-import { sanitizeName, shuffle, createVoteState, addLog, getPlayerRoleLabel } from '../src/server/utils/helpers';
-import type { Room, Player, Role } from '../src/shared/types';
+import { sanitizeName, shuffle, createVoteState, addLog, getPlayerRoleLabel } from '../server/src/utils/helpers';
+import type { Room, Player, Role } from '../core/src/types';
 
 describe('helpers', () => {
   test('sanitizeName trims and caps at 20 characters', () => {

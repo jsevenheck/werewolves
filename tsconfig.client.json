@@ -3,5 +3,5 @@
   "compilerOptions": {
     "types": ["vite/client"]
   },
-  "include": ["client/src/**/*.ts", "client/index.html"]
+  "include": ["ui-vue/src/**/*.ts", "ui-vue/index.html"]
 }

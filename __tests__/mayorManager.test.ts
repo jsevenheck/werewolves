@@ -1,9 +1,9 @@
-import { startNextMayorSelection, tryResolveMayorVote } from '../src/server/managers/mayorManager';
-import { createVoteState } from '../src/server/utils/helpers';
-import { schedulePhaseTransition } from '../src/server/managers/phaseManager';
-import type { Room, Player } from '../src/shared/types';
+import { startNextMayorSelection, tryResolveMayorVote } from '../server/src/managers/mayorManager';
+import { createVoteState } from '../server/src/utils/helpers';
+import { schedulePhaseTransition } from '../server/src/managers/phaseManager';
+import type { Room, Player } from '../core/src/types';
 
-jest.mock('../src/server/managers/phaseManager', () => ({
+jest.mock('../server/src/managers/phaseManager', () => ({
   schedulePhaseTransition: jest.fn()
 }));
 

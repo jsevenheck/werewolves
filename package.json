@@ -10,12 +10,12 @@
   "scripts": {
     "dev": "concurrently \"pnpm run dev:server\" \"pnpm run dev:client\"",
     "dev:server": "tsx watch server.ts",
-    "dev:client": "pnpm --filter werewolves-client dev",
+    "dev:client": "pnpm -C ui-vue dev",
     "build": "pnpm run build:server && pnpm run build:client",
     "build:server": "tsc -p tsconfig.server.json",
-    "build:client": "pnpm --filter werewolves-client build",
+    "build:client": "pnpm -C ui-vue build",
     "start": "node dist/server.js",
-    "typecheck": "tsc -p tsconfig.json && pnpm --filter werewolves-client typecheck",
+    "typecheck": "tsc -p tsconfig.json && pnpm -C ui-vue typecheck",
     "test": "jest",
     "test:e2e": "playwright test"
   },

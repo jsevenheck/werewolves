@@ -1,5 +1,5 @@
-import { sanitizeRoom } from '../src/server/managers/broadcastManager';
-import type { Room, Player } from '../src/shared/types';
+import { sanitizeRoom } from '../server/src/managers/broadcastManager';
+import type { Room, Player } from '../core/src/types';
 
 const makeRoom = (): Room => ({
   code: 'ABCD',

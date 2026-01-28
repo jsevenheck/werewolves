@@ -1,9 +1,9 @@
-import { DEFAULT_ROLE_CONFIG, ROLE_INFO } from '../src/server/config/constants';
-import { normalizeRoleConfig, validateCounts, assignRoles } from '../src/server/managers/roleManager';
-import type { Player, Room, RoleConfig } from '../src/shared/types';
+import { DEFAULT_ROLE_CONFIG, ROLE_INFO } from '../server/src/config/constants';
+import { normalizeRoleConfig, validateCounts, assignRoles } from '../server/src/managers/roleManager';
+import type { Player, Room, RoleConfig } from '../core/src/types';
 
-jest.mock('../src/server/utils/helpers', () => ({
-  ...jest.requireActual('../src/server/utils/helpers'),
+jest.mock('../server/src/utils/helpers', () => ({
+  ...jest.requireActual('../server/src/utils/helpers'),
   shuffle: (arr: unknown[]) => arr
 }));
 

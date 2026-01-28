@@ -1,5 +1,5 @@
-import { queueDeath, resolveDeaths, checkWinners } from '../src/server/managers/deathManager';
-import type { Player, Room, RoleConfig } from '../src/shared/types';
+import { queueDeath, resolveDeaths, checkWinners } from '../server/src/managers/deathManager';
+import type { Player, Room, RoleConfig } from '../core/src/types';
 
 type IoStub = { sockets: { sockets: Map<string, { emit: jest.Mock }> } };
 

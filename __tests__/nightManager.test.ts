@@ -1,15 +1,15 @@
-import { scheduleNightStep, schedulePhaseTransition } from '../src/server/managers/phaseManager';
-import { queueDeath, resolveDeaths } from '../src/server/managers/deathManager';
-import { tryFinalizeWolfVote, handleWitchDecision, resolveNight } from '../src/server/managers/nightManager';
-import { NIGHT_RESOLVE_DELAY_MS } from '../src/server/config/constants';
-import type { Player, Room, RoleConfig } from '../src/shared/types';
+import { scheduleNightStep, schedulePhaseTransition } from '../server/src/managers/phaseManager';
+import { queueDeath, resolveDeaths } from '../server/src/managers/deathManager';
+import { tryFinalizeWolfVote, handleWitchDecision, resolveNight } from '../server/src/managers/nightManager';
+import { NIGHT_RESOLVE_DELAY_MS } from '../server/src/config/constants';
+import type { Player, Room, RoleConfig } from '../core/src/types';
 
-jest.mock('../src/server/managers/phaseManager', () => ({
+jest.mock('../server/src/managers/phaseManager', () => ({
   scheduleNightStep: jest.fn(),
   schedulePhaseTransition: jest.fn()
 }));
 
-jest.mock('../src/server/managers/deathManager', () => ({
+jest.mock('../server/src/managers/deathManager', () => ({
   queueDeath: jest.fn(),
   resolveDeaths: jest.fn()
 }));

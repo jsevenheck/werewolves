@@ -1,31 +1,7 @@
-import express from 'express';
-import http from 'http';
-import path from 'path';
-import fs from 'fs';
-import { Server } from 'socket.io';
-import { PORT } from './src/server/config/constants';
-import { setupSocketHandlers } from './src/server/handlers/socketHandlers';
-import type { ClientToServerEvents, ServerToClientEvents } from './src/shared/events';
-
-const app = express();
-const server = http.createServer(app);
-const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
-  cors: {
-    origin: '*'
-  }
-});
-
-const builtClientDir = path.join(__dirname, 'client');
-const devClientDir = path.join(process.cwd(), 'client');
-const staticDir = fs.existsSync(builtClientDir) ? builtClientDir : devClientDir;
-
-app.use(express.static(staticDir));
-app.get('/health', (_, res) => res.json({ ok: true }));
-
-server.listen(PORT, () => {
-  // Server started on PORT
-});
-
-io.on('connection', (socket) => {
-  setupSocketHandlers(io, socket);
-});
+/**
+ * Legacy entry point – delegates to server/src/standalone.ts.
+ *
+ * Kept so that existing scripts (`tsx server.ts`, Playwright config, etc.)
+ * continue to work without changes.
+ */
+import './server/src/standalone';

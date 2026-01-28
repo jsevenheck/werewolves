@@ -1,10 +1,10 @@
-import { queueDeath, resolveDeaths } from '../src/server/managers/deathManager';
-import { tryResolveDayVote } from '../src/server/managers/voteManager';
-import { createRoom } from '../src/server/models/room';
-import { createPlayer } from '../src/server/models/player';
-import type { Player, Room } from '../src/shared/types';
+import { queueDeath, resolveDeaths } from '../server/src/managers/deathManager';
+import { tryResolveDayVote } from '../server/src/managers/voteManager';
+import { createRoom } from '../server/src/models/room';
+import { createPlayer } from '../server/src/models/player';
+import type { Player, Room } from '../core/src/types';
 
-jest.mock('../src/server/managers/phaseManager', () => ({
+jest.mock('../server/src/managers/phaseManager', () => ({
   schedulePhaseTransition: jest.fn(),
   holdDayToNightTransition: jest.fn()
 }));

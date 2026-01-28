@@ -1,8 +1,8 @@
-import { holdDayToNightTransition } from '../src/server/managers/phaseManager';
-import { tryResolveDayVote, resolveDayKill } from '../src/server/managers/voteManager';
-import type { Player, Room, RoleConfig } from '../src/shared/types';
+import { holdDayToNightTransition } from '../server/src/managers/phaseManager';
+import { tryResolveDayVote, resolveDayKill } from '../server/src/managers/voteManager';
+import type { Player, Room, RoleConfig } from '../core/src/types';
 
-jest.mock('../src/server/managers/phaseManager', () => ({
+jest.mock('../server/src/managers/phaseManager', () => ({
   schedulePhaseTransition: jest.fn(),
   holdDayToNightTransition: jest.fn()
 }));
@@ -94,7 +94,7 @@ describe('voteManager', () => {
     room.voteState.revoteFromTie = ['b', 'c'];
     room.voteState.votes = { a: 'b', b: 'c', c: 'b', d: 'c' };
     const broadcastRoom = jest.fn();
-    const resolveSpy = jest.spyOn(require('../src/server/managers/voteManager'), 'resolveDayKill')
+    const resolveSpy = jest.spyOn(require('../server/src/managers/voteManager'), 'resolveDayKill')
       .mockImplementation(() => {});
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
 
