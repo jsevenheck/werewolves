@@ -7,7 +7,8 @@ RUN corepack enable
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY ui-vue/package.json ui-vue/pnpm-lock.yaml ./ui-vue/
+RUN pnpm install --frozen-lockfile && pnpm -C ui-vue install --frozen-lockfile
 
 COPY . .
 
@@ -21,8 +22,8 @@ RUN corepack enable
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod
+COPY package.json ./
+RUN pnpm install --prod
 
 COPY --from=builder /app/dist ./dist
 

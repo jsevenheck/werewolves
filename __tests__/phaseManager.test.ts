@@ -1,5 +1,5 @@
-import { startNight, scheduleNightStep, schedulePhaseTransition, advanceFromReveal } from '../src/server/managers/phaseManager';
-import type { Player, Room, RoleConfig } from '../src/shared/types';
+import { startNight, scheduleNightStep, schedulePhaseTransition, advanceFromReveal } from '../server/src/managers/phaseManager';
+import type { Player, Room, RoleConfig } from '../core/src/types';
 
 const makeRoom = (): Room => ({
   code: 'ABCD',

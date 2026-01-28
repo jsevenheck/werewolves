@@ -1,33 +1,33 @@
-import { getRoom } from '../src/server/models/room';
-import { broadcastRoom } from '../src/server/managers/broadcastManager';
+import { getRoom } from '../server/src/models/room';
+import { broadcastRoom } from '../server/src/managers/broadcastManager';
 import {
   scheduleNightStep,
   schedulePhaseTransition,
   startNight,
   advanceFromReveal,
   holdDayToNightTransition
-} from '../src/server/managers/phaseManager';
-import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../src/server/managers/nightManager';
-import { tryResolveDayVote } from '../src/server/managers/voteManager';
-import { queueDeath, resolveDeaths, startNextHunterShot, checkWinners } from '../src/server/managers/deathManager';
-import { startNextMayorSelection, tryResolveMayorVote } from '../src/server/managers/mayorManager';
-import { setupSocketHandlers } from '../src/server/handlers/socketHandlers';
-import { setSocketIndex, deleteSocketIndex } from '../src/server/models/player';
-import type { ClientToServerEvents, ServerToClientEvents } from '../src/shared/events';
-import type { Room } from '../src/shared/types';
+} from '../server/src/managers/phaseManager';
+import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../server/src/managers/nightManager';
+import { tryResolveDayVote } from '../server/src/managers/voteManager';
+import { queueDeath, resolveDeaths, startNextHunterShot, checkWinners } from '../server/src/managers/deathManager';
+import { startNextMayorSelection, tryResolveMayorVote } from '../server/src/managers/mayorManager';
+import { setupSocketHandlers } from '../server/src/handlers/socketHandlers';
+import { setSocketIndex, deleteSocketIndex } from '../server/src/models/player';
+import type { ClientToServerEvents, ServerToClientEvents } from '../core/src/events';
+import type { Room } from '../core/src/types';
 
-jest.mock('../src/server/models/room', () => ({
+jest.mock('../server/src/models/room', () => ({
   createRoom: jest.fn(),
   getRoom: jest.fn(),
   getAllRooms: jest.fn()
 }));
 
-jest.mock('../src/server/managers/broadcastManager', () => ({
+jest.mock('../server/src/managers/broadcastManager', () => ({
   broadcastRoom: jest.fn(),
   sendStateToPlayer: jest.fn()
 }));
 
-jest.mock('../src/server/managers/phaseManager', () => ({
+jest.mock('../server/src/managers/phaseManager', () => ({
   schedulePhaseTransition: jest.fn(),
   holdDayToNightTransition: jest.fn(),
   advanceFromReveal: jest.fn(),
@@ -36,28 +36,28 @@ jest.mock('../src/server/managers/phaseManager', () => ({
   scheduleNightStep: jest.fn()
 }));
 
-jest.mock('../src/server/managers/nightManager', () => ({
+jest.mock('../server/src/managers/nightManager', () => ({
   tryFinalizeWolfVote: jest.fn(),
   advanceNightStep: jest.fn(),
   handleWitchDecision: jest.fn()
 }));
 
-jest.mock('../src/server/managers/voteManager', () => {
-  const actual = jest.requireActual('../src/server/managers/voteManager');
+jest.mock('../server/src/managers/voteManager', () => {
+  const actual = jest.requireActual('../server/src/managers/voteManager');
   return {
     ...actual,
     tryResolveDayVote: jest.fn(actual.tryResolveDayVote)
   };
 });
 
-jest.mock('../src/server/managers/deathManager', () => ({
+jest.mock('../server/src/managers/deathManager', () => ({
   queueDeath: jest.fn(),
   resolveDeaths: jest.fn(),
   startNextHunterShot: jest.fn(),
   checkWinners: jest.fn()
 }));
 
-jest.mock('../src/server/managers/mayorManager', () => ({
+jest.mock('../server/src/managers/mayorManager', () => ({
   startNextMayorSelection: jest.fn(),
   startMayorSelection: jest.fn(),
   tryResolveMayorVote: jest.fn()

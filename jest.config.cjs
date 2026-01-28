@@ -5,7 +5,7 @@ module.exports = {
   clearMocks: true,
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
-    '^@shared/(.*)$': '<rootDir>/src/shared/$1'
+    '^@shared/(.*)$': '<rootDir>/core/src/$1'
   },
   testMatch: ['**/__tests__/**/*.test.ts'],
   transform: {

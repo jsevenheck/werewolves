@@ -1,7 +1,7 @@
 import { MockHowl } from './mocks/howler';
 
-import { computeNarrationKey, createNarrator } from '../client/src/utils/narrator';
-import type { RoomView } from '../src/shared/types';
+import { computeNarrationKey, createNarrator } from '../ui-vue/src/utils/narrator';
+import type { RoomView } from '../core/src/types';
 
 type RoomOverrides = Partial<RoomView>;
 
