@@ -528,6 +528,16 @@ function setupSocketHandlers(
     tryResolveMayorVote(room, (r) => broadcastRoom(r, io), { allowEarly: true });
   });
 
+  socket.on('hostProceedToNight', ({ roomCode, playerId }) => {
+    const room = getRoom(roomCode);
+    if (!room || room.phase !== 'day') return;
+    if (room.hostId !== playerId) return;
+    if (!getPlayerForSocket(room, playerId, socket.id)) return;
+    if (!room.dayVoteResolved) return;
+    room.dayVoteResolved = false;
+    holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
+  });
+
   socket.on('hunterShoot', ({ roomCode, playerId, targetId }) => {
     const room = getRoom(roomCode);
     if (!room) return;

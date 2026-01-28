@@ -116,6 +116,7 @@ export interface Room {
   lastDayDeaths: NightDeathAnnouncement[];
   lastDayMessage: string | null;
   awaitingHunterShot: string | null;
+  dayVoteResolved: boolean;
   logs: RoomLog[];
   nextNightStep: NightStep;
   transitionTimer: NodeJS.Timeout | null;
@@ -176,6 +177,7 @@ export interface RoomView {
   loverName: string | null;
   witchState: { healAvailable: boolean | null; poisonAvailable: boolean | null };
   wolfVotes: Record<string, string | null> | null;
+  wolfVoteState: { submitted: number; required: number; yourVote: string | null | undefined } | null;
   wolfTarget: string | null;
   wolfPeers: string[];
   nextNightStep: NightStep;
@@ -188,6 +190,7 @@ export interface RoomView {
   awaitingHunterShot: boolean;
   hunterShotPending: boolean;
   hunterShotEndsAt: number | null;
+  dayVoteResolved: boolean;
   winner: Winner | null;
   logs: RoomViewLog[];
   self: RoomViewSelf | null;
