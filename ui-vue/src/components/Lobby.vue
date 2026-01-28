@@ -14,6 +14,7 @@ const ROLE_DETAILS: Record<string, { name: string }> = {
   witch: { name: 'Witch' },
   armor: { name: 'Armor' },
   joker: { name: 'Joker' },
+  guard: { name: 'Guard' },
   villager: { name: 'Villager' }
 };
 
@@ -31,7 +32,7 @@ const { room, playerId } = storeToRefs(store);
 
 const canStart = computed(() => playerId.value === room.value?.hostId);
 const minPlayers = computed(() => room.value?.minPlayers ?? MIN_PLAYERS);
-const roleConfig = computed(() => room.value?.roleConfig || { werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 1 });
+const roleConfig = computed(() => room.value?.roleConfig || { werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 1, guard: 0 });
 const passiveRoleConfig = computed(() => room.value?.passiveRoleConfig || { mayor: true });
 const totals = computed(() => Object.values(roleConfig.value).reduce((sum, count) => sum + count, 0));
 const playersCount = computed(() => room.value?.players.length || 0);

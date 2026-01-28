@@ -25,7 +25,8 @@ test('hunter prompt allows a follow-up shot', async ({ browser }) => {
       hunter: 1,
       witch: 0,
       armor: 0,
-      joker: 0
+      joker: 0,
+      guard: 0
     });
 
     await startGameAndReady(pages);

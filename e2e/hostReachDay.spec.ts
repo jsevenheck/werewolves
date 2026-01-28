@@ -20,7 +20,8 @@ test('host can start a 5-player game and reach day', async ({ browser }) => {
       hunter: 0,
       witch: 0,
       armor: 0,
-      joker: 0
+      joker: 0,
+      guard: 0
     });
 
     await startGameAndReady(pages);

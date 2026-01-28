@@ -73,6 +73,7 @@ test("mayor is selected and displayed during mayor phase", async ({
       witch: 0,
       armor: 0,
       joker: 0,
+      guard: 0,
     });
 
     await startGameAndReady(pages);
@@ -105,6 +106,7 @@ test("mayor can be disabled in the lobby", async ({ browser }) => {
       witch: 0,
       armor: 0,
       joker: 0,
+      guard: 0,
       passiveRoles: { mayor: false },
     });
 
@@ -132,6 +134,7 @@ test("mayor election revote resolves a tie", async ({ browser }) => {
       witch: 0,
       armor: 0,
       joker: 0,
+      guard: 0,
     });
 
     await startGameAndReady(pages);
@@ -185,6 +188,7 @@ test("mayor vote breaks tie in day voting", async ({ browser }) => {
       witch: 0,
       armor: 0,
       joker: 0,
+      guard: 0,
     });
 
     await startGameAndReady(pages);
@@ -279,6 +283,7 @@ test("host can finalize mayor vote early", async ({ browser }) => {
       witch: 0,
       armor: 0,
       joker: 0,
+      guard: 0,
     });
 
     await startGameAndReady(pages);
@@ -322,6 +327,7 @@ test("dying mayor selects successor", async ({ browser }) => {
       witch: 0,
       armor: 0,
       joker: 0,
+      guard: 0,
     });
 
     await startGameAndReady(pages);
@@ -383,6 +389,7 @@ test("host can skip mayor selection", async ({ browser }) => {
       witch: 0,
       armor: 0,
       joker: 0,
+      guard: 0,
     });
 
     await startGameAndReady(pages);

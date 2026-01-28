@@ -320,6 +320,33 @@ function setupSocketHandlers(
     handleWitchDecision(room, playerId, action, targetId ?? null, (r) => broadcastRoom(r, io), io);
   });
 
+  socket.on('submitGuardProtection', ({ roomCode, playerId, targetId }, cb) => {
+    const room = getRoom(roomCode);
+    if (!room || room.phase !== 'night' || room.phaseStep !== 'guard')
+      return cb?.({ error: 'Invalid room or phase' });
+
+    const player = getPlayerForSocket(room, playerId, socket.id);
+    if (!player || player.role !== 'guard' || !player.alive)
+      return cb?.({ error: 'Invalid player' });
+
+    if (targetId === playerId)
+      return cb?.({ error: 'Cannot protect yourself' });
+
+    // Check consecutive protection rule
+    if (room.lastGuardedTarget && room.lastGuardedTarget === targetId)
+      return cb?.({ error: 'Cannot protect the same player two nights in a row' });
+
+    const target = room.players[targetId];
+    if (!target || !target.alive)
+      return cb?.({ error: 'Invalid target' });
+
+    room.guardedTarget = targetId;
+    room.guardActed = true;
+    cb?.({ ok: true });
+
+    advanceNightStep(room, (r) => broadcastRoom(r, io), io);
+  });
+
   socket.on('hostSkipStep', ({ roomCode, playerId }) => {
     const room = getRoom(roomCode);
     if (!room || room.hostId !== playerId) return;
@@ -398,7 +425,7 @@ function setupSocketHandlers(
       if (step === 'resolve') {
         const { resolveNight } = require('../managers/nightManager');
         resolveNight(room, (r: typeof room) => broadcastRoom(r, io), io);
-      } else if (step === 'seer' || step === 'witch') {
+      } else if (step === 'seer' || step === 'witch' || step === 'guard') {
         advanceNightStep(room, (r) => broadcastRoom(r, io), io);
       } else {
         broadcastRoom(room, io);
@@ -481,6 +508,13 @@ function setupSocketHandlers(
 
     if (room.phaseStep === 'witch') {
       handleWitchDecision(room, null, 'skip', null, (r) => broadcastRoom(r, io), io);
+      return;
+    }
+
+    if (room.phaseStep === 'guard') {
+      room.guardActed = true;
+      const { scheduleNightStep } = require('../managers/phaseManager');
+      scheduleNightStep(room, 'resolve', (r: typeof room) => broadcastRoom(r, io), io);
       return;
     }
   });
@@ -584,6 +618,9 @@ function setupSocketHandlers(
     room.healedTarget = null;
     room.poisonTarget = null;
     room.seerActed = false;
+    room.guardedTarget = null;
+    room.lastGuardedTarget = null;
+    room.guardActed = false;
     room.voteState = createVoteState();
     room.pendingDeaths = [];
     room.winner = null;

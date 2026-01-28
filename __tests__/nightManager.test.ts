@@ -22,7 +22,7 @@ const makeRoom = (): Room => ({
   dayCount: 0,
   players: {},
   minPlayers: 5,
-  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0 } as RoleConfig,
+  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0 } as RoleConfig,
   passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: null,
@@ -35,6 +35,9 @@ const makeRoom = (): Room => ({
   healedTarget: null,
   poisonTarget: null,
   seerActed: false,
+  guardedTarget: null,
+  lastGuardedTarget: null,
+  guardActed: false,
   voteState: { votes: {}, revoteFromTie: null },
   pendingDeaths: [],
   logs: [],
@@ -112,7 +115,7 @@ describe('nightManager', () => {
 
     expect(room.witchState.healAvailable).toBe(false);
     expect(room.healedTarget).toBe('v1');
-    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'resolve', expect.any(Function), undefined);
+    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'guard', expect.any(Function), undefined);
   });
 
   test('handleWitchDecision does not consume heal when wolf target is invalid', () => {
@@ -175,7 +178,7 @@ describe('nightManager', () => {
 
     expect(room.witchState.poisonAvailable).toBe(false);
     expect(room.poisonTarget).toBe('v2');
-    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'resolve', expect.any(Function), undefined);
+    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'guard', expect.any(Function), undefined);
   });
 
   test('resolveNight queues deaths, resolves, and transitions', () => {

@@ -26,6 +26,7 @@ function startNight(room: Room) {
   });
   room.wolfTarget = null;
   room.seerActed = false;
+  room.guardActed = false;
   room.pendingDeaths = [];
   room.lastNightDeaths = [];
   room.lastDayDeaths = [];
@@ -55,7 +56,7 @@ function scheduleNightStep(
     if (resolvedStep === 'resolve') {
       const { resolveNight } = require('./nightManager');
       resolveNight(room, broadcastRoom, io);
-    } else if (resolvedStep === 'seer' || resolvedStep === 'witch') {
+    } else if (resolvedStep === 'seer' || resolvedStep === 'witch' || resolvedStep === 'guard') {
       const { advanceNightStep } = require('./nightManager');
       advanceNightStep(room, broadcastRoom, io);
     } else {

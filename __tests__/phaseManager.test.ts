@@ -29,7 +29,7 @@ const makeRoom = (): Room => ({
   logs: [],
   winner: null,
   minPlayers: 5,
-  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0 } as RoleConfig,
+  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0 } as RoleConfig,
   passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: null,
@@ -37,6 +37,9 @@ const makeRoom = (): Room => ({
   mayorSelectionTimer: null,
   lovers: null,
   witchState: { healAvailable: true, poisonAvailable: true },
+  guardedTarget: null,
+  lastGuardedTarget: null,
+  guardActed: false,
   createdAt: Date.now(),
   lastActivityAt: Date.now()
 });

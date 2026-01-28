@@ -17,6 +17,7 @@ const { room, playerId, pendingWolfVote } = storeToRefs(store);
 const wolfTarget = ref('');
 const seerTarget = ref('');
 const poisonTarget = ref('');
+const guardTarget = ref('');
 
 const self = computed(() => room.value?.self || null);
 const isHost = computed(() => room.value?.hostId === playerId.value);
@@ -56,7 +57,13 @@ const healedText = computed(() => witchWolfTarget.value && room.value ? `Wolves 
 const aliveWitchTargets = computed(() => (room.value?.players ?? []).filter((p) => p && p.alive && p.id !== playerId.value));
 const skipLabel = computed(() => !witchState.value.healAvailable ? 'Continue' : 'Skip');
 
-const showHostSkip = computed(() => isHost.value && ['wolves', 'seer', 'witch', 'transition'].includes(room.value?.phaseStep || ''));
+// Guard form
+const isGuard = computed(() => room.value?.phaseStep === 'guard' && self.value?.role === 'guard' && self.value.alive);
+const lastGuardedTarget = computed(() => room.value?.lastGuardedTarget || null);
+const guardTargets = computed(() => (room.value?.players ?? []).filter((p) => p.alive && p.id !== playerId.value && p.id !== lastGuardedTarget.value));
+const lastProtectedName = computed(() => lastGuardedTarget.value && room.value ? getPlayerName(room.value, lastGuardedTarget.value) : null);
+
+const showHostSkip = computed(() => isHost.value && ['wolves', 'seer', 'witch', 'guard', 'transition'].includes(room.value?.phaseStep || ''));
 
 function onWolfSelectChange() {
   store.pendingWolfVote = wolfTarget.value || undefined;
@@ -98,6 +105,19 @@ function poisonSubmit() {
 function skipWitch() {
   if (!playerId.value || !room.value) return;
   props.socket.emit('submitWitchDecision', { roomCode: room.value.code, playerId: playerId.value, action: 'skip' });
+}
+
+function submitGuardProtection() {
+  if (!guardTarget.value || !playerId.value || !room.value) return;
+  props.socket.emit('submitGuardProtection', {
+    roomCode: room.value.code,
+    playerId: playerId.value,
+    targetId: guardTarget.value
+  }, (res) => {
+    if (res && 'error' in res && res.error) {
+      notify(`Error: ${res.error}`);
+    }
+  });
 }
 
 function skipStep() {
@@ -199,6 +219,23 @@ function skipStep() {
         </div>
         <button type="button" id="skip-witch" @click="skipWitch">{{ skipLabel }}</button>
       </div>
+    </template>
+
+    <!-- Guard form -->
+    <template v-else-if="isGuard">
+      <form id="guard-form" class="actions" @submit.prevent="submitGuardProtection">
+        <p v-if="lastProtectedName">Last night you protected {{ lastProtectedName }}. You cannot protect them again tonight.</p>
+        <label>
+          <span>Protect a player</span>
+          <select v-model="guardTarget" name="target" required>
+            <option value="">Select target</option>
+            <option v-for="player in guardTargets" :key="player.id" :value="player.id">
+              {{ player.name }}
+            </option>
+          </select>
+        </label>
+        <button type="submit">Protect</button>
+      </form>
     </template>
 
     <!-- Alive but not active role -->
