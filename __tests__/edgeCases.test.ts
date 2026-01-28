@@ -97,7 +97,7 @@ describe('Edge Cases', () => {
         hunterShotQueue: []
       } as unknown as Room;
       const emit = jest.fn();
-      const io = { sockets: { sockets: new Map([['socket-h', { emit }]]) } };
+      const io = { sockets: new Map([['socket-h', { emit }]]) };
       const broadcastRoom = jest.fn();
 
       queueDeath(room, 'lover', 'eaten by Werewolves');
@@ -256,7 +256,7 @@ describe('Edge Cases', () => {
         hunterShotQueue: []
       } as unknown as Room;
       const emit = jest.fn();
-      const io = { sockets: { sockets: new Map([['socket-h', { emit }]]) } };
+      const io = { sockets: new Map([['socket-h', { emit }]]) };
       const broadcastRoom = jest.fn();
 
       queueDeath(room, 'hunter', 'executed by vote');
@@ -299,7 +299,7 @@ describe('Edge Cases', () => {
         phaseTimer: null,
         hunterShotQueue: []
       } as unknown as Room;
-      const io = { sockets: { sockets: new Map() } };
+      const io = { sockets: new Map() };
       const broadcastRoom = jest.fn();
 
       queueDeath(room, 'hunter', 'executed by vote');

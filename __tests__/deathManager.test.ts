@@ -1,7 +1,7 @@
 import { queueDeath, resolveDeaths, checkWinners } from '../server/src/managers/deathManager';
 import type { Player, Room, RoleConfig } from '../core/src/types';
 
-type IoStub = { sockets: { sockets: Map<string, { emit: jest.Mock }> } };
+type IoStub = { sockets: Map<string, { emit: jest.Mock }> };
 
 const makeRoom = (): Room => ({
   code: 'ABCD',
@@ -95,7 +95,7 @@ describe('deathManager', () => {
       villager: buildPlayer({ id: 'villager', name: 'Villager', role: 'villager', alive: true, connected: true })
     };
     const emit = jest.fn();
-    const io: IoStub = { sockets: { sockets: new Map([['socket-h', { emit }]]) } };
+    const io: IoStub = { sockets: new Map([['socket-h', { emit }]]) };
     const broadcastRoom = jest.fn();
 
     queueDeath(room, 'hunter', 'executed by vote');
