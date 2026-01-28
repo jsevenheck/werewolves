@@ -965,3 +965,144 @@ describe('socketHandlers hunterShoot', () => {
     expect(holdDayToNightTransition).toHaveBeenCalledWith(room, expect.any(Function));
   });
 });
+
+describe('submitGuardProtection', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('guard can protect a player', () => {
+    const room = {
+      code: 'ABCD',
+      phase: 'night',
+      phaseStep: 'guard',
+      guardedTarget: null,
+      lastGuardedTarget: null,
+      guardActed: false,
+      players: {
+        guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' },
+        v1: { id: 'v1', role: 'villager', alive: true }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    socket.id = 'socket1';
+    setupSocketHandlers(io, socket as any);
+
+    const callback = jest.fn();
+    handlers.submitGuardProtection({ roomCode: 'ABCD', playerId: 'guard', targetId: 'v1' }, callback);
+
+    expect(room.guardedTarget).toBe('v1');
+    expect(room.guardActed).toBe(true);
+    expect(callback).toHaveBeenCalledWith({ ok: true });
+    expect(advanceNightStep).toHaveBeenCalledWith(room, expect.any(Function), io);
+  });
+
+  test('guard cannot protect themselves', () => {
+    const room = {
+      code: 'ABCD',
+      phase: 'night',
+      phaseStep: 'guard',
+      guardedTarget: null,
+      lastGuardedTarget: null,
+      guardActed: false,
+      players: {
+        guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    socket.id = 'socket1';
+    setupSocketHandlers(io, socket as any);
+
+    const callback = jest.fn();
+    handlers.submitGuardProtection({ roomCode: 'ABCD', playerId: 'guard', targetId: 'guard' }, callback);
+
+    expect(room.guardedTarget).toBeNull();
+    expect(room.guardActed).toBe(false);
+    expect(callback).toHaveBeenCalledWith({ error: 'Cannot protect yourself' });
+    expect(advanceNightStep).not.toHaveBeenCalled();
+  });
+
+  test('guard cannot protect same player on consecutive nights', () => {
+    const room = {
+      code: 'ABCD',
+      phase: 'night',
+      phaseStep: 'guard',
+      guardedTarget: null,
+      lastGuardedTarget: 'v1',
+      guardActed: false,
+      players: {
+        guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' },
+        v1: { id: 'v1', role: 'villager', alive: true }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    socket.id = 'socket1';
+    setupSocketHandlers(io, socket as any);
+
+    const callback = jest.fn();
+    handlers.submitGuardProtection({ roomCode: 'ABCD', playerId: 'guard', targetId: 'v1' }, callback);
+
+    expect(room.guardedTarget).toBeNull();
+    expect(room.guardActed).toBe(false);
+    expect(callback).toHaveBeenCalledWith({ error: 'Cannot protect the same player two nights in a row' });
+    expect(advanceNightStep).not.toHaveBeenCalled();
+  });
+
+  test('guard can protect same player after skipping a night', () => {
+    const room = {
+      code: 'ABCD',
+      phase: 'night',
+      phaseStep: 'guard',
+      guardedTarget: null,
+      lastGuardedTarget: 'v2',
+      guardActed: false,
+      players: {
+        guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' },
+        v1: { id: 'v1', role: 'villager', alive: true },
+        v2: { id: 'v2', role: 'villager', alive: true }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    socket.id = 'socket1';
+    setupSocketHandlers(io, socket as any);
+
+    const callback = jest.fn();
+    handlers.submitGuardProtection({ roomCode: 'ABCD', playerId: 'guard', targetId: 'v1' }, callback);
+
+    expect(room.guardedTarget).toBe('v1');
+    expect(room.guardActed).toBe(true);
+    expect(callback).toHaveBeenCalledWith({ ok: true });
+    expect(advanceNightStep).toHaveBeenCalledWith(room, expect.any(Function), io);
+  });
+
+  test('guard cannot protect dead player', () => {
+    const room = {
+      code: 'ABCD',
+      phase: 'night',
+      phaseStep: 'guard',
+      guardedTarget: null,
+      lastGuardedTarget: null,
+      guardActed: false,
+      players: {
+        guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' },
+        v1: { id: 'v1', role: 'villager', alive: false }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    socket.id = 'socket1';
+    setupSocketHandlers(io, socket as any);
+
+    const callback = jest.fn();
+    handlers.submitGuardProtection({ roomCode: 'ABCD', playerId: 'guard', targetId: 'v1' }, callback);
+
+    expect(room.guardedTarget).toBeNull();
+    expect(room.guardActed).toBe(false);
+    expect(callback).toHaveBeenCalledWith({ error: 'Invalid target' });
+    expect(advanceNightStep).not.toHaveBeenCalled();
+  });
+});

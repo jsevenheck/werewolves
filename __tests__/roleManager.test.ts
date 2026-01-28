@@ -99,6 +99,15 @@ describe('roleManager', () => {
     expect(validateCounts(capShouldWinOverTotalCount)).toEqual({ error: 'Only 1 Seer is supported' });
   });
 
+  test('validateCounts rejects more than 1 Guard', () => {
+    const tooManyGuards = {
+      players: makePlayers(5),
+      minPlayers: 5,
+      roleConfig: { ...DEFAULT_ROLE_CONFIG, guard: 2 }
+    } as Room;
+    expect(validateCounts(tooManyGuards)).toEqual({ error: 'Maximum 1 Guard allowed' });
+  });
+
   test('assignRoles sets roles, teams, and night actions', () => {
     const room = {
       players: makePlayers(3),

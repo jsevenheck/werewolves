@@ -238,4 +238,68 @@ describe('nightManager', () => {
       jest.useRealTimers();
     }
   });
+
+  describe('Guard protection', () => {
+    test('guard protection blocks wolf kill', () => {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.wolfTarget = 'v1';
+      room.guardedTarget = 'v1';
+      room.players = {
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+      };
+
+      resolveNight(room, jest.fn(), undefined as never);
+
+      expect(queueDeath).not.toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
+    });
+
+    test('guard protection blocks witch poison', () => {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.poisonTarget = 'v1';
+      room.guardedTarget = 'v1';
+      room.players = {
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+      };
+
+      resolveNight(room, jest.fn(), undefined as never);
+
+      expect(queueDeath).not.toHaveBeenCalledWith(room, 'v1', 'poisoned by Witch');
+    });
+
+    test('wolf kills player when guard protects someone else', () => {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.wolfTarget = 'v1';
+      room.guardedTarget = 'v2';
+      room.players = {
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
+        v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true })
+      };
+
+      resolveNight(room, jest.fn(), undefined as never);
+
+      expect(queueDeath).toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
+    });
+
+    test('guard protection and witch heal on same target (both consumed)', () => {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.wolfTarget = 'v1';
+      room.guardedTarget = 'v1';
+      room.healedTarget = 'v1';
+      room.players = {
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+      };
+
+      resolveNight(room, jest.fn(), undefined as never);
+
+      // Player survives (both protections applied, though only one needed)
+      expect(queueDeath).not.toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
+      // Both heal and guard were "used" (healedTarget was set by witch)
+      expect(room.healedTarget).toBe('v1');
+      expect(room.guardedTarget).toBe('v1');
+    });
+  });
 });
