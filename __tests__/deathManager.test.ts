@@ -37,6 +37,7 @@ const makeRoom = (): Room => ({
   transitionTimer: null,
   phaseTimer: null,
   hunterShotTimer: null,
+  hunterShotEndsAt: null,
   hunterShotQueue: [],
   createdAt: Date.now(),
   lastActivityAt: Date.now()

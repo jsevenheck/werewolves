@@ -9,6 +9,7 @@ import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../m
 import { tryResolveDayVote } from '../managers/voteManager';
 import { queueDeath, resolveDeaths, startNextHunterShot, checkWinners } from '../managers/deathManager';
 import { startNextMayorSelection, tryResolveMayorVote } from '../managers/mayorManager';
+import { MAYOR_SUCCESSION_DELAY_MS } from '../config/constants';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { Room } from '../../../core/src/types';
 
@@ -215,11 +216,28 @@ function setupSocketHandlers(
     // Check win conditions and continue
     checkWinners(room);
     if (!room.winner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
-      if (room.phase === 'day') {
-        holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
-      } else if (room.phase === 'night' && room.phaseStep === 'resolve') {
-        // Resume night->day transition after mayor succession during night
-        schedulePhaseTransition(room, 'nightToDay', (r) => broadcastRoom(r, io));
+      const resumeAfterDelay = () => {
+        if (room.winner || room.awaitingHunterShot || room.awaitingMayorSelection) {
+          return;
+        }
+        if (room.phase === 'day') {
+          holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
+        } else if (room.phase === 'night' && room.phaseStep === 'resolve') {
+          // Resume night->day transition after mayor succession during night
+          schedulePhaseTransition(room, 'nightToDay', (r) => broadcastRoom(r, io));
+        }
+      };
+      if (MAYOR_SUCCESSION_DELAY_MS > 0) {
+        if (room.phaseTimer) {
+          clearTimeout(room.phaseTimer);
+          room.phaseTimer = null;
+        }
+        room.phaseTimer = setTimeout(() => {
+          room.phaseTimer = null;
+          resumeAfterDelay();
+        }, MAYOR_SUCCESSION_DELAY_MS);
+      } else {
+        resumeAfterDelay();
       }
     }
     broadcastRoom(room, io);
@@ -347,6 +365,7 @@ function setupSocketHandlers(
         clearTimeout(room.hunterShotTimer);
         room.hunterShotTimer = null;
       }
+      room.hunterShotEndsAt = null;
       if (startNextHunterShot(room, (r) => broadcastRoom(r, io), io)) {
         return;
       }
@@ -514,6 +533,7 @@ function setupSocketHandlers(
       clearTimeout(room.hunterShotTimer);
       room.hunterShotTimer = null;
     }
+    room.hunterShotEndsAt = null;
     queueDeath(room, targetId, 'shot by Hunter');
     room.awaitingHunterShot = null;
     const context =
@@ -577,6 +597,7 @@ function setupSocketHandlers(
     room.phaseTimer = null;
     room.transitionTimer = null;
     room.hunterShotTimer = null;
+    room.hunterShotEndsAt = null;
     room.hunterShotQueue = [];
     Object.values(room.players).forEach((player) => {
       player.role = null;

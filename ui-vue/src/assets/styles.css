@@ -102,6 +102,9 @@
 .werewolves-root .player-card.dead {
   opacity: 0.55;
   text-decoration: line-through;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: rgba(254, 202, 202, 0.9);
 }
 
 .werewolves-root .tag {
@@ -127,6 +130,12 @@
   border: 1px solid rgba(248, 197, 144, 0.5);
   padding: 1rem;
   border-radius: 12px;
+}
+
+.werewolves-root .passive-role-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(148, 163, 184, 0.9);
 }
 
 .werewolves-root .actions {
@@ -305,6 +314,18 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.overlay-panel {
+  position: relative;
+}
+
+.overlay-timer {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.8);
 }
 
 .mayor-overlay {
