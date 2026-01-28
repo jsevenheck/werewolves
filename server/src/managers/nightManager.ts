@@ -48,7 +48,7 @@ function tryFinalizeWolfVote(
   scheduleNightStep(room, 'seer', broadcastRoom, io);
 }
 
-function advanceNightStep(room: Room, broadcastRoom: (room: Room) => void, io: Server<ClientToServerEvents, ServerToClientEvents>) {
+function advanceNightStep(room: Room, broadcastRoom: (room: Room) => void, io: Namespace<ClientToServerEvents, ServerToClientEvents>) {
   if (room.phaseStep === 'seer') {
     const seerAlive = Object.values(room.players).some((p) => p.role === 'seer' && p.alive);
     if (!seerAlive || room.seerActed) {
@@ -131,7 +131,7 @@ function handleWitchDecision(
   broadcastRoom(room);
 }
 
-function resolveNight(room: Room, broadcastRoom: (room: Room) => void, io: Server<ClientToServerEvents, ServerToClientEvents>) {
+function resolveNight(room: Room, broadcastRoom: (room: Room) => void, io: Namespace<ClientToServerEvents, ServerToClientEvents>) {
   const { queueDeath, resolveDeaths } = require('./deathManager');
   if (room.wolfTarget && room.healedTarget !== room.wolfTarget) {
     queueDeath(room, room.wolfTarget, 'eaten by Werewolves');
