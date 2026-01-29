@@ -21,8 +21,57 @@ jest.mock('../client/src/utils/helpers', () => ({
 }));
 
 import { bindPhaseHandlers } from '../client/src/handlers/phaseHandlers';
+import { notify } from '../client/src/utils/helpers';
 
 describe('lobby handlers', () => {
+  const makePlayers = (count: number) =>
+    Array.from({ length: count }, (_, i) => ({
+      id: `p${i + 1}`,
+      name: `Player ${i + 1}`,
+      alive: true,
+      connected: true,
+      isHost: i === 0,
+      role: null
+    }));
+
+  const makeRoom = (roleConfig: RoomView['roleConfig'], players = makePlayers(5)): RoomView => ({
+    code: 'ABCD',
+    phase: 'lobby',
+    phaseStep: null,
+    dayCount: 0,
+    players,
+    hostId: 'host',
+    minPlayers: 5,
+    roleConfig,
+    passiveRoleConfig: { mayor: true },
+    mayorId: null,
+    awaitingMayorSelection: false,
+    mayorSelectionPending: false,
+    loversKnown: false,
+    loversAssigned: false,
+    loverName: null,
+    witchState: { healAvailable: null, poisonAvailable: null },
+    wolfVotes: null,
+    wolfVoteState: null,
+    wolfTarget: null,
+    wolfPeers: [],
+    wolfIds: [],
+    nextNightStep: null,
+    phaseTransition: null,
+    seerResult: null,
+    voteState: { yourVote: undefined, submitted: 0, required: 0, revoteFromTie: null },
+    lastNightDeaths: [],
+    lastDayDeaths: [],
+    lastDayMessage: null,
+    awaitingHunterShot: false,
+    hunterShotPending: false,
+    hunterShotEndsAt: null,
+    dayVoteResolved: false,
+    winner: null,
+    logs: [],
+    self: null
+  });
+
   const buildDom = () => {
     document.body.innerHTML = `
       <form id="role-config">
@@ -38,45 +87,17 @@ describe('lobby handlers', () => {
     `;
   };
 
+  afterEach(() => {
+    mockState.room = null;
+    mockState.playerId = '';
+    (notify as jest.Mock).mockClear();
+    jest.clearAllTimers();
+    jest.useRealTimers();
+  });
+
   test('change emits updateRoleConfig immediately', () => {
     buildDom();
-    mockState.room = {
-      code: 'ABCD',
-      phase: 'lobby',
-      phaseStep: null,
-      dayCount: 0,
-      players: [],
-      hostId: 'host',
-      minPlayers: 5,
-      roleConfig: { werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 0 },
-      passiveRoleConfig: { mayor: true },
-      mayorId: null,
-      awaitingMayorSelection: false,
-      mayorSelectionPending: false,
-      loversKnown: false,
-      loversAssigned: false,
-      loverName: null,
-      witchState: { healAvailable: null, poisonAvailable: null },
-      wolfVotes: null,
-      wolfVoteState: null,
-      wolfTarget: null,
-      wolfPeers: [],
-      wolfIds: [],
-      nextNightStep: null,
-      phaseTransition: null,
-      seerResult: null,
-      voteState: { yourVote: undefined, submitted: 0, required: 0, revoteFromTie: null },
-      lastNightDeaths: [],
-      lastDayDeaths: [],
-      lastDayMessage: null,
-      awaitingHunterShot: false,
-      hunterShotPending: false,
-      hunterShotEndsAt: null,
-      dayVoteResolved: false,
-      winner: null,
-      logs: [],
-      self: null
-    };
+    mockState.room = makeRoom({ werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 0 });
     mockState.playerId = 'host';
     const socket = { emit: jest.fn() };
 
@@ -104,43 +125,7 @@ describe('lobby handlers', () => {
   test('input emits updateRoleConfig after debounce', () => {
     jest.useFakeTimers();
     buildDom();
-    mockState.room = {
-      code: 'ABCD',
-      phase: 'lobby',
-      phaseStep: null,
-      dayCount: 0,
-      players: [],
-      hostId: 'host',
-      minPlayers: 5,
-      roleConfig: { werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 0 },
-      passiveRoleConfig: { mayor: true },
-      mayorId: null,
-      awaitingMayorSelection: false,
-      mayorSelectionPending: false,
-      loversKnown: false,
-      loversAssigned: false,
-      loverName: null,
-      witchState: { healAvailable: null, poisonAvailable: null },
-      wolfVotes: null,
-      wolfVoteState: null,
-      wolfTarget: null,
-      wolfPeers: [],
-      wolfIds: [],
-      nextNightStep: null,
-      phaseTransition: null,
-      seerResult: null,
-      voteState: { yourVote: undefined, submitted: 0, required: 0, revoteFromTie: null },
-      lastNightDeaths: [],
-      lastDayDeaths: [],
-      lastDayMessage: null,
-      awaitingHunterShot: false,
-      hunterShotPending: false,
-      hunterShotEndsAt: null,
-      dayVoteResolved: false,
-      winner: null,
-      logs: [],
-      self: null
-    };
+    mockState.room = makeRoom({ werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 0 });
     mockState.playerId = 'host';
     const socket = { emit: jest.fn() };
 
@@ -167,5 +152,61 @@ describe('lobby handlers', () => {
         passiveRoles: { mayor: true }
       }
     });
+  });
+
+  test('singleton role inputs are clamped to max 1', () => {
+    buildDom();
+    mockState.room = makeRoom({ werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 0 });
+    mockState.playerId = 'host';
+    const socket = { emit: jest.fn() };
+
+    bindPhaseHandlers(socket as never, jest.fn());
+
+    const seerInput = document.querySelector('input[data-role="seer"]') as HTMLInputElement;
+    seerInput.value = '2';
+    seerInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+    expect(seerInput.value).toBe('1');
+    expect(socket.emit).toHaveBeenCalledWith('updateRoleConfig', {
+      roomCode: 'ABCD',
+      playerId: 'host',
+      config: {
+        werewolf: 2,
+        seer: 1,
+        hunter: 1,
+        witch: 1,
+        armor: 1,
+        joker: 0,
+        passiveRoles: { mayor: true }
+      }
+    });
+  });
+
+  test('start game precheck shows cap error before total-count error', () => {
+    buildDom();
+    mockState.room = makeRoom({ werewolf: 5, seer: 2, hunter: 0, witch: 0, armor: 0, joker: 0 });
+    mockState.playerId = 'host';
+    const socket = { emit: jest.fn() };
+
+    bindPhaseHandlers(socket as never, jest.fn());
+
+    document.getElementById('start-game')?.dispatchEvent(new Event('click', { bubbles: true }));
+
+    expect(notify).toHaveBeenCalledWith('Only 1 Seer is supported');
+    expect(socket.emit).not.toHaveBeenCalledWith('startGame', expect.anything());
+  });
+
+  test('start game precheck shows total-count error when caps are valid', () => {
+    buildDom();
+    mockState.room = makeRoom({ werewolf: 6, seer: 1, hunter: 0, witch: 0, armor: 0, joker: 0 });
+    mockState.playerId = 'host';
+    const socket = { emit: jest.fn() };
+
+    bindPhaseHandlers(socket as never, jest.fn());
+
+    document.getElementById('start-game')?.dispatchEvent(new Event('click', { bubbles: true }));
+
+    expect(notify).toHaveBeenCalledWith('Role count exceeds players');
+    expect(socket.emit).not.toHaveBeenCalledWith('startGame', expect.anything());
   });
 });

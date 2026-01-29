@@ -25,12 +25,21 @@ function validateCounts(room: Room): { ok: true } | { error: string } {
   if (players.length < room.minPlayers) {
     return { error: `Need at least ${room.minPlayers} players` };
   }
+  if (room.roleConfig.werewolf < 1) {
+    return { error: 'Need at least 1 Werewolf' };
+  }
+  if (room.roleConfig.seer > 1) {
+    return { error: 'Only 1 Seer is supported' };
+  }
+  if (room.roleConfig.witch > 1) {
+    return { error: 'Only 1 Witch is supported' };
+  }
+  if (room.roleConfig.armor > 1) {
+    return { error: 'Only 1 Armor is supported' };
+  }
   const configured = Object.entries(room.roleConfig).reduce((sum, [, count]) => sum + count, 0);
   if (configured > players.length) {
     return { error: 'Role count exceeds players' };
-  }
-  if (room.roleConfig.werewolf < 1) {
-    return { error: 'Need at least 1 Werewolf' };
   }
   return { ok: true };
 }

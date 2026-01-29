@@ -225,6 +225,12 @@ button:disabled {
   width: 100%;
 }
 
+.role-hint {
+  color: rgba(148, 163, 184, 0.9);
+  font-size: 0.75rem;
+  margin-left: 0.35rem;
+}
+
 .role-row input {
   width: 100%;
 }
