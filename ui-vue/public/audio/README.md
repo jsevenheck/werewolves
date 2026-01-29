@@ -6,7 +6,7 @@ Lobby phase; also used for the initial audio unlock. Max length: no fixed limit.
 roleReveal.mp3
 Role reveal phase while players privately view their roles. Max length: no fixed limit.
 postReveal.mp3
-Transition after role reveal (e.g. "the village falls asleep") before mayor selection. Max length: 5s.
+Transition after role reveal (e.g. "the village falls asleep") before mayor selection. Max length: 6s.
 mayor.mp3
 Mayor election phase while players vote for the first Mayor. Max length: no fixed limit.
 postMayor.mp3
@@ -23,6 +23,10 @@ night_seer.mp3
 Night step: seer acts. Max length: no fixed limit.
 night_witch.mp3
 Night step: witch acts. Max length: no fixed limit.
+night_guard.mp3
+Night step: guard protects a player. Max length: no fixed limit.
+night_harlot.mp3
+Night step: harlot chooses a player to visit. Max length: no fixed limit.
 night_transition.mp3
 Night step transition between roles (role sleeps, next role wakes). Max length: 3s.
 Also used after postArmor before the wolves step begins.
