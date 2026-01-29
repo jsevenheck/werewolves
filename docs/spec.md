@@ -40,6 +40,7 @@
 - `awaitingHunterShot`: playerId awaiting a hunter shot, or null.
 - `hunterShotTimer`: timeout for hunter shot (60 seconds; auto-skips if no target selected).
 - `hunterShotQueue`: queue of hunter death events awaiting shot prompts.
+- `dayVoteResolved`: boolean indicating day voting has completed and host must proceed to night.
 - `phaseTransition`: pending phase transition kind (`postReveal`, `postMayor`, `postArmor`, `nightToDay`, `dayToNight`) or null.
 - `nextNightStep`: when `phaseStep` is `transition`, the next step to enter.
 - `winner`: `{team: 'village' | 'wolves' | 'joker', reason}` when ended.
@@ -103,7 +104,10 @@ loop:
         if role(target)=='joker': endGame('joker', 'Joker voted out')
         else:
           kill target, resolveDeaths()
-          if phase still not ended -> start next night (phase='night', step='wolves')
+          if phase still not ended:
+            set dayVoteResolved=true
+            wait for host to click "Proceed to Night" button
+            host action triggers start next night (phase='night', step='wolves')
 
 resolveDeaths():
   while queue not empty:
@@ -122,7 +126,8 @@ resolveDeaths():
           if all wolves dead -> endGame('village', 'All wolves dead')
           else if wolves >= others:
             check for special village abilities that could still turn the tide:
-              if hunter alive OR witch has poison available -> continue game (village still has chance)
+              if hunter alive OR witch has poison available OR mayor succession pending OR mayor alive -> continue game (village still has chance)
+              note: mayor has tie-breaking power in day votes, so they can still influence outcomes at parity
               else -> endGame('wolves', 'Parity reached')
 
 HunterShot(targetId):
