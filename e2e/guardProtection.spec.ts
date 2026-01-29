@@ -208,3 +208,44 @@ test('guard cannot protect self and cannot protect the same target on consecutiv
     await closeContexts(contexts);
   }
 });
+
+test('werewolves cannot target other werewolves in the vote dropdown', async ({ browser }) => {
+  const names = ['Host', 'Player2', 'Player3', 'Player4', 'Player5'];
+  const { contexts, pages } = await createLobbyWithPlayers(browser, names);
+  const [host] = pages;
+
+  try {
+    await configureRoles(host, {
+      werewolf: 2,
+      seer: 0,
+      hunter: 0,
+      witch: 0,
+      armor: 0,
+      joker: 0,
+      guard: 0,
+      passiveRoles: { mayor: false }
+    });
+
+    await startGameAndReady(pages);
+
+    const { roles } = await mapRolesToPages(pages, names);
+    const wolfIndexes = roles
+      .map((role, index) => (role === 'werewolf' ? index : -1))
+      .filter((index) => index >= 0);
+    if (wolfIndexes.length < 2) {
+      throw new Error('Expected two werewolves to be assigned.');
+    }
+
+    const wolfNames = wolfIndexes.map((index) => names[index]);
+    const wolfPage = pages[wolfIndexes[0]];
+    await wolfPage.waitForSelector('#wolf-form', { timeout: 15000 });
+    const optionTexts = (await wolfPage
+      .locator('#wolf-form select[name="target"] option')
+      .allTextContents())
+      .map((text) => text.trim());
+
+    wolfNames.forEach((name) => expect(optionTexts).not.toContain(name));
+  } finally {
+    await closeContexts(contexts);
+  }
+});

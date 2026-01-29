@@ -40,6 +40,7 @@
 - `awaitingHunterShot`: playerId awaiting a hunter shot, or null.
 - `hunterShotTimer`: timeout for hunter shot (60 seconds; auto-skips if no target selected).
 - `hunterShotQueue`: queue of hunter death events awaiting shot prompts.
+- `dayVoteResolved`: boolean indicating day voting has completed and the host may proceed to night.
 - `phaseTransition`: pending phase transition kind (`postReveal`, `postMayor`, `postArmor`, `nightToDay`, `dayToNight`) or null.
 - `nextNightStep`: when `phaseStep` is `transition`, the next step to enter.
 - `winner`: `{team: 'village' | 'wolves' | 'joker', reason}` when ended.
@@ -107,7 +108,10 @@ loop:
         if role(target)=='joker': endGame('joker', 'Joker voted out')
         else:
           kill target, resolveDeaths()
-          if phase still not ended -> start next night (phase='night', step='wolves')
+          if phase still not ended and no pending hunter/mayor actions:
+            set dayVoteResolved=true
+            wait for host to click "Proceed to Night"
+            host action triggers start next night (phase='night', step='wolves')
 
 resolveDeaths():
   while queue not empty:
@@ -118,9 +122,16 @@ resolveDeaths():
     if role is hunter -> add to hunterShotQueue and start hunter shot prompt (60s timeout)
     if player is mayorId -> add to mayorSelectionQueue and start mayor succession prompt (60s timeout)
     if player is lover -> enqueue other lover death reason='died of heartbreak'
-  after queue empty check win conditions:
-    if all wolves dead -> endGame('village', 'All wolves dead')
-    else if wolves >= others -> endGame('wolves', 'Parity reached')
+  after queue empty:
+    if no hunters pending and no hunter shots queued:
+      process mayor succession queue (if any)
+      after mayor selections complete:
+        check win conditions:
+          if all wolves dead -> endGame('village', 'All wolves dead')
+          else if wolves >= others:
+            check for special village abilities that could still turn the tide:
+              if hunter alive OR witch has poison available OR mayor succession pending OR mayor alive -> continue game
+              else -> endGame('wolves', 'Parity reached')
 
 HunterShot(targetId):
   enqueue death for target

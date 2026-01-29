@@ -39,6 +39,7 @@ const baseRoom = (): RoomView => ({
   wolfVoteState: null,
   wolfTarget: null,
   wolfPeers: [],
+  wolfIds: [],
   guardedTarget: null,
   lastGuardedTarget: null,
   nextNightStep: null,

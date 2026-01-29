@@ -226,8 +226,10 @@ function renderWolfForm(room: RoomView) {
   if (!room || !Array.isArray(room.players)) {
     return '<p>No game data available.</p>';
   }
-  const wolfIds = Object.keys(room.wolfVotes || {});
-  const votesCast = Object.values(room.wolfVotes || {}).filter((value) => value !== undefined && value !== null).length;
+  const wolfIds = room.wolfIds?.length ? room.wolfIds : Object.keys(room.wolfVotes || {});
+  const votesCast = room.wolfVoteState?.submitted
+    ?? Object.values(room.wolfVotes || {}).filter((value) => value !== undefined && value !== null).length;
+  const requiredVotes = room.wolfVoteState?.required ?? (wolfIds.length || 1);
   const aliveTargets = (room?.players ?? []).filter((p) => p.alive && !wolfIds.includes(p.id));
   if (!aliveTargets.length) {
     return '<p>No valid targets available.</p>';
@@ -272,7 +274,7 @@ function renderWolfForm(room: RoomView) {
       ${voteSummary}
       ${voteStatus}
       ${voteControls}
-      <small>${votesCast} / ${wolfIds.length || 1} votes submitted.</small>
+      <small>${votesCast} / ${requiredVotes} votes submitted.</small>
     </form>
   `;
 }
