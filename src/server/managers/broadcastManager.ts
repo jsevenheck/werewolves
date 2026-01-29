@@ -73,6 +73,7 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
       : [],
     guardedTarget: viewer?.role === 'guard' ? room.guardedTarget : null,
     lastGuardedTarget: viewer?.role === 'guard' ? room.lastGuardedTarget : null,
+    harlotVisitedTarget: viewer?.role === 'harlot' ? room.harlotVisitedTarget : null,
     nextNightStep: room.phaseStep === 'transition' ? room.nextNightStep : null,
     phaseTransition: room.phaseTransition,
     seerResult: viewer?.role === 'seer' ? viewer.seerResult : null,

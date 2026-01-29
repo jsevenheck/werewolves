@@ -26,7 +26,8 @@ function renderLobbySection(room: RoomView) {
       role === 'seer' ||
       role === 'witch' ||
       role === 'armor' ||
-      role === 'guard';
+      role === 'guard' ||
+      role === 'harlot';
     const maxAttr = isSingletonRole ? ' max="1"' : '';
     const roleLabelBase = safeRoleDetails[role as keyof typeof safeRoleDetails]?.name || role;
     const roleHint = isSingletonRole ? '<span class="role-hint">(max 1)</span>' : '';
@@ -177,11 +178,13 @@ function renderNightSection(room: RoomView, self: RoomViewSelf | null) {
       content = renderWitchForm(room);
     } else if (room.phaseStep === 'guard' && self.role === 'guard') {
       content = renderGuardForm(room);
+    } else if (room.phaseStep === 'harlot' && self.role === 'harlot') {
+      content = renderHarlotForm(room);
     }
   } else {
     content = '<p>You are dead. Spectating only.</p>';
   }
-  const hostControls = room.hostId === state.playerId && ['wolves', 'seer', 'witch', 'guard', 'transition'].includes(room.phaseStep || '')
+  const hostControls = room.hostId === state.playerId && ['wolves', 'seer', 'witch', 'guard', 'harlot', 'transition'].includes(room.phaseStep || '')
     ? '<div class="actions host-actions"><button id="skip-step" type="button">Skip current action</button></div>'
     : '';
   return `
@@ -357,6 +360,35 @@ function renderGuardForm(room: RoomView) {
         </select>
       </label>
       <button type="submit">Protect player</button>
+    </form>
+  `;
+}
+
+function renderHarlotForm(room: RoomView) {
+  if (!room) return '<p>Room data unavailable.</p>';
+
+  const targets = (room?.players ?? []).filter((p) =>
+    p.alive &&
+    p.id !== state.playerId
+  );
+
+  if (!targets.length) return '<p>No valid targets to visit.</p>';
+
+  const options = targets.map((p) =>
+    `<option value="${p.id}">${escapeHtml(p.name)}</option>`
+  ).join('');
+
+  return `
+    <form id="harlot-form" class="actions">
+      <p>⚠️ Warning: If wolves attack the player you visit tonight, you will die too!</p>
+      <label>
+        <span>Visit a player</span>
+        <select name="target" required>
+          <option value="">Select target</option>
+          ${options}
+        </select>
+      </label>
+      <button type="submit">Visit player</button>
     </form>
   `;
 }

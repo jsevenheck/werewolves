@@ -20,6 +20,10 @@
 - **Guard consecutive protection rule**: Night 1 guard protects Player A, Night 2 verify guard cannot protect Player A, Night 3 verify guard can protect Player A again.
 - **Guard blocks poison**: Witch poisons Player A, guard protects Player A, verify Player A survives and poison is wasted.
 - **Guard + Witch interaction**: Wolves target Player A, guard protects Player A, witch also heals Player A, verify Player A survives and witch heal is wasted.
+- **Harlot visits wolf victim**: Configure harlot, wolves target Player A, harlot visits Player A, verify both Player A and harlot die (Player A "eaten by Werewolves", harlot "caught visiting the victim").
+- **Harlot visits someone else**: Wolves target Player A, harlot visits Player B, verify only Player A dies and harlot survives.
+- **Harlot attacked directly**: Wolves target harlot, harlot visits Player A, verify only harlot dies (eaten by Werewolves) and does not trigger "caught visiting" death.
+- **Harlot survives when wolf kill prevented**: Wolves target Player A, guard protects Player A, harlot visits Player A, verify both Player A and harlot survive.
 - **Seer and Witch private info**: Confirm Seer sees the last inspection result only on their device and Witch sees the wolves' target before acting.
 - **Voting UI**: Ensure vote submit is disabled until a selection is made; choose Abstain explicitly; test majority abstain -> no elimination.
 - **Lobby validation**: Attempt to start with fewer than 5 players; ensure the backend rejects the start and displays an error alert. Verify seer/witch/armor are capped at 1 and that too many roles vs player count is blocked.
@@ -44,6 +48,7 @@ Expected narrator keys:
 - `night_seer.mp3`
 - `night_witch.mp3`
 - `night_guard.mp3`
+- `night_harlot.mp3`
 - `night_resolve.mp3`
 - `night_transition.mp3`
 - `postReveal.mp3`

@@ -65,6 +65,11 @@ const ROLE_INFO: RoleInfo = {
     team: 'village',
     description: 'Each night protect one player from all attacks. Cannot protect the same player two nights in a row.'
   },
+  harlot: {
+    label: 'Harlot',
+    team: 'village',
+    description: 'Each night you must visit another player. If wolves attack that player, you die along with them.'
+  },
   villager: {
     label: 'Villager',
     team: 'village',
@@ -79,7 +84,8 @@ const DEFAULT_ROLE_CONFIG: RoleConfig = {
   witch: 1,
   armor: 1,
   joker: 1,
-  guard: 0
+  guard: 0,
+  harlot: 0
 };
 
 const DEFAULT_PASSIVE_ROLE_CONFIG: PassiveRoleConfig = {

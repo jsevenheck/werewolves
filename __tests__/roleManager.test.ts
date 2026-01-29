@@ -52,7 +52,7 @@ describe('roleManager', () => {
     const tooManyRoles = {
       players: makePlayers(5),
       minPlayers: 5,
-      roleConfig: { werewolf: 3, seer: 1, hunter: 1, witch: 1, armor: 0, guard: 0, joker: 0 }
+      roleConfig: { werewolf: 3, seer: 1, hunter: 1, witch: 1, armor: 0, guard: 0, joker: 0, harlot: 0 }
     } as Room;
     expect(validateCounts(tooManyRoles)).toEqual({ error: 'Role count exceeds players' });
 
@@ -68,7 +68,7 @@ describe('roleManager', () => {
     const base = {
       players: makePlayers(5),
       minPlayers: 5,
-      roleConfig: { werewolf: 1, seer: 1, hunter: 0, witch: 0, armor: 0, guard: 0, joker: 0 }
+      roleConfig: { werewolf: 1, seer: 1, hunter: 0, witch: 0, armor: 0, guard: 0, joker: 0, harlot: 0 }
     } as Room;
 
     expect(validateCounts({ ...base, roleConfig: { ...base.roleConfig, seer: 2 } as RoleConfig }))
@@ -79,11 +79,13 @@ describe('roleManager', () => {
       .toEqual({ error: 'Only 1 Armor is supported' });
     expect(validateCounts({ ...base, roleConfig: { ...base.roleConfig, guard: 2 } as RoleConfig }))
       .toEqual({ error: 'Only 1 Guard is supported' });
+    expect(validateCounts({ ...base, roleConfig: { ...base.roleConfig, harlot: 2 } as RoleConfig }))
+      .toEqual({ error: 'Only 1 Harlot is supported' });
 
     const capShouldWinOverTotalCount = {
       players: makePlayers(5),
       minPlayers: 5,
-      roleConfig: { werewolf: 5, seer: 2, hunter: 0, witch: 0, armor: 0, guard: 0, joker: 0 }
+      roleConfig: { werewolf: 5, seer: 2, hunter: 0, witch: 0, armor: 0, guard: 0, joker: 0, harlot: 0 }
     } as Room;
     expect(validateCounts(capShouldWinOverTotalCount)).toEqual({ error: 'Only 1 Seer is supported' });
   });
@@ -91,7 +93,7 @@ describe('roleManager', () => {
   test('assignRoles sets roles, teams, and night actions', () => {
     const room = {
       players: makePlayers(3),
-      roleConfig: { werewolf: 1, seer: 1, hunter: 0, witch: 0, armor: 0, guard: 0, joker: 0 } as RoleConfig
+      roleConfig: { werewolf: 1, seer: 1, hunter: 0, witch: 0, armor: 0, guard: 0, joker: 0, harlot: 0 } as RoleConfig
     } as Room;
     assignRoles(room);
     const assigned = Object.values(room.players);

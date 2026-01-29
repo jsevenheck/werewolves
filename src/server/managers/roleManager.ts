@@ -40,6 +40,9 @@ function validateCounts(room: Room): { ok: true } | { error: string } {
   if (room.roleConfig.guard > 1) {
     return { error: 'Only 1 Guard is supported' };
   }
+  if (room.roleConfig.harlot > 1) {
+    return { error: 'Only 1 Harlot is supported' };
+  }
   const configured = Object.entries(room.roleConfig).reduce((sum, [, count]) => sum + count, 0);
   if (configured > players.length) {
     return { error: 'Role count exceeds players' };

@@ -513,7 +513,7 @@ describe('socketHandlers security checks', () => {
       hostId: 'host',
       phase: 'lobby',
       minPlayers: 5,
-      roleConfig: { werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 0 },
+      roleConfig: { werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 0, guard: 0, harlot: 0 },
       players: {
         host: { id: 'host', socketId: 'socket-host' }
       }

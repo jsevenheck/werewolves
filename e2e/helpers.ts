@@ -6,7 +6,7 @@ type SubmissionState = { wolf: boolean; seer: boolean; witch: boolean; guard: bo
 
 export type PassiveRoleConfig = Partial<Record<PassiveRole, boolean>>;
 
-type RoleCountKey = 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'guard';
+type RoleCountKey = 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'guard' | 'harlot';
 
 export type RoleConfig = {
   werewolf: number;
@@ -16,6 +16,7 @@ export type RoleConfig = {
   armor: number;
   joker: number;
   guard?: number;
+  harlot?: number;
   passiveRoles?: PassiveRoleConfig;
 };
 
@@ -26,7 +27,7 @@ type AdvanceToDayResult = {
   dayPage?: Page | null;
 };
 
-const ROLE_FIELDS: RoleCountKey[] = ['werewolf', 'seer', 'hunter', 'witch', 'armor', 'joker', 'guard'];
+const ROLE_FIELDS: RoleCountKey[] = ['werewolf', 'seer', 'hunter', 'witch', 'armor', 'joker', 'guard', 'harlot'];
 
 const joinRoom = async (page: Page, name: string, code: string) => {
   await page.goto('/');

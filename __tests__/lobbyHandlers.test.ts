@@ -58,6 +58,7 @@ describe('lobby handlers', () => {
     wolfIds: [],
     guardedTarget: null,
     lastGuardedTarget: null,
+    harlotVisitedTarget: null,
     nextNightStep: null,
     phaseTransition: null,
     seerResult: null,
@@ -100,7 +101,7 @@ describe('lobby handlers', () => {
 
   test('change emits updateRoleConfig immediately', () => {
     buildDom();
-    mockState.room = makeRoom({ werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, guard: 0, joker: 0 });
+    mockState.room = makeRoom({ werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, guard: 0, joker: 0, harlot: 0 });
     mockState.playerId = 'host';
     const socket = { emit: jest.fn() };
 
@@ -129,7 +130,7 @@ describe('lobby handlers', () => {
   test('input emits updateRoleConfig after debounce', () => {
     jest.useFakeTimers();
     buildDom();
-    mockState.room = makeRoom({ werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, guard: 0, joker: 0 });
+    mockState.room = makeRoom({ werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, guard: 0, joker: 0, harlot: 0 });
     mockState.playerId = 'host';
     const socket = { emit: jest.fn() };
 
@@ -161,7 +162,7 @@ describe('lobby handlers', () => {
 
   test('singleton role inputs are clamped to max 1', () => {
     buildDom();
-    mockState.room = makeRoom({ werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, guard: 0, joker: 0 });
+    mockState.room = makeRoom({ werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, guard: 0, joker: 0, harlot: 0 });
     mockState.playerId = 'host';
     const socket = { emit: jest.fn() };
 
@@ -190,7 +191,7 @@ describe('lobby handlers', () => {
 
   test('start game precheck shows cap error before total-count error', () => {
     buildDom();
-    mockState.room = makeRoom({ werewolf: 5, seer: 2, hunter: 0, witch: 0, armor: 0, guard: 0, joker: 0 });
+    mockState.room = makeRoom({ werewolf: 5, seer: 2, hunter: 0, witch: 0, armor: 0, guard: 0, joker: 0, harlot: 0 });
     mockState.playerId = 'host';
     const socket = { emit: jest.fn() };
 
@@ -204,7 +205,7 @@ describe('lobby handlers', () => {
 
   test('start game precheck shows total-count error when caps are valid', () => {
     buildDom();
-    mockState.room = makeRoom({ werewolf: 6, seer: 1, hunter: 0, witch: 0, armor: 0, guard: 0, joker: 0 });
+    mockState.room = makeRoom({ werewolf: 6, seer: 1, hunter: 0, witch: 0, armor: 0, guard: 0, joker: 0, harlot: 0 });
     mockState.playerId = 'host';
     const socket = { emit: jest.fn() };
 

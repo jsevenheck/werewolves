@@ -25,6 +25,10 @@ export interface ClientToServerEvents {
     payload: { roomCode: string; playerId: string; targetId: string },
     cb?: (response: OkResponse | ErrorResponse) => void
   ) => void;
+  submitHarlotVisit: (
+    payload: { roomCode: string; playerId: string; targetId: string },
+    cb?: (response: OkResponse | ErrorResponse) => void
+  ) => void;
   hostSkipStep: (payload: { roomCode: string; playerId: string }) => void;
   hostFinalizeDayVote: (payload: { roomCode: string; playerId: string }) => void;
   hostProceedToNight: (payload: { roomCode: string; playerId: string }) => void;

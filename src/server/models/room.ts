@@ -39,6 +39,8 @@ function createRoom(hostName: string, socketId: string, createPlayer: (name: str
     guardedTarget: null,
     lastGuardedTarget: null,
     guardActed: false,
+    harlotVisitedTarget: null,
+    harlotActed: false,
     voteState: createVoteState(),
     pendingDeaths: [],
     winner: null,

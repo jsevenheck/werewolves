@@ -8,6 +8,7 @@ Run a multiplayer Werewolf/Mafia party game in the browser with no human moderat
 - Day/night phases with voting and role actions.
 - Joker instant win on day vote; Hunter shot on death.
 - Guard role: nightly protection with consecutive-target restriction.
+- Harlot role: nightly visit with risk of death if visiting the wolf victim.
 - Mayor election with tie-breaking and succession on death.
 - Reconnect support and mobile-friendly UI.
 - Acting host handoff on disconnect, plus skip controls for blocked armor/night steps.
