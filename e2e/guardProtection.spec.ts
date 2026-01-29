@@ -113,6 +113,11 @@ test("guard cannot protect the same player two nights in a row", async ({
       }
     }
 
+    // Host must click "Proceed to Night" after vote is resolved
+    const proceedBtn = host.locator('#proceed-to-night-btn');
+    await proceedBtn.waitFor({ state: 'visible', timeout: 10000 });
+    await proceedBtn.click();
+
     // Wait for night 2
     await host.waitForSelector("#wolf-form", { timeout: 15000 });
 

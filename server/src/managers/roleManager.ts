@@ -33,7 +33,7 @@ function validateCounts(room: Room): { ok: true } | { error: string } {
     return { error: 'Need at least 1 Werewolf' };
   }
   // Singleton roles validation (max 1)
-  const singletonRoles: (keyof RoleConfig)[] = ['seer', 'witch', 'armor', 'guard'];
+  const singletonRoles: (keyof RoleConfig)[] = ['seer', 'witch', 'armor', 'guard', 'harlot'];
   for (const role of singletonRoles) {
     if (room.roleConfig[role] > 1) {
       return { error: `Only 1 ${role.charAt(0).toUpperCase() + role.slice(1)} allowed` };

@@ -50,10 +50,10 @@ pnpm run test:e2e
 - If the host disconnects, another connected player becomes the acting host until the original host reconnects.
 
 ## Narrator Audio
-- Place MP3 files in `client/public/audio/` (served at runtime as `/audio/<name>.mp3`).
-- Vite serves files from `client/public/` at `/` during development and copies them into the build output.
+- Place MP3 files in `ui-vue/public/audio/` (served at runtime as `/audio/<name>.mp3`).
+- Vite serves files from `ui-vue/public/` at `/` during development and copies them into the build output.
 - The narrator looks up files by key and falls back to a silent placeholder if missing.
-- See `client/public/audio/README.md` for per-file descriptions and when each clip plays.
+- See `ui-vue/public/audio/README.md` for per-file descriptions and when each clip plays.
 
 ## Troubleshooting
 - If players cannot connect, ensure the host firewall allows inbound `3001` (or the `PORT` you set).

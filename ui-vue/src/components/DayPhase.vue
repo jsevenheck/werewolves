@@ -12,6 +12,8 @@ const ROLE_DETAILS: Record<string, { name: string }> = {
   witch: { name: 'Witch' },
   armor: { name: 'Armor' },
   joker: { name: 'Joker' },
+  guard: { name: 'Guard' },
+  harlot: { name: 'Harlot' },
   villager: { name: 'Villager' }
 };
 
@@ -28,6 +30,9 @@ const selectedTarget = ref('');
 const self = computed(() => room.value?.self || null);
 const isHost = computed(() => room.value?.hostId === playerId.value);
 const lastNightDeaths = computed(() => room.value?.lastNightDeaths ?? []);
+const dayVoteResolved = computed(() => room.value?.dayVoteResolved ?? false);
+const lastDayDeaths = computed(() => room.value?.lastDayDeaths ?? []);
+const lastDayMessage = computed(() => room.value?.lastDayMessage ?? null);
 const yourVote = computed(() => room.value?.voteState?.yourVote);
 const hasVoted = computed(() => yourVote.value !== undefined);
 const submitted = computed(() => room.value?.voteState?.submitted || 0);
@@ -68,6 +73,11 @@ function submitVote() {
 function endVoting() {
   if (!playerId.value || !room.value) return;
   props.socket.emit('hostFinalizeDayVote', { roomCode: room.value.code, playerId: playerId.value });
+}
+
+function proceedToNight() {
+  if (!playerId.value || !room.value) return;
+  props.socket.emit('hostProceedToNight', { roomCode: room.value.code, playerId: playerId.value });
 }
 </script>
 
@@ -122,8 +132,21 @@ function endVoting() {
     </template>
     <p v-else>You are dead and cannot vote.</p>
 
+    <!-- Vote resolved state - show result and wait for host to proceed -->
+    <template v-if="dayVoteResolved">
+      <div class="vote-result">
+        <template v-if="lastDayDeaths.length">
+          <p v-for="(death, i) in lastDayDeaths" :key="i">
+            {{ death.name }} ({{ ROLE_DETAILS[death.role || 'villager']?.name || death.role }}) was eliminated.
+          </p>
+        </template>
+        <p v-else-if="lastDayMessage">{{ lastDayMessage }}</p>
+      </div>
+    </template>
+
     <div v-if="isHost" class="actions host-actions">
-      <button id="end-vote-btn" type="button" @click="endVoting">End Voting</button>
+      <button v-if="!dayVoteResolved" id="end-vote-btn" type="button" @click="endVoting">End Voting</button>
+      <button v-if="dayVoteResolved" id="proceed-to-night-btn" type="button" @click="proceedToNight">Proceed to Night</button>
     </div>
   </section>
 </template>

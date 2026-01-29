@@ -29,7 +29,7 @@ const makeRoom = (): Room => ({
   logs: [],
   winner: null,
   minPlayers: 5,
-  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0 } as RoleConfig,
+  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0, harlot: 0 } as RoleConfig,
   passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: null,
@@ -40,6 +40,9 @@ const makeRoom = (): Room => ({
   guardedTarget: null,
   lastGuardedTarget: null,
   guardActed: false,
+  harlotVisitedTarget: null,
+  harlotActed: false,
+  dayVoteResolved: false,
   createdAt: Date.now(),
   lastActivityAt: Date.now()
 });
@@ -74,7 +77,7 @@ describe('phaseManager', () => {
 
     expect(room.phase).toBe('night');
     expect(room.phaseStep).toBe('wolves');
-    expect(room.wolfVotes).toEqual({ w1: null });
+    expect(room.wolfVotes).toEqual({});
     expect(room.wolfTarget).toBeNull();
     expect(room.seerActed).toBe(false);
     expect(room.pendingDeaths).toEqual([]);

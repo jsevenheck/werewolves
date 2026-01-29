@@ -12,6 +12,8 @@ const ROLE_DETAILS: Record<string, { name: string }> = {
   witch: { name: 'Witch' },
   armor: { name: 'Armor' },
   joker: { name: 'Joker' },
+  guard: { name: 'Guard' },
+  harlot: { name: 'Harlot' },
   villager: { name: 'Villager' }
 };
 

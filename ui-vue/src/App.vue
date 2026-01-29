@@ -7,7 +7,8 @@ import { notify, escapeHtml } from '@/utils/helpers';
 import type { WerewolvesGameConfig } from '@/types/config';
 import type { StoredSession, RoomView } from '@shared/types';
 import {
-  PHASE_DELAY_MS,
+  NIGHT_TO_DAY_DELAY_MS,
+  DAY_TO_NIGHT_DELAY_MS,
   POST_REVEAL_DELAY_MS,
   POST_MAYOR_DELAY_MS,
   POST_ARMOR_DELAY_MS
@@ -107,6 +108,8 @@ const ROLE_DETAILS: Record<string, { name: string }> = {
   witch: { name: 'Witch' },
   armor: { name: 'Armor' },
   joker: { name: 'Joker' },
+  guard: { name: 'Guard' },
+  harlot: { name: 'Harlot' },
   villager: { name: 'Villager' }
 };
 
@@ -122,8 +125,8 @@ const transitionDurations: Record<string, number> = {
   postReveal: POST_REVEAL_DELAY_MS,
   postMayor: POST_MAYOR_DELAY_MS,
   postArmor: POST_ARMOR_DELAY_MS,
-  nightToDay: PHASE_DELAY_MS,
-  dayToNight: PHASE_DELAY_MS
+  nightToDay: NIGHT_TO_DAY_DELAY_MS,
+  dayToNight: DAY_TO_NIGHT_DELAY_MS
 };
 
 const transitionMessage = computed(() => {
@@ -133,7 +136,7 @@ const transitionMessage = computed(() => {
 
 const transitionDurationSeconds = computed(() => {
   if (!phaseTransition.value) return 0;
-  return Math.round((transitionDurations[phaseTransition.value] ?? PHASE_DELAY_MS) / 1000);
+  return Math.round((transitionDurations[phaseTransition.value] ?? NIGHT_TO_DAY_DELAY_MS) / 1000);
 });
 
 const dayResults = computed(() => {

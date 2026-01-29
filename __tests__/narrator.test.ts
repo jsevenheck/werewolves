@@ -20,7 +20,8 @@ const baseRoom = (): RoomView => ({
     witch: 0,
     armor: 0,
     joker: 0,
-    guard: 0
+    guard: 0,
+    harlot: 0
   },
   passiveRoleConfig: { mayor: true },
   mayorId: null,
@@ -52,6 +53,10 @@ const baseRoom = (): RoomView => ({
   logs: [],
   guardedTarget: null,
   lastGuardedTarget: null,
+  wolfVoteState: null,
+  wolfIds: [],
+  harlotVisitedTarget: null,
+  dayVoteResolved: false,
   self: null
 });
 

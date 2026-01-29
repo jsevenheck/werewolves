@@ -88,6 +88,9 @@ function setupSocketHandlers(
     const room = getRoom(code?.toUpperCase());
     if (!room) return cb?.({ error: 'Room not found' });
     if (room.phase !== 'lobby') return cb?.({ error: 'Game already started' });
+    // Check for duplicate names
+    const nameExists = Object.values(room.players).some((p) => p.name === cleanName);
+    if (nameExists) return cb?.({ error: 'Name already taken' });
     const player = createPlayer(cleanName, socket.id, false);
     room.players[player.id] = player;
     setSocketIndex(socket.id, room.code, player.id);
@@ -113,7 +116,7 @@ function setupSocketHandlers(
     }
     if (player.socketId && player.socketId !== socket.id) {
       const previousSocketId = player.socketId;
-      const existingSocket = io.sockets.get(previousSocketId);
+      const existingSocket = (io.sockets as unknown as { sockets: Map<string, typeof socket> }).sockets.get(previousSocketId);
       if (existingSocket) {
         detachSocketFromRoom(io, previousSocketId);
         existingSocket.disconnect(true);
@@ -179,8 +182,10 @@ function setupSocketHandlers(
     if (!room || room.hostId !== playerId) return;
     if (!getPlayerForSocket(room, playerId, socket.id)) return;
     if (room.phase !== 'roleReveal') return;
-    const allReady = Object.values(room.players).every((p) => !p.connected || p.ready);
-    if (!allReady) return;
+    // Only count connected players - disconnected players should not block game start
+    const connectedPlayers = Object.values(room.players).filter((p) => p.connected);
+    const allConnectedReady = connectedPlayers.every((p) => p.ready);
+    if (!allConnectedReady || connectedPlayers.length === 0) return;
     schedulePhaseTransition(room, 'postReveal', (r) => broadcastRoom(r, io));
   });
 
@@ -285,14 +290,17 @@ function setupSocketHandlers(
     if (!room || room.phase !== 'night' || room.phaseStep !== 'wolves') return;
     const player = getPlayerForSocket(room, playerId, socket.id);
     if (!player || player.role !== 'werewolf' || !player.alive) return;
-    if (room.wolfVotes[playerId] !== undefined && room.wolfVotes[playerId] !== null) {
-      // Inform the client that this vote was rejected because the player has already voted.
-      socket.emit('wolfVoteRejected', { reason: 'already_voted' });
-      return;
-    }
+    // Allow wolves to change their vote (by checking only for having voted before)
+    // If vote is not undefined, they've already submitted a vote
+    const alreadyVoted = room.wolfVotes[playerId] !== undefined;
     if (targetId && !room.players[targetId]?.alive) return;
     if (targetId && room.players[targetId]?.role === 'werewolf') return;
     room.wolfVotes[playerId] = targetId || null;
+    // Inform wolves when they update their vote
+    if (alreadyVoted) {
+      const votedPlayer = targetId ? room.players[targetId] : null;
+      addLog(room, `${player.name} changed their wolf vote${votedPlayer ? ` to ${votedPlayer.name}` : ''}.`);
+    }
     tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io), io);
     broadcastRoom(room, io);
   });
@@ -342,6 +350,29 @@ function setupSocketHandlers(
 
     room.guardedTarget = targetId;
     room.guardActed = true;
+    cb?.({ ok: true });
+
+    advanceNightStep(room, (r) => broadcastRoom(r, io), io);
+  });
+
+  socket.on('submitHarlotVisit', ({ roomCode, playerId, targetId }, cb) => {
+    const room = getRoom(roomCode);
+    if (!room || room.phase !== 'night' || room.phaseStep !== 'harlot')
+      return cb?.({ error: 'Invalid room or phase' });
+
+    const player = getPlayerForSocket(room, playerId, socket.id);
+    if (!player || player.role !== 'harlot' || !player.alive)
+      return cb?.({ error: 'Invalid player' });
+
+    if (targetId === playerId)
+      return cb?.({ error: 'Cannot visit yourself' });
+
+    const target = room.players[targetId];
+    if (!target || !target.alive)
+      return cb?.({ error: 'Invalid target' });
+
+    room.harlotVisitedTarget = targetId;
+    room.harlotActed = true;
     cb?.({ ok: true });
 
     advanceNightStep(room, (r) => broadcastRoom(r, io), io);
@@ -425,7 +456,7 @@ function setupSocketHandlers(
       if (step === 'resolve') {
         const { resolveNight } = require('../managers/nightManager');
         resolveNight(room, (r: typeof room) => broadcastRoom(r, io), io);
-      } else if (step === 'seer' || step === 'witch' || step === 'guard') {
+      } else if (step === 'seer' || step === 'witch' || step === 'guard' || step === 'harlot') {
         advanceNightStep(room, (r) => broadcastRoom(r, io), io);
       } else {
         broadcastRoom(room, io);
@@ -514,6 +545,13 @@ function setupSocketHandlers(
     if (room.phaseStep === 'guard') {
       room.guardActed = true;
       const { scheduleNightStep } = require('../managers/phaseManager');
+      scheduleNightStep(room, 'harlot', (r: typeof room) => broadcastRoom(r, io), io);
+      return;
+    }
+
+    if (room.phaseStep === 'harlot') {
+      room.harlotActed = true;
+      const { scheduleNightStep } = require('../managers/phaseManager');
       scheduleNightStep(room, 'resolve', (r: typeof room) => broadcastRoom(r, io), io);
       return;
     }
@@ -544,6 +582,21 @@ function setupSocketHandlers(
     if (room.hostId !== playerId) return;
     if (!getPlayerForSocket(room, playerId, socket.id)) return;
     tryResolveDayVote(room, (r) => broadcastRoom(r, io), io, { allowEarly: true });
+  });
+
+  socket.on('hostProceedToNight', ({ roomCode, playerId }) => {
+    const room = getRoom(roomCode);
+    if (!room || room.phase !== 'day') return;
+    if (room.hostId !== playerId) return;
+    if (!getPlayerForSocket(room, playerId, socket.id)) return;
+    if (!room.dayVoteResolved) return;
+    // Check if game has already ended before transitioning
+    if (room.winner) {
+      broadcastRoom(room, io);
+      return;
+    }
+    room.dayVoteResolved = false;
+    holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
   });
 
   socket.on('hostFinalizeMayorVote', ({ roomCode, playerId }) => {
@@ -621,6 +674,8 @@ function setupSocketHandlers(
     room.guardedTarget = null;
     room.lastGuardedTarget = null;
     room.guardActed = false;
+    room.harlotVisitedTarget = null;
+    room.harlotActed = false;
     room.voteState = createVoteState();
     room.pendingDeaths = [];
     room.winner = null;
@@ -628,6 +683,7 @@ function setupSocketHandlers(
     room.lastDayDeaths = [];
     room.lastDayMessage = null;
     room.awaitingHunterShot = null;
+    room.dayVoteResolved = false;
     room.logs = [];
     room.nextNightStep = null;
     room.phaseTransition = null;
@@ -654,7 +710,31 @@ function setupSocketHandlers(
     if (!room) return cb?.({ error: 'Room not found' });
     const player = getPlayerForSocket(room, playerId, socket.id);
     if (!player) return cb?.({ error: 'Player not found' });
-    detachSocketFromRoom(io, socket.id, 'left the game');
+    // Remove player completely from the room
+    addLog(room, `${player.name} left the game.`);
+    delete room.players[playerId];
+    deleteSocketIndex(socket.id);
+    // Clean up any references to this player
+    if (room.mayorId === playerId) room.mayorId = null;
+    if (room.awaitingHunterShot === playerId) room.awaitingHunterShot = null;
+    if (room.awaitingMayorSelection === playerId) room.awaitingMayorSelection = null;
+    if (room.wolfTarget === playerId) room.wolfTarget = null;
+    if (room.healedTarget === playerId) room.healedTarget = null;
+    if (room.poisonTarget === playerId) room.poisonTarget = null;
+    if (room.guardedTarget === playerId) room.guardedTarget = null;
+    if (player.role === 'guard') {
+      room.guardedTarget = null;
+      room.lastGuardedTarget = null;
+    }
+    if (room.lovers && (room.lovers.aId === playerId || room.lovers.bId === playerId)) {
+      room.lovers = null;
+    }
+    room.hunterShotQueue = room.hunterShotQueue.filter((id) => id !== playerId);
+    room.mayorSelectionQueue = room.mayorSelectionQueue.filter((id) => id !== playerId);
+    delete room.wolfVotes[playerId];
+    delete room.voteState.votes[playerId];
+    updateHostIfNeeded(room);
+    broadcastRoom(room, io);
     cb?.({ ok: true });
   });
 

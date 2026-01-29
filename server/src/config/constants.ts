@@ -2,7 +2,8 @@ import { customAlphabet } from 'nanoid';
 import type { Role, RoleConfig, PassiveRoleConfig, Team } from '../../../core/src/types';
 import {
   NIGHT_DELAY_MS as BASE_NIGHT_DELAY_MS,
-  PHASE_DELAY_MS as BASE_PHASE_DELAY_MS,
+  NIGHT_TO_DAY_DELAY_MS as BASE_NIGHT_TO_DAY_DELAY_MS,
+  DAY_TO_NIGHT_DELAY_MS as BASE_DAY_TO_NIGHT_DELAY_MS,
   POST_REVEAL_DELAY_MS as BASE_POST_REVEAL_DELAY_MS,
   POST_MAYOR_DELAY_MS as BASE_POST_MAYOR_DELAY_MS,
   POST_ARMOR_DELAY_MS as BASE_POST_ARMOR_DELAY_MS,
@@ -14,7 +15,8 @@ import {
 const PORT = process.env.PORT ?? 3001;
 const IS_E2E = process.env.E2E_TESTS === '1';
 const NIGHT_DELAY_MS = IS_E2E ? 0 : BASE_NIGHT_DELAY_MS;
-const PHASE_DELAY_MS = IS_E2E ? 0 : BASE_PHASE_DELAY_MS;
+const NIGHT_TO_DAY_DELAY_MS = IS_E2E ? 0 : BASE_NIGHT_TO_DAY_DELAY_MS;
+const DAY_TO_NIGHT_DELAY_MS = IS_E2E ? 0 : BASE_DAY_TO_NIGHT_DELAY_MS;
 const POST_REVEAL_DELAY_MS = IS_E2E ? 0 : BASE_POST_REVEAL_DELAY_MS;
 const POST_MAYOR_DELAY_MS = IS_E2E ? 0 : BASE_POST_MAYOR_DELAY_MS;
 const POST_ARMOR_DELAY_MS = IS_E2E ? 0 : BASE_POST_ARMOR_DELAY_MS;
@@ -63,6 +65,11 @@ const ROLE_INFO: RoleInfo = {
     team: 'village',
     description: 'Each night protect one player from all attacks. Cannot protect the same player two nights in a row.'
   },
+  harlot: {
+    label: 'Harlot',
+    team: 'village',
+    description: 'Each night you must visit another player. If wolves attack that player, you die along with them.'
+  },
   villager: {
     label: 'Villager',
     team: 'village',
@@ -77,7 +84,8 @@ const DEFAULT_ROLE_CONFIG: RoleConfig = {
   witch: 1,
   armor: 1,
   joker: 1,
-  guard: 0
+  guard: 0,
+  harlot: 0
 };
 
 const DEFAULT_PASSIVE_ROLE_CONFIG: PassiveRoleConfig = {
@@ -87,7 +95,8 @@ const DEFAULT_PASSIVE_ROLE_CONFIG: PassiveRoleConfig = {
 export {
   PORT,
   NIGHT_DELAY_MS,
-  PHASE_DELAY_MS,
+  NIGHT_TO_DAY_DELAY_MS,
+  DAY_TO_NIGHT_DELAY_MS,
   POST_REVEAL_DELAY_MS,
   POST_MAYOR_DELAY_MS,
   POST_ARMOR_DELAY_MS,

@@ -18,6 +18,7 @@ const wolfTarget = ref('');
 const seerTarget = ref('');
 const poisonTarget = ref('');
 const guardTarget = ref('');
+const harlotTarget = ref('');
 
 const self = computed(() => room.value?.self || null);
 const isHost = computed(() => room.value?.hostId === playerId.value);
@@ -28,7 +29,7 @@ const durationSeconds = computed(() => Math.round(NIGHT_DELAY_MS / 1000));
 
 // Wolf form
 const isWolf = computed(() => room.value?.phaseStep === 'wolves' && self.value?.role === 'werewolf' && self.value.alive);
-const wolfIds = computed(() => Object.keys(room.value?.wolfVotes || {}));
+const wolfIds = computed(() => room.value?.wolfIds || []);
 const votesCast = computed(() => Object.values(room.value?.wolfVotes || {}).filter((v) => v !== undefined && v !== null).length);
 const aliveTargets = computed(() => (room.value?.players ?? []).filter((p) => p.alive && !wolfIds.value.includes(p.id)));
 const currentWolfVote = computed(() => room.value?.wolfVotes?.[playerId.value]);
@@ -63,7 +64,12 @@ const lastGuardedTarget = computed(() => room.value?.lastGuardedTarget || null);
 const guardTargets = computed(() => (room.value?.players ?? []).filter((p) => p.alive && p.id !== playerId.value && p.id !== lastGuardedTarget.value));
 const lastProtectedName = computed(() => lastGuardedTarget.value && room.value ? getPlayerName(room.value, lastGuardedTarget.value) : null);
 
-const showHostSkip = computed(() => isHost.value && ['wolves', 'seer', 'witch', 'guard', 'transition'].includes(room.value?.phaseStep || ''));
+// Harlot form
+const isHarlot = computed(() => room.value?.phaseStep === 'harlot' && self.value?.role === 'harlot' && self.value.alive);
+const harlotTargets = computed(() => (room.value?.players ?? []).filter((p) => p.alive && p.id !== playerId.value));
+const harlotVisitedTarget = computed(() => room.value?.harlotVisitedTarget || null);
+
+const showHostSkip = computed(() => isHost.value && ['wolves', 'seer', 'witch', 'guard', 'harlot', 'transition'].includes(room.value?.phaseStep || ''));
 
 function onWolfSelectChange() {
   store.pendingWolfVote = wolfTarget.value || undefined;
@@ -113,6 +119,19 @@ function submitGuardProtection() {
     roomCode: room.value.code,
     playerId: playerId.value,
     targetId: guardTarget.value
+  }, (res) => {
+    if (res && 'error' in res && res.error) {
+      notify(`Error: ${res.error}`);
+    }
+  });
+}
+
+function submitHarlotVisit() {
+  if (!harlotTarget.value || !playerId.value || !room.value) return;
+  props.socket.emit('submitHarlotVisit', {
+    roomCode: room.value.code,
+    playerId: playerId.value,
+    targetId: harlotTarget.value
   }, (res) => {
     if (res && 'error' in res && res.error) {
       notify(`Error: ${res.error}`);
@@ -235,6 +254,23 @@ function skipStep() {
           </select>
         </label>
         <button type="submit">Protect</button>
+      </form>
+    </template>
+
+    <!-- Harlot form -->
+    <template v-else-if="isHarlot">
+      <form id="harlot-form" class="actions" @submit.prevent="submitHarlotVisit">
+        <p>Choose a player to visit tonight. If wolves attack them, you will die too.</p>
+        <label>
+          <span>Visit a player</span>
+          <select v-model="harlotTarget" name="target" required>
+            <option value="">Select target</option>
+            <option v-for="player in harlotTargets" :key="player.id" :value="player.id">
+              {{ player.name }}
+            </option>
+          </select>
+        </label>
+        <button type="submit">Visit</button>
       </form>
     </template>
 

@@ -31,6 +31,15 @@ const advanceToNextNight = async (host: Page) => {
       return;
     }
 
+    const proceedToNightBtn = host.locator("#proceed-to-night-btn");
+    if (await proceedToNightBtn.isVisible().catch(() => false)) {
+      try {
+        await proceedToNightBtn.click();
+      } catch {
+        // Ignore race conditions
+      }
+    }
+
     const endVoteButton = host.locator("#end-vote-btn");
     if (await endVoteButton.isVisible().catch(() => false)) {
       try {

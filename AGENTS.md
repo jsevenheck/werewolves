@@ -19,15 +19,18 @@ Keep detailed guidance in docs/ and link to it from here.
 
 ## Repo Map
 - server.ts: server entry point
-- src/server/...
+- core/src/: shared types, events, constants (alias @shared/*)
+- server/src/...
   - config/: server-only constants and role data
   - models/: Room/Player models
   - managers/: business logic
   - handlers/: Socket.IO handlers (thin)
   - utils/: helpers
-- src/shared/: types/events/constants shared by client + server (alias @shared/*)
-- client/src/...
-  - config/, state/, renderers/, handlers/, utils/
+- ui-vue/src/...
+  - components/: Vue phase screens, panels, overlays
+  - composables/: socket, narrator hooks
+  - stores/: Pinia stores
+  - utils/: helpers
 - __tests__/: Jest unit tests
 - e2e/: Playwright specs
 

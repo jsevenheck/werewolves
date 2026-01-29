@@ -11,7 +11,7 @@ const makeRoom = (): Room => ({
   dayCount: 1,
   players: {},
   minPlayers: 5,
-  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0 } as RoleConfig,
+  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0, harlot: 0 } as RoleConfig,
   passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: null,
@@ -42,6 +42,9 @@ const makeRoom = (): Room => ({
   hunterShotTimer: null,
   hunterShotEndsAt: null,
   hunterShotQueue: [],
+  harlotVisitedTarget: null,
+  harlotActed: false,
+  dayVoteResolved: false,
   createdAt: Date.now(),
   lastActivityAt: Date.now()
 });

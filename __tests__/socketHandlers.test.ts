@@ -219,7 +219,7 @@ describe('socketHandlers hostSkipStep', () => {
     expect(advanceNightStep).toHaveBeenCalledWith(room, expect.any(Function), io);
   });
 
-  test('rejects duplicate wolf votes', () => {
+  test('allows changing wolf votes', () => {
     const room = {
       code: 'ABCD',
       hostId: 'host',
@@ -227,17 +227,19 @@ describe('socketHandlers hostSkipStep', () => {
       phaseStep: 'wolves',
       players: {
         w1: { id: 'w1', role: 'werewolf', alive: true, socketId: 'socket-1' },
-        v1: { id: 'v1', role: 'villager', alive: true }
+        v1: { id: 'v1', role: 'villager', alive: true },
+        v2: { id: 'v2', role: 'villager', alive: true }
       },
-      wolfVotes: { w1: 'v1' }
+      wolfVotes: { w1: 'v1' },
+      logs: []
     } as unknown as Room;
     (getRoom as jest.Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
-    handlers.submitWolfVote({ roomCode: 'ABCD', playerId: 'w1', targetId: 'v1' });
+    handlers.submitWolfVote({ roomCode: 'ABCD', playerId: 'w1', targetId: 'v2' });
 
-    expect(socket.emit).toHaveBeenCalledWith('wolfVoteRejected', { reason: 'already_voted' });
+    expect(room.wolfVotes.w1).toBe('v2');
   });
 
   test('host skips phase transition night to day', () => {

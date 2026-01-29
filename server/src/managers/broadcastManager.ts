@@ -55,14 +55,25 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
       : null,
     witchState: viewer?.role === 'witch' ? room.witchState : { healAvailable: null, poisonAvailable: null },
     wolfVotes: viewer?.role === 'werewolf' ? room.wolfVotes : null,
+    wolfVoteState: viewer?.role === 'werewolf' ? {
+      submitted: Object.values(room.wolfVotes).filter((value) => value !== undefined).length,
+      required: Object.values(room.players).filter((p) => p.role === 'werewolf' && p.alive).length,
+      yourVote: room.wolfVotes[viewerId]
+    } : null,
     wolfTarget: viewer?.role === 'witch' || viewer?.role === 'werewolf' ? room.wolfTarget : null,
     wolfPeers: viewer?.role === 'werewolf'
       ? Object.values(room.players)
           .filter((p) => p.role === 'werewolf' && p.id !== viewerId && p.alive)
           .map((p) => p.name)
       : [],
+    wolfIds: viewer?.role === 'werewolf'
+      ? Object.values(room.players)
+          .filter((p) => p.role === 'werewolf' && p.alive)
+          .map((p) => p.id)
+      : [],
     guardedTarget: viewer?.role === 'guard' ? room.guardedTarget : null,
     lastGuardedTarget: viewer?.role === 'guard' ? room.lastGuardedTarget : null,
+    harlotVisitedTarget: viewer?.role === 'harlot' ? room.harlotVisitedTarget : null,
     nextNightStep: room.phaseStep === 'transition' ? room.nextNightStep : null,
     phaseTransition: room.phaseTransition,
     seerResult: viewer?.role === 'seer' ? viewer.seerResult : null,
@@ -78,6 +89,7 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     awaitingHunterShot: room.awaitingHunterShot === viewerId,
     hunterShotPending: !!room.awaitingHunterShot,
     hunterShotEndsAt: room.awaitingHunterShot === viewerId ? room.hunterShotEndsAt : null,
+    dayVoteResolved: room.dayVoteResolved,
     winner: room.winner,
     logs,
     self: viewer

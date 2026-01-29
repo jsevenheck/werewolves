@@ -2,11 +2,11 @@ import { expect, type Browser, type Locator, type Page } from '@playwright/test'
 import { MIN_PLAYERS } from '@shared/constants';
 import type { PassiveRole } from '@shared/types';
 
-type SubmissionState = { wolf: boolean; seer: boolean; witch: boolean; mayor: boolean };
+type SubmissionState = { wolf: boolean; seer: boolean; witch: boolean; guard: boolean; mayor: boolean };
 
 export type PassiveRoleConfig = Partial<Record<PassiveRole, boolean>>;
 
-type RoleCountKey = 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'guard';
+type RoleCountKey = 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'guard' | 'harlot';
 
 export type RoleConfig = {
   werewolf: number;
@@ -15,7 +15,8 @@ export type RoleConfig = {
   witch: number;
   armor: number;
   joker: number;
-  guard: number;
+  guard?: number;
+  harlot?: number;
   passiveRoles?: PassiveRoleConfig;
 };
 
@@ -26,7 +27,7 @@ type AdvanceToDayResult = {
   dayPage?: Page | null;
 };
 
-const ROLE_FIELDS: RoleCountKey[] = ['werewolf', 'seer', 'hunter', 'witch', 'armor', 'joker', 'guard'];
+const ROLE_FIELDS: RoleCountKey[] = ['werewolf', 'seer', 'hunter', 'witch', 'armor', 'joker', 'guard', 'harlot'];
 
 const joinRoom = async (page: Page, name: string, code: string) => {
   await page.goto('/');
@@ -235,12 +236,18 @@ const selectOptionByLabel = async (select: Locator, label?: string | null) => {
 const trySubmitNightActions = async (
   pages: Page[],
   submissionState: Map<Page, SubmissionState>,
-  options: { wolfTargetName?: string; avoidWolfTargetName?: string } = {}
+  options: {
+    wolfTargetName?: string;
+    avoidWolfTargetName?: string;
+    guardTargetName?: string;
+    avoidGuardTargetName?: string;
+  } = {}
 ) => {
-  const { wolfTargetName, avoidWolfTargetName } = options;
+  const { wolfTargetName, avoidWolfTargetName, guardTargetName, avoidGuardTargetName } = options;
   let acted = false;
   for (const page of pages) {
-    const state = submissionState.get(page) || { wolf: false, seer: false, witch: false, mayor: false };
+    const state =
+      submissionState.get(page) || { wolf: false, seer: false, witch: false, guard: false, mayor: false };
 
     const wolfForm = page.locator('#wolf-form');
     if ((await wolfForm.count()) && (await wolfForm.isVisible())) {
@@ -285,6 +292,22 @@ const trySubmitNightActions = async (
       state.witch = false;
     }
 
+    const guardForm = page.locator('#guard-form');
+    if ((await guardForm.count()) && (await guardForm.isVisible())) {
+      if (!state.guard) {
+        const select = guardForm.locator('select[name="target"]');
+        const picked = guardTargetName ? await selectOptionByLabel(select, guardTargetName) : false;
+        const selected = picked || (await selectFirstOptionAvoidingLabel(select, avoidGuardTargetName));
+        if (selected) {
+          await guardForm.locator('button[type="submit"]').click();
+          state.guard = true;
+          acted = true;
+        }
+      }
+    } else {
+      state.guard = false;
+    }
+
     submissionState.set(page, state);
   }
   return acted;
@@ -298,7 +321,8 @@ const trySubmitMayorVotes = async (
   const { mayorTargetName } = options;
   let acted = false;
   for (const page of pages) {
-    const state = submissionState.get(page) || { wolf: false, seer: false, witch: false, mayor: false };
+    const state =
+      submissionState.get(page) || { wolf: false, seer: false, witch: false, guard: false, mayor: false };
     try {
       const form = page.locator('#mayor-vote-form');
       if ((await form.count()) && (await form.isVisible())) {
@@ -502,9 +526,23 @@ const getPhaseText = async (page: Page) => {
 export const advanceToDay = async (
   host: Page,
   pages: Page[],
-  options: { allowHunterStop?: boolean; wolfTargetName?: string; avoidWolfTargetName?: string; mayorTargetName?: string } = {}
+  options: {
+    allowHunterStop?: boolean;
+    wolfTargetName?: string;
+    avoidWolfTargetName?: string;
+    guardTargetName?: string;
+    avoidGuardTargetName?: string;
+    mayorTargetName?: string;
+  } = {}
 ): Promise<AdvanceToDayResult> => {
-  const { allowHunterStop = false, wolfTargetName, avoidWolfTargetName, mayorTargetName } = options;
+  const {
+    allowHunterStop = false,
+    wolfTargetName,
+    avoidWolfTargetName,
+    guardTargetName,
+    avoidGuardTargetName,
+    mayorTargetName
+  } = options;
   const submissionState = new Map<Page, SubmissionState>();
   const dayReportSelector = 'h3:has-text("Night Report")';
   const gameOverSelector = 'h2:has-text("Game Over")';
@@ -538,7 +576,14 @@ export const advanceToDay = async (
       await host.waitForTimeout(200);
       continue;
     }
-    if (await trySubmitNightActions(pages, submissionState, { wolfTargetName, avoidWolfTargetName })) {
+    if (
+      await trySubmitNightActions(pages, submissionState, {
+        wolfTargetName,
+        avoidWolfTargetName,
+        guardTargetName,
+        avoidGuardTargetName
+      })
+    ) {
       await host.waitForTimeout(200);
       continue;
     }
@@ -547,6 +592,10 @@ export const advanceToDay = async (
       continue;
     }
     if (await tryClick(host.locator('#skip-step'))) {
+      await host.waitForTimeout(150);
+      continue;
+    }
+    if (await tryClick(host.locator('#proceed-to-night-btn'))) {
       await host.waitForTimeout(150);
       continue;
     }

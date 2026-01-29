@@ -40,9 +40,9 @@ This runs the backend server on port 3001 and Vite dev server on port 5173 with 
 - The Vite dev server serves the client on port 5173 and proxies to the server on port 3001.
 - Running the server alone (e.g. `pnpm run dev:server` or `pnpm start`) is **not** equivalent to running the client dev server.
 
-The Vue client lives in the `client/` package (pnpm workspace). You can run only the client with:
+The Vue client lives in the `ui-vue/` package (pnpm workspace). You can run only the client with:
 ```bash
-pnpm --filter werewolves-client dev
+pnpm --filter werewolves-ui-vue dev
 ```
 
 ## Development
@@ -95,9 +95,9 @@ pnpm run test:e2e
 
 Mobile browsers require a user gesture before audio can play. If a player enables the narrator and sees "Tap to enable audio," they must tap once to unlock playback (browser autoplay policy requirement).
 
-- Canonical location: `client/public/audio/`
+- Canonical location: `ui-vue/public/audio/`
 - Runtime URL expectation: `/audio/<name>.mp3`
-- Vite serves files in `client/public/` at `/` during development and copies them into the build output as-is (so `client/public/audio/*.mp3` becomes `dist/client/audio/*.mp3`).
+- Vite serves files in `ui-vue/public/` at `/` during development and copies them into the build output as-is (so `ui-vue/public/audio/*.mp3` becomes `dist/client/audio/*.mp3`).
 - MP3 files are not stored in git; provide them locally for development or via deployment artifacts.
 - See `client/public/audio/README.md` for per-file meanings and when each clip plays.
 
@@ -121,11 +121,11 @@ Note: The Docker image defaults to port 3000. Override with `-e PORT=3001` if ne
 
 ## Embedding / host integration notes
 
-- The Vue client lives in `client/` and can be built as a library with:
+- The Vue client lives in `ui-vue/` and can be built as a library with:
   ```bash
-  pnpm --filter werewolves-client build:lib
+  pnpm --filter werewolves-ui-vue build:lib
   ```
-  This outputs UMD/ESM bundles to `client/dist-lib/`.
+  This outputs UMD/ESM bundles to `ui-vue/dist-lib/`.
 - The Socket.IO `path` must match between client and server unless a proxy rewrites it.
 - Configuration options (when embedding via `installWerewolvesGame`):
   - `socketUrl` (default: same origin)

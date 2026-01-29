@@ -19,6 +19,10 @@
 - **Guard protection from poison**: Guard selects a player that the Witch poisons; confirm the player survives the poison.
 - **Guard consecutive protection restriction**: Guard protects player A on night 1; on night 2, confirm player A is not available in the target list (guard cannot protect the same player two nights in a row).
 - **Guard cannot self-protect**: Confirm guard cannot select themselves as protection target.
+- **Harlot dies visiting wolf victim**: Configure a Harlot, let them visit the wolf's target during night; confirm the Harlot dies along with the wolf's victim.
+- **Harlot survives visiting non-victim**: Harlot visits someone who is not the wolf's target; confirm the Harlot survives.
+- **Harlot survives when guard protects wolf target**: Harlot visits wolf's target but the Guard protected that target; confirm both the target and the Harlot survive.
+- **dayVoteResolved flow**: After a day vote resolves (or abstain), confirm the host sees 'Proceed to Night' button and the game waits for the host to click before transitioning to night.
 - **Seer and Witch private info**: Confirm Seer sees the last inspection result only on their device and Witch sees the wolves' target before acting.
 - **Voting UI**: Ensure vote submit is disabled until a selection is made; choose Abstain explicitly; test majority abstain -> no elimination.
 - **Lobby validation**: Attempt to start with fewer than 5 players; ensure the backend rejects the start and displays an error alert. Also test too many roles vs player count.
@@ -30,7 +34,7 @@
 
 ## Narrator Audio Assets
 
-Place MP3 narrator clips in `client/public/audio/` with filenames matching the expected ones (for example, `night_wolves.mp3` or `dayToNight.mp3`) so the narrator continues to map phase changes correctly. The code falls back to an embedded silent clip when files are missing, so adding the real audio files is required for audible narration.
+Place MP3 narrator clips in `ui-vue/public/audio/` with filenames matching the expected ones (for example, `night_wolves.mp3` or `dayToNight.mp3`) so the narrator continues to map phase changes correctly. The code falls back to an embedded silent clip when files are missing, so adding the real audio files is required for audible narration.
 Expected narrator keys:
 - `lobby.mp3` (also used for the initial audio unlock)
 - `roleReveal.mp3`
@@ -42,6 +46,7 @@ Expected narrator keys:
 - `night_seer.mp3`
 - `night_witch.mp3`
 - `night_guard.mp3`
+- `night_harlot.mp3`
 - `night_resolve.mp3`
 - `night_transition.mp3`
 - `postReveal.mp3`
@@ -49,4 +54,4 @@ Expected narrator keys:
 - `nightToDay.mp3`
 - `dayToNight.mp3`
 
-See `client/public/audio/README.md` for per-file meanings and timing.
+See `ui-vue/public/audio/README.md` for per-file meanings and timing.

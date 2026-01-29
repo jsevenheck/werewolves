@@ -22,7 +22,7 @@ const makeRoom = (): Room => ({
   dayCount: 0,
   players: {},
   minPlayers: 5,
-  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0 } as RoleConfig,
+  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0, harlot: 0 } as RoleConfig,
   passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: null,
@@ -53,6 +53,9 @@ const makeRoom = (): Room => ({
   lastDayMessage: null,
   awaitingHunterShot: null,
   winner: null,
+  harlotVisitedTarget: null,
+  harlotActed: false,
+  dayVoteResolved: false,
   createdAt: Date.now(),
   lastActivityAt: Date.now()
 });
@@ -201,5 +204,140 @@ describe('nightManager', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  describe('Guard protection', () => {
+    test('guard protection blocks wolf kill', () => {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.wolfTarget = 'v1';
+      room.guardedTarget = 'v1';
+      room.players = {
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+      };
+
+      resolveNight(room, jest.fn(), undefined as never);
+
+      expect(queueDeath).not.toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
+    });
+
+    test('guard protection blocks witch poison', () => {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.poisonTarget = 'v1';
+      room.guardedTarget = 'v1';
+      room.players = {
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+      };
+
+      resolveNight(room, jest.fn(), undefined as never);
+
+      expect(queueDeath).not.toHaveBeenCalledWith(room, 'v1', 'poisoned by Witch');
+    });
+
+    test('wolf kills player when guard protects someone else', () => {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.wolfTarget = 'v1';
+      room.guardedTarget = 'v2';
+      room.players = {
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
+        v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true })
+      };
+
+      resolveNight(room, jest.fn(), undefined as never);
+
+      expect(queueDeath).toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
+    });
+  });
+
+  describe('Harlot additional death', () => {
+    test('harlot dies when visiting wolf victim', () => {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.wolfTarget = 'v1';
+      room.harlotVisitedTarget = 'v1';
+      room.players = {
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
+        h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true })
+      };
+
+      resolveNight(room, jest.fn(), undefined as never);
+
+      expect(queueDeath).toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
+      expect(queueDeath).toHaveBeenCalledWith(room, 'h1', 'caught visiting the victim');
+    });
+
+    test('harlot survives when visiting someone else', () => {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.wolfTarget = 'v1';
+      room.harlotVisitedTarget = 'v2';
+      room.players = {
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
+        v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true }),
+        h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true })
+      };
+
+      resolveNight(room, jest.fn(), undefined as never);
+
+      expect(queueDeath).toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
+      expect(queueDeath).not.toHaveBeenCalledWith(room, 'h1', expect.any(String));
+    });
+
+    test('harlot dies when attacked directly by wolves', () => {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.wolfTarget = 'h1';
+      room.harlotVisitedTarget = 'v1';
+      room.players = {
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
+        h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true })
+      };
+
+      resolveNight(room, jest.fn(), undefined as never);
+
+      expect(queueDeath).toHaveBeenCalledWith(room, 'h1', 'eaten by Werewolves');
+      // Should not trigger "caught visiting" because harlot didn't visit the wolf victim
+      expect(queueDeath).not.toHaveBeenCalledWith(room, 'h1', 'caught visiting the victim');
+    });
+
+    test('harlot survives when wolf kill is prevented by guard', () => {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.wolfTarget = 'v1';
+      room.guardedTarget = 'v1';
+      room.harlotVisitedTarget = 'v1';
+      room.players = {
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
+        h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true })
+      };
+
+      resolveNight(room, jest.fn(), undefined as never);
+
+      // Wolf kill was prevented by guard
+      expect(queueDeath).not.toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
+      // Harlot should not die because the kill was prevented
+      expect(queueDeath).not.toHaveBeenCalledWith(room, 'h1', 'caught visiting the victim');
+    });
+
+    test('harlot survives when wolf kill is prevented by witch heal', () => {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.wolfTarget = 'v1';
+      room.healedTarget = 'v1';
+      room.harlotVisitedTarget = 'v1';
+      room.players = {
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
+        h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true })
+      };
+
+      resolveNight(room, jest.fn(), undefined as never);
+
+      // Wolf kill was prevented by witch heal
+      expect(queueDeath).not.toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
+      // Harlot should not die because the kill was prevented
+      expect(queueDeath).not.toHaveBeenCalledWith(room, 'h1', 'caught visiting the victim');
+    });
   });
 });
