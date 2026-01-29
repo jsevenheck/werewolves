@@ -34,10 +34,10 @@ const makeRoom = (): Room => ({
   wolfTarget: null,
   healedTarget: null,
   poisonTarget: null,
-  seerActed: false,
   guardedTarget: null,
   lastGuardedTarget: null,
   guardActed: false,
+  seerActed: false,
   voteState: { votes: {}, revoteFromTie: null },
   pendingDeaths: [],
   logs: [],
@@ -52,6 +52,7 @@ const makeRoom = (): Room => ({
   lastDayDeaths: [],
   lastDayMessage: null,
   awaitingHunterShot: null,
+  dayVoteResolved: false,
   winner: null,
   createdAt: Date.now(),
   lastActivityAt: Date.now()
@@ -110,6 +111,7 @@ describe('nightManager', () => {
 
   test('handleWitchDecision uses heal potion and advances', () => {
     const room = makeRoom();
+    room.phaseStep = 'witch';
     room.wolfTarget = 'v1';
     room.players = {
       v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
@@ -176,6 +178,7 @@ describe('nightManager', () => {
 
   test('handleWitchDecision uses poison potion and advances', () => {
     const room = makeRoom();
+    room.phaseStep = 'witch';
     room.players = { v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true }) };
 
     handleWitchDecision(room, 'w1', 'poison', 'v2', jest.fn(), undefined as never);

@@ -18,16 +18,17 @@ const makeRoom = (): Room => ({
   wolfTarget: 'old',
   healedTarget: null,
   poisonTarget: null,
-  seerActed: true,
   guardedTarget: null,
   lastGuardedTarget: null,
   guardActed: false,
+  seerActed: true,
   pendingDeaths: [],
   lastNightDeaths: [],
   lastDayDeaths: [],
   lastDayMessage: null,
   voteState: { votes: { a: 'b' }, revoteFromTie: ['b'] },
   awaitingHunterShot: 'p1',
+  dayVoteResolved: false,
   dayCount: 0,
   logs: [],
   winner: null,
@@ -74,7 +75,7 @@ describe('phaseManager', () => {
 
     expect(room.phase).toBe('night');
     expect(room.phaseStep).toBe('wolves');
-    expect(room.wolfVotes).toEqual({ w1: null });
+    expect(room.wolfVotes).toEqual({});
     expect(room.wolfTarget).toBeNull();
     expect(room.seerActed).toBe(false);
     expect(room.pendingDeaths).toEqual([]);

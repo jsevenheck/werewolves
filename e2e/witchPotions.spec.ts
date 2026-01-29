@@ -32,6 +32,14 @@ const advanceToNextNight = async (host: Page) => {
       // Ignore rapid transition racing the host finalize.
     }
   }
+  const proceedButton = host.locator('#proceed-to-night-btn');
+  if (await proceedButton.isVisible()) {
+    try {
+      await proceedButton.click();
+    } catch {
+      // Ignore rapid transition racing.
+    }
+  }
   const skipButton = host.locator('#host-skip-btn');
   if (await skipButton.isVisible()) {
     try {

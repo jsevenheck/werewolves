@@ -27,6 +27,7 @@ export interface ClientToServerEvents {
   ) => void;
   hostSkipStep: (payload: { roomCode: string; playerId: string }) => void;
   hostFinalizeDayVote: (payload: { roomCode: string; playerId: string }) => void;
+  hostProceedToNight: (payload: { roomCode: string; playerId: string }) => void;
   submitDayVote: (payload: { roomCode: string; playerId: string; targetId?: string | null }) => void;
   hunterShoot: (payload: { roomCode: string; playerId: string; targetId: string }) => void;
   leaveRoom: (payload: { roomCode: string; playerId: string }, cb?: (response: OkResponse | ErrorResponse) => void) => void;

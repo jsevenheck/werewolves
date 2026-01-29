@@ -594,6 +594,10 @@ export const advanceToDay = async (
       await host.waitForTimeout(150);
       continue;
     }
+    if (await tryClick(host.locator('#proceed-to-night-btn'))) {
+      await host.waitForTimeout(150);
+      continue;
+    }
     if (await tryClick(host.locator('#skip-mayor-selection'))) {
       await host.waitForTimeout(150);
       continue;

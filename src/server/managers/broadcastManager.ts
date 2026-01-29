@@ -55,6 +55,11 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
       : null,
     witchState: viewer?.role === 'witch' ? room.witchState : { healAvailable: null, poisonAvailable: null },
     wolfVotes: viewer?.role === 'werewolf' ? room.wolfVotes : null,
+    wolfVoteState: viewer?.role === 'werewolf' ? {
+      submitted: Object.values(room.wolfVotes).filter((value) => value !== undefined).length,
+      required: Object.values(room.players).filter((p) => p.role === 'werewolf' && p.alive).length,
+      yourVote: room.wolfVotes[viewerId]
+    } : null,
     wolfTarget: viewer?.role === 'witch' || viewer?.role === 'werewolf' ? room.wolfTarget : null,
     wolfPeers: viewer?.role === 'werewolf'
       ? Object.values(room.players)
@@ -78,6 +83,7 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     awaitingHunterShot: room.awaitingHunterShot === viewerId,
     hunterShotPending: !!room.awaitingHunterShot,
     hunterShotEndsAt: room.awaitingHunterShot === viewerId ? room.hunterShotEndsAt : null,
+    dayVoteResolved: room.dayVoteResolved,
     winner: room.winner,
     logs,
     self: viewer

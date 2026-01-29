@@ -158,10 +158,7 @@ describe('socketHandlers hostSkipStep', () => {
       phaseStep: 'seer',
       phaseTransition: null,
       seerActed: false,
-      guardedTarget: null,
-      lastGuardedTarget: null,
-      guardActed: false,
-      players: {
+                  players: {
         host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' },
         s1: { id: 's1', role: 'seer', alive: true },
         v1: { id: 'v1', role: 'villager', alive: true }
@@ -222,7 +219,7 @@ describe('socketHandlers hostSkipStep', () => {
     expect(advanceNightStep).toHaveBeenCalledWith(room, expect.any(Function), io);
   });
 
-  test('rejects duplicate wolf votes', () => {
+  test('allows wolves to change their votes', () => {
     const room = {
       code: 'ABCD',
       hostId: 'host',
@@ -230,17 +227,20 @@ describe('socketHandlers hostSkipStep', () => {
       phaseStep: 'wolves',
       players: {
         w1: { id: 'w1', role: 'werewolf', alive: true, socketId: 'socket-1' },
-        v1: { id: 'v1', role: 'villager', alive: true }
+        v1: { id: 'v1', role: 'villager', alive: true },
+        v2: { id: 'v2', role: 'villager', alive: true }
       },
-      wolfVotes: { w1: 'v1' }
+      wolfVotes: { w1: 'v1' },
+      logs: []
     } as unknown as Room;
     (getRoom as jest.Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
-    handlers.submitWolfVote({ roomCode: 'ABCD', playerId: 'w1', targetId: 'v1' });
+    handlers.submitWolfVote({ roomCode: 'ABCD', playerId: 'w1', targetId: 'v2' });
 
-    expect(socket.emit).toHaveBeenCalledWith('wolfVoteRejected', { reason: 'already_voted' });
+    expect(room.wolfVotes.w1).toBe('v2');
+    expect(socket.emit).not.toHaveBeenCalledWith('wolfVoteRejected', expect.anything());
   });
 
   test('host skips phase transition night to day', () => {
@@ -509,7 +509,7 @@ describe('socketHandlers security checks', () => {
       hostId: 'host',
       phase: 'lobby',
       minPlayers: 5,
-      roleConfig: { werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 0, guard: 0 },
+      roleConfig: { werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 0 },
       players: {
         host: { id: 'host', socketId: 'socket-host' }
       }
@@ -582,10 +582,9 @@ describe('socketHandlers mechanics guards', () => {
       hostId: 'host',
       phase: 'night',
       phaseStep: 'guard',
-      guardedTarget: null,
-      lastGuardedTarget: null,
       guardActed: false,
-      players: {
+      guardedTarget: null,
+                  players: {
         guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket-1' },
         v1: { id: 'v1', role: 'villager', alive: true }
       }
@@ -609,10 +608,10 @@ describe('socketHandlers mechanics guards', () => {
       hostId: 'host',
       phase: 'night',
       phaseStep: 'guard',
-      guardedTarget: null,
-      lastGuardedTarget: 'v1',
       guardActed: false,
-      players: {
+      guardedTarget: null,
+          lastGuardedTarget: 'v1',
+          players: {
         guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket-1' },
         v1: { id: 'v1', role: 'villager', alive: true }
       }
@@ -978,10 +977,7 @@ describe('submitGuardProtection', () => {
       code: 'ABCD',
       phase: 'night',
       phaseStep: 'guard',
-      guardedTarget: null,
-      lastGuardedTarget: null,
-      guardActed: false,
-      players: {
+                  players: {
         guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' },
         v1: { id: 'v1', role: 'villager', alive: true }
       }
@@ -1005,10 +1001,9 @@ describe('submitGuardProtection', () => {
       code: 'ABCD',
       phase: 'night',
       phaseStep: 'guard',
-      guardedTarget: null,
-      lastGuardedTarget: null,
       guardActed: false,
-      players: {
+      guardedTarget: null,
+                  players: {
         guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' }
       }
     } as unknown as Room;
@@ -1031,10 +1026,10 @@ describe('submitGuardProtection', () => {
       code: 'ABCD',
       phase: 'night',
       phaseStep: 'guard',
-      guardedTarget: null,
-      lastGuardedTarget: 'v1',
       guardActed: false,
-      players: {
+      guardedTarget: null,
+          lastGuardedTarget: 'v1',
+          players: {
         guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' },
         v1: { id: 'v1', role: 'villager', alive: true }
       }
@@ -1058,10 +1053,8 @@ describe('submitGuardProtection', () => {
       code: 'ABCD',
       phase: 'night',
       phaseStep: 'guard',
-      guardedTarget: null,
-      lastGuardedTarget: 'v2',
-      guardActed: false,
-      players: {
+          lastGuardedTarget: 'v2',
+          players: {
         guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' },
         v1: { id: 'v1', role: 'villager', alive: true },
         v2: { id: 'v2', role: 'villager', alive: true }
@@ -1086,10 +1079,9 @@ describe('submitGuardProtection', () => {
       code: 'ABCD',
       phase: 'night',
       phaseStep: 'guard',
-      guardedTarget: null,
-      lastGuardedTarget: null,
       guardActed: false,
-      players: {
+      guardedTarget: null,
+                  players: {
         guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' },
         v1: { id: 'v1', role: 'villager', alive: false }
       }

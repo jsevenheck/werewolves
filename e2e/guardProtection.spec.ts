@@ -181,6 +181,8 @@ test('guard cannot protect self and cannot protect the same target on consecutiv
 
     // Day 1: host ends voting early and waits for night to begin.
     await host.locator('#end-vote-btn').click();
+    await host.locator('#proceed-to-night-btn').waitFor({ timeout: 5000 });
+    await host.locator('#proceed-to-night-btn').click();
 
     // Night 2: guard options should exclude self and the previous target.
     await wolf.page.waitForSelector('#wolf-form', { timeout: 15000 });

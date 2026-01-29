@@ -88,7 +88,7 @@ function handleWitchDecision(
   broadcastRoom: (room: Room) => void,
   io: Server<ClientToServerEvents, ServerToClientEvents>
 ) {
-  // Handle skip action - advance to guard step immediately
+  // Handle skip action - advance to guard immediately
   if (action === 'skip') {
     scheduleNightStep(room, 'guard', broadcastRoom, io);
     return;
@@ -131,7 +131,7 @@ function handleWitchDecision(
     actingWitch.alive &&
     alivePlayers.some((p) => p.id !== playerId);
 
-  // If no more actions available, advance to guard step
+  // If no more actions available, advance to guard
   if (!canHeal && !canPoison) {
     scheduleNightStep(room, 'guard', broadcastRoom, io);
     return;

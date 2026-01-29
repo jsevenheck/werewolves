@@ -46,8 +46,8 @@ describe('commonRenderers narrator label', () => {
         witch: 0,
         armor: 0,
         joker: 0,
-        guard: 0
-      },
+        guard: 0,
+        },
       passiveRoleConfig: { mayor: true },
       mayorId: null,
       awaitingMayorSelection: false,
@@ -57,11 +57,12 @@ describe('commonRenderers narrator label', () => {
       loverName: null,
       witchState: { healAvailable: null, poisonAvailable: null },
       wolfVotes: null,
+      wolfVoteState: null,
       wolfTarget: null,
       wolfPeers: [],
       guardedTarget: null,
       lastGuardedTarget: null,
-      nextNightStep: null,
+              nextNightStep: null,
       phaseTransition: null,
       seerResult: null,
       voteState: {
@@ -76,6 +77,7 @@ describe('commonRenderers narrator label', () => {
       awaitingHunterShot: false,
       hunterShotPending: false,
       hunterShotEndsAt: null,
+      dayVoteResolved: false,
       winner: null,
       logs: [],
       self: null

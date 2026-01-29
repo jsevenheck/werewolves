@@ -50,7 +50,8 @@ function tryResolveDayVote(
     addLog(room, 'Vote skipped. No one eliminated.', 'Vote skipped. No one eliminated.');
     room.lastDayDeaths = [];
     room.lastDayMessage = 'No one was eliminated.';
-    holdDayToNightTransition(room, broadcastRoom);
+    room.dayVoteResolved = true;
+    broadcastRoom(room);
     return;
   }
   entries.sort((a, b) => b[1] - a[1]);
@@ -63,7 +64,8 @@ function tryResolveDayVote(
     addLog(room, 'Majority abstained. No one eliminated.', 'Majority abstained. No one eliminated.');
     room.lastDayDeaths = [];
     room.lastDayMessage = 'No one was eliminated.';
-    holdDayToNightTransition(room, broadcastRoom);
+    room.dayVoteResolved = true;
+    broadcastRoom(room);
     return;
   }
   const tied = entries.filter(([, count]) => count === top[1]).map(([id]) => id);
@@ -130,7 +132,8 @@ function resolveDayKill(
   queueDeath(room, targetId, 'executed by vote');
   resolveDeaths(room, 'day', broadcastRoom, io);
   if (!room.winner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
-    holdDayToNightTransition(room, broadcastRoom);
+    room.dayVoteResolved = true;
+    broadcastRoom(room);
   }
 }
 

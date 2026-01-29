@@ -407,6 +407,10 @@ function bindDayHandlers(socket: Socket<ServerToClientEvents, ClientToServerEven
       if (!state.playerId) return;
       socket.emit('hostFinalizeDayVote', { roomCode: room.code, playerId: state.playerId });
     });
+    document.getElementById('proceed-to-night-btn')?.addEventListener('click', () => {
+      if (!state.playerId) return;
+      socket.emit('hostProceedToNight', { roomCode: room.code, playerId: state.playerId });
+    });
   }
 
   if (!room.self?.alive) return;
