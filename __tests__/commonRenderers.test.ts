@@ -11,7 +11,8 @@ jest.mock('../client/src/state/gameState', () => ({
 }));
 
 jest.mock('../client/src/config/constants', () => ({
-  ROLE_DETAILS: {}
+  ROLE_DETAILS: {},
+  PASSIVE_ROLE_DETAILS: { mayor: { name: 'Mayor', description: '' } }
 }));
 
 jest.mock('../client/src/utils/helpers', () => ({
@@ -44,7 +45,8 @@ describe('commonRenderers narrator label', () => {
         hunter: 0,
         witch: 0,
         armor: 0,
-        joker: 0
+        joker: 0,
+        guard: 0
       },
       passiveRoleConfig: { mayor: true },
       mayorId: null,
@@ -55,8 +57,12 @@ describe('commonRenderers narrator label', () => {
       loverName: null,
       witchState: { healAvailable: null, poisonAvailable: null },
       wolfVotes: null,
+      wolfVoteState: null,
       wolfTarget: null,
       wolfPeers: [],
+      wolfIds: [],
+      guardedTarget: null,
+      lastGuardedTarget: null,
       nextNightStep: null,
       phaseTransition: null,
       seerResult: null,
@@ -71,6 +77,8 @@ describe('commonRenderers narrator label', () => {
       lastDayMessage: null,
       awaitingHunterShot: false,
       hunterShotPending: false,
+      hunterShotEndsAt: null,
+      dayVoteResolved: false,
       winner: null,
       logs: [],
       self: null

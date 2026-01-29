@@ -22,7 +22,7 @@ const makeRoom = (): Room => ({
   dayCount: 0,
   players: {},
   minPlayers: 5,
-  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0 } as RoleConfig,
+  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0 } as RoleConfig,
   passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: null,
@@ -34,6 +34,9 @@ const makeRoom = (): Room => ({
   wolfTarget: null,
   healedTarget: null,
   poisonTarget: null,
+  guardedTarget: null,
+  lastGuardedTarget: null,
+  guardActed: false,
   seerActed: false,
   voteState: { votes: {}, revoteFromTie: null },
   pendingDeaths: [],
@@ -43,11 +46,13 @@ const makeRoom = (): Room => ({
   phaseTimer: null,
   transitionTimer: null,
   hunterShotTimer: null,
+  hunterShotEndsAt: null,
   hunterShotQueue: [],
   lastNightDeaths: [],
   lastDayDeaths: [],
   lastDayMessage: null,
   awaitingHunterShot: null,
+  dayVoteResolved: false,
   winner: null,
   createdAt: Date.now(),
   lastActivityAt: Date.now()
@@ -71,6 +76,10 @@ const buildPlayer = (overrides: Partial<Player>): Player => ({
 });
 
 describe('nightManager', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   test('tryFinalizeWolfVote picks a tied target and advances', () => {
     const room = makeRoom();
     room.players = {
@@ -102,6 +111,7 @@ describe('nightManager', () => {
 
   test('handleWitchDecision uses heal potion and advances', () => {
     const room = makeRoom();
+    room.phaseStep = 'witch';
     room.wolfTarget = 'v1';
     room.players = {
       v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
@@ -111,7 +121,7 @@ describe('nightManager', () => {
 
     expect(room.witchState.healAvailable).toBe(false);
     expect(room.healedTarget).toBe('v1');
-    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'resolve', expect.any(Function), undefined);
+    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'guard', expect.any(Function), undefined);
   });
 
   test('handleWitchDecision does not consume heal when wolf target is invalid', () => {
@@ -168,13 +178,46 @@ describe('nightManager', () => {
 
   test('handleWitchDecision uses poison potion and advances', () => {
     const room = makeRoom();
+    room.phaseStep = 'witch';
     room.players = { v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true }) };
 
     handleWitchDecision(room, 'w1', 'poison', 'v2', jest.fn(), undefined as never);
 
     expect(room.witchState.poisonAvailable).toBe(false);
     expect(room.poisonTarget).toBe('v2');
-    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'resolve', expect.any(Function), undefined);
+    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'guard', expect.any(Function), undefined);
+  });
+
+  test('resolveNight blocks wolf kill when the target is guarded', () => {
+    const room = makeRoom();
+    room.phaseStep = 'resolve';
+    room.awaitingHunterShot = 'hunter';
+    room.players = {
+      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+    };
+    room.wolfTarget = 'v1';
+    room.guardedTarget = 'v1';
+
+    resolveNight(room, jest.fn(), undefined as never);
+
+    expect(queueDeath).not.toHaveBeenCalled();
+    expect(resolveDeaths).toHaveBeenCalledWith(room, 'night', expect.any(Function), undefined);
+  });
+
+  test('resolveNight blocks witch poison when the target is guarded', () => {
+    const room = makeRoom();
+    room.phaseStep = 'resolve';
+    room.awaitingHunterShot = 'hunter';
+    room.players = {
+      v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true })
+    };
+    room.poisonTarget = 'v2';
+    room.guardedTarget = 'v2';
+
+    resolveNight(room, jest.fn(), undefined as never);
+
+    expect(queueDeath).not.toHaveBeenCalled();
+    expect(resolveDeaths).toHaveBeenCalledWith(room, 'night', expect.any(Function), undefined);
   });
 
   test('resolveNight queues deaths, resolves, and transitions', () => {
@@ -197,5 +240,72 @@ describe('nightManager', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  describe('Guard protection', () => {
+    test('guard protection blocks wolf kill', () => {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.awaitingHunterShot = 'hunter';
+      room.wolfTarget = 'v1';
+      room.guardedTarget = 'v1';
+      room.players = {
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+      };
+
+      resolveNight(room, jest.fn(), undefined as never);
+
+      expect(queueDeath).not.toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
+    });
+
+    test('guard protection blocks witch poison', () => {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.awaitingHunterShot = 'hunter';
+      room.poisonTarget = 'v1';
+      room.guardedTarget = 'v1';
+      room.players = {
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+      };
+
+      resolveNight(room, jest.fn(), undefined as never);
+
+      expect(queueDeath).not.toHaveBeenCalledWith(room, 'v1', 'poisoned by Witch');
+    });
+
+    test('wolf kills player when guard protects someone else', () => {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.awaitingHunterShot = 'hunter';
+      room.wolfTarget = 'v1';
+      room.guardedTarget = 'v2';
+      room.players = {
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
+        v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true })
+      };
+
+      resolveNight(room, jest.fn(), undefined as never);
+
+      expect(queueDeath).toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
+    });
+
+    test('guard protection and witch heal on same target (both consumed)', () => {
+      const room = makeRoom();
+      room.phaseStep = 'resolve';
+      room.awaitingHunterShot = 'hunter';
+      room.wolfTarget = 'v1';
+      room.guardedTarget = 'v1';
+      room.healedTarget = 'v1';
+      room.players = {
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+      };
+
+      resolveNight(room, jest.fn(), undefined as never);
+
+      // Player survives (both protections applied, though only one needed)
+      expect(queueDeath).not.toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
+      // Guard protection persists (healedTarget is cleared after resolution)
+      expect(room.guardedTarget).toBe('v1');
+    });
   });
 });

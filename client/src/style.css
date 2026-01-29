@@ -103,8 +103,11 @@ button:disabled {
 }
 
 .player-card.dead {
-  opacity: 0.55;
+  opacity: 0.7;
   text-decoration: line-through;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: rgba(254, 202, 202, 0.9);
 }
 
 .tag {
@@ -130,6 +133,12 @@ button:disabled {
   border: 1px solid rgba(248, 197, 144, 0.5);
   padding: 1rem;
   border-radius: 12px;
+}
+
+.passive-role-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(148, 163, 184, 0.9);
 }
 
 .actions {
@@ -216,8 +225,20 @@ button:disabled {
   width: 100%;
 }
 
+.role-hint {
+  color: rgba(148, 163, 184, 0.9);
+  font-size: 0.75rem;
+  margin-left: 0.35rem;
+}
+
 .role-row input {
   width: 100%;
+}
+
+.role-hint {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-left: 0.35rem;
 }
 
 .notifications {
@@ -247,6 +268,18 @@ button:disabled {
 .hunter-overlay .panel {
   max-width: 420px;
   width: 100%;
+}
+
+.overlay-panel {
+  position: relative;
+}
+
+.overlay-timer {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.8);
 }
 
 .mayor-overlay {

@@ -12,11 +12,15 @@ const makeRoom = (): Room => ({
   transitionTimer: null,
   phaseTimer: null,
   hunterShotTimer: null,
+  hunterShotEndsAt: null,
   hunterShotQueue: [],
   wolfVotes: { stale: 'x' },
   wolfTarget: 'old',
   healedTarget: null,
   poisonTarget: null,
+  guardedTarget: null,
+  lastGuardedTarget: null,
+  guardActed: false,
   seerActed: true,
   pendingDeaths: [],
   lastNightDeaths: [],
@@ -24,11 +28,12 @@ const makeRoom = (): Room => ({
   lastDayMessage: null,
   voteState: { votes: { a: 'b' }, revoteFromTie: ['b'] },
   awaitingHunterShot: 'p1',
+  dayVoteResolved: false,
   dayCount: 0,
   logs: [],
   winner: null,
   minPlayers: 5,
-  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0 } as RoleConfig,
+  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0 } as RoleConfig,
   passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: null,
@@ -70,7 +75,8 @@ describe('phaseManager', () => {
 
     expect(room.phase).toBe('night');
     expect(room.phaseStep).toBe('wolves');
-    expect(room.wolfVotes).toEqual({ w1: null });
+    // Wolf votes are now empty until wolves actually vote
+    expect(room.wolfVotes).toEqual({});
     expect(room.wolfTarget).toBeNull();
     expect(room.seerActed).toBe(false);
     expect(room.pendingDeaths).toEqual([]);

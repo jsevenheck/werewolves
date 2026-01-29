@@ -24,7 +24,8 @@ const baseRoom = (): RoomView => ({
     hunter: 0,
     witch: 0,
     armor: 0,
-    joker: 0
+    joker: 0,
+    guard: 0
   },
   passiveRoleConfig: { mayor: true },
   mayorId: null,
@@ -35,8 +36,12 @@ const baseRoom = (): RoomView => ({
   loverName: null,
   witchState: { healAvailable: null, poisonAvailable: null },
   wolfVotes: null,
+  wolfVoteState: null,
   wolfTarget: null,
   wolfPeers: [],
+  wolfIds: [],
+  guardedTarget: null,
+  lastGuardedTarget: null,
   nextNightStep: null,
   phaseTransition: null,
   seerResult: null,
@@ -46,6 +51,8 @@ const baseRoom = (): RoomView => ({
   lastDayMessage: null,
   awaitingHunterShot: false,
   hunterShotPending: false,
+  hunterShotEndsAt: null,
+  dayVoteResolved: false,
   winner: null,
   logs: [],
   self: null

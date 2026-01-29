@@ -9,6 +9,21 @@ let narratorUnlockToken = 0;
 let narratorGestureBound = false;
 let narratorLastUnlockAttemptAt = 0;
 const NARRATOR_UNLOCK_COOLDOWN_MS = 1500;
+let hunterTimerHandle: number | null = null;
+
+function clearHunterTimer() {
+  if (hunterTimerHandle !== null) {
+    window.clearInterval(hunterTimerHandle);
+    hunterTimerHandle = null;
+  }
+}
+
+function formatCountdown(seconds: number) {
+  const clamped = Math.max(0, Math.ceil(seconds));
+  const minutes = Math.floor(clamped / 60);
+  const remainder = clamped % 60;
+  return `${minutes}:${String(remainder).padStart(2, '0')}`;
+}
 
 function setNarratorButtonDisabled(disabled: boolean) {
   const button = document.getElementById('toggle-narrator');
@@ -91,6 +106,7 @@ function bindCommonHandlers(
   const toggleNarratorBtn = document.getElementById('toggle-narrator');
   setNarratorButtonDisabled(narratorUnlockInProgress);
   toggleNarratorBtn?.addEventListener('click', async () => {
+    state.narratorToggled = true;
     if (narrator.isEnabled() && narrator.isUnlocked()) {
       narrator.setEnabled(false);
       renderApp();
@@ -114,6 +130,8 @@ function bindCommonHandlers(
 }
 
 function resetState() {
+  document.getElementById('hunter-overlay')?.remove();
+  clearHunterTimer();
   state.room = null;
   state.roomCode = '';
   state.playerId = '';
@@ -125,6 +143,8 @@ function resetState() {
   state.pendingMayorVote = undefined;
   state.pendingWolfVote = undefined;
   state.roleVisible = false;
+  state.newlyDeadIds = new Set();
+  state.narratorToggled = false;
   narratorUnlockInProgress = false;
   narratorUnlockToken += 1;
   narratorLastUnlockAttemptAt = 0;
@@ -135,12 +155,14 @@ function updateHunterOverlay(socket: Socket<ServerToClientEvents, ClientToServer
   const existing = document.getElementById('hunter-overlay');
   if (!state.room?.awaitingHunterShot) {
     existing?.remove();
+    clearHunterTimer();
     state.hunterPrompt = false;
     return;
   }
   if (!state.room) return;
 
   existing?.remove();
+  clearHunterTimer();
   const wrapper = document.createElement('div');
   wrapper.id = 'hunter-overlay';
   wrapper.className = 'hunter-overlay';
@@ -152,8 +174,11 @@ function updateHunterOverlay(socket: Socket<ServerToClientEvents, ClientToServer
 
   const targets = room.players.filter((player) => player.alive);
   const options = targets.map((player) => `<option value="${player.id}">${escapeHtml(player.name)}</option>`).join('');
+  const endsAt = room.hunterShotEndsAt;
+  const timerMarkup = endsAt ? '<span id="hunter-time-remaining" class="overlay-timer"></span>' : '';
   wrapper.innerHTML = `
-    <div class="panel">
+    <div class="panel overlay-panel">
+      ${timerMarkup}
       <h2>Hunter's Last Shot</h2>
       <form id="hunter-form" class="actions">
         <label>
@@ -168,6 +193,15 @@ function updateHunterOverlay(socket: Socket<ServerToClientEvents, ClientToServer
     </div>
   `;
   document.body.appendChild(wrapper);
+  const timerEl = document.getElementById('hunter-time-remaining');
+  if (timerEl instanceof HTMLElement && endsAt) {
+    const updateTimer = () => {
+      const remainingSeconds = (endsAt - Date.now()) / 1000;
+      timerEl.textContent = formatCountdown(remainingSeconds);
+    };
+    updateTimer();
+    hunterTimerHandle = window.setInterval(updateTimer, 250);
+  }
   const form = document.getElementById('hunter-form') as HTMLFormElement | null;
   form?.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -178,6 +212,7 @@ function updateHunterOverlay(socket: Socket<ServerToClientEvents, ClientToServer
     socket.emit('hunterShoot', { roomCode: state.roomCode, playerId: state.playerId, targetId: String(targetId) });
     state.hunterPrompt = false;
     wrapper.remove();
+    clearHunterTimer();
   });
 }
 

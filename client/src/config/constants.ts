@@ -37,6 +37,11 @@ const ROLE_DETAILS: Record<Role, RoleDetail> = {
     description: 'Get voted out during the day to win instantly.',
     color: '#facc15'
   },
+  guard: {
+    name: 'Guard',
+    description: 'Protect one player from all attacks each night. Cannot protect the same player consecutively.',
+    color: '#3b82f6'
+  },
   villager: {
     name: 'Villager',
     description: 'Use your wits during the day. No special powers.',

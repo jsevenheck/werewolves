@@ -8,7 +8,7 @@ Each file is triggered by the game phase, phase transition, or night step as des
 - roleReveal.mp3
   - Role reveal phase while players privately view their roles. Max length: no fixed limit.
 - postReveal.mp3
-  - Transition after role reveal (e.g. "the village falls asleep") before mayor selection. Max length: 5s.
+  - Transition after role reveal (e.g. "the village falls asleep") before mayor selection. Max length: 6s.
 - mayor.mp3
   - Mayor election phase while players vote for the first Mayor. Max length: no fixed limit.
 - postMayor.mp3
@@ -25,6 +25,8 @@ Each file is triggered by the game phase, phase transition, or night step as des
   - Night step: seer acts. Max length: no fixed limit.
 - night_witch.mp3
   - Night step: witch acts. Max length: no fixed limit.
+- night_guard.mp3
+  - Night step: guard protects a player. Max length: no fixed limit.
 - night_transition.mp3
   - Night step transition between roles (role sleeps, next role wakes). Max length: 3s.
   - Also used after postArmor before the wolves step begins.
@@ -35,7 +37,7 @@ Each file is triggered by the game phase, phase transition, or night step as des
 - day.mp3
   - Day phase while discussion and voting happen. Max length: no fixed limit.
 - dayToNight.mp3
-  - Transition from day to night (e.g. "night falls"). Max length: 3s.
+  - Transition from day to night (e.g. "night falls"). Max length: 6s.
 - ended.mp3
   - Game over announcement. Max length: no fixed limit.
 

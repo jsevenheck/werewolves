@@ -21,12 +21,22 @@ function renderLobbySection(room: RoomView) {
   const safeRoleDetails = ROLE_DETAILS || {};
   const passiveRoleConfig = room.passiveRoleConfig || { mayor: true };
   const passiveRoleDetails = PASSIVE_ROLE_DETAILS || {};
-  const roleInputs = Object.entries(room.roleConfig).map(([role, count]) => `
+  const roleInputs = Object.entries(room.roleConfig).map(([role, count]) => {
+    const isSingletonRole =
+      role === 'seer' ||
+      role === 'witch' ||
+      role === 'armor' ||
+      role === 'guard';
+    const maxAttr = isSingletonRole ? ' max="1"' : '';
+    const roleLabelBase = safeRoleDetails[role as keyof typeof safeRoleDetails]?.name || role;
+    const roleHint = isSingletonRole ? '<span class="role-hint">(max 1)</span>' : '';
+    return `
     <label class="role-row">
-      <span>${safeRoleDetails[role as keyof typeof safeRoleDetails]?.name || role}</span>
-      <input type="number" class="role-input" data-role="${role}" min="0" value="${count}" />
+      <span>${roleLabelBase} ${roleHint}</span>
+      <input type="number" class="role-input" data-role="${role}" min="0"${maxAttr} value="${count}" />
     </label>
-  `).join('');
+  `;
+  }).join('');
   const passiveRoleInputs = Object.entries(passiveRoleConfig).map(([role, enabled]) => {
     const detail = passiveRoleDetails[role as PassiveRole];
     const label = detail?.name || role;
@@ -165,11 +175,13 @@ function renderNightSection(room: RoomView, self: RoomViewSelf | null) {
       content = renderSeerForm(room);
     } else if (room.phaseStep === 'witch' && self.role === 'witch') {
       content = renderWitchForm(room);
+    } else if (room.phaseStep === 'guard' && self.role === 'guard') {
+      content = renderGuardForm(room);
     }
   } else {
     content = '<p>You are dead. Spectating only.</p>';
   }
-  const hostControls = room.hostId === state.playerId && ['wolves', 'seer', 'witch', 'transition'].includes(room.phaseStep || '')
+  const hostControls = room.hostId === state.playerId && ['wolves', 'seer', 'witch', 'guard', 'transition'].includes(room.phaseStep || '')
     ? '<div class="actions host-actions"><button id="skip-step" type="button">Skip current action</button></div>'
     : '';
   return `
@@ -194,7 +206,9 @@ function renderDaySection(room: RoomView, self: RoomViewSelf | null) {
       : renderVoteForm(room)
     : '<p>You are dead and cannot vote.</p>';
   const hostControls = room.hostId === state.playerId
-    ? '<div class="actions host-actions"><button id="end-vote-btn" type="button">End Voting</button></div>'
+    ? room.dayVoteResolved
+      ? '<div class="actions host-actions"><button id="proceed-to-night-btn" type="button">Proceed to Night</button></div>'
+      : '<div class="actions host-actions"><button id="end-vote-btn" type="button">End Voting</button></div>'
     : '';
   return `
     <section class="panel">
@@ -212,8 +226,10 @@ function renderWolfForm(room: RoomView) {
   if (!room || !Array.isArray(room.players)) {
     return '<p>No game data available.</p>';
   }
-  const wolfIds = Object.keys(room.wolfVotes || {});
-  const votesCast = Object.values(room.wolfVotes || {}).filter((value) => value !== undefined && value !== null).length;
+  const wolfIds = room.wolfIds?.length ? room.wolfIds : Object.keys(room.wolfVotes || {});
+  const votesCast = room.wolfVoteState?.submitted
+    ?? Object.values(room.wolfVotes || {}).filter((value) => value !== undefined && value !== null).length;
+  const requiredVotes = room.wolfVoteState?.required ?? (wolfIds.length || 1);
   const aliveTargets = (room?.players ?? []).filter((p) => p.alive && !wolfIds.includes(p.id));
   if (!aliveTargets.length) {
     return '<p>No valid targets available.</p>';
@@ -258,7 +274,7 @@ function renderWolfForm(room: RoomView) {
       ${voteSummary}
       ${voteStatus}
       ${voteControls}
-      <small>${votesCast} / ${wolfIds.length || 1} votes submitted.</small>
+      <small>${votesCast} / ${requiredVotes} votes submitted.</small>
     </form>
   `;
 }
@@ -289,7 +305,7 @@ function renderWitchForm(room: RoomView) {
   const aliveTargets = (room?.players ?? []).filter((p) => p && p.alive && p.id !== state.playerId);
   const options = aliveTargets.map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
   const witchState = room?.witchState ?? { healAvailable: false, poisonAvailable: false };
-  const skipLabel = !witchState.healAvailable ? 'Continue' : 'Skip';
+  const skipLabel = !witchState.healAvailable || !witchState.poisonAvailable ? 'Continue' : 'Skip';
   return `
     <div class="actions">
       <p>${healedText}</p>
@@ -308,6 +324,40 @@ function renderWitchForm(room: RoomView) {
       </div>
       <button type="button" id="skip-witch">${skipLabel}</button>
     </div>
+  `;
+}
+
+function renderGuardForm(room: RoomView) {
+  if (!room) return '<p>Room data unavailable.</p>';
+
+  const targets = (room?.players ?? []).filter((p) =>
+    p.alive &&
+    p.id !== state.playerId &&
+    p.id !== room.lastGuardedTarget
+  );
+
+  if (!targets.length) return '<p>No valid targets to protect.</p>';
+
+  const options = targets.map((p) =>
+    `<option value="${p.id}">${escapeHtml(p.name)}</option>`
+  ).join('');
+
+  const lastProtectedNote = room.lastGuardedTarget
+    ? `<p>Last night you protected ${getPlayerName(room, room.lastGuardedTarget)}. You cannot protect them again tonight.</p>`
+    : '';
+
+  return `
+    <form id="guard-form" class="actions">
+      ${lastProtectedNote}
+      <label>
+        <span>Protect a player</span>
+        <select name="target" required>
+          <option value="">Select target</option>
+          ${options}
+        </select>
+      </label>
+      <button type="submit">Protect player</button>
+    </form>
   `;
 }
 

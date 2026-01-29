@@ -4,6 +4,37 @@ import type { ClientToServerEvents, ServerToClientEvents } from '@shared/events'
 import type { RoomView } from '@shared/types';
 import type { Socket } from 'socket.io-client';
 
+function getLobbyConfigError(room: RoomView): string | null {
+  const playersCount = room.players.length;
+  if (playersCount < room.minPlayers) {
+    return `Need at least ${room.minPlayers} players`;
+  }
+
+  const { roleConfig } = room;
+  if (roleConfig.werewolf < 1) {
+    return 'Need at least 1 Werewolf';
+  }
+  if (roleConfig.seer > 1) {
+    return 'Only 1 Seer is supported';
+  }
+  if (roleConfig.witch > 1) {
+    return 'Only 1 Witch is supported';
+  }
+  if (roleConfig.armor > 1) {
+    return 'Only 1 Armor is supported';
+  }
+  if (roleConfig.guard > 1) {
+    return 'Only 1 Guard is supported';
+  }
+
+  const configured = Object.values(roleConfig).reduce((sum, count) => sum + count, 0);
+  if (configured > playersCount) {
+    return 'Role count exceeds players';
+  }
+
+  return null;
+}
+
 function bindPhaseHandlers(socket: Socket<ServerToClientEvents, ClientToServerEvents>, renderApp: () => void) {
   if (!state.room) return;
   const room = state.room;
@@ -84,7 +115,23 @@ function bindLobbyHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
     const config: Record<string, number> & { passiveRoles?: Record<string, boolean> } = {};
     roleConfigForm.querySelectorAll<HTMLInputElement>('.role-input').forEach((field) => {
       if (!field.dataset.role) return;
-      config[field.dataset.role] = Number(field.value);
+      const role = field.dataset.role;
+      let value = Number(field.value);
+      if (!Number.isFinite(value) || value < 0) {
+        value = 0;
+      }
+      const isSingletonRole =
+        role === 'seer' ||
+        role === 'witch' ||
+        role === 'armor' ||
+        role === 'guard';
+      if (isSingletonRole) {
+        value = Math.min(value, 1);
+        if (Number(field.value) !== value) {
+          field.value = String(value);
+        }
+      }
+      config[role] = value;
     });
     const passiveRoles: Record<string, boolean> = {};
     roleConfigForm.querySelectorAll<HTMLInputElement>('.passive-role-input').forEach((field) => {
@@ -124,6 +171,12 @@ function bindLobbyHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
 
   document.getElementById('start-game')?.addEventListener('click', () => {
     if (!state.playerId) {
+      return;
+    }
+    const currentRoom = state.room ?? room;
+    const configError = getLobbyConfigError(currentRoom);
+    if (configError) {
+      notify(configError);
       return;
     }
     const playerId = state.playerId;
@@ -327,6 +380,25 @@ function bindNightHandlers(
       socket.emit('submitWitchDecision', { roomCode: room.code, playerId: state.playerId, action: 'skip' });
     });
   }
+
+  if (room.phaseStep === 'guard' && room.self?.role === 'guard' && room.self.alive) {
+    const guardForm = document.getElementById('guard-form') as HTMLFormElement | null;
+    guardForm?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!guardForm) return;
+      const data = new FormData(guardForm);
+      const targetId = data.get('target');
+      if (!targetId || !state.playerId) return;
+      socket.emit('submitGuardProtection',
+        { roomCode: room.code, playerId: state.playerId, targetId: String(targetId) },
+        (res) => {
+          if (res && 'error' in res && res.error) {
+            notify(`Error: ${res.error}`);
+          }
+        }
+      );
+    });
+  }
 }
 
 function bindDayHandlers(socket: Socket<ServerToClientEvents, ClientToServerEvents>, room: RoomView, renderApp: () => void) {
@@ -334,6 +406,10 @@ function bindDayHandlers(socket: Socket<ServerToClientEvents, ClientToServerEven
     document.getElementById('end-vote-btn')?.addEventListener('click', () => {
       if (!state.playerId) return;
       socket.emit('hostFinalizeDayVote', { roomCode: room.code, playerId: state.playerId });
+    });
+    document.getElementById('proceed-to-night-btn')?.addEventListener('click', () => {
+      if (!state.playerId) return;
+      socket.emit('hostProceedToNight', { roomCode: room.code, playerId: state.playerId });
     });
   }
 

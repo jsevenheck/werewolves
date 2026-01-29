@@ -219,25 +219,32 @@ describe('socketHandlers hostSkipStep', () => {
     expect(advanceNightStep).toHaveBeenCalledWith(room, expect.any(Function), io);
   });
 
-  test('rejects duplicate wolf votes', () => {
+  test('allows wolves to change their vote', () => {
     const room = {
       code: 'ABCD',
       hostId: 'host',
       phase: 'night',
       phaseStep: 'wolves',
       players: {
-        w1: { id: 'w1', role: 'werewolf', alive: true, socketId: 'socket-1' },
-        v1: { id: 'v1', role: 'villager', alive: true }
+        w1: { id: 'w1', name: 'Wolf1', role: 'werewolf', alive: true, socketId: 'socket-1' },
+        v1: { id: 'v1', name: 'Victim1', role: 'villager', alive: true },
+        v2: { id: 'v2', name: 'Victim2', role: 'villager', alive: true }
       },
-      wolfVotes: { w1: 'v1' }
+      wolfVotes: { w1: 'v1' }, // Wolf already voted for v1
+      logs: []
     } as unknown as Room;
     (getRoom as jest.Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
-    handlers.submitWolfVote({ roomCode: 'ABCD', playerId: 'w1', targetId: 'v1' });
+    // Wolf changes vote to v2
+    handlers.submitWolfVote({ roomCode: 'ABCD', playerId: 'w1', targetId: 'v2' });
 
-    expect(socket.emit).toHaveBeenCalledWith('wolfVoteRejected', { reason: 'already_voted' });
+    // Vote should be changed
+    expect(room.wolfVotes.w1).toBe('v2');
+    // Log should indicate vote change
+    expect(room.logs.length).toBeGreaterThan(0);
+    expect(room.logs[room.logs.length - 1].text).toContain('changed their wolf vote');
   });
 
   test('host skips phase transition night to day', () => {
@@ -573,6 +580,59 @@ describe('socketHandlers mechanics guards', () => {
     jest.clearAllMocks();
   });
 
+  test('guard cannot protect themselves', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'guard',
+      guardActed: false,
+      guardedTarget: null,
+      players: {
+        guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket-1' },
+        v1: { id: 'v1', role: 'villager', alive: true }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+    const cb = jest.fn();
+
+    handlers.submitGuardProtection({ roomCode: 'ABCD', playerId: 'guard', targetId: 'guard' }, cb);
+
+    expect(cb).toHaveBeenCalledWith({ error: 'Cannot protect yourself' });
+    expect(room.guardActed).toBe(false);
+    expect(room.guardedTarget).toBeNull();
+    expect(advanceNightStep).not.toHaveBeenCalled();
+  });
+
+  test('guard cannot protect the same target on consecutive nights', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'guard',
+      guardActed: false,
+      guardedTarget: null,
+      lastGuardedTarget: 'v1',
+      players: {
+        guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket-1' },
+        v1: { id: 'v1', role: 'villager', alive: true }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+    const cb = jest.fn();
+
+    handlers.submitGuardProtection({ roomCode: 'ABCD', playerId: 'guard', targetId: 'v1' }, cb);
+
+    expect(cb).toHaveBeenCalledWith({ error: 'Cannot protect the same player two nights in a row' });
+    expect(room.guardActed).toBe(false);
+    expect(room.guardedTarget).toBeNull();
+    expect(advanceNightStep).not.toHaveBeenCalled();
+  });
+
   test('seer cannot inspect themselves', () => {
     const room = {
       code: 'ABCD',
@@ -759,6 +819,9 @@ describe('socketHandlers restartGame', () => {
       healedTarget: 'host',
       poisonTarget: 'p2',
       seerActed: true,
+      guardedTarget: 'p2',
+      lastGuardedTarget: 'host',
+      guardActed: true,
       voteState: { votes: { host: 'p2' }, revoteFromTie: ['p2'] },
       pendingDeaths: [{ playerId: 'p2', reason: 'executed by vote' }],
       winner: { team: 'wolves', reason: 'Werewolves reached parity.' },
@@ -794,6 +857,9 @@ describe('socketHandlers restartGame', () => {
     expect(room.healedTarget).toBeNull();
     expect(room.poisonTarget).toBeNull();
     expect(room.seerActed).toBe(false);
+    expect(room.guardedTarget).toBeNull();
+    expect(room.lastGuardedTarget).toBeNull();
+    expect(room.guardActed).toBe(false);
     expect(room.voteState).toEqual({ votes: {}, revoteFromTie: null });
     expect(room.pendingDeaths).toEqual([]);
     expect(room.winner).toBeNull();
@@ -900,5 +966,141 @@ describe('socketHandlers hunterShoot', () => {
     expect(resolveDeaths).toHaveBeenCalledWith(room, 'day', expect.any(Function), io);
     expect(startNextHunterShot).toHaveBeenCalledWith(room, expect.any(Function), io);
     expect(holdDayToNightTransition).toHaveBeenCalledWith(room, expect.any(Function));
+  });
+});
+
+describe('submitGuardProtection', () => {
+  const io = { sockets: { sockets: new Map() } } as unknown as any;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('guard can protect a player', () => {
+    const room = {
+      code: 'ABCD',
+      phase: 'night',
+      phaseStep: 'guard',
+                  players: {
+        guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' },
+        v1: { id: 'v1', role: 'villager', alive: true }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    socket.id = 'socket1';
+    setupSocketHandlers(io, socket as any);
+
+    const callback = jest.fn();
+    handlers.submitGuardProtection({ roomCode: 'ABCD', playerId: 'guard', targetId: 'v1' }, callback);
+
+    expect(room.guardedTarget).toBe('v1');
+    expect(room.guardActed).toBe(true);
+    expect(callback).toHaveBeenCalledWith({ ok: true });
+    expect(advanceNightStep).toHaveBeenCalledWith(room, expect.any(Function), io);
+  });
+
+  test('guard cannot protect themselves', () => {
+    const room = {
+      code: 'ABCD',
+      phase: 'night',
+      phaseStep: 'guard',
+      guardActed: false,
+      guardedTarget: null,
+                  players: {
+        guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    socket.id = 'socket1';
+    setupSocketHandlers(io, socket as any);
+
+    const callback = jest.fn();
+    handlers.submitGuardProtection({ roomCode: 'ABCD', playerId: 'guard', targetId: 'guard' }, callback);
+
+    expect(room.guardedTarget).toBeNull();
+    expect(room.guardActed).toBe(false);
+    expect(callback).toHaveBeenCalledWith({ error: 'Cannot protect yourself' });
+    expect(advanceNightStep).not.toHaveBeenCalled();
+  });
+
+  test('guard cannot protect same player on consecutive nights', () => {
+    const room = {
+      code: 'ABCD',
+      phase: 'night',
+      phaseStep: 'guard',
+      guardActed: false,
+      guardedTarget: null,
+          lastGuardedTarget: 'v1',
+          players: {
+        guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' },
+        v1: { id: 'v1', role: 'villager', alive: true }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    socket.id = 'socket1';
+    setupSocketHandlers(io, socket as any);
+
+    const callback = jest.fn();
+    handlers.submitGuardProtection({ roomCode: 'ABCD', playerId: 'guard', targetId: 'v1' }, callback);
+
+    expect(room.guardedTarget).toBeNull();
+    expect(room.guardActed).toBe(false);
+    expect(callback).toHaveBeenCalledWith({ error: 'Cannot protect the same player two nights in a row' });
+    expect(advanceNightStep).not.toHaveBeenCalled();
+  });
+
+  test('guard can protect same player after skipping a night', () => {
+    const room = {
+      code: 'ABCD',
+      phase: 'night',
+      phaseStep: 'guard',
+      lastGuardedTarget: 'v2',
+      players: {
+        guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' },
+        v1: { id: 'v1', role: 'villager', alive: true },
+        v2: { id: 'v2', role: 'villager', alive: true }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    socket.id = 'socket1';
+    setupSocketHandlers(io, socket as any);
+
+    const callback = jest.fn();
+    handlers.submitGuardProtection({ roomCode: 'ABCD', playerId: 'guard', targetId: 'v1' }, callback);
+
+    expect(room.guardedTarget).toBe('v1');
+    expect(room.guardActed).toBe(true);
+    expect(callback).toHaveBeenCalledWith({ ok: true });
+    expect(advanceNightStep).toHaveBeenCalledWith(room, expect.any(Function), io);
+  });
+
+  test('guard cannot protect dead player', () => {
+    const room = {
+      code: 'ABCD',
+      phase: 'night',
+      phaseStep: 'guard',
+      guardActed: false,
+      guardedTarget: null,
+      players: {
+        guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' },
+        v1: { id: 'v1', role: 'villager', alive: false }
+      }
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    socket.id = 'socket1';
+    setupSocketHandlers(io, socket as any);
+
+    const callback = jest.fn();
+    handlers.submitGuardProtection({ roomCode: 'ABCD', playerId: 'guard', targetId: 'v1' }, callback);
+
+    expect(room.guardedTarget).toBeNull();
+    expect(room.guardActed).toBe(false);
+    expect(callback).toHaveBeenCalledWith({ error: 'Invalid target' });
+    expect(advanceNightStep).not.toHaveBeenCalled();
   });
 });

@@ -34,6 +34,7 @@ function startHunterShot(
     clearTimeout(room.hunterShotTimer);
     room.hunterShotTimer = null;
   }
+  room.hunterShotEndsAt = Date.now() + HUNTER_SHOT_TIMEOUT_MS;
 
   const hunter = room.players[hunterId];
   const socket = io && hunter?.socketId && io.sockets?.sockets?.get(hunter.socketId);
@@ -47,15 +48,17 @@ function startHunterShot(
       addLog(room, `Hunter shot timed out. No target selected.`);
       room.awaitingHunterShot = null;
       room.hunterShotTimer = null;
+      room.hunterShotEndsAt = null;
 
       // Check for next hunter in queue
       if (!startNextHunterShot(room, broadcastRoom, io)) {
-        // No more hunters, check win conditions
-        checkWinners(room);
-        if (!room.winner) {
-          const { startNextMayorSelection } = require('./mayorManager');
-          if (!startNextMayorSelection(room, broadcastRoom, io)) {
-            // No more mayor selections either, resume game flow
+        // No more hunters, check for mayor selections before checking win conditions
+        const { startNextMayorSelection } = require('./mayorManager');
+        if (!startNextMayorSelection(room, broadcastRoom, io)) {
+          // No more mayor selections, check win conditions
+          checkWinners(room);
+          if (!room.winner) {
+            // No winner, resume game flow
             const { schedulePhaseTransition, holdDayToNightTransition } = require('../managers/phaseManager');
             if (!room.awaitingHunterShot && !room.awaitingMayorSelection) {
               if (room.phase === 'day') {
@@ -156,11 +159,13 @@ function resolveDeaths(
     }
   }
   if (!room.awaitingHunterShot && room.hunterShotQueue.length === 0) {
-    checkWinners(room);
-  }
-  if (!room.winner && !room.awaitingHunterShot && room.hunterShotQueue.length === 0) {
     const { startNextMayorSelection } = require('./mayorManager');
-    startNextMayorSelection(room, broadcastRoom, io);
+    const hasMoreMayorSelections = startNextMayorSelection(room, broadcastRoom, io);
+    // Check winners if no new mayor selections were started
+    // If a mayor selection is already in progress, we'll check winners after it completes
+    if (!hasMoreMayorSelections) {
+      checkWinners(room);
+    }
   }
   broadcastRoom(room);
 }
@@ -182,11 +187,21 @@ function checkWinners(room: Room) {
   }
   const others = alive.length - wolves.length;
   if (wolves.length >= others) {
-    const loneWitch = alive.length === 2 && alive.some((p) => p.role === 'witch');
-    const witchHasLastStand = loneWitch && room.witchState.healAvailable && room.witchState.poisonAvailable;
-    if (witchHasLastStand) {
+    // Check if village has special abilities that could still turn the tide
+    const hunterAlive = alive.some((p) => p.role === 'hunter');
+    const witchWithPoison = alive.some((p) => p.role === 'witch') && room.witchState.poisonAvailable;
+
+    // Check if there's a pending mayor succession - the new mayor could still turn the tide
+    const hasPendingMayorSelection = room.awaitingMayorSelection || room.mayorSelectionQueue.length > 0;
+
+    // Check if there's a mayor alive - they have tie-breaking power in voting
+    const mayorAlive = room.mayorId && room.players[room.mayorId]?.alive;
+
+    // If there's a hunter alive, witch with poison, pending mayor succession, or mayor alive, village still has a chance
+    if (hunterAlive || witchWithPoison || hasPendingMayorSelection || mayorAlive) {
       return;
     }
+
     room.winner = { team: 'wolves', reason: 'Werewolves reached parity.' };
     room.phase = 'ended';
     room.phaseStep = null;

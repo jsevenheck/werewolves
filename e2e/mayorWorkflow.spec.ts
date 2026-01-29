@@ -361,15 +361,19 @@ test('host can skip mayor selection', async ({ browser }) => {
       hunter: 0,
       witch: 0,
       armor: 0,
-      joker: 0
+      joker: 0,
+      guard: 0
     });
 
     await startGameAndReady(pages);
     const mayorName = await pickNonWolfMayor(pages, names);
 
+    // Pick a victim for wolves (not the mayor, preferably last player to keep others for voting)
+    const wolfVictim = names.filter((name) => name !== mayorName)[names.length - 2];
+
     // Advance to day
     await advanceToDay(host, pages, {
-      avoidWolfTargetName: mayorName,
+      wolfTargetName: wolfVictim,
       mayorTargetName: mayorName
     });
     await waitForDayOnAllPages(pages);

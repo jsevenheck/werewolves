@@ -1,7 +1,7 @@
-export type Role = 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'villager';
+export type Role = 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'guard' | 'villager';
 export type Team = 'wolves' | 'village' | 'neutral' | 'joker';
 export type Phase = 'lobby' | 'roleReveal' | 'mayor' | 'armor' | 'night' | 'day' | 'ended';
-export type NightStep = 'wolves' | 'seer' | 'witch' | 'resolve' | 'transition' | null;
+export type NightStep = 'wolves' | 'seer' | 'witch' | 'guard' | 'resolve' | 'transition' | null;
 export type PhaseTransition = 'postReveal' | 'postMayor' | 'postArmor' | 'nightToDay' | 'dayToNight' | null;
 export type PassiveRole = 'mayor';
 
@@ -12,6 +12,7 @@ export interface RoleConfig {
   witch: number;
   armor: number;
   joker: number;
+  guard: number;
 }
 
 export interface PassiveRoleConfig {
@@ -109,6 +110,9 @@ export interface Room {
   healedTarget: string | null;
   poisonTarget: string | null;
   seerActed: boolean;
+  guardedTarget: string | null;
+  lastGuardedTarget: string | null;
+  guardActed: boolean;
   voteState: VoteState;
   pendingDeaths: PendingDeath[];
   winner: Winner | null;
@@ -116,12 +120,14 @@ export interface Room {
   lastDayDeaths: NightDeathAnnouncement[];
   lastDayMessage: string | null;
   awaitingHunterShot: string | null;
+  dayVoteResolved: boolean;
   logs: RoomLog[];
   nextNightStep: NightStep;
   transitionTimer: NodeJS.Timeout | null;
   phaseTransition: PhaseTransition;
   phaseTimer: NodeJS.Timeout | null;
   hunterShotTimer: NodeJS.Timeout | null;
+  hunterShotEndsAt: number | null;
   hunterShotQueue: string[];
   createdAt: number;
   lastActivityAt: number;
@@ -175,8 +181,12 @@ export interface RoomView {
   loverName: string | null;
   witchState: { healAvailable: boolean | null; poisonAvailable: boolean | null };
   wolfVotes: Record<string, string | null> | null;
+  wolfVoteState: { submitted: number; required: number; yourVote: string | null | undefined } | null;
   wolfTarget: string | null;
   wolfPeers: string[];
+  wolfIds: string[];
+  guardedTarget: string | null;
+  lastGuardedTarget: string | null;
   nextNightStep: NightStep;
   phaseTransition: PhaseTransition;
   seerResult: SeerResult | null;
@@ -186,6 +196,8 @@ export interface RoomView {
   lastDayMessage: string | null;
   awaitingHunterShot: boolean;
   hunterShotPending: boolean;
+  hunterShotEndsAt: number | null;
+  dayVoteResolved: boolean;
   winner: Winner | null;
   logs: RoomViewLog[];
   self: RoomViewSelf | null;

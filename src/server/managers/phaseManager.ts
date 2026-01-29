@@ -1,7 +1,8 @@
 import type { Server } from 'socket.io';
 import {
   NIGHT_DELAY_MS,
-  PHASE_DELAY_MS,
+  NIGHT_TO_DAY_DELAY_MS,
+  DAY_TO_NIGHT_DELAY_MS,
   POST_ARMOR_DELAY_MS,
   POST_MAYOR_DELAY_MS,
   POST_REVEAL_DELAY_MS
@@ -19,13 +20,12 @@ function startNight(room: Room) {
   room.hunterShotQueue = [];
   room.mayorSelectionQueue = [];
   room.wolfVotes = {};
-  Object.values(room.players).forEach((player) => {
-    if (player.role === 'werewolf' && player.alive) {
-      room.wolfVotes[player.id] = null;
-    }
-  });
+  // Don't pre-initialize wolf votes - leave them undefined until wolves actually vote
   room.wolfTarget = null;
   room.seerActed = false;
+  room.lastGuardedTarget = room.guardedTarget;
+  room.guardedTarget = null;
+  room.guardActed = false;
   room.pendingDeaths = [];
   room.lastNightDeaths = [];
   room.lastDayDeaths = [];
@@ -33,6 +33,7 @@ function startNight(room: Room) {
   room.voteState = createVoteState();
   room.awaitingHunterShot = null;
   room.awaitingMayorSelection = null;
+  room.dayVoteResolved = false;
 }
 
 function scheduleNightStep(
@@ -55,7 +56,7 @@ function scheduleNightStep(
     if (resolvedStep === 'resolve') {
       const { resolveNight } = require('./nightManager');
       resolveNight(room, broadcastRoom, io);
-    } else if (resolvedStep === 'seer' || resolvedStep === 'witch') {
+    } else if (resolvedStep === 'seer' || resolvedStep === 'witch' || resolvedStep === 'guard') {
       const { advanceNightStep } = require('./nightManager');
       advanceNightStep(room, broadcastRoom, io);
     } else {
@@ -80,7 +81,9 @@ function schedulePhaseTransition(
     kind === 'postReveal' ? POST_REVEAL_DELAY_MS :
     kind === 'postMayor' ? POST_MAYOR_DELAY_MS :
     kind === 'postArmor' ? POST_ARMOR_DELAY_MS :
-    PHASE_DELAY_MS;
+    kind === 'nightToDay' ? NIGHT_TO_DAY_DELAY_MS :
+    kind === 'dayToNight' ? DAY_TO_NIGHT_DELAY_MS :
+    NIGHT_TO_DAY_DELAY_MS;
   room.phaseTimer = setTimeout(() => {
     room.phaseTimer = null;
     if (room.winner) return;
@@ -113,6 +116,7 @@ function schedulePhaseTransition(
       room.phaseStep = null;
       room.nextNightStep = null;
       room.voteState = createVoteState();
+      room.dayVoteResolved = false;
       addLog(room, `Day ${room.dayCount} has begun.`);
       broadcastRoom(room);
       return;
@@ -138,6 +142,12 @@ function resolveNightStep(room: Room, nextStep: NightStep): NightStep {
   if (nextStep === 'witch') {
     const witchAlive = Object.values(room.players).some((p) => p.role === 'witch' && p.alive);
     if (!witchAlive) {
+      return resolveNightStep(room, 'guard');
+    }
+  }
+  if (nextStep === 'guard') {
+    const guardAlive = Object.values(room.players).some((p) => p.role === 'guard' && p.alive);
+    if (!guardAlive) {
       return 'resolve';
     }
   }
