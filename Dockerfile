@@ -6,12 +6,16 @@ RUN corepack enable
 
 WORKDIR /app
 
+# Copy root package files and ui-vue package file
 COPY package.json pnpm-lock.yaml ./
-COPY ui-vue/package.json ui-vue/pnpm-lock.yaml ./ui-vue/
-RUN pnpm install --frozen-lockfile && pnpm -C ui-vue install --frozen-lockfile
+COPY ui-vue/package.json ./ui-vue/
+
+# Install dependencies (root installs ui-vue via pnpm -C ui-vue)
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 
+# Build server and client
 RUN pnpm run build
 
 # Production stage
