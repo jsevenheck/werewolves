@@ -42,6 +42,11 @@ const ROLE_DETAILS: Record<Role, RoleDetail> = {
     description: 'Protect one player from all attacks each night. Cannot protect the same player consecutively.',
     color: '#3b82f6'
   },
+  harlot: {
+    name: 'Harlot',
+    description: 'Visit another player each night. If wolves attack that player, you die along with them.',
+    color: '#ec4899'
+  },
   villager: {
     name: 'Villager',
     description: 'Use your wits during the day. No special powers.',

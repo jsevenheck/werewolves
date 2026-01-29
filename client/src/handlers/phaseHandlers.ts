@@ -26,6 +26,9 @@ function getLobbyConfigError(room: RoomView): string | null {
   if (roleConfig.guard > 1) {
     return 'Only 1 Guard is supported';
   }
+  if (roleConfig.harlot > 1) {
+    return 'Only 1 Harlot is supported';
+  }
 
   const configured = Object.values(roleConfig).reduce((sum, count) => sum + count, 0);
   if (configured > playersCount) {
@@ -124,7 +127,8 @@ function bindLobbyHandlers(socket: Socket<ServerToClientEvents, ClientToServerEv
         role === 'seer' ||
         role === 'witch' ||
         role === 'armor' ||
-        role === 'guard';
+        role === 'guard' ||
+        role === 'harlot';
       if (isSingletonRole) {
         value = Math.min(value, 1);
         if (Number(field.value) !== value) {
@@ -390,6 +394,25 @@ function bindNightHandlers(
       const targetId = data.get('target');
       if (!targetId || !state.playerId) return;
       socket.emit('submitGuardProtection',
+        { roomCode: room.code, playerId: state.playerId, targetId: String(targetId) },
+        (res) => {
+          if (res && 'error' in res && res.error) {
+            notify(`Error: ${res.error}`);
+          }
+        }
+      );
+    });
+  }
+
+  if (room.phaseStep === 'harlot' && room.self?.role === 'harlot' && room.self.alive) {
+    const harlotForm = document.getElementById('harlot-form') as HTMLFormElement | null;
+    harlotForm?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!harlotForm) return;
+      const data = new FormData(harlotForm);
+      const targetId = data.get('target');
+      if (!targetId || !state.playerId) return;
+      socket.emit('submitHarlotVisit',
         { roomCode: room.code, playerId: state.playerId, targetId: String(targetId) },
         (res) => {
           if (res && 'error' in res && res.error) {

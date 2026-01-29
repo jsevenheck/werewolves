@@ -26,6 +26,8 @@ function startNight(room: Room) {
   room.lastGuardedTarget = room.guardedTarget;
   room.guardedTarget = null;
   room.guardActed = false;
+  room.harlotVisitedTarget = null;
+  room.harlotActed = false;
   room.pendingDeaths = [];
   room.lastNightDeaths = [];
   room.lastDayDeaths = [];
@@ -148,6 +150,12 @@ function resolveNightStep(room: Room, nextStep: NightStep): NightStep {
   if (nextStep === 'guard') {
     const guardAlive = Object.values(room.players).some((p) => p.role === 'guard' && p.alive);
     if (!guardAlive) {
+      return resolveNightStep(room, 'harlot');
+    }
+  }
+  if (nextStep === 'harlot') {
+    const harlotAlive = Object.values(room.players).some((p) => p.role === 'harlot' && p.alive);
+    if (!harlotAlive) {
       return 'resolve';
     }
   }

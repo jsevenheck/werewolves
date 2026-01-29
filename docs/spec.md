@@ -5,7 +5,7 @@
 - `socketId`: string or null active socket id for reconnect.
 - `resumeToken`: random token required to resume a session (stored client-side).
 - `name`: display name shown to others.
-- `role`: enum (`werewolf`, `seer`, `hunter`, `witch`, `armor`, `joker`, `guard`, `villager`).
+- `role`: enum (`werewolf`, `seer`, `hunter`, `witch`, `armor`, `joker`, `guard`, `harlot`, `villager`).
 - `team`: derived team id for win logic (`wolves`, `village`, `neutral`).
 - `alive`: boolean.
 - `connected`: boolean for reconnect tracking.
@@ -18,7 +18,7 @@
 ### Room
 - `code`: 4-letter uppercase join code.
 - `phase`: enum (`lobby`, `roleReveal`, `mayor`, `armor`, `night`, `day`, `ended`).
-- `phaseStep`: helper for night substeps (`wolves`, `seer`, `witch`, `guard`, `resolve`, `transition`).
+- `phaseStep`: helper for night substeps (`wolves`, `seer`, `witch`, `guard`, `harlot`, `resolve`, `transition`).
 - `dayCount`: starts at 0, increments at each day phase.
 - `players`: map playerId -> Player.
 - `hostId`: acting host id (may switch on disconnect; reverts to owner when they reconnect).
@@ -33,6 +33,8 @@
 - `witchState`: `{healAvailable: boolean, poisonAvailable: boolean}`.
 - `wolfVotes`: map playerId -> targetId (null for no vote).
 - `wolfTarget`: chosen target after wolf vote resolves.
+- `harlotVisitedTarget`: playerId the harlot visited this night (null if no harlot or not acted).
+- `harlotActed`: boolean tracking if harlot has submitted their visit this night.
 - `voteState`: `{votes: map playerId -> targetId|null, revoteFromTie: array|null}`.
 - `pendingDeaths`: queue of `{playerId, reason}` awaiting resolution.
 - `logs`: array of structured entries for UI recap (`{ts, text, publicText}`).
@@ -92,11 +94,18 @@ loop:
         if guard alive:
           wait for guard to select target (cannot be self, cannot be lastGuardedTarget)
           store guardedTarget (lastGuardedTarget is updated at the start of the next night)
+        advance step='harlot'
+      if step='harlot':
+        if harlot alive:
+          wait for harlot to select visit target (cannot be self)
+          store harlotVisitedTarget (purely informational for death resolution)
         advance step='resolve'
       wait ~3 seconds between all phase transitions and night steps to allow players to reset
       host may skip current step if a player is offline or unresponsive
       if step='resolve':
         apply wolf target unless healed OR guarded -> queue death
+        if wolf kill succeeded AND harlot visited the wolf target:
+          queue harlot death reason='caught visiting the victim'
         apply poison death unless guarded (if any)
         process queued deaths with `resolveDeaths()`
         increment day count, update phase='day', reset votes

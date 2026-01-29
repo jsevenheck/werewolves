@@ -355,6 +355,29 @@ function setupSocketHandlers(
     advanceNightStep(room, (r) => broadcastRoom(r, io), io);
   });
 
+  socket.on('submitHarlotVisit', ({ roomCode, playerId, targetId }, cb) => {
+    const room = getRoom(roomCode);
+    if (!room || room.phase !== 'night' || room.phaseStep !== 'harlot')
+      return cb?.({ error: 'Invalid room or phase' });
+
+    const player = getPlayerForSocket(room, playerId, socket.id);
+    if (!player || player.role !== 'harlot' || !player.alive)
+      return cb?.({ error: 'Invalid player' });
+
+    if (targetId === playerId)
+      return cb?.({ error: 'Cannot visit yourself' });
+
+    const target = room.players[targetId];
+    if (!target || !target.alive)
+      return cb?.({ error: 'Invalid target' });
+
+    room.harlotVisitedTarget = targetId;
+    room.harlotActed = true;
+    cb?.({ ok: true });
+
+    advanceNightStep(room, (r) => broadcastRoom(r, io), io);
+  });
+
   socket.on('hostSkipStep', ({ roomCode, playerId }) => {
     const room = getRoom(roomCode);
     if (!room || room.hostId !== playerId) return;

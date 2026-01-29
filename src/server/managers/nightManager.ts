@@ -72,6 +72,16 @@ function advanceNightStep(room: Room, broadcastRoom: (room: Room) => void, io: S
     const guardAlive = Object.values(room.players).some((p) => p.role === 'guard' && p.alive);
     if (!guardAlive || room.guardActed) {
       room.guardActed = false;
+      scheduleNightStep(room, 'harlot', broadcastRoom, io);
+      return;
+    }
+    broadcastRoom(room);
+    return;
+  }
+  if (room.phaseStep === 'harlot') {
+    const harlotAlive = Object.values(room.players).some((p) => p.role === 'harlot' && p.alive);
+    if (!harlotAlive || room.harlotActed) {
+      room.harlotActed = false;
       scheduleNightStep(room, 'resolve', broadcastRoom, io);
       return;
     }
@@ -143,10 +153,25 @@ function handleWitchDecision(
 
 function resolveNight(room: Room, broadcastRoom: (room: Room) => void, io: Server<ClientToServerEvents, ServerToClientEvents>) {
   const { queueDeath, resolveDeaths } = require('./deathManager');
+
+  // Determine if wolf kill succeeds (blocked by heal OR guard)
+  const wolfKillSucceeds = room.wolfTarget &&
+    room.healedTarget !== room.wolfTarget &&
+    room.guardedTarget !== room.wolfTarget;
+
   // Wolf kill - blocked by heal OR guard
-  if (room.wolfTarget && room.healedTarget !== room.wolfTarget && room.guardedTarget !== room.wolfTarget) {
+  if (wolfKillSucceeds) {
     queueDeath(room, room.wolfTarget, 'eaten by Werewolves');
   }
+
+  // Harlot additional death: if wolves killed the player the harlot visited, harlot dies too
+  if (wolfKillSucceeds && room.harlotVisitedTarget === room.wolfTarget) {
+    const harlot = Object.values(room.players).find((p) => p.role === 'harlot' && p.alive);
+    if (harlot) {
+      queueDeath(room, harlot.id, 'caught visiting the victim');
+    }
+  }
+
   // Poison - blocked by guard protection
   if (room.poisonTarget && room.guardedTarget !== room.poisonTarget) {
     queueDeath(room, room.poisonTarget, 'poisoned by Witch');
