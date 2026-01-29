@@ -29,6 +29,7 @@ const makeRoom = (): Room => ({
   lastDayDeaths: [],
   lastDayMessage: null,
   awaitingHunterShot: null,
+  dayVoteResolved: false,
   logs: [],
   nextNightStep: null,
   transitionTimer: null,

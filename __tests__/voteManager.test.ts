@@ -42,6 +42,7 @@ const makeRoom = (players: Record<string, Player>): Room => ({
   lastDayDeaths: [],
   lastDayMessage: null,
   awaitingHunterShot: null,
+  dayVoteResolved: false,
   winner: null,
   createdAt: Date.now(),
   lastActivityAt: Date.now()
@@ -124,7 +125,8 @@ describe('voteManager', () => {
 
     tryResolveDayVote(room, broadcastRoom, undefined as never);
 
-    expect(holdDayToNightTransition).toHaveBeenCalledWith(room, broadcastRoom);
+    expect(room.dayVoteResolved).toBe(true);
+    expect(broadcastRoom).toHaveBeenCalled();
     expect(room.logs[room.logs.length - 1].text).toBe('Majority abstained. No one eliminated.');
     expect(room.lastDayDeaths).toEqual([]);
     expect(room.lastDayMessage).toBe('No one was eliminated.');
@@ -143,7 +145,8 @@ describe('voteManager', () => {
     tryResolveDayVote(room, broadcastRoom, undefined as never);
 
     expect(room.voteState.votes.c).toBeNull();
-    expect(holdDayToNightTransition).toHaveBeenCalledWith(room, broadcastRoom);
+    expect(room.dayVoteResolved).toBe(true);
+    expect(broadcastRoom).toHaveBeenCalled();
     expect(room.logs[room.logs.length - 1].text).toBe('Vote skipped. No one eliminated.');
     expect(room.lastDayMessage).toBe('No one was eliminated.');
   });

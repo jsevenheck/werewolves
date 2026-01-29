@@ -58,6 +58,7 @@ describe('lobby handlers', () => {
       loverName: null,
       witchState: { healAvailable: null, poisonAvailable: null },
       wolfVotes: null,
+      wolfVoteState: null,
       wolfTarget: null,
       wolfPeers: [],
       nextNightStep: null,
@@ -70,6 +71,7 @@ describe('lobby handlers', () => {
       awaitingHunterShot: false,
       hunterShotPending: false,
       hunterShotEndsAt: null,
+      dayVoteResolved: false,
       winner: null,
       logs: [],
       self: null
@@ -119,6 +121,7 @@ describe('lobby handlers', () => {
       loverName: null,
       witchState: { healAvailable: null, poisonAvailable: null },
       wolfVotes: null,
+      wolfVoteState: null,
       wolfTarget: null,
       wolfPeers: [],
       nextNightStep: null,
@@ -131,6 +134,7 @@ describe('lobby handlers', () => {
       awaitingHunterShot: false,
       hunterShotPending: false,
       hunterShotEndsAt: null,
+      dayVoteResolved: false,
       winner: null,
       logs: [],
       self: null

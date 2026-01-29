@@ -194,7 +194,9 @@ function renderDaySection(room: RoomView, self: RoomViewSelf | null) {
       : renderVoteForm(room)
     : '<p>You are dead and cannot vote.</p>';
   const hostControls = room.hostId === state.playerId
-    ? '<div class="actions host-actions"><button id="end-vote-btn" type="button">End Voting</button></div>'
+    ? room.dayVoteResolved
+      ? '<div class="actions host-actions"><button id="proceed-to-night-btn" type="button">Proceed to Night</button></div>'
+      : '<div class="actions host-actions"><button id="end-vote-btn" type="button">End Voting</button></div>'
     : '';
   return `
     <section class="panel">

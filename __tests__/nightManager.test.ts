@@ -49,6 +49,7 @@ const makeRoom = (): Room => ({
   lastDayDeaths: [],
   lastDayMessage: null,
   awaitingHunterShot: null,
+  dayVoteResolved: false,
   winner: null,
   createdAt: Date.now(),
   lastActivityAt: Date.now()

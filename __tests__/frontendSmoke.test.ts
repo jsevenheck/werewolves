@@ -48,6 +48,7 @@ describe('frontend smoke', () => {
       loverName: null,
       witchState: { healAvailable: null, poisonAvailable: null },
       wolfVotes: null,
+      wolfVoteState: null,
       wolfTarget: null,
       wolfPeers: [],
       nextNightStep: null,
@@ -60,6 +61,7 @@ describe('frontend smoke', () => {
       awaitingHunterShot: false,
       hunterShotPending: false,
       hunterShotEndsAt: null,
+      dayVoteResolved: false,
       winner: null,
       logs: [],
       self: { id: 'p1', role: null, team: null, alive: true }

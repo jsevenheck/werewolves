@@ -71,7 +71,8 @@ test('wolves win when they reach parity', async ({ browser }) => {
       hunter: 0,
       witch: 0,
       armor: 0,
-      joker: 0
+      joker: 0,
+      passiveRoles: { mayor: false }
     });
 
     await startGameAndReady(pages);

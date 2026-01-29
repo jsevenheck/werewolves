@@ -25,6 +25,7 @@ const makeRoom = (): Room => ({
   lastDayMessage: null,
   voteState: { votes: { a: 'b' }, revoteFromTie: ['b'] },
   awaitingHunterShot: 'p1',
+  dayVoteResolved: false,
   dayCount: 0,
   logs: [],
   winner: null,

@@ -28,8 +28,18 @@ const advanceToNextNight = async (host: Page) => {
   if (await endVoteButton.isVisible()) {
     try {
       await endVoteButton.click();
+      await host.waitForTimeout(200);
     } catch {
       // Ignore rapid transition racing the host finalize.
+    }
+  }
+  const proceedButton = host.locator('#proceed-to-night-btn');
+  if (await proceedButton.isVisible()) {
+    try {
+      await proceedButton.click();
+      await host.waitForTimeout(200);
+    } catch {
+      // Ignore transition button racing.
     }
   }
   const skipButton = host.locator('#host-skip-btn');

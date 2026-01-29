@@ -56,6 +56,7 @@ describe('commonRenderers narrator label', () => {
       loverName: null,
       witchState: { healAvailable: null, poisonAvailable: null },
       wolfVotes: null,
+      wolfVoteState: null,
       wolfTarget: null,
       wolfPeers: [],
       nextNightStep: null,
@@ -73,6 +74,7 @@ describe('commonRenderers narrator label', () => {
       awaitingHunterShot: false,
       hunterShotPending: false,
       hunterShotEndsAt: null,
+      dayVoteResolved: false,
       winner: null,
       logs: [],
       self: null
