@@ -180,6 +180,7 @@ export interface RoomView {
   wolfVoteState: { submitted: number; required: number; yourVote: string | null | undefined } | null;
   wolfTarget: string | null;
   wolfPeers: string[];
+  wolfIds: string[];
   nextNightStep: NightStep;
   phaseTransition: PhaseTransition;
   seerResult: SeerResult | null;

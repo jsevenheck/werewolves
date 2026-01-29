@@ -77,6 +77,7 @@ loop:
         collect werewolf votes until all submitted
         once locked, compute target using majority (ties random)
         if no votes, pick a random alive non-wolf
+        wolves cannot target other werewolves
         store `wolfTarget` and advance to step='seer'
       if step='seer':
         if seer alive:
@@ -104,10 +105,11 @@ loop:
         if role(target)=='joker': endGame('joker', 'Joker voted out')
         else:
           kill target, resolveDeaths()
-          if phase still not ended:
+          if phase still not ended and no pending hunter/mayor actions:
             set dayVoteResolved=true
             wait for host to click "Proceed to Night" button
             host action triggers start next night (phase='night', step='wolves')
+          else pending hunter/mayor prompts resolve first, then the game resumes/advances
 
 resolveDeaths():
   while queue not empty:

@@ -10,6 +10,7 @@
 - **Joker voted out**: Configure a Joker, run a day vote that eliminates them, and verify the game ends instantly with Joker win before Lovers or Hunter effects continue.
 - **Hunter dies via Lovers link**: Make Hunter a Lover partner, kill the other Lover (any method), and ensure Hunter still receives the last-shot overlay even though death came from heartbreak.
 - **Werewolf & day vote ties**: Force wolf vote tie to see random target selection, and run a day vote tie to trigger revote UI; verify second tie resolves randomly among tied players.
+- **Werewolf target restrictions**: As a Werewolf, confirm you cannot target other Werewolves (dropdown excludes them and server rejects invalid targets).
 - **Role reveal readiness**: During role reveal, each player must click Ready; host can only continue once all connected players are ready. Disconnected players do not block progression and do not receive roles.
 - **Host skip armor step**: With an unresponsive or disconnected Armor, host uses Skip armor step and the game continues into night.
 - **Host skip night step**: With an unresponsive or disconnected Witch/Seer/Wolf, host uses Skip current action and the game continues normally.
