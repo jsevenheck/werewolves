@@ -565,6 +565,7 @@ function setupSocketHandlers(
       broadcastRoom(room, io);
       return;
     }
+    room.dayVoteResolved = false;
     holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
   });
 
@@ -676,12 +677,10 @@ function setupSocketHandlers(
     if (!room) return cb?.({ error: 'Room not found' });
     const player = getPlayerForSocket(room, playerId, socket.id);
     if (!player) return cb?.({ error: 'Player not found' });
-
     // Remove player completely from the room
     addLog(room, `${player.name} left the game.`);
     delete room.players[playerId];
     deleteSocketIndex(socket.id);
-
     // Clean up any references to this player
     if (room.mayorId === playerId) room.mayorId = null;
     if (room.awaitingHunterShot === playerId) room.awaitingHunterShot = null;
@@ -701,7 +700,6 @@ function setupSocketHandlers(
     room.mayorSelectionQueue = room.mayorSelectionQueue.filter((id) => id !== playerId);
     delete room.wolfVotes[playerId];
     delete room.voteState.votes[playerId];
-
     updateHostIfNeeded(room);
     broadcastRoom(room, io);
     cb?.({ ok: true });

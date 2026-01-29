@@ -70,10 +70,10 @@ villager variant with no active abilities.
    - Update any test snapshots or role lists in `__tests__`.
 
 ### Passive Role Checklist (Quick Reference)
-- ✅ No new phases or night steps.
-- ✅ No socket events or client handlers needed.
-- ✅ Only update types, constants, and tests.
-- ✅ If the role has *passive effects* (e.g., extra life), implement that in:
+- [ ] No new phases or night steps.
+- [ ] No socket events or client handlers needed.
+- [ ] Only update types, constants, and tests.
+- [ ] If the role has *passive effects* (e.g., extra life), implement that in:
   - `src/server/managers/deathManager.ts` (death resolution), or
   - `src/server/managers/voteManager.ts` (day voting outcomes), or
   - `src/server/managers/phaseManager.ts` (flow tweaks without new phases).
@@ -295,35 +295,35 @@ rg -n "wolfPeers.*\[\]" __tests__/
 
 ### Critical Mistakes to Avoid
 
-1. **Forgetting Test Fixtures** ⚠️ MOST COMMON
+1. **Forgetting Test Fixtures** (most common)
    - **Problem**: TypeScript errors about missing properties in test files
    - **Solution**: Search codebase for `RoleConfig` and add `yourRole: 0` to ALL instances
    - **Files**: Usually 10-15 test files need updates
    - **How to Find**: `rg -n "roleConfig:" __tests__/ | rg -v "yourRole"`
 
-2. **Incomplete Room/RoomView Updates** ⚠️
+2. **Incomplete Room/RoomView Updates**
    - **Problem**: Type errors or runtime crashes
    - **Solution**: Add fields to BOTH `Room` interface AND `RoomView` interface
    - **Files**: `src/shared/types.ts` (2 places), `src/server/models/room.ts`, `broadcastManager.ts`
    - **Pattern**: Any server state the client needs must be represented in `RoomView` with explicit visibility logic in `broadcastManager.ts`
 
-3. **Outdated Test Expectations** ⚠️
+3. **Outdated Test Expectations**
    - **Problem**: Tests fail even though implementation is correct
    - **Solution**: When you change phase flow, update ALL tests that check phase transitions
    - **Example**: If witch now advances to `'guard'` instead of `'resolve'`, update test expectations
    - **Files**: `__tests__/nightManager.test.ts`, `__tests__/phaseManager.test.ts`
 
-4. **Missing Visibility in Broadcast** ⚠️
+4. **Missing Visibility in Broadcast**
    - **Problem**: Client can't see role-specific data OR sees data they shouldn't
    - **Solution**: Add proper filtering in `broadcastManager.ts sanitizeRoom()`
    - **Pattern**: `fieldName: viewer?.role === 'yourRole' ? room.fieldName : null`
 
-5. **Forgetting Host Skip Support** ⚠️
+5. **Forgetting Host Skip Support**
    - **Problem**: Game gets stuck when role player disconnects
    - **Solution**: Add your step to `hostSkipStep` handler and host controls list
    - **Files**: `socketHandlers.ts`, `phaseRenderers.ts` (host controls array)
 
-6. **Missing Step in advanceNightStep** ⚠️
+6. **Missing Step in advanceNightStep**
    - **Problem**: Night phase doesn't progress through your role's step
    - **Solution**: Add handling in `advanceNightStep` to check if role acted or is dead
    - **File**: `src/server/managers/nightManager.ts`

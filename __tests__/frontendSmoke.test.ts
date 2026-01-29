@@ -54,7 +54,7 @@ describe('frontend smoke', () => {
       wolfIds: [],
       guardedTarget: null,
       lastGuardedTarget: null,
-              nextNightStep: null,
+      nextNightStep: null,
       phaseTransition: null,
       seerResult: null,
       voteState: { yourVote: undefined, submitted: 0, required: 2, revoteFromTie: null },

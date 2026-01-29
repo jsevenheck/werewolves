@@ -75,6 +75,7 @@ describe('phaseManager', () => {
 
     expect(room.phase).toBe('night');
     expect(room.phaseStep).toBe('wolves');
+    // Wolf votes are now empty until wolves actually vote
     expect(room.wolfVotes).toEqual({});
     expect(room.wolfTarget).toBeNull();
     expect(room.seerActed).toBe(false);

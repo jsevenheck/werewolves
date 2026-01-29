@@ -20,8 +20,8 @@ const baseRoom = (): RoomView => ({
     witch: 0,
     armor: 0,
     joker: 0,
-    guard: 0,
-    },
+    guard: 0
+  },
   passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: false,

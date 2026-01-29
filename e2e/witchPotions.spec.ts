@@ -28,6 +28,7 @@ const advanceToNextNight = async (host: Page) => {
   if (await endVoteButton.isVisible()) {
     try {
       await endVoteButton.click();
+      await host.waitForTimeout(200);
     } catch {
       // Ignore rapid transition racing the host finalize.
     }
@@ -36,8 +37,9 @@ const advanceToNextNight = async (host: Page) => {
   if (await proceedButton.isVisible()) {
     try {
       await proceedButton.click();
+      await host.waitForTimeout(200);
     } catch {
-      // Ignore rapid transition racing.
+      // Ignore transition button racing.
     }
   }
   const skipButton = host.locator('#host-skip-btn');
@@ -63,7 +65,8 @@ test('witch can heal and poison across nights', async ({ browser }) => {
       hunter: 0,
       witch: 1,
       armor: 0,
-      joker: 0
+      joker: 0,
+      guard: 0
     });
 
     await startGameAndReady(pages);
@@ -122,7 +125,8 @@ test('witch can heal and poison in the same night', async ({ browser }) => {
       hunter: 0,
       witch: 1,
       armor: 0,
-      joker: 0
+      joker: 0,
+      guard: 0
     });
 
     await startGameAndReady(pages);

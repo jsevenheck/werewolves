@@ -116,6 +116,7 @@ function schedulePhaseTransition(
       room.phaseStep = null;
       room.nextNightStep = null;
       room.voteState = createVoteState();
+      room.dayVoteResolved = false;
       addLog(room, `Day ${room.dayCount} has begun.`);
       broadcastRoom(room);
       return;

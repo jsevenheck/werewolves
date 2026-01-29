@@ -197,7 +197,7 @@ function checkWinners(room: Room) {
     // Check if there's a mayor alive - they have tie-breaking power in voting
     const mayorAlive = room.mayorId && room.players[room.mayorId]?.alive;
 
-    // If there's a hunter alive, witch with poison, pending mayor succession, or mayor alive, village still has a chance    
+    // If there's a hunter alive, witch with poison, pending mayor succession, or mayor alive, village still has a chance
     if (hunterAlive || witchWithPoison || hasPendingMayorSelection || mayorAlive) {
       return;
     }

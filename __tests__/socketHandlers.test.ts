@@ -158,7 +158,7 @@ describe('socketHandlers hostSkipStep', () => {
       phaseStep: 'seer',
       phaseTransition: null,
       seerActed: false,
-                  players: {
+      players: {
         host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' },
         s1: { id: 's1', role: 'seer', alive: true },
         v1: { id: 'v1', role: 'villager', alive: true }
@@ -219,28 +219,32 @@ describe('socketHandlers hostSkipStep', () => {
     expect(advanceNightStep).toHaveBeenCalledWith(room, expect.any(Function), io);
   });
 
-  test('allows wolves to change their votes', () => {
+  test('allows wolves to change their vote', () => {
     const room = {
       code: 'ABCD',
       hostId: 'host',
       phase: 'night',
       phaseStep: 'wolves',
       players: {
-        w1: { id: 'w1', role: 'werewolf', alive: true, socketId: 'socket-1' },
-        v1: { id: 'v1', role: 'villager', alive: true },
-        v2: { id: 'v2', role: 'villager', alive: true }
+        w1: { id: 'w1', name: 'Wolf1', role: 'werewolf', alive: true, socketId: 'socket-1' },
+        v1: { id: 'v1', name: 'Victim1', role: 'villager', alive: true },
+        v2: { id: 'v2', name: 'Victim2', role: 'villager', alive: true }
       },
-      wolfVotes: { w1: 'v1' },
+      wolfVotes: { w1: 'v1' }, // Wolf already voted for v1
       logs: []
     } as unknown as Room;
     (getRoom as jest.Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
+    // Wolf changes vote to v2
     handlers.submitWolfVote({ roomCode: 'ABCD', playerId: 'w1', targetId: 'v2' });
 
+    // Vote should be changed
     expect(room.wolfVotes.w1).toBe('v2');
-    expect(socket.emit).not.toHaveBeenCalledWith('wolfVoteRejected', expect.anything());
+    // Log should indicate vote change
+    expect(room.logs.length).toBeGreaterThan(0);
+    expect(room.logs[room.logs.length - 1].text).toContain('changed their wolf vote');
   });
 
   test('host skips phase transition night to day', () => {
@@ -584,7 +588,7 @@ describe('socketHandlers mechanics guards', () => {
       phaseStep: 'guard',
       guardActed: false,
       guardedTarget: null,
-                  players: {
+      players: {
         guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket-1' },
         v1: { id: 'v1', role: 'villager', alive: true }
       }
@@ -610,8 +614,8 @@ describe('socketHandlers mechanics guards', () => {
       phaseStep: 'guard',
       guardActed: false,
       guardedTarget: null,
-          lastGuardedTarget: 'v1',
-          players: {
+      lastGuardedTarget: 'v1',
+      players: {
         guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket-1' },
         v1: { id: 'v1', role: 'villager', alive: true }
       }
@@ -1053,8 +1057,8 @@ describe('submitGuardProtection', () => {
       code: 'ABCD',
       phase: 'night',
       phaseStep: 'guard',
-          lastGuardedTarget: 'v2',
-          players: {
+      lastGuardedTarget: 'v2',
+      players: {
         guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' },
         v1: { id: 'v1', role: 'villager', alive: true },
         v2: { id: 'v2', role: 'villager', alive: true }
@@ -1081,7 +1085,7 @@ describe('submitGuardProtection', () => {
       phaseStep: 'guard',
       guardActed: false,
       guardedTarget: null,
-                  players: {
+      players: {
         guard: { id: 'guard', role: 'guard', alive: true, socketId: 'socket1' },
         v1: { id: 'v1', role: 'villager', alive: false }
       }

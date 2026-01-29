@@ -52,7 +52,7 @@ describe('roleManager', () => {
     const tooManyRoles = {
       players: makePlayers(5),
       minPlayers: 5,
-      roleConfig: { werewolf: 6, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0 }
+      roleConfig: { werewolf: 3, seer: 1, hunter: 1, witch: 1, armor: 0, guard: 0, joker: 0 }
     } as Room;
     expect(validateCounts(tooManyRoles)).toEqual({ error: 'Role count exceeds players' });
 
@@ -62,56 +62,36 @@ describe('roleManager', () => {
       roleConfig: { ...DEFAULT_ROLE_CONFIG, werewolf: 0 }
     } as Room;
     expect(validateCounts(noWolves)).toEqual({ error: 'Need at least 1 Werewolf' });
+  });
 
-    const tooManyGuards = {
+  test('validateCounts enforces singleton role caps', () => {
+    const base = {
       players: makePlayers(5),
       minPlayers: 5,
-      roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 2 }
+      roleConfig: { werewolf: 1, seer: 1, hunter: 0, witch: 0, armor: 0, guard: 0, joker: 0 }
     } as Room;
-    expect(validateCounts(tooManyGuards)).toEqual({ error: 'Only 1 Guard is supported' });
 
-    const tooManySeers = {
-      players: makePlayers(5),
-      minPlayers: 5,
-      roleConfig: { werewolf: 1, seer: 2, hunter: 0, witch: 0, armor: 0, joker: 0 }
-    } as Room;
-    expect(validateCounts(tooManySeers)).toEqual({ error: 'Only 1 Seer is supported' });
-
-    const tooManyWitches = {
-      players: makePlayers(5),
-      minPlayers: 5,
-      roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 2, armor: 0, joker: 0 }
-    } as Room;
-    expect(validateCounts(tooManyWitches)).toEqual({ error: 'Only 1 Witch is supported' });
-
-    const tooManyArmors = {
-      players: makePlayers(5),
-      minPlayers: 5,
-      roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 2, joker: 0 }
-    } as Room;
-    expect(validateCounts(tooManyArmors)).toEqual({ error: 'Only 1 Armor is supported' });
+    expect(validateCounts({ ...base, roleConfig: { ...base.roleConfig, seer: 2 } as RoleConfig }))
+      .toEqual({ error: 'Only 1 Seer is supported' });
+    expect(validateCounts({ ...base, roleConfig: { ...base.roleConfig, witch: 2 } as RoleConfig }))
+      .toEqual({ error: 'Only 1 Witch is supported' });
+    expect(validateCounts({ ...base, roleConfig: { ...base.roleConfig, armor: 2 } as RoleConfig }))
+      .toEqual({ error: 'Only 1 Armor is supported' });
+    expect(validateCounts({ ...base, roleConfig: { ...base.roleConfig, guard: 2 } as RoleConfig }))
+      .toEqual({ error: 'Only 1 Guard is supported' });
 
     const capShouldWinOverTotalCount = {
       players: makePlayers(5),
       minPlayers: 5,
-      roleConfig: { werewolf: 5, seer: 2, hunter: 0, witch: 0, armor: 0, joker: 0 }
+      roleConfig: { werewolf: 5, seer: 2, hunter: 0, witch: 0, armor: 0, guard: 0, joker: 0 }
     } as Room;
     expect(validateCounts(capShouldWinOverTotalCount)).toEqual({ error: 'Only 1 Seer is supported' });
-  });
-
-  test('validateCounts rejects more than 1 Guard', () => {
-    const tooManyGuards = {
-      players: makePlayers(5),
-      minPlayers: 5,
-      roleConfig: { ...DEFAULT_ROLE_CONFIG, guard: 2 }
-    } as Room;
-    expect(validateCounts(tooManyGuards)).toEqual({ error: 'Only 1 Guard is supported' });
   });
 
   test('assignRoles sets roles, teams, and night actions', () => {
     const room = {
       players: makePlayers(3),
-      roleConfig: { werewolf: 1, seer: 1, hunter: 0, witch: 0, armor: 0, joker: 0 } as RoleConfig
+      roleConfig: { werewolf: 1, seer: 1, hunter: 0, witch: 0, armor: 0, guard: 0, joker: 0 } as RoleConfig
     } as Room;
     assignRoles(room);
     const assigned = Object.values(room.players);

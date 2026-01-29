@@ -23,7 +23,8 @@ test('village wins after the last werewolf is eliminated', async ({ browser }) =
       hunter: 0,
       witch: 0,
       armor: 0,
-      joker: 0
+      joker: 0,
+      guard: 0
     });
 
     await startGameAndReady(pages);
@@ -100,7 +101,8 @@ test('joker wins when voted out during the day', async ({ browser }) => {
       hunter: 0,
       witch: 0,
       armor: 0,
-      joker: 1
+      joker: 1,
+      guard: 0
     });
 
     await startGameAndReady(pages);
