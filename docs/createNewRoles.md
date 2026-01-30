@@ -70,10 +70,10 @@ villager variant with no active abilities.
    - Update any test snapshots or role lists in `__tests__`.
 
 ### Passive Role Checklist (Quick Reference)
-- ? No new phases or night steps.
-- ? No socket events or client handlers needed.
-- ? Only update types, constants, and tests.
-- ? If the role has *passive effects* (e.g., extra life), implement that in:
+- No new phases or night steps.
+- No socket events or client handlers needed.
+- Only update types, constants, and tests.
+- If the role has *passive effects* (e.g., extra life), implement that in:
   - `src/server/managers/deathManager.ts` (death resolution), or
   - `src/server/managers/voteManager.ts` (day voting outcomes), or
   - `src/server/managers/phaseManager.ts` (flow tweaks without new phases).
