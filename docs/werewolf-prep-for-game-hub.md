@@ -299,6 +299,10 @@ mode they're served at `/audio/*.mp3`. In the hub, the base path may
 differ. Pass `assetsBasePath` prop to `GameComponent` or configure it
 via `WerewolvesGameConfig.assetsBasePath`.
 
+**Note**: The narrator supports audio variants (e.g., `day_1.mp3`, `day_2.mp3`) 
+for variety. The system auto-detects numbered variants and randomly selects 
+one each playback. See `ui-vue/public/audio/README.md` for the naming convention.
+
 ### 5.6 CSS isolation
 
 The game's styles are global CSS (`styles.css`). They use a `.werewolves-root`

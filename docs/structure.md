@@ -154,8 +154,13 @@ GameComponent (App.vue)
   ├── stores/ (game)
   ├── composables/ (socket, narrator)
   ├── components/ (phases, panels, overlays)
-  └── utils/helpers.ts
+  └── utils/helpers.ts, narrator.ts
 ```
+
+**Narrator**: The `utils/narrator.ts` module handles audio playback with support 
+for multiple audio variants per clip (e.g., `day_1.mp3`, `day_2.mp3`). It 
+auto-detects numbered variants via HEAD requests and randomly selects one per 
+playback for variety.
 
 ## Benefits of This Structure
 

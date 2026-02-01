@@ -42,6 +42,9 @@ Manual and automated testing expectations for the Werewolves game.
 ## Narrator Audio Assets
 
 Place MP3 narrator clips in `ui-vue/public/audio/` with filenames matching the expected ones (for example, `night_wolves.mp3` or `dayToNight.mp3`) so the narrator continues to map phase changes correctly. The code falls back to an embedded silent clip when files are missing, so adding the real audio files is required for audible narration.
+
+**Audio Variants** (optional): The narrator supports multiple audio variants per clip for variety. Name files as `{key}_1.mp3`, `{key}_2.mp3`, etc. The system auto-detects variants (up to 10) and randomly selects one each time. See `ui-vue/public/audio/README.md` for details.
+
 Expected narrator keys:
 - `lobby.mp3` (also used for the initial audio unlock)
 - `roleReveal.mp3`

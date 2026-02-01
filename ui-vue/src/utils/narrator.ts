@@ -47,6 +47,28 @@ class Narrator {
   private readonly playClip: (key: string) => void;
   private readonly notify: (message: string) => void;
   private readonly playDebounceMs: number;
+  private readonly variants = new Map<string, number>([
+    ['day', -1],
+    ['night', -1],
+    ['night_wolves', -1],
+    ['night_seer', -1],
+    ['night_witch', -1],
+    ['night_guard', -1],
+    ['night_harlot', -1],
+    ['night_transition', -1],
+    ['night_resolve', -1],
+    ['nightToDay', -1],
+    ['dayToNight', -1],
+    ['lobby', -1],
+    ['roleReveal', -1],
+    ['postReveal', -1],
+    ['mayor', -1],
+    ['postMayor', -1],
+    ['armor', -1],
+    ['postArmor', -1],
+    ['ended', -1]
+  ]);
+  private readonly discoveredVariants = new Map<string, string[]>();
 
   constructor(options: NarratorOptions = {}) {
     this.basePath = options.basePath ?? '/audio';
@@ -198,6 +220,48 @@ class Narrator {
     }
   }
 
+  private async discoverVariants(key: string, maxVariants = 10): Promise<string[]> {
+    const variants: string[] = [];
+    
+    for (let i = 1; i <= maxVariants; i++) {
+      const variantKey = `${key}_${i}`;
+      const url = `${this.basePath}/${variantKey}.mp3`;
+      
+      try {
+        const response = await fetch(url, { method: 'HEAD' });
+        if (response.ok) {
+          variants.push(variantKey);
+        }
+      } catch {
+        // File doesn't exist or network error, skip
+      }
+    }
+    
+    return variants;
+  }
+
+  private async selectVariant(key: string): Promise<string> {
+    const count = this.variants.get(key);
+    
+    // Auto-discovery mode
+    if (count === -1) {
+      let available = this.discoveredVariants.get(key);
+      if (!available) {
+        available = await this.discoverVariants(key);
+        this.discoveredVariants.set(key, available);
+      }
+      
+      if (available.length === 0) return key;
+      return available[Math.floor(Math.random() * available.length)];
+    }
+    
+    // Manual configuration mode
+    if (!count || count === 0) return key;
+    
+    const index = Math.floor(Math.random() * count) + 1;
+    return `${key}_${index}`;
+  }
+
   private async playWithHowler(key: string) {
     const requestToken = this.disableToken;
     const howl = await this.getHowl(key);
@@ -214,9 +278,10 @@ class Narrator {
   }
 
   private async getHowl(key: string) {
-    const existing = this.howls.get(key);
+    const audioKey = await this.selectVariant(key);
+    const existing = this.howls.get(audioKey);
     if (existing) return existing;
-    const pending = this.howlPromises.get(key);
+    const pending = this.howlPromises.get(audioKey);
     if (pending) return pending;
 
     const promise = new Promise<Howl>((resolve) => {
@@ -231,7 +296,7 @@ class Narrator {
           preload: 'metadata',
           volume: DEFAULT_VOLUME
         });
-      let activeHowl = createHowl(`${this.basePath}/${key}.mp3`);
+      let activeHowl = createHowl(`${this.basePath}/${audioKey}.mp3`);
 
       const cleanup = (howl: Howl) => {
         howl.off('load');
@@ -241,14 +306,14 @@ class Narrator {
       const finalize = (howl: Howl) => {
         if (resolved) return;
         resolved = true;
-        this.howlPromises.delete(key);
+        this.howlPromises.delete(audioKey);
         if (!shouldCache()) {
           cleanup(howl);
           howl.unload();
           resolve(howl);
           return;
         }
-        this.howls.set(key, howl);
+        this.howls.set(audioKey, howl);
         resolve(howl);
       };
       const swapToFallback = (playAfterSwap: boolean) => {
@@ -294,7 +359,7 @@ class Narrator {
       activeHowl.load();
     });
 
-    this.howlPromises.set(key, promise);
+    this.howlPromises.set(audioKey, promise);
     return promise;
   }
 
