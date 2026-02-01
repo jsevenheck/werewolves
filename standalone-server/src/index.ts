@@ -60,8 +60,10 @@ if (fs.existsSync(builtClientDir)) {
 app.use(express.static(staticDir));
 app.get('/health', (_, res) => res.json({ ok: true }));
 
-// SPA fallback
-app.get('*', (_, res) => {
+// SPA fallback (Express 5 requires named wildcard)
+app.get('/{*splat}', (req, res, next) => {
+  // Skip socket.io paths
+  if (req.path.startsWith('/socket.io')) return next();
   const indexPath = path.join(staticDir, 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);

@@ -17,9 +17,12 @@
     "build": "pnpm run build:server && pnpm run build:client",
     "build:server": "tsc -p tsconfig.server.json",
     "build:client": "pnpm -C ui-vue build",
+    "build:standalone": "pnpm run build:standalone-web && pnpm run build:standalone-server",
+    "build:standalone-server": "tsc -p standalone-server/tsconfig.json",
     "build:standalone-web": "pnpm -C standalone-web build",
     "build:lib": "pnpm -C ui-vue build:lib",
     "start": "node dist/server.js",
+    "start:standalone": "node dist/standalone-server/standalone-server/src/index.js",
     "typecheck": "tsc -p tsconfig.json && pnpm -C ui-vue typecheck",
     "test": "jest",
     "test:e2e": "playwright test"

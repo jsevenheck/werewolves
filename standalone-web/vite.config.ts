@@ -13,6 +13,8 @@ export default defineConfig({
       '@shared': path.resolve(__dirname, '../core/src'),
       '@': path.resolve(__dirname, '../ui-vue/src'),
     },
+    // Avoid duplicate Vue/Pinia instances when ui-vue has its own node_modules.
+    dedupe: ['vue', 'pinia'],
   },
 
   server: {
