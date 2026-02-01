@@ -133,7 +133,7 @@ describe('deathManager', () => {
     expect(room.phaseTimer).toBeNull();
   });
 
-  test('checkWinners defers wolf parity when lone witch has both potions', () => {
+  test('checkWinners declares village win when lone witch has both potions at parity', () => {
     const room = makeRoom();
     room.players = {
       wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: true }),
@@ -143,7 +143,7 @@ describe('deathManager', () => {
 
     checkWinners(room);
 
-    expect(room.winner).toBeNull();
-    expect(room.phase).not.toBe('ended');
+    expect(room.winner).toEqual({ team: 'village', reason: 'Witch can heal and poison to break parity.' });
+    expect(room.phase).toBe('ended');
   });
 });

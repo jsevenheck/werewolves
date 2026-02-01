@@ -135,6 +135,12 @@ describe('narrator dedupe', () => {
 describe('narrator playback', () => {
   beforeEach(() => {
     MockHowl.reset();
+    // Mock fetch for variant discovery
+    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   test('does not play if disabled while clip is loading', async () => {
@@ -142,6 +148,7 @@ describe('narrator playback', () => {
     const room = buildRoom({ phase: 'day' });
 
     narrator.handleRoomUpdate(null, room);
+    await flushPromises(); // Wait for variant discovery
     const [howl] = MockHowl.instances;
 
     narrator.setEnabled(false);
@@ -156,6 +163,7 @@ describe('narrator playback', () => {
     const room = buildRoom({ phase: 'day' });
 
     narrator.handleRoomUpdate(null, room);
+    await flushPromises(); // Wait for variant discovery
     const initialHowl = MockHowl.instances[0];
 
     initialHowl.trigger('loaderror');
@@ -173,6 +181,7 @@ describe('narrator playback', () => {
     const room = buildRoom({ phase: 'day' });
 
     narrator.handleRoomUpdate(null, room);
+    await flushPromises(); // Wait for variant discovery
     const initialHowl = MockHowl.instances[0];
 
     initialHowl.trigger('loaderror');
@@ -190,6 +199,7 @@ describe('narrator playback', () => {
     const room = buildRoom({ phase: 'day' });
 
     narrator.handleRoomUpdate(null, room);
+    await flushPromises(); // Wait for variant discovery
     const [howl] = MockHowl.instances;
 
     howl.trigger('load');
@@ -302,5 +312,91 @@ describe('narrator unlock', () => {
     expect(initialHowl.off).toHaveBeenCalledWith('play');
     expect(initialHowl.off).toHaveBeenCalledWith('playerror');
     expect(initialHowl.off).toHaveBeenCalledWith('loaderror');
+  });
+});
+
+describe('narrator audio variants', () => {
+  beforeEach(() => {
+    MockHowl.reset();
+    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test('uses base filename when no variants configured', async () => {
+    // Mock fetch to return 404 for all variants
+    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+    
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: true,
+      basePath: '/audio',
+      storage: null
+    });
+    const room = buildRoom({ phase: 'lobby' });
+
+    narrator.handleRoomUpdate(null, room);
+    await flushPromises();
+
+    const [howl] = MockHowl.instances;
+    expect(howl.options.src).toBe('/audio/lobby.mp3');
+  });
+
+  test('selects random variant when discovered', async () => {
+    // Mock fetch to return success for 2 variants
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('day_1.mp3') || url.includes('day_2.mp3')) {
+        return Promise.resolve({ ok: true });
+      }
+      return Promise.resolve({ ok: false });
+    });
+
+    const originalRandom = Math.random;
+    Math.random = jest.fn(() => 0.5); // Will select second variant
+
+    try {
+      const narrator = createNarrator({
+        initialEnabled: true,
+        initialUnlocked: true,
+        basePath: '/audio',
+        storage: null
+      });
+
+      const roomDay = buildRoom({ phase: 'day' });
+      narrator.handleRoomUpdate(null, roomDay);
+      await flushPromises();
+
+      const [howl] = MockHowl.instances;
+      // Should select day_2 (index 1 of 2 variants)
+      expect(howl.options.src).toBe('/audio/day_2.mp3');
+    } finally {
+      Math.random = originalRandom;
+    }
+  });
+
+  test('caches variants separately', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+    
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: true,
+      basePath: '/audio',
+      storage: null
+    });
+
+    const room1 = buildRoom({ phase: 'day' });
+    narrator.handleRoomUpdate(null, room1);
+    await flushPromises();
+
+    const room2 = buildRoom({ phase: 'night', phaseStep: 'wolves' });
+    narrator.handleRoomUpdate(room1, room2);
+    await flushPromises();
+
+    // Should have created two separate Howl instances
+    expect(MockHowl.instances).toHaveLength(2);
+    expect(MockHowl.instances[0].options.src).toBe('/audio/day.mp3');
+    expect(MockHowl.instances[1].options.src).toBe('/audio/night_wolves.mp3');
   });
 });

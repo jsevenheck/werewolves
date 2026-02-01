@@ -62,12 +62,13 @@ function startMayorSelection(
       if (!startNextMayorSelection(room, broadcastRoom, io)) {
         // No more mayor selections, resume game flow
         const { checkWinners } = require('./deathManager');
-        const { schedulePhaseTransition, holdDayToNightTransition } = require('./phaseManager');
+        const { schedulePhaseTransition } = require('./phaseManager');
 
         checkWinners(room);
         if (!room.winner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
           if (room.phase === 'day') {
-            holdDayToNightTransition(room, broadcastRoom);
+            // Mark vote as resolved; host must manually proceed to night
+            room.dayVoteResolved = true;
           } else if (room.phase === 'night' && room.phaseStep === 'resolve') {
             // Resume night->day transition after mayor succession during night
             schedulePhaseTransition(room, 'nightToDay', broadcastRoom);
