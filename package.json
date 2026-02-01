@@ -23,6 +23,8 @@
     "build:lib": "pnpm -C ui-vue build:lib",
     "start": "node dist/server.js",
     "start:standalone": "node dist/standalone-server/standalone-server/src/index.js",
+    "install:standalone": "pnpm -C standalone-server install && pnpm -C standalone-web install",
+    "install:all": "pnpm install && pnpm run install:standalone",
     "typecheck": "tsc -p tsconfig.json && pnpm -C ui-vue typecheck",
     "test": "jest",
     "test:e2e": "playwright test"
