@@ -59,10 +59,11 @@ function startHunterShot(
           checkWinners(room);
           if (!room.winner) {
             // No winner, resume game flow
-            const { schedulePhaseTransition, holdDayToNightTransition } = require('../managers/phaseManager');
+            const { schedulePhaseTransition } = require('../managers/phaseManager');
             if (!room.awaitingHunterShot && !room.awaitingMayorSelection) {
               if (room.phase === 'day') {
-                holdDayToNightTransition(room, broadcastRoom);
+                // Mark vote as resolved; host must manually proceed to night
+                room.dayVoteResolved = true;
               } else if (room.phase === 'night' && room.phaseStep === 'resolve') {
                 // Resume night->day transition after hunter shot during night
                 schedulePhaseTransition(room, 'nightToDay', broadcastRoom);

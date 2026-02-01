@@ -37,10 +37,7 @@ const seerResult = computed(() => room.value?.seerResult || null);
 
 const phaseText = computed(() => room.value ? formatPhase(room.value) : '');
 const narratorLabel = computed(() => {
-  if (props.narratorEnabled) {
-    return props.narratorUnlocked ? 'On' : 'Tap to enable audio';
-  }
-  return 'Off';
+  return props.narratorEnabled ? 'On' : 'Off';
 });
 
 function toggleRole() {

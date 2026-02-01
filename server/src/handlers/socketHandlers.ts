@@ -221,28 +221,12 @@ function setupSocketHandlers(
     // Check win conditions and continue
     checkWinners(room);
     if (!room.winner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
-      const resumeAfterDelay = () => {
-        if (room.winner || room.awaitingHunterShot || room.awaitingMayorSelection) {
-          return;
-        }
-        if (room.phase === 'day') {
-          holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
-        } else if (room.phase === 'night' && room.phaseStep === 'resolve') {
-          // Resume night->day transition after mayor succession during night
-          schedulePhaseTransition(room, 'nightToDay', (r) => broadcastRoom(r, io));
-        }
-      };
-      if (MAYOR_SUCCESSION_DELAY_MS > 0) {
-        if (room.phaseTimer) {
-          clearTimeout(room.phaseTimer);
-          room.phaseTimer = null;
-        }
-        room.phaseTimer = setTimeout(() => {
-          room.phaseTimer = null;
-          resumeAfterDelay();
-        }, MAYOR_SUCCESSION_DELAY_MS);
-      } else {
-        resumeAfterDelay();
+      if (room.phase === 'day') {
+        // Mark vote as resolved; host must manually proceed to night
+        room.dayVoteResolved = true;
+      } else if (room.phase === 'night' && room.phaseStep === 'resolve') {
+        // Resume night->day transition after mayor succession during night
+        schedulePhaseTransition(room, 'nightToDay', (r) => broadcastRoom(r, io));
       }
     }
     broadcastRoom(room, io);
