@@ -526,7 +526,7 @@ function setupSocketHandlers(
           room.wolfVotes[wolf.id] = null;
         }
       });
-      tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io), io);
+      tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io), io, { allowNoKill: true });
       return;
     }
 
@@ -595,8 +595,15 @@ function setupSocketHandlers(
       broadcastRoom(room, io);
       return;
     }
-    room.dayVoteResolved = false;
-    holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
+    // Check win conditions before starting the night
+    const { checkWinners } = require('../managers/deathManager');
+    checkWinners(room);
+    if (room.winner) {
+      broadcastRoom(room, io);
+      return;
+    }
+    startNight(room);
+    broadcastRoom(room, io);
   });
 
   socket.on('hostFinalizeMayorVote', ({ roomCode, playerId }) => {

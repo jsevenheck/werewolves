@@ -4,10 +4,11 @@ import {
   closeContexts,
   configureRoles,
   createLobbyWithPlayers,
-  startGameAndReady,
-  voteAllForTarget,
   findMayorPromptPage,
-  submitMayorSelection
+  proceedToNightIfAvailable,
+  startGameAndReady,
+  submitMayorSelection,
+  voteAllForTarget
 } from './helpers';
 
 test('village wins after the last werewolf is eliminated', async ({ browser }) => {
@@ -38,6 +39,14 @@ test('village wins after the last werewolf is eliminated', async ({ browser }) =
       const mayorPage = await findMayorPromptPage(pages);
       if (mayorPage) {
         await submitMayorSelection(mayorPage);
+      }
+
+      // Check if we need to proceed to night (if game didn't end)
+      const proceeded = await proceedToNightIfAvailable(host);
+      if (proceeded) {
+        // Game continues, wait a bit and check again
+        await dayPage.waitForTimeout(500);
+        continue;
       }
 
       const gameOver = await dayPage.locator('h2:has-text("Game Over")').isVisible().catch(() => false);
@@ -116,6 +125,13 @@ test('joker wins when voted out during the day', async ({ browser }) => {
       const mayorPage = await findMayorPromptPage(pages);
       if (mayorPage) {
         await submitMayorSelection(mayorPage);
+      }
+
+      // Check if we need to proceed (if game didn't end)
+      const proceeded = await proceedToNightIfAvailable(host);
+      if (proceeded) {
+        await dayPage.waitForTimeout(500);
+        continue;
       }
 
       const gameOver = await dayPage.locator('h2:has-text("Game Over")').isVisible().catch(() => false);

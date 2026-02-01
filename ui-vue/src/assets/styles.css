@@ -101,7 +101,6 @@
 
 .werewolves-root .player-card.dead {
   opacity: 0.55;
-  text-decoration: line-through;
   background: rgba(239, 68, 68, 0.12);
   border-color: rgba(239, 68, 68, 0.35);
   color: rgba(254, 202, 202, 0.9);
@@ -324,8 +323,12 @@
   position: absolute;
   top: 1rem;
   right: 1rem;
-  font-size: 0.75rem;
-  color: rgba(148, 163, 184, 0.8);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(148, 163, 184, 0.9);
+  background: rgba(71, 85, 105, 0.25);
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
 }
 
 .mayor-overlay {

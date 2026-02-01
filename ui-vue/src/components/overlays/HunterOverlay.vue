@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '@/stores/game';
 import type { TypedSocket } from '@/composables/useSocket';
@@ -13,6 +13,22 @@ const store = useGameStore();
 const { room, roomCode, playerId } = storeToRefs(store);
 
 const selectedTarget = ref('');
+const now = ref(Date.now());
+let timer: ReturnType<typeof setInterval> | null = null;
+
+const hunterShotEndsAt = computed(() => room.value?.hunterShotEndsAt ?? null);
+const remainingSeconds = computed(() => {
+  if (!hunterShotEndsAt.value) return null;
+  const remainingMs = hunterShotEndsAt.value - now.value;
+  return Math.max(0, Math.ceil(remainingMs / 1000));
+});
+
+function formatSeconds(seconds: number) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  const padded = secs < 10 ? `0${secs}` : `${secs}`;
+  return `${mins}:${padded}`;
+}
 
 const targets = computed(() => {
   return (room.value?.players || []).filter((p) => p.alive);
@@ -27,11 +43,27 @@ function submitShot() {
   });
   store.hunterPrompt = false;
 }
+
+onMounted(() => {
+  timer = setInterval(() => {
+    now.value = Date.now();
+  }, 1000);
+});
+
+onBeforeUnmount(() => {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+});
 </script>
 
 <template>
   <div id="hunter-overlay" class="hunter-overlay">
-    <div class="panel">
+    <div class="panel overlay-panel">
+      <div v-if="remainingSeconds !== null" class="overlay-timer">
+        {{ formatSeconds(remainingSeconds) }}
+      </div>
       <h2>Hunter's Last Shot</h2>
       <form id="hunter-form" class="actions" @submit.prevent="submitShot">
         <label>

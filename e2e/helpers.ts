@@ -648,6 +648,22 @@ export const voteAllForTarget = async (
   }
 };
 
+export const proceedToNight = async (hostPage: Page) => {
+  const button = hostPage.locator('#proceed-to-night-btn');
+  await button.waitFor({ state: 'visible', timeout: 15000 });
+  await button.click();
+};
+
+export const proceedToNightIfAvailable = async (hostPage: Page) => {
+  const button = hostPage.locator('#proceed-to-night-btn');
+  const isVisible = await button.isVisible().catch(() => false);
+  if (isVisible) {
+    await button.click();
+    return true;
+  }
+  return false;
+};
+
 export const closeContexts = async (contexts: Array<Awaited<ReturnType<Browser['newContext']>>>) => {
   for (const context of contexts) {
     try {

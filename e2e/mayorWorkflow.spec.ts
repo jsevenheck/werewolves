@@ -11,6 +11,7 @@ import {
   voteAllForTarget,
   getAliveNames,
   waitForDayOnAllPages,
+  proceedToNightIfAvailable,
 } from "./helpers";
 
 type VotePlan = Record<string, string>;
@@ -265,6 +266,9 @@ test("mayor vote breaks tie in day voting", async ({ browser }) => {
       logsPanel?.includes("voted out") ||
       logsPanel?.includes("executed by vote");
     expect(voteResolved).toBe(true);
+
+    // Proceed to night after vote resolution
+    await proceedToNightIfAvailable(host);
   } finally {
     await closeContexts(contexts);
   }
@@ -371,6 +375,9 @@ test("dying mayor selects successor", async ({ browser }) => {
     // Check logs for appointment message
     const logsPanel = await host.locator("#logs-panel").textContent();
     expect(logsPanel).toContain("appointed as the new Mayor");
+
+    // Proceed to night after mayor succession
+    await proceedToNightIfAvailable(host);
   } finally {
     await closeContexts(contexts);
   }
@@ -437,6 +444,10 @@ test("host can skip mayor selection", async ({ browser }) => {
 
     // Game should continue (night phase should start or game should end)
     await host.waitForTimeout(2000);
+    
+    // Proceed to night after skip
+    await proceedToNightIfAvailable(host);
+    
     const phaseText = await host.locator("text=Phase:").textContent();
     expect(phaseText).toBeTruthy();
   } finally {

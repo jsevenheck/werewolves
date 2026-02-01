@@ -1,6 +1,7 @@
 # Adding New Roles
 
-This guide explains what to update when introducing a new role and where those changes live.
+This guide explains how to add a new role to the Werewolves game.
+Roles can be **active** (with night/day actions like Seer, Witch) or **passive** (no actions, like a simple villager variant).
 
 ## Quick Checklist
 - Add the role to shared types in `core/src/types.ts` (Role union, RoleConfig, optional Team/NightStep/Phase).

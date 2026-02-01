@@ -6,6 +6,8 @@ export default defineConfig({
   plugins: [vue()],
 
   root: __dirname,
+  // Reuse ui-vue public assets (narrator audio, etc.)
+  publicDir: path.resolve(__dirname, '../ui-vue/public'),
 
   resolve: {
     alias: {

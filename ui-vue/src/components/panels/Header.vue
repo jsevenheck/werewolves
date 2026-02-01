@@ -67,7 +67,6 @@ function leaveRoom() {
         </div>
         <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;">
           <span class="tag">You: {{ playerName || 'Unknown' }}</span>
-          <span v-if="hostPlayer" class="tag">Host: {{ hostPlayer.name }}{{ hostPlayer.connected ? '' : ' (offline)' }}</span>
           <span v-if="self?.alive" class="tag" style="border-color:#4ade80;color:#4ade80;">Alive</span>
           <span v-else class="tag" style="border-color:#ef4444;color:#ef4444;">Dead</span>
           <button v-if="self?.role" id="toggle-role" type="button" @click="toggleRole">

@@ -124,7 +124,7 @@ describe('deathManager', () => {
 
     checkWinners(room);
 
-    expect(room.winner).toEqual({ team: 'wolves', reason: 'Werewolves reached parity.' });
+    expect(room.winner).toEqual({ team: 'wolves', reason: 'Werewolves have the majority.' });
     expect(room.phase).toBe('ended');
     expect(room.phaseStep).toBeNull();
     expect(room.nextNightStep).toBeNull();

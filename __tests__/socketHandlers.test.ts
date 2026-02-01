@@ -147,7 +147,7 @@ describe('socketHandlers hostSkipStep', () => {
     handlers.hostSkipStep({ roomCode: 'ABCD', playerId: 'host' });
 
     expect(room.wolfVotes).toEqual({ w1: null, w2: null });
-    expect(tryFinalizeWolfVote).toHaveBeenCalledWith(room, expect.any(Function), io);
+    expect(tryFinalizeWolfVote).toHaveBeenCalledWith(room, expect.any(Function), io, { allowNoKill: true });
   });
 
   test('host skips seer step even when seer is alive', () => {

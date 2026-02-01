@@ -112,6 +112,12 @@ function resolveDeaths(
     if (!player || !player.alive) continue;
     player.alive = false;
     player.voteTarget = null;
+    if (room.voteState?.votes) {
+      delete room.voteState.votes[playerId];
+    }
+    if (room.wolfVotes) {
+      delete room.wolfVotes[playerId];
+    }
     announced.push({ name: player.name, role: player.role });
     const roleLabel = getPlayerRoleLabel(player);
     addLog(
@@ -165,6 +171,10 @@ function resolveDeaths(
     // If a mayor selection is already in progress, we'll check winners after it completes
     if (!hasMoreMayorSelections) {
       checkWinners(room);
+      // If in day phase and no more actions pending, mark vote as resolved so host can proceed
+      if (room.phase === 'day' && context === 'day' && !room.winner) {
+        room.dayVoteResolved = true;
+      }
     }
   }
   broadcastRoom(room);
@@ -186,18 +196,30 @@ function checkWinners(room: Room) {
     return;
   }
   const others = alive.length - wolves.length;
-  if (wolves.length >= others) {
-    // Check if village has special abilities that could still turn the tide
+  
+  // Wolves have strict majority - game over regardless of special abilities
+  if (wolves.length > others) {
+    room.winner = { team: 'wolves', reason: 'Werewolves have the majority.' };
+    room.phase = 'ended';
+    room.phaseStep = null;
+    room.nextNightStep = null;
+    room.phaseTransition = null;
+    room.awaitingMayorSelection = null;
+    room.mayorSelectionQueue = [];
+    clearRoomTimers(room);
+    return;
+  }
+  
+  // Wolves at parity - check if village has abilities that could turn the tide
+  if (wolves.length === others) {
     const hunterAlive = alive.some((p) => p.role === 'hunter');
     const witchWithPoison = alive.some((p) => p.role === 'witch') && room.witchState.poisonAvailable;
-
-    // Check if there's a pending mayor succession - the new mayor could still turn the tide
     const hasPendingMayorSelection = room.awaitingMayorSelection || room.mayorSelectionQueue.length > 0;
-
-    // Check if there's a mayor alive - they have tie-breaking power in voting
+    
+    // At parity, mayor's tie-breaking power in voting is crucial
     const mayorAlive = room.mayorId && room.players[room.mayorId]?.alive;
 
-    // If there's a hunter alive, witch with poison, pending mayor succession, or mayor alive, village still has a chance
+    // If there's a hunter, witch with poison, pending mayor succession, or mayor with tie-breaking power, village still has a chance
     if (hunterAlive || witchWithPoison || hasPendingMayorSelection || mayorAlive) {
       return;
     }

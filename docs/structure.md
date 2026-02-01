@@ -1,7 +1,15 @@
 # Werewolves Codebase Structure
 
-This document describes the refactored codebase structure, designed to support both
+This document describes the codebase structure, designed to support both
 standalone operation and embedding into the game-hub platform.
+
+## Quick Summary
+- **core/**: Shared types, events, constants (used by both client and server)
+- **server/**: Node.js + Socket.IO backend with managers for game logic
+- **ui-vue/**: Vue 3 frontend with Pinia stores and phase components
+- **standalone-*/**: Thin wrappers for running without game-hub
+- **__tests__/**: Jest unit tests
+- **e2e/**: Playwright E2E tests
 
 ## Project Structure
 

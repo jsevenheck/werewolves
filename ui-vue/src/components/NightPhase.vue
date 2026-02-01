@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '@/stores/game';
 import { getPlayerName, escapeHtml, notify } from '@/utils/helpers';
@@ -19,6 +19,7 @@ const seerTarget = ref('');
 const poisonTarget = ref('');
 const guardTarget = ref('');
 const harlotTarget = ref('');
+const witchActionTaken = ref(false);
 
 const self = computed(() => room.value?.self || null);
 const isHost = computed(() => room.value?.hostId === playerId.value);
@@ -56,7 +57,7 @@ const witchState = computed(() => room.value?.witchState ?? { healAvailable: fal
 const witchWolfTarget = computed(() => room.value?.wolfTarget || null);
 const healedText = computed(() => witchWolfTarget.value && room.value ? `Wolves targeted ${getPlayerName(room.value, witchWolfTarget.value)}.` : 'Wolves have no target.');
 const aliveWitchTargets = computed(() => (room.value?.players ?? []).filter((p) => p && p.alive && p.id !== playerId.value));
-const skipLabel = computed(() => !witchState.value.healAvailable ? 'Continue' : 'Skip');
+const skipLabel = computed(() => witchActionTaken.value ? 'Continue' : 'Skip');
 
 // Guard form
 const isGuard = computed(() => room.value?.phaseStep === 'guard' && self.value?.role === 'guard' && self.value.alive);
@@ -100,11 +101,13 @@ function submitSeerInspect() {
 
 function healTarget() {
   if (!playerId.value || !room.value) return;
+  witchActionTaken.value = true;
   props.socket.emit('submitWitchDecision', { roomCode: room.value.code, playerId: playerId.value, action: 'heal' });
 }
 
 function poisonSubmit() {
   if (!poisonTarget.value || !playerId.value || !room.value) return;
+  witchActionTaken.value = true;
   props.socket.emit('submitWitchDecision', { roomCode: room.value.code, playerId: playerId.value, action: 'poison', targetId: poisonTarget.value });
 }
 
@@ -143,6 +146,13 @@ function skipStep() {
   if (!playerId.value || !room.value) return;
   props.socket.emit('hostSkipStep', { roomCode: room.value.code, playerId: playerId.value });
 }
+
+// Reset witch action flag when witch phase starts
+watch(() => isWitch.value, (newIsWitch) => {
+  if (newIsWitch) {
+    witchActionTaken.value = false;
+  }
+});
 </script>
 
 <template>

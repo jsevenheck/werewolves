@@ -33,11 +33,15 @@ const lastNightDeaths = computed(() => room.value?.lastNightDeaths ?? []);
 const dayVoteResolved = computed(() => room.value?.dayVoteResolved ?? false);
 const lastDayDeaths = computed(() => room.value?.lastDayDeaths ?? []);
 const lastDayMessage = computed(() => room.value?.lastDayMessage ?? null);
+const awaitingActions = computed(() => {
+  return !!room.value?.awaitingHunterShot || !!room.value?.awaitingMayorSelection;
+});
 const yourVote = computed(() => room.value?.voteState?.yourVote);
 const hasVoted = computed(() => yourVote.value !== undefined);
 const submitted = computed(() => room.value?.voteState?.submitted || 0);
 const required = computed(() => room.value?.voteState?.required || 0);
 const isRevote = computed(() => !!room.value?.voteState?.revoteFromTie);
+const showVoteProgress = computed(() => required.value > 0 && submitted.value < required.value);
 
 const eligible = computed(() => {
   if (!room.value) return [];
@@ -100,7 +104,7 @@ function proceedToNight() {
       <template v-if="hasVoted">
         <p v-if="yourVote === null" style="color:#4ade80;">Vote submitted: Abstain.</p>
         <p v-else style="color:#4ade80;">Vote submitted: {{ yourVote ? getPlayerName(room, yourVote) : '' }}.</p>
-        <small>{{ submitted }} / {{ required }} votes submitted.</small>
+        <small v-if="showVoteProgress">{{ submitted }} / {{ required }} votes submitted.</small>
       </template>
       <template v-else>
         <form id="vote-form" class="actions" @submit.prevent="submitVote">
@@ -126,7 +130,7 @@ function proceedToNight() {
             </select>
           </label>
           <button type="submit" id="vote-submit" :disabled="!selectedTarget">Submit vote</button>
-          <small>{{ submitted }} / {{ required }} votes submitted.</small>
+          <small v-if="showVoteProgress">{{ submitted }} / {{ required }} votes submitted.</small>
         </form>
       </template>
     </template>
@@ -146,7 +150,7 @@ function proceedToNight() {
 
     <div v-if="isHost" class="actions host-actions">
       <button v-if="!dayVoteResolved" id="end-vote-btn" type="button" @click="endVoting">End Voting</button>
-      <button v-if="dayVoteResolved" id="proceed-to-night-btn" type="button" @click="proceedToNight">Proceed to Night</button>
+      <button v-if="dayVoteResolved && !awaitingActions" id="proceed-to-night-btn" type="button" @click="proceedToNight">Proceed to Night</button>
     </div>
   </section>
 </template>

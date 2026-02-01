@@ -1,3 +1,14 @@
+# Game Specification
+
+This document describes the game rules, data model, and phase flow for the Werewolves game.
+
+## Overview
+Werewolves is a social deduction game where:
+- **Werewolves** secretly kill a villager each night
+- **Villagers** vote to eliminate suspects during the day
+- Special roles (Seer, Witch, Hunter, Guard, etc.) have unique abilities
+- Game ends when all wolves are dead (village wins) or wolves reach majority (wolves win)
+
 ## Data Model
 
 ### Player
@@ -88,6 +99,8 @@ loop:
       if step='witch':
         if witch alive:
           show wolves' target; let witch save/poison (one potion per night)
+          witch can use both potions in the same night
+          button shows 'Continue' after using any potion, otherwise 'Skip'
           update potion flags
         advance step='guard'
       if step='guard':
@@ -125,7 +138,11 @@ loop:
         if role(target)=='joker': endGame('joker', 'Joker voted out')
         else:
           kill target, resolveDeaths()
-          if phase still not ended -> start next night (phase='night', step='wolves')
+          after all actions complete (hunter shots, mayor successions):
+            set dayVoteResolved=true
+            host must click 'Proceed to Night' button to continue
+            button only appears after all pending actions are resolved
+          if game not ended -> host triggers dayToNight transition
 
 resolveDeaths():
   while queue not empty:
@@ -138,7 +155,16 @@ resolveDeaths():
     if player is lover -> enqueue other lover death reason='died of heartbreak'
   after queue empty check win conditions:
     if all wolves dead -> endGame('village', 'All wolves dead')
-    else if wolves >= others -> endGame('wolves', 'Parity reached')
+    else if wolves > others (strict majority):
+      endGame('wolves', 'Werewolves have the majority')
+    else if wolves == others (parity):
+      check if village has abilities to turn the tide:
+        - hunter alive (can shoot)
+        - witch with poison (can kill)
+        - pending mayor succession
+        - mayor alive (has tie-breaking power in votes)
+      if any of above true -> game continues
+      else -> endGame('wolves', 'Werewolves reached parity')
 
 HunterShot(targetId):
   enqueue death for target

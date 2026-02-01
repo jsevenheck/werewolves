@@ -131,11 +131,6 @@ function resolveDayKill(
   const { queueDeath, resolveDeaths } = require('./deathManager');
   queueDeath(room, targetId, 'executed by vote');
   resolveDeaths(room, 'day', broadcastRoom, io);
-  if (!room.winner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
-    // Mark day vote as resolved - host must manually proceed to night
-    room.dayVoteResolved = true;
-    broadcastRoom(room);
-  }
 }
 
 export {

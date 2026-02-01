@@ -31,6 +31,7 @@ const eligible = computed(() => {
 const submitted = computed(() => room.value?.voteState?.submitted || 0);
 const required = computed(() => room.value?.voteState?.required || 0);
 const isRevote = computed(() => !!room.value?.voteState?.revoteFromTie);
+const showVoteProgress = computed(() => required.value > 0 && submitted.value < required.value);
 
 function onSelectChange() {
   store.pendingMayorVote = selectedTarget.value || undefined;
@@ -64,7 +65,7 @@ function endVoting() {
       <template v-if="hasVoted">
         <p v-if="yourVote === null" style="color:#4ade80;">Vote submitted: Abstain.</p>
         <p v-else style="color:#4ade80;">Vote submitted: {{ yourVote ? getPlayerName(room, yourVote) : '' }}.</p>
-        <small>{{ submitted }} / {{ required }} votes submitted.</small>
+        <small v-if="showVoteProgress">{{ submitted }} / {{ required }} votes submitted.</small>
       </template>
       <template v-else>
         <form id="mayor-vote-form" class="actions" @submit.prevent="submitVote">
@@ -88,7 +89,7 @@ function endVoting() {
             </select>
           </label>
           <button type="submit" id="mayor-vote-submit" :disabled="!selectedTarget">Submit vote</button>
-          <small>{{ submitted }} / {{ required }} votes submitted.</small>
+          <small v-if="showVoteProgress">{{ submitted }} / {{ required }} votes submitted.</small>
         </form>
       </template>
     </template>

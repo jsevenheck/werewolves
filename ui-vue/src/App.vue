@@ -3,7 +3,7 @@ import { computed, onMounted, inject } from 'vue';
 import { useGameStore } from '@/stores/game';
 import { useSocket } from '@/composables/useSocket';
 import { useNarrator } from '@/composables/useNarrator';
-import { notify, escapeHtml } from '@/utils/helpers';
+import { notify } from '@/utils/helpers';
 import type { WerewolvesGameConfig } from '@/types/config';
 import type { StoredSession, RoomView } from '@shared/types';
 import {
@@ -99,6 +99,10 @@ const hunterPrompt = computed(() => store.hunterPrompt && store.room?.awaitingHu
 const mayorPrompt = computed(() => store.mayorPrompt && store.room?.awaitingMayorSelection);
 const phaseTransition = computed(() => store.room?.phaseTransition || null);
 const winner = computed(() => store.room?.winner || null);
+const mayorName = computed(() => {
+  if (!store.room?.mayorId) return null;
+  return store.room.players.find((player) => player.id === store.room?.mayorId)?.name ?? null;
+});
 
 // Transition display data
 const ROLE_DETAILS: Record<string, { name: string }> = {
@@ -131,6 +135,11 @@ const transitionDurations: Record<string, number> = {
 
 const transitionMessage = computed(() => {
   if (!phaseTransition.value) return '';
+  if (phaseTransition.value === 'postMayor') {
+    return mayorName.value
+      ? `Mayor elected: ${mayorName.value}. Preparing the next phase...`
+      : transitionMessages.postMayor;
+  }
   return transitionMessages[phaseTransition.value] || 'Next phase in a few seconds. Close your eyes if needed.';
 });
 
@@ -147,11 +156,8 @@ const dayResults = computed(() => {
   return { type: 'message' as const, message: store.room.lastDayMessage || 'No one was eliminated.' };
 });
 
-const hostSkipLabel = computed(() => {
-  return phaseTransition.value === 'dayToNight' ? 'Start next round' : 'Skip transition';
-});
-
 const isHost = computed(() => store.room?.hostId === store.playerId);
+const showHostSkip = computed(() => isHost.value && !!phaseTransition.value);
 
 // Pending actions
 const mayorSelectionPending = computed(() =>
@@ -263,8 +269,8 @@ onMounted(() => {
             </template>
             <p v-else>{{ dayResults.message }}</p>
           </template>
-          <button v-if="isHost" id="host-skip-btn" type="button" @click="skipStep">
-            {{ hostSkipLabel }}
+          <button v-if="showHostSkip" id="host-skip-btn" type="button" @click="skipStep">
+            Skip transition
           </button>
         </section>
       </template>

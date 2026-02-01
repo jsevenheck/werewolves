@@ -7,7 +7,8 @@ import type { Room } from '../../../core/src/types';
 function tryFinalizeWolfVote(
   room: Room,
   broadcastRoom: (room: Room) => void,
-  io: Namespace<ClientToServerEvents, ServerToClientEvents>
+  io: Namespace<ClientToServerEvents, ServerToClientEvents>,
+  options: { allowNoKill?: boolean } = {}
 ) {
   const wolves = Object.values(room.players).filter((p) => p.role === 'werewolf' && p.alive);
   if (!wolves.length) {
@@ -37,6 +38,11 @@ function tryFinalizeWolfVote(
   });
   if (tied.length > 1) {
     chosen = tied[Math.floor(Math.random() * tied.length)];
+  }
+  if (!chosen && options.allowNoKill) {
+    room.wolfTarget = null;
+    scheduleNightStep(room, 'seer', broadcastRoom, io);
+    return;
   }
   if (!chosen && wolves.length) {
     const aliveNonWolves = Object.values(room.players).filter((p) => p.alive && p.role !== 'werewolf');
