@@ -1,7 +1,7 @@
 import { MockHowl } from './mocks/howler';
 
-import { computeNarrationKey, createNarrator } from '../client/src/utils/narrator';
-import type { RoomView } from '../src/shared/types';
+import { computeNarrationKey, createNarrator } from '../ui-vue/src/utils/narrator';
+import type { RoomView } from '../core/src/types';
 
 type RoomOverrides = Partial<RoomView>;
 
@@ -19,7 +19,9 @@ const baseRoom = (): RoomView => ({
     hunter: 0,
     witch: 0,
     armor: 0,
-    joker: 0
+    joker: 0,
+    guard: 0,
+    harlot: 0
   },
   passiveRoleConfig: { mayor: true },
   mayorId: null,
@@ -49,6 +51,12 @@ const baseRoom = (): RoomView => ({
   hunterShotEndsAt: null,
   winner: null,
   logs: [],
+  guardedTarget: null,
+  lastGuardedTarget: null,
+  wolfVoteState: null,
+  wolfIds: [],
+  harlotVisitedTarget: null,
+  dayVoteResolved: false,
   self: null
 });
 

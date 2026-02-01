@@ -3,6 +3,12 @@ npm-debug.log
 .env
 .DS_Store
 dist/
+dist-lib/
 test-results/
 coverage/
 *.mp3
+
+# Nested lockfiles (should only exist at monorepo root when moved to game-hub)
+ui-vue/pnpm-lock.yaml
+standalone-web/pnpm-lock.yaml
+standalone-server/pnpm-lock.yaml

@@ -5,6 +5,7 @@ import {
   configureRoles,
   createLobbyWithPlayers,
   ensureHunterOverlay,
+  proceedToNightIfAvailable,
   reconnectPage,
   startGameAndReady,
   submitHunterShot,
@@ -25,7 +26,8 @@ test('hunter prompt allows a follow-up shot', async ({ browser }) => {
       hunter: 1,
       witch: 0,
       armor: 0,
-      joker: 0
+      joker: 0,
+      guard: 0
     });
 
     await startGameAndReady(pages);
@@ -45,6 +47,8 @@ test('hunter prompt allows a follow-up shot', async ({ browser }) => {
       const overlayReady = await ensureHunterOverlay(hunterPlayer.page, code);
       expect(overlayReady).toBe(true);
       await submitHunterShot(hunterPlayer.page);
+      // After hunter shot, proceed to night if game didn't end
+      await proceedToNightIfAvailable(host);
     }
 
     const resultPage = advanceResult.dayPage || host;

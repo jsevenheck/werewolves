@@ -9,5 +9,5 @@
     "moduleResolution": "Node",
     "target": "ES2022"
   },
-  "include": ["server.ts", "src/server/**/*.ts", "src/shared/**/*.ts"]
+  "include": ["server.ts", "server/src/**/*.ts", "core/src/**/*.ts"]
 }

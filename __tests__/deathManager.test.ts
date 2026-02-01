@@ -1,7 +1,7 @@
-import { queueDeath, resolveDeaths, checkWinners } from '../src/server/managers/deathManager';
-import type { Player, Room, RoleConfig } from '../src/shared/types';
+import { queueDeath, resolveDeaths, checkWinners } from '../server/src/managers/deathManager';
+import type { Player, Room, RoleConfig } from '../core/src/types';
 
-type IoStub = { sockets: { sockets: Map<string, { emit: jest.Mock }> } };
+type IoStub = { sockets: Map<string, { emit: jest.Mock }> };
 
 const makeRoom = (): Room => ({
   code: 'ABCD',
@@ -11,7 +11,7 @@ const makeRoom = (): Room => ({
   dayCount: 1,
   players: {},
   minPlayers: 5,
-  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0 } as RoleConfig,
+  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0, harlot: 0 } as RoleConfig,
   passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: null,
@@ -24,6 +24,9 @@ const makeRoom = (): Room => ({
   healedTarget: null,
   poisonTarget: null,
   seerActed: false,
+  guardedTarget: null,
+  lastGuardedTarget: null,
+  guardActed: false,
   voteState: { votes: {}, revoteFromTie: null },
   pendingDeaths: [],
   logs: [],
@@ -39,6 +42,9 @@ const makeRoom = (): Room => ({
   hunterShotTimer: null,
   hunterShotEndsAt: null,
   hunterShotQueue: [],
+  harlotVisitedTarget: null,
+  harlotActed: false,
+  dayVoteResolved: false,
   createdAt: Date.now(),
   lastActivityAt: Date.now()
 });
@@ -96,7 +102,7 @@ describe('deathManager', () => {
       villager: buildPlayer({ id: 'villager', name: 'Villager', role: 'villager', alive: true, connected: true })
     };
     const emit = jest.fn();
-    const io: IoStub = { sockets: { sockets: new Map([['socket-h', { emit }]]) } };
+    const io: IoStub = { sockets: new Map([['socket-h', { emit }]]) };
     const broadcastRoom = jest.fn();
 
     queueDeath(room, 'hunter', 'executed by vote');
@@ -118,7 +124,7 @@ describe('deathManager', () => {
 
     checkWinners(room);
 
-    expect(room.winner).toEqual({ team: 'wolves', reason: 'Werewolves reached parity.' });
+    expect(room.winner).toEqual({ team: 'wolves', reason: 'Werewolves have the majority.' });
     expect(room.phase).toBe('ended');
     expect(room.phaseStep).toBeNull();
     expect(room.nextNightStep).toBeNull();

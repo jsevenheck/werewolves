@@ -1,8 +1,8 @@
-import { holdDayToNightTransition } from '../src/server/managers/phaseManager';
-import { tryResolveDayVote, resolveDayKill } from '../src/server/managers/voteManager';
-import type { Player, Room, RoleConfig } from '../src/shared/types';
+import { holdDayToNightTransition } from '../server/src/managers/phaseManager';
+import { tryResolveDayVote, resolveDayKill } from '../server/src/managers/voteManager';
+import type { Player, Room, RoleConfig } from '../core/src/types';
 
-jest.mock('../src/server/managers/phaseManager', () => ({
+jest.mock('../server/src/managers/phaseManager', () => ({
   schedulePhaseTransition: jest.fn(),
   holdDayToNightTransition: jest.fn()
 }));
@@ -15,7 +15,7 @@ const makeRoom = (players: Record<string, Player>): Room => ({
   dayCount: 1,
   players,
   minPlayers: 5,
-  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0 } as RoleConfig,
+  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0, harlot: 0 } as RoleConfig,
   passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: null,
@@ -28,6 +28,9 @@ const makeRoom = (players: Record<string, Player>): Room => ({
   healedTarget: null,
   poisonTarget: null,
   seerActed: false,
+  guardedTarget: null,
+  lastGuardedTarget: null,
+  guardActed: false,
   voteState: { votes: {}, revoteFromTie: null },
   pendingDeaths: [],
   logs: [],
@@ -43,6 +46,9 @@ const makeRoom = (players: Record<string, Player>): Room => ({
   lastDayMessage: null,
   awaitingHunterShot: null,
   winner: null,
+  harlotVisitedTarget: null,
+  harlotActed: false,
+  dayVoteResolved: false,
   createdAt: Date.now(),
   lastActivityAt: Date.now()
 });
@@ -95,7 +101,7 @@ describe('voteManager', () => {
     room.voteState.revoteFromTie = ['b', 'c'];
     room.voteState.votes = { a: 'b', b: 'c', c: 'b', d: 'c' };
     const broadcastRoom = jest.fn();
-    const resolveSpy = jest.spyOn(require('../src/server/managers/voteManager'), 'resolveDayKill')
+    const resolveSpy = jest.spyOn(require('../server/src/managers/voteManager'), 'resolveDayKill')
       .mockImplementation(() => {});
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
 
@@ -124,7 +130,7 @@ describe('voteManager', () => {
 
     tryResolveDayVote(room, broadcastRoom, undefined as never);
 
-    expect(holdDayToNightTransition).toHaveBeenCalledWith(room, broadcastRoom);
+    expect(room.dayVoteResolved).toBe(true);
     expect(room.logs[room.logs.length - 1].text).toBe('Majority abstained. No one eliminated.');
     expect(room.lastDayDeaths).toEqual([]);
     expect(room.lastDayMessage).toBe('No one was eliminated.');
@@ -143,7 +149,7 @@ describe('voteManager', () => {
     tryResolveDayVote(room, broadcastRoom, undefined as never);
 
     expect(room.voteState.votes.c).toBeNull();
-    expect(holdDayToNightTransition).toHaveBeenCalledWith(room, broadcastRoom);
+    expect(room.dayVoteResolved).toBe(true);
     expect(room.logs[room.logs.length - 1].text).toBe('Vote skipped. No one eliminated.');
     expect(room.lastDayMessage).toBe('No one was eliminated.');
   });

@@ -1,0 +1,392 @@
+/* Component styles scoped under .werewolves-root.
+   Safe to import in both standalone and embedded (library) mode. */
+
+.werewolves-root {
+  font-family: 'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif;
+  color: #f8fafc;
+}
+
+.werewolves-root *,
+.werewolves-root *::before,
+.werewolves-root *::after {
+  box-sizing: border-box;
+}
+
+.werewolves-root.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.werewolves-root .panel {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+}
+
+.werewolves-root h1,
+.werewolves-root h2,
+.werewolves-root h3 {
+  margin: 0 0 0.5rem;
+  line-height: 1.2;
+}
+
+.werewolves-root p {
+  margin: 0.5rem 0;
+}
+
+.werewolves-root form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.werewolves-root input,
+.werewolves-root select,
+.werewolves-root button,
+.werewolves-root textarea {
+  font: inherit;
+}
+
+.werewolves-root input,
+.werewolves-root select,
+.werewolves-root button {
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.6);
+  color: inherit;
+}
+
+.werewolves-root input:focus,
+.werewolves-root select:focus,
+.werewolves-root button:focus {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
+}
+
+.werewolves-root button {
+  cursor: pointer;
+  font-weight: 600;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  border: none;
+  color: #fff;
+  transition: opacity 0.2s ease;
+}
+
+.werewolves-root button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.werewolves-root .players-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.werewolves-root .player-card {
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.werewolves-root .player-card.dead {
+  opacity: 0.55;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: rgba(254, 202, 202, 0.9);
+}
+
+.werewolves-root .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(248, 197, 144, 0.4);
+}
+
+.werewolves-root .logs {
+  max-height: 180px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.werewolves-root .role-card {
+  background: rgba(248, 197, 144, 0.11);
+  border: 1px solid rgba(248, 197, 144, 0.5);
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.werewolves-root .passive-role-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.werewolves-root .actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.werewolves-root .actions.host-actions {
+  margin-top: 1rem;
+}
+
+.werewolves-root .passive-roles {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.werewolves-root .passive-role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.werewolves-root .toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.werewolves-root .toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.werewolves-root .toggle-track {
+  position: relative;
+  width: 46px;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.4);
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  transition: background 0.2s ease, border-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.werewolves-root .toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #f8fafc;
+  transition: transform 0.2s ease;
+}
+
+.werewolves-root .toggle input:focus + .toggle-track {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
+}
+
+.werewolves-root .toggle input:checked + .toggle-track {
+  background: rgba(249, 115, 22, 0.9);
+  border-color: rgba(249, 115, 22, 0.9);
+}
+
+.werewolves-root .toggle input:checked + .toggle-track::after {
+  transform: translateX(20px);
+}
+
+.werewolves-root .role-summary {
+  margin-top: 1rem;
+}
+
+.werewolves-root .role-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 200px) minmax(160px, 1fr);
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.werewolves-root .role-row input {
+  width: 100%;
+}
+
+.werewolves-root .notifications {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.werewolves-root .notification {
+  background: rgba(252, 211, 77, 0.2);
+  border: 1px solid rgba(252, 211, 77, 0.5);
+  padding: 0.75rem;
+  border-radius: 12px;
+}
+
+@media (max-width: 640px) {
+  .werewolves-root .panel {
+    padding: 1.1rem;
+  }
+
+  .werewolves-root .role-row {
+    grid-template-columns: 1fr;
+  }
+
+  .werewolves-root .players-list {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  }
+}
+
+/* Overlay styles - not scoped under .werewolves-root because
+   overlays are teleported to <body> */
+
+.hunter-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 7, 18, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 100;
+  font-family: 'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif;
+  color: #f8fafc;
+}
+
+.hunter-overlay .panel {
+  max-width: 420px;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+}
+
+.hunter-overlay .panel h2 {
+  margin: 0 0 0.5rem;
+  line-height: 1.2;
+}
+
+.hunter-overlay .panel p {
+  margin: 0.5rem 0;
+}
+
+.hunter-overlay .panel select,
+.hunter-overlay .panel button {
+  font: inherit;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  color: inherit;
+}
+
+.hunter-overlay .panel select {
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.hunter-overlay .panel button {
+  cursor: pointer;
+  font-weight: 600;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  border: none;
+  color: #fff;
+}
+
+.hunter-overlay .actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.overlay-panel {
+  position: relative;
+}
+
+.overlay-timer {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(148, 163, 184, 0.9);
+  background: rgba(71, 85, 105, 0.25);
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+}
+
+.mayor-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 7, 18, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 100;
+  font-family: 'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif;
+  color: #f8fafc;
+}
+
+.mayor-overlay .panel {
+  max-width: 420px;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+}
+
+.mayor-overlay .panel h2 {
+  margin: 0 0 0.5rem;
+  line-height: 1.2;
+}
+
+.mayor-overlay .panel p {
+  margin: 0.5rem 0;
+}
+
+.mayor-overlay .panel select,
+.mayor-overlay .panel button {
+  font: inherit;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  color: inherit;
+}
+
+.mayor-overlay .panel select {
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.mayor-overlay .panel button {
+  cursor: pointer;
+  font-weight: 600;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  border: none;
+  color: #fff;
+}
+
+.mayor-overlay .actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}

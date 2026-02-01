@@ -5,6 +5,7 @@ import {
   configureRoles,
   createLobbyWithPlayers,
   getAliveNames,
+  proceedToNightIfAvailable,
   startGameAndReady,
   voteAllForTarget,
   waitForDayOnAllPages
@@ -23,7 +24,8 @@ test('day vote eliminates a player', async ({ browser }) => {
       hunter: 0,
       witch: 0,
       armor: 0,
-      joker: 0
+      joker: 0,
+      guard: 0
     });
 
     await startGameAndReady(pages);
@@ -40,6 +42,9 @@ test('day vote eliminates a player', async ({ browser }) => {
 
     await voteAllForTarget(players, targetName);
     await dayPage.waitForSelector('text=was voted out', { timeout: 10000 });
+    
+    // Host proceeds to night if game didn't end (e.g., if wolf was voted out, game ends)
+    await proceedToNightIfAvailable(host);
   } finally {
     await closeContexts(contexts);
   }

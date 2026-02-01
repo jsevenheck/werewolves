@@ -1,5 +1,5 @@
-import { sanitizeRoom } from '../src/server/managers/broadcastManager';
-import type { Room, Player } from '../src/shared/types';
+import { sanitizeRoom } from '../server/src/managers/broadcastManager';
+import type { Room, Player } from '../core/src/types';
 
 const makeRoom = (): Room => ({
   code: 'ABCD',
@@ -9,7 +9,7 @@ const makeRoom = (): Room => ({
   players: {},
   hostId: 'p1',
   minPlayers: 5,
-  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0 },
+  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0, harlot: 0 },
   passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: null,
@@ -22,6 +22,9 @@ const makeRoom = (): Room => ({
   healedTarget: null,
   poisonTarget: null,
   seerActed: false,
+  guardedTarget: null,
+  lastGuardedTarget: null,
+  guardActed: false,
   voteState: { votes: {}, revoteFromTie: null },
   pendingDeaths: [],
   winner: null,
@@ -37,6 +40,9 @@ const makeRoom = (): Room => ({
   hunterShotTimer: null,
   hunterShotEndsAt: null,
   hunterShotQueue: [],
+  harlotVisitedTarget: null,
+  harlotActed: false,
+  dayVoteResolved: false,
   createdAt: Date.now(),
   lastActivityAt: Date.now()
 });

@@ -1,0 +1,20 @@
+{
+  "extends": "../ui-vue/tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["../core/src/*"],
+      "@/*": ["../ui-vue/src/*"]
+    },
+    "types": ["vite/client", "node"],
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "env.d.ts",
+    "../ui-vue/src/**/*.ts",
+    "../ui-vue/src/**/*.vue",
+    "../ui-vue/env.d.ts"
+  ]
+}
