@@ -345,9 +345,9 @@ describe('narrator audio variants', () => {
   });
 
   test('selects random variant when discovered', async () => {
-    // Mock fetch to return success for 2 variants in default folder only
+    // Mock fetch to return success for 2 variants in custom folder only
     global.fetch = jest.fn().mockImplementation((url: string) => {
-      if (!url.includes('/custom/') && (url.includes('day_1.mp3') || url.includes('day_2.mp3'))) {
+      if (url.includes('/custom/day_1.mp3') || url.includes('/custom/day_2.mp3')) {
         return Promise.resolve({ ok: true });
       }
       return Promise.resolve({ ok: false });
@@ -369,8 +369,8 @@ describe('narrator audio variants', () => {
       await flushPromises();
 
       const [howl] = MockHowl.instances;
-      // Should select day_2 (index 1 of 2 variants)
-      expect(howl.options.src).toBe('/audio/day_2.mp3');
+      // Should select day_2 (index 1 of 2 variants) from custom folder
+      expect(howl.options.src).toBe('/audio/custom/day_2.mp3');
     } finally {
       Math.random = originalRandom;
     }
@@ -458,8 +458,8 @@ describe('narrator custom audio override', () => {
     expect(howl.options.src).toBe('/audio/night_wolves.mp3');
   });
 
-  test('discovers custom variants before default variants', async () => {
-    // Mock: custom/day_1 exists, default day_2 exists
+  test('only discovers custom variants, not default variants', async () => {
+    // Mock: custom/day_1 exists, default day_2 exists (but should be ignored)
     global.fetch = jest.fn().mockImplementation((url: string) => {
       if (url.includes('/custom/day_1.mp3')) {
         return Promise.resolve({ ok: true });
@@ -488,19 +488,21 @@ describe('narrator custom audio override', () => {
       const [howl] = MockHowl.instances;
       // Should use custom variant
       expect(howl.options.src).toBe('/audio/custom/day_1.mp3');
+
+      // Should NOT have checked for default variants (only custom)
+      expect(global.fetch).toHaveBeenCalledWith('/audio/custom/day_1.mp3', { method: 'HEAD' });
+      expect(global.fetch).not.toHaveBeenCalledWith('/audio/day_2.mp3', { method: 'HEAD' });
     } finally {
       Math.random = originalRandom;
     }
   });
 
-  test('mixes custom and default variants', async () => {
-    // Mock: custom/night_1 exists, default night_2 and night_3 exist
+  test('uses standard file when no custom variants exist', async () => {
+    // Mock: no custom variants exist
     global.fetch = jest.fn().mockImplementation((url: string) => {
-      if (url.includes('/custom/night_1.mp3')) {
-        return Promise.resolve({ ok: true });
-      }
-      if ((url.includes('night_2.mp3') || url.includes('night_3.mp3')) && !url.includes('/custom/')) {
-        return Promise.resolve({ ok: true });
+      // All custom variant checks fail
+      if (url.includes('/custom/') && url.includes('night_')) {
+        return Promise.resolve({ ok: false });
       }
       return Promise.resolve({ ok: false });
     });
@@ -516,8 +518,11 @@ describe('narrator custom audio override', () => {
     narrator.handleRoomUpdate(null, room);
     await flushPromises();
 
-    // Verify that fetch was called for both custom and default paths
+    const [howl] = MockHowl.instances;
+    // Should fall back to standard file (not custom)
+    expect(howl.options.src).toBe('/audio/night.mp3');
+
+    // Should have checked for custom variants but not found any
     expect(global.fetch).toHaveBeenCalledWith('/audio/custom/night_1.mp3', { method: 'HEAD' });
-    expect(global.fetch).toHaveBeenCalledWith('/audio/night_2.mp3', { method: 'HEAD' });
   });
 });

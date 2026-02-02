@@ -241,27 +241,15 @@ class Narrator {
     for (let i = 1; i <= maxVariants; i++) {
       const variantKey = `${key}_${i}`;
 
-      // Check custom folder first
+      // Check custom folder only - standard files are used as fallback when no custom variants exist
       const customUrl = `${this.basePath}/custom/${variantKey}.mp3`;
       try {
         const response = await fetch(customUrl, { method: 'HEAD' });
         if (response.ok) {
           variants.push(variantKey);
-          continue;
         }
       } catch {
-        // Custom file doesn't exist, try default
-      }
-
-      // Fallback to default folder
-      const defaultUrl = `${this.basePath}/${variantKey}.mp3`;
-      try {
-        const response = await fetch(defaultUrl, { method: 'HEAD' });
-        if (response.ok) {
-          variants.push(variantKey);
-        }
-      } catch {
-        // File doesn't exist or network error, skip
+        // Custom variant doesn't exist, skip
       }
     }
 
