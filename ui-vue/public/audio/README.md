@@ -32,6 +32,30 @@ day_3.mp3     ← Will be auto-detected
 
 The narrator will randomly select one variant each time the clip is played.
 
+## Custom Audio Override
+
+You can override any AI-generated audio file with your own recordings by placing them in the `custom/` subdirectory.
+
+**How it works:**
+1. Create a `custom/` folder inside this `audio/` directory
+2. Place your custom recordings with the same filenames (e.g., `custom/night_wolves.mp3`)
+3. The narrator will automatically use custom files when available
+4. If no custom file exists, it falls back to the AI-generated file in the main `audio/` folder
+
+**Priority:** `audio/custom/` → `audio/`
+
+**Examples:**
+```
+audio/
+  day.mp3              ← AI-generated (fallback)
+  night_wolves.mp3     ← AI-generated (fallback)
+  custom/
+    day.mp3            ← Custom recording (used instead of AI version)
+    night_wolves_2.mp3 ← Custom variant (used instead of AI variant)
+```
+
+**Note:** The `custom/` folder is automatically ignored by git, so your personal recordings won't be committed to the repository.
+
 ## Audio Files
 
 ### lobby.mp3

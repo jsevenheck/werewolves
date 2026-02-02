@@ -345,9 +345,9 @@ describe('narrator audio variants', () => {
   });
 
   test('selects random variant when discovered', async () => {
-    // Mock fetch to return success for 2 variants
+    // Mock fetch to return success for 2 variants in default folder only
     global.fetch = jest.fn().mockImplementation((url: string) => {
-      if (url.includes('day_1.mp3') || url.includes('day_2.mp3')) {
+      if (!url.includes('/custom/') && (url.includes('day_1.mp3') || url.includes('day_2.mp3'))) {
         return Promise.resolve({ ok: true });
       }
       return Promise.resolve({ ok: false });
@@ -398,5 +398,126 @@ describe('narrator audio variants', () => {
     expect(MockHowl.instances).toHaveLength(2);
     expect(MockHowl.instances[0].options.src).toBe('/audio/day.mp3');
     expect(MockHowl.instances[1].options.src).toBe('/audio/night_wolves.mp3');
+  });
+});
+
+describe('narrator custom audio override', () => {
+  beforeEach(() => {
+    MockHowl.reset();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test('uses custom audio when available', async () => {
+    // Mock fetch to return success for custom file
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('/custom/day.mp3')) {
+        return Promise.resolve({ ok: true });
+      }
+      return Promise.resolve({ ok: false });
+    });
+
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: true,
+      basePath: '/audio',
+      storage: null
+    });
+
+    const room = buildRoom({ phase: 'day' });
+    narrator.handleRoomUpdate(null, room);
+    await flushPromises();
+
+    const [howl] = MockHowl.instances;
+    expect(howl.options.src).toBe('/audio/custom/day.mp3');
+  });
+
+  test('falls back to default audio when custom not available', async () => {
+    // Mock fetch to return 404 for custom, would succeed for default
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('/custom/')) {
+        return Promise.resolve({ ok: false });
+      }
+      return Promise.resolve({ ok: false });
+    });
+
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: true,
+      basePath: '/audio',
+      storage: null
+    });
+
+    const room = buildRoom({ phase: 'night', phaseStep: 'wolves' });
+    narrator.handleRoomUpdate(null, room);
+    await flushPromises();
+
+    const [howl] = MockHowl.instances;
+    expect(howl.options.src).toBe('/audio/night_wolves.mp3');
+  });
+
+  test('discovers custom variants before default variants', async () => {
+    // Mock: custom/day_1 exists, default day_2 exists
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('/custom/day_1.mp3')) {
+        return Promise.resolve({ ok: true });
+      }
+      if (url.includes('day_2.mp3') && !url.includes('/custom/')) {
+        return Promise.resolve({ ok: true });
+      }
+      return Promise.resolve({ ok: false });
+    });
+
+    const originalRandom = Math.random;
+    Math.random = jest.fn(() => 0); // Select first variant
+
+    try {
+      const narrator = createNarrator({
+        initialEnabled: true,
+        initialUnlocked: true,
+        basePath: '/audio',
+        storage: null
+      });
+
+      const room = buildRoom({ phase: 'day' });
+      narrator.handleRoomUpdate(null, room);
+      await flushPromises();
+
+      const [howl] = MockHowl.instances;
+      // Should use custom variant
+      expect(howl.options.src).toBe('/audio/custom/day_1.mp3');
+    } finally {
+      Math.random = originalRandom;
+    }
+  });
+
+  test('mixes custom and default variants', async () => {
+    // Mock: custom/night_1 exists, default night_2 and night_3 exist
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('/custom/night_1.mp3')) {
+        return Promise.resolve({ ok: true });
+      }
+      if ((url.includes('night_2.mp3') || url.includes('night_3.mp3')) && !url.includes('/custom/')) {
+        return Promise.resolve({ ok: true });
+      }
+      return Promise.resolve({ ok: false });
+    });
+
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: true,
+      basePath: '/audio',
+      storage: null
+    });
+
+    const room = buildRoom({ phase: 'night' });
+    narrator.handleRoomUpdate(null, room);
+    await flushPromises();
+
+    // Verify that fetch was called for both custom and default paths
+    expect(global.fetch).toHaveBeenCalledWith('/audio/custom/night_1.mp3', { method: 'HEAD' });
+    expect(global.fetch).toHaveBeenCalledWith('/audio/night_2.mp3', { method: 'HEAD' });
   });
 });

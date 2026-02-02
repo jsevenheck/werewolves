@@ -220,15 +220,43 @@ class Narrator {
     }
   }
 
+  private async resolveAudioPath(audioKey: string): Promise<string> {
+    const customPath = `${this.basePath}/custom/${audioKey}.mp3`;
+
+    try {
+      const response = await fetch(customPath, { method: 'HEAD' });
+      if (response.ok) {
+        return customPath;
+      }
+    } catch {
+      // Custom file doesn't exist, fall back to default
+    }
+
+    return `${this.basePath}/${audioKey}.mp3`;
+  }
+
   private async discoverVariants(key: string, maxVariants = 10): Promise<string[]> {
     const variants: string[] = [];
-    
+
     for (let i = 1; i <= maxVariants; i++) {
       const variantKey = `${key}_${i}`;
-      const url = `${this.basePath}/${variantKey}.mp3`;
-      
+
+      // Check custom folder first
+      const customUrl = `${this.basePath}/custom/${variantKey}.mp3`;
       try {
-        const response = await fetch(url, { method: 'HEAD' });
+        const response = await fetch(customUrl, { method: 'HEAD' });
+        if (response.ok) {
+          variants.push(variantKey);
+          continue;
+        }
+      } catch {
+        // Custom file doesn't exist, try default
+      }
+
+      // Fallback to default folder
+      const defaultUrl = `${this.basePath}/${variantKey}.mp3`;
+      try {
+        const response = await fetch(defaultUrl, { method: 'HEAD' });
         if (response.ok) {
           variants.push(variantKey);
         }
@@ -236,7 +264,7 @@ class Narrator {
         // File doesn't exist or network error, skip
       }
     }
-    
+
     return variants;
   }
 
@@ -284,6 +312,8 @@ class Narrator {
     const pending = this.howlPromises.get(audioKey);
     if (pending) return pending;
 
+    const audioPath = await this.resolveAudioPath(audioKey);
+
     const promise = new Promise<Howl>((resolve) => {
       let attemptedFallback = false;
       let resolved = false;
@@ -296,7 +326,7 @@ class Narrator {
           preload: 'metadata',
           volume: DEFAULT_VOLUME
         });
-      let activeHowl = createHowl(`${this.basePath}/${audioKey}.mp3`);
+      let activeHowl = createHowl(audioPath);
 
       const cleanup = (howl: Howl) => {
         howl.off('load');
