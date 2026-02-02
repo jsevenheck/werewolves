@@ -1,3 +1,14 @@
+# Game Specification
+
+This document describes the game rules, data model, and phase flow for the Werewolves game.
+
+## Overview
+Werewolves is a social deduction game where:
+- **Werewolves** secretly kill a villager each night
+- **Villagers** vote to eliminate suspects during the day
+- Special roles (Seer, Witch, Hunter, Guard, etc.) have unique abilities
+- Game ends when all wolves are dead (village wins) or wolves reach majority (wolves win)
+
 ## Data Model
 
 ### Player
@@ -5,7 +16,7 @@
 - `socketId`: string or null active socket id for reconnect.
 - `resumeToken`: random token required to resume a session (stored client-side).
 - `name`: display name shown to others.
-- `role`: enum (`werewolf`, `seer`, `hunter`, `witch`, `armor`, `joker`, `villager`).
+- `role`: enum (`werewolf`, `seer`, `hunter`, `witch`, `armor`, `joker`, `guard`, `harlot`, `villager`).
 - `team`: derived team id for win logic (`wolves`, `village`, `neutral`).
 - `alive`: boolean.
 - `connected`: boolean for reconnect tracking.
@@ -18,7 +29,7 @@
 ### Room
 - `code`: 4-letter uppercase join code.
 - `phase`: enum (`lobby`, `roleReveal`, `mayor`, `armor`, `night`, `day`, `ended`).
-- `phaseStep`: helper for night substeps (`wolves`, `seer`, `witch`, `resolve`, `transition`).
+- `phaseStep`: helper for night substeps (`wolves`, `seer`, `witch`, `guard`, `harlot`, `resolve`, `transition`).
 - `dayCount`: starts at 0, increments at each day phase.
 - `players`: map playerId -> Player.
 - `hostId`: acting host id (may switch on disconnect; reverts to owner when they reconnect).
@@ -31,6 +42,11 @@
 - `mayorSelectionTimer`: timeout for mayor succession (60 seconds; auto-selects random alive player on timeout).
 - `lovers`: `{aId, bId}` or null.
 - `witchState`: `{healAvailable: boolean, poisonAvailable: boolean}`.
+- `guardedTarget`: player protected by guard this night, or null.
+- `lastGuardedTarget`: player protected by guard last night (for consecutive protection rule), or null.
+- `guardActed`: boolean, true if guard has submitted protection this night.
+- `harlotVisitedTarget`: player visited by harlot this night, or null.
+- `harlotActed`: boolean, true if harlot has submitted a visit this night.
 - `wolfVotes`: map playerId -> targetId (null for no vote).
 - `wolfTarget`: chosen target after wolf vote resolves.
 - `voteState`: `{votes: map playerId -> targetId|null, revoteFromTie: array|null}`.
@@ -83,15 +99,35 @@ loop:
       if step='witch':
         if witch alive:
           show wolves' target; let witch save/poison (one potion per night)
+          witch can use both potions in the same night
+          button shows 'Continue' after using any potion, otherwise 'Skip'
           update potion flags
+        advance step='guard'
+      if step='guard':
+        if guard alive:
+          wait for guard to select a target to protect
+          guard cannot protect same player two nights in a row
+          guard cannot protect themselves
+        advance step='harlot'
+      if step='harlot':
+        if harlot alive:
+          wait for harlot to select a player to visit
+          harlot cannot visit themselves
+          if harlot visits the wolf target (and target is not protected), harlot also dies
         advance step='resolve'
       wait ~3 seconds between all phase transitions and night steps to allow players to reset
       host may skip current step if a player is offline or unresponsive
       if step='resolve':
-        apply wolf target unless healed -> queue death
-        apply poison death (if any)
+        apply wolf target unless healed or guarded -> queue death
+        if harlot visited wolf target (and target dies), queue harlot death
+        apply poison death (if any) unless guarded -> queue death
         process queued deaths with `resolveDeaths()`
         increment day count, update phase='day', reset votes
+    day:
+      ...vote resolution...
+      once winner target established:
+        set dayVoteResolved=true, broadcast
+        host clicks 'Proceed to Night' to trigger dayToNight transition
     day:
       announce deaths to all
       collect votes from alive players
@@ -102,7 +138,11 @@ loop:
         if role(target)=='joker': endGame('joker', 'Joker voted out')
         else:
           kill target, resolveDeaths()
-          if phase still not ended -> start next night (phase='night', step='wolves')
+          after all actions complete (hunter shots, mayor successions):
+            set dayVoteResolved=true
+            host must click 'Proceed to Night' button to continue
+            button only appears after all pending actions are resolved
+          if game not ended -> host triggers dayToNight transition
 
 resolveDeaths():
   while queue not empty:
@@ -115,7 +155,16 @@ resolveDeaths():
     if player is lover -> enqueue other lover death reason='died of heartbreak'
   after queue empty check win conditions:
     if all wolves dead -> endGame('village', 'All wolves dead')
-    else if wolves >= others -> endGame('wolves', 'Parity reached')
+    else if wolves > others (strict majority):
+      endGame('wolves', 'Werewolves have the majority')
+    else if wolves == others (parity):
+      check if village has abilities to turn the tide:
+        - hunter alive (can shoot)
+        - witch with poison (can kill)
+        - pending mayor succession
+        - mayor alive (has tie-breaking power in votes)
+      if any of above true -> game continues
+      else -> endGame('wolves', 'Werewolves reached parity')
 
 HunterShot(targetId):
   enqueue death for target

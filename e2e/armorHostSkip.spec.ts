@@ -13,7 +13,8 @@ test('host can skip armor selection', async ({ browser }) => {
       seer: 0,
       hunter: 0,
       witch: 0,
-      joker: 0
+      joker: 0,
+      guard: 0
     });
     await startGameAndReady(pages);
     await completeMayorElection(host, pages);

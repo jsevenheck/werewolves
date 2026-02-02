@@ -1,78 +1,114 @@
 # Werewolves Codebase Structure
 
-This document describes the refactored codebase structure.
+This document describes the codebase structure, designed to support both
+standalone operation and embedding into the game-hub platform.
+
+## Quick Summary
+- **core/**: Shared types, events, constants (used by both client and server)
+- **server/**: Node.js + Socket.IO backend with managers for game logic
+- **ui-vue/**: Vue 3 frontend with Pinia stores and phase components
+- **standalone-*/**: Thin wrappers for running without game-hub
+- **__tests__/**: Jest unit tests
+- **e2e/**: Playwright E2E tests
 
 ## Project Structure
 
 ```
 werewolves/
-|-- server.ts                 # Main server entry point (TypeScript)
-|-- src/                      # Server-side code
-|   `-- server/
-|       |-- config/           # Configuration and constants
-|       |   `-- constants.ts  # Game constants, role info, defaults
-|       |-- models/           # Data models
-|       |   |-- room.ts       # Room creation and management
-|       |   `-- player.ts     # Player creation and socket index
-|       |-- managers/         # Business logic managers
-|       |   |-- roleManager.ts      # Role assignment and validation
-|       |   |-- phaseManager.ts     # Game phase transitions
-|       |   |-- nightManager.ts     # Night phase logic
-|       |   |-- voteManager.ts      # Day voting logic
-|       |   |-- mayorManager.ts     # Mayor election and succession logic
-|       |   |-- deathManager.ts     # Death resolution and win conditions
-|       |   `-- broadcastManager.ts # Room state broadcasting
-|       |-- handlers/         # Socket event handlers
-|       |   `-- socketHandlers.ts   # All socket.io event handlers
-|       `-- utils/            # Utility functions
-|           `-- helpers.ts    # Helper functions
-|-- src/shared/               # Shared types/events for client + server
-|   |-- events.ts             # Socket.IO event contracts
-|   |-- types.ts              # Shared data shapes (room, player, etc.)
-|   `-- constants.ts          # Shared timing constants for UI + server
-|-- client/                   # Vite client workspace
-|   |-- index.html            # Main HTML file
-|   `-- src/                  # Client TypeScript modules
-|       |-- main.ts           # Main client entry point
-|       |-- style.css         # Styles
-|       |-- config/           # Client configuration
-|       |   `-- constants.ts  # Role details and constants
-|       |-- state/            # State management
-|       |   `-- gameState.ts  # Global game state and session storage
-|       |-- renderers/        # UI rendering functions
-|       |   |-- landingRenderer.ts  # Landing page renderer
-|       |   |-- commonRenderers.ts  # Header, players, logs renderers
-|       |   `-- phaseRenderers.ts   # Game phase renderers
-|       |-- handlers/         # Event handlers
-|       |   |-- landingHandlers.ts  # Landing page event handlers
-|       |   |-- commonHandlers.ts   # Common UI event handlers
-|       |   `-- phaseHandlers.ts    # Game phase event handlers
-|       `-- utils/            # Utility functions
-|           `-- helpers.ts    # Client helper functions
-|-- docs/                     # Documentation
-|-- package.json              # Dependencies and scripts
-`-- README.md                 # Project README
+├── server.ts                 # Legacy entry point (delegates to standalone)
+├── core/                     # Pure game logic (no Vue, Pinia, Socket.IO, DOM)
+│   └── src/
+│       ├── types.ts          # Shared types (Role, Phase, Player, Room, etc.)
+│       ├── events.ts         # Socket.IO event contracts
+│       └── constants.ts      # Shared timing constants
+├── server/                   # Server-side game logic
+│   └── src/
+│       ├── index.ts          # registerWerewolf(io) - namespace plugin export
+│       ├── standalone.ts     # Legacy standalone entry (uses registerWerewolf)
+│       ├── config/           # Server-only constants and role data
+│       ├── handlers/         # Socket.IO event handlers
+│       ├── managers/         # Business logic (role, phase, vote, death, etc.)
+│       ├── models/           # Room and Player models
+│       └── utils/            # Server helpers
+├── ui-vue/                   # Vue 3 game UI
+│   └── src/
+│       ├── index.ts          # Hub exports: manifest, GameComponent
+│       ├── install.ts        # Legacy plugin installer (standalone only)
+│       ├── main.ts           # Standalone entry (with Pinia)
+│       ├── App.vue           # Root component with phase switching
+│       ├── components/       # Phase screens, panels, overlays
+│       ├── composables/      # Socket, narrator hooks
+│       ├── stores/           # Pinia stores
+│       ├── types/            # Client-only types
+│       └── utils/            # Client helpers
+├── standalone-server/        # Thin wrapper for standalone server
+│   └── src/
+│       └── index.ts          # HTTP + Socket.IO + registerWerewolf()
+├── standalone-web/           # Thin wrapper for standalone web client
+│   ├── index.html
+│   ├── vite.config.ts
+│   └── src/
+│       └── main.ts           # Vue app + Pinia + GameComponent
+├── docs/                     # Documentation
+├── __tests__/                # Jest unit tests
+└── e2e/                      # Playwright E2E tests
 ```
+
+## Embedded vs Standalone
+
+| Aspect | Embedded (game-hub) | Standalone |
+|--------|---------------------|------------|
+| Vue app | Created by hub | Created by standalone-web |
+| Pinia | Installed by hub | Installed by standalone-web |
+| Socket.IO server | Hub calls registerWerewolf() | standalone-server creates + calls |
+| Room creation | Platform provides sessionId | User creates via UI |
+| Auth | Platform issues joinToken | Server issues resumeToken |
+
+See [embedded-and-standalone.md](./embedded-and-standalone.md) for full details.
 
 ## Server-Side Architecture
 
+### Entry Points
+
+- `server/src/index.ts`: Exports `registerWerewolf(io)` for embedded use
+- `server/src/standalone.ts`: Legacy entry point (uses registerWerewolf internally)
+- `standalone-server/src/index.ts`: New standalone wrapper
+
+### Namespace Plugin Pattern
+
+The server exports a single function that attaches handlers to a Socket.IO namespace:
+
+```typescript
+// server/src/index.ts
+export function registerWerewolf(io: Server) {
+  const nsp = io.of('/g/werewolf');
+  
+  nsp.use(authMiddleware);
+  nsp.on('connection', (socket) => {
+    setupSocketHandlers(nsp, socket);
+  });
+  
+  return nsp;
+}
+```
+
 ### Config Layer
-- `constants.ts`: Contains all game constants, role information, and default configurations
-- `src/shared/constants.ts`: Shared timing constants (phase/transition delays) used by client + server
+- `server/src/config/constants.ts`: Server-only constants, role data, timing (E2E override)
+- `core/src/constants.ts`: Shared timing constants for client + server
 
 ### Models Layer
-- `room.ts`: Room creation, storage, and retrieval
-- `player.ts`: Player creation and socket-player mapping
+- `server/src/models/room.ts`: Room creation, storage, and retrieval
+- `server/src/models/player.ts`: Player creation and socket-player mapping
 
 ### Managers Layer
 Business logic separated by concern:
 - `roleManager.ts`: Role configuration, validation, and assignment
 - `phaseManager.ts`: Phase transitions and scheduling
 - `nightManager.ts`: Night phase actions (wolf votes, seer, witch)
-- `voteManager.ts`: Day voting and elimination (includes mayor tie-breaking mechanics)
-- `mayorManager.ts`: Mayor election and succession (includes timeout handling)
-- `deathManager.ts`: Death queue, resolution, hunter shots, and win condition checking
-- `broadcastManager.ts`: Room state sanitization, broadcasting, and activity tracking
+- `voteManager.ts`: Day voting and elimination (includes mayor tie-breaking)
+- `mayorManager.ts`: Mayor election and succession
+- `deathManager.ts`: Death queue, resolution, hunter shots, win checking
+- `broadcastManager.ts`: Room state sanitization and broadcasting
 
 ### Handlers Layer
 - `socketHandlers.ts`: All Socket.IO event handlers organized by game phase
@@ -82,47 +118,49 @@ Business logic separated by concern:
 
 ## Client-Side Architecture
 
-### Config Layer
-- `constants.ts`: Role details and UI constants
-- `src/shared/constants.ts`: Timing constants used to display transition durations
+### Entry Points
 
-### State Layer
-- `gameState.ts`: Global state management and localStorage session handling
+- `ui-vue/src/index.ts`: Hub exports (manifest, GameComponent)
+- `ui-vue/src/main.ts`: Legacy standalone entry with Pinia
+- `standalone-web/src/main.ts`: New standalone wrapper
 
-### Renderers Layer
-UI rendering functions organized by screen:
-- `landingRenderer.ts`: Initial landing page
-- `commonRenderers.ts`: Header, players list, event logs
-- `phaseRenderers.ts`: All game phase-specific UI (lobby, roleReveal, armor, night, day)
+### Components
+Phase-specific screens in `ui-vue/src/components/*Phase.vue`. Shared UI in
+`ui-vue/src/components/panels` and `ui-vue/src/components/overlays`.
 
-### Handlers Layer
-Event handlers separated by functionality:
-- `landingHandlers.ts`: Room creation, joining, resuming
-- `commonHandlers.ts`: Common actions (toggle role, leave game, hunter overlay)
-- `phaseHandlers.ts`: Phase-specific interactions (voting, role actions)
+### Composables
+Reusable client logic (socket setup, narrator audio) in `ui-vue/src/composables/`.
 
-### Utils Layer
-- `helpers.ts`: Helper functions for notifications and formatting
+### Stores
+Pinia stores in `ui-vue/src/stores/` (game/session state, pending actions).
+
+### Utils
+Helper functions in `ui-vue/src/utils/`.
 
 ## Module Dependencies
 
 ### Server Dependencies
 ```
-server.ts
-  -> socketHandlers.ts
-       -> models/ (room, player)
-       -> managers/ (role, phase, night, vote, death, broadcast)
-       -> utils/ (helpers)
+registerWerewolf(io)
+  └── setupSocketHandlers(nsp, socket)
+       ├── models/ (room, player)
+       ├── managers/ (role, phase, night, vote, death, broadcast)
+       └── utils/ (helpers)
 ```
 
 ### Client Dependencies
 ```
-main.ts
-  -> state/gameState.ts
-  -> renderers/ (landing, common, phase)
-  -> handlers/ (landing, common, phase)
-  -> utils/helpers.ts
+GameComponent (App.vue)
+  ├── stores/ (game)
+  ├── composables/ (socket, narrator)
+  ├── components/ (phases, panels, overlays)
+  └── utils/helpers.ts, narrator.ts
 ```
+
+**Narrator**: The `utils/narrator.ts` module handles audio playback with support 
+for multiple audio variants per clip (e.g., `day_1.mp3`, `day_2.mp3`). It 
+auto-detects numbered variants via HEAD requests and randomly selects one per 
+playback for variety.
 
 ## Benefits of This Structure
 
@@ -138,19 +176,17 @@ main.ts
 ### Adding New Features
 
 **Server-side:**
-1. Add shared timing constants to `src/shared/constants.ts` when both client + server need them
-2. Add server-only constants to `src/server/config/constants.ts`
-2. Update models if new data structures are needed
-3. Add business logic to appropriate manager
-4. Add socket event handlers to `src/server/handlers/socketHandlers.ts`
+1. Add shared timing constants to `core/src/constants.ts` when both client + server need them
+2. Add server-only constants to `server/src/config/constants.ts`
+3. Update models if new data structures are needed
+4. Add business logic to appropriate manager
+5. Add socket event handlers to `server/src/handlers/socketHandlers.ts`
 
 **Client-side:**
-1. Add shared timing constants to `src/shared/constants.ts` when both client + server need them
-2. Add client-only constants to `client/src/config/constants.ts`
-2. Update state management if needed
-3. Add rendering functions to appropriate renderer
-4. Add event handlers to appropriate handler module
-5. Update `client/src/main.ts` if new top-level functionality is needed
+1. Add shared timing constants to `core/src/constants.ts` when both client + server need them
+2. Update client state in `ui-vue/src/stores/` if needed
+3. Add UI in `ui-vue/src/components/` and wiring in `ui-vue/src/App.vue`
+4. Add client-only helpers in `ui-vue/src/utils/` or `ui-vue/src/composables/`
 
 ### Module Export/Import Pattern
 
@@ -171,3 +207,10 @@ export { functionName };
 // Importing
 import { functionName } from './path/to/module';
 ```
+
+## Workspace Layout Notes
+
+- The main folders are `core/`, `server/`, `ui-vue/`, plus standalone wrappers.
+- In development, Vite runs on port 5173 and proxies `/socket.io` to port 3001.
+- Standalone-web and standalone-server reuse embedded modules as thin wrappers.
+- See [embedded-and-standalone.md](./embedded-and-standalone.md) for integration details.

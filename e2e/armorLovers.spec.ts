@@ -58,7 +58,8 @@ test('armor can link two lovers', async ({ browser }) => {
       hunter: 0,
       witch: 0,
       armor: 1,
-      joker: 0
+      joker: 0,
+      guard: 0
     });
 
     await startGameAndReady(pages);
