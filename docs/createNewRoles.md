@@ -171,7 +171,7 @@ If the role affects win conditions or death resolution:
 ## Pitfalls and Notes
 - `DEFAULT_ROLE_CONFIG` must match `RoleConfig`, otherwise lobby validation breaks.
 - `validateCounts` in `server/src/managers/roleManager.ts` may need updates if your role has minimums.
-- `assignRoles` in `server/src/managers/roleManager.ts` sets `nightAction` only for werewolves; extend it if your role needs per-player action state.
+- `assignRoles` in `server/src/managers/roleManager.ts` is the place to initialize any per-role player state you add.
 - Be careful with visibility in `broadcastManager`: private info must not leak to other roles.
 - If you add a new phase or transition, also update `Phase`/`PhaseTransition` and narrator handling.
 

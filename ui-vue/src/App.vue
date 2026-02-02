@@ -4,7 +4,7 @@ import { useGameStore } from '@/stores/game';
 import { useSocket } from '@/composables/useSocket';
 import { useNarrator } from '@/composables/useNarrator';
 import { notify } from '@/utils/helpers';
-import type { WerewolvesGameConfig } from '@/types/config';
+import type { GameComponentProps } from '@/types/config';
 import type { StoredSession, RoomView } from '@shared/types';
 import {
   NIGHT_TO_DAY_DELAY_MS,
@@ -44,27 +44,26 @@ const props = withDefaults(defineProps<Props>(), {
   socketUrl: '',
   socketPath: '/socket.io',
   assetsBasePath: '/audio',
-  standalone: true,
   sessionId: '',
   joinToken: '',
   wsNamespace: '',
   apiBaseUrl: ''
 });
 
-// Check for injected config from app.use() installation
-const injectedConfig = inject<WerewolvesGameConfig>('werewolvesConfig', {});
-const effectiveSocketUrl = props.wsNamespace
-  ? (props.socketUrl || injectedConfig.socketUrl || '') + props.wsNamespace
+// Check for injected config from host app (app.provide)
+const injectedConfig = inject<Partial<GameComponentProps>>('werewolvesConfig', {});
+const effectiveWsNamespace = props.wsNamespace || injectedConfig.wsNamespace || '';
+const effectiveSocketUrl = effectiveWsNamespace
+  ? (props.socketUrl || injectedConfig.socketUrl || '') + effectiveWsNamespace
   : props.socketUrl || injectedConfig.socketUrl || '';
 const effectiveSocketPath = props.socketPath || injectedConfig.socketPath || '/socket.io';
 const effectiveAssetsBasePath = normalizeAssetsBasePath(
   props.assetsBasePath || injectedConfig.assetsBasePath || '/audio'
 );
-const effectiveStandalone = props.wsNamespace
-  ? false
-  : (props.standalone ?? injectedConfig.standalone ?? true);
-const effectiveSessionId = props.sessionId || '';
-const effectiveJoinToken = props.joinToken || '';
+const explicitStandalone = props.standalone ?? injectedConfig.standalone;
+const effectiveStandalone = explicitStandalone ?? (effectiveWsNamespace ? false : true);
+const effectiveSessionId = props.sessionId || injectedConfig.sessionId || '';
+const effectiveJoinToken = props.joinToken || injectedConfig.joinToken || '';
 
 function normalizeAssetsBasePath(path: string) {
   const trimmed = path.trim();

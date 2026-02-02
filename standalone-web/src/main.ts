@@ -21,9 +21,9 @@ const urlParams = new URLSearchParams(window.location.search);
 const sessionId = urlParams.get('sessionId') || '';
 const joinToken = urlParams.get('joinToken') || '';
 
-// In standalone mode, we connect to /g/werewolf namespace
+// In standalone mode, we connect to /g/werewolves namespace
 // The server URL is inferred from the current origin
-const wsNamespace = '/g/werewolf';
+const wsNamespace = '/g/werewolves';
 
 const app = createApp({
   render() {

@@ -18,6 +18,13 @@ jobs:
   test-and-integrate:
     name: Test & Create Game Hub PR
     runs-on: ubuntu-latest
+    env:
+      SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      SOURCE_BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+      SOURCE_MESSAGE: ${{ github.event.workflow_run.head_commit.message || github.event.head_commit.message || '' }}
+      SOURCE_AUTHOR_NAME: ${{ github.event.workflow_run.head_commit.author.name || github.actor }}
+      SOURCE_AUTHOR_EMAIL: ${{ github.event.workflow_run.head_commit.author.email || '' }}
+      SOURCE_TIMESTAMP: ${{ github.event.workflow_run.head_commit.timestamp || '' }}
     
     # Run after successful CI, or when manually dispatched.
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
@@ -102,7 +109,7 @@ jobs:
             🐺 Update Werewolves Game
             
             Auto-generated from werewolves repo
-            Source commit: ${{ github.event.workflow_run.head_sha }}
+            Source commit: ${{ env.SOURCE_SHA }}
           branch: update-werewolves-game
           delete-branch: true
           title: '🐺 Update Werewolves Game'
@@ -113,11 +120,11 @@ jobs:
             
             ### Source Information
             - **Repository:** ${{ github.repository }}
-            - **Branch:** ${{ github.event.workflow_run.head_branch }}
-            - **Commit:** ${{ github.event.workflow_run.head_sha }}
-            - **Commit Message:** ${{ github.event.workflow_run.head_commit.message }}
-            - **Author:** ${{ github.event.workflow_run.head_commit.author.name }} <${{ github.event.workflow_run.head_commit.author.email }}>
-            - **Timestamp:** ${{ github.event.workflow_run.head_commit.timestamp }}
+            - **Branch:** ${{ env.SOURCE_BRANCH }}
+            - **Commit:** ${{ env.SOURCE_SHA }}
+            - **Commit Message:** ${{ env.SOURCE_MESSAGE }}
+            - **Author:** ${{ env.SOURCE_AUTHOR_NAME }} <${{ env.SOURCE_AUTHOR_EMAIL }}>
+            - **Timestamp:** ${{ env.SOURCE_TIMESTAMP }}
             
             ### Tests Status
             ✅ All tests passed in source repository:
@@ -127,9 +134,9 @@ jobs:
             
             ### Integration Notes
             ⚠️ **Manual adaptation required** - This is a template export that needs integration work:
-            - [ ] Review and adapt `web/src/Werewolves.vue` for Game Hub props
-            - [ ] Review and adapt `server/src/index.ts` for Game Hub context
-            - [ ] Verify socket event namespacing
+            - [ ] Review and adapt `web/src/Werewolves.vue` for `sessionId`, `joinToken`, `wsNamespace`
+            - [ ] Decide how to map `sessionId` to the game's room-code flow
+            - [ ] Ensure `registerWerewolf(io)` is mounted under `/g/werewolves`
             - [ ] Test in Game Hub environment
             - [ ] Update integration checklist in `games/werewolves/README.md`
             
@@ -149,13 +156,13 @@ jobs:
           echo "✅ Integration workflow completed successfully!"
           echo ""
           echo "📦 Transformed Werewolves game and created PR in Game Hub"
-          echo "🔗 Source commit: ${{ github.event.workflow_run.head_sha }}"
-          echo "🌿 Branch: ${{ github.event.workflow_run.head_branch }}"
+          echo "🔗 Source commit: ${{ env.SOURCE_SHA }}"
+          echo "🌿 Branch: ${{ env.SOURCE_BRANCH }}"
 
       - name: Upload Export Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: werewolves-game-export-${{ github.event.workflow_run.head_sha }}
+          name: werewolves-game-export-${{ env.SOURCE_SHA }}
           path: game-export/
           retention-days: 7

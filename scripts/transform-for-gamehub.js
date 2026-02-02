@@ -129,7 +129,7 @@ function createPackageJsonFiles() {
     JSON.stringify(sharedPackageJson, null, 2) + '\n'
   );
 
-  console.log('✓ Created package.json files');
+  console.log('âœ“ Created package.json files');
 }
 
 /**
@@ -192,7 +192,7 @@ function createTsConfigFiles() {
     JSON.stringify(sharedTsConfig, null, 2) + '\n'
   );
 
-  console.log('✓ Created tsconfig.json files');
+  console.log('âœ“ Created tsconfig.json files');
 }
 
 /**
@@ -231,7 +231,7 @@ export default defineConfig({
     sharedTsupConfig
   );
 
-  console.log('✓ Created tsup.config.ts files');
+  console.log('âœ“ Created tsup.config.ts files');
 }
 
 /**
@@ -240,53 +240,27 @@ export default defineConfig({
 function createVueWrapper() {
   const wrapperContent = `<template>
   <div class="werewolves-game">
-    <!-- 
-      TODO: Integrate the Werewolves game with Game Hub
-      
-      This is a TEMPLATE component that needs manual adaptation.
-      
-      Game Hub Props:
-      - partyId: string - The party/room ID
-      - playerId: string - The current player's ID
-      - isHost: boolean - Whether the player is the party host
-      - gameSocket: Socket - Socket.IO connection for game communication
-      - onReady: () => void - Callback to signal game is ready
-      - onError: (error: Error) => void - Callback for error reporting
-      
-      Integration Steps:
-      1. Import the main App component from './App.vue'
-      2. Set up socket event handlers using gameSocket
-      3. Pass partyId and playerId to the game state
-      4. Connect isHost to the game's host detection logic
-      5. Call onReady() when the game UI is initialized
-      6. Call onError() if any critical errors occur
-      7. Handle game-specific socket events (join, vote, etc.)
-      
-      Example socket setup:
-        gameSocket.emit('werewolf:join', { partyId, playerId, ...playerData });
-        gameSocket.on('werewolf:state', (state) => { ... });
-      
-      See the original App.vue and socket composables for the full implementation.
-    -->
-    <div class="game-placeholder">
-      <h2>Werewolves Game - Integration Needed</h2>
-      <p>Party ID: {{ partyId }}</p>
-      <p>Player ID: {{ playerId }}</p>
-      <p>Is Host: {{ isHost }}</p>
-    </div>
+    <GameComponent
+      :standalone="false"
+      :session-id="props.sessionId"
+      :join-token="props.joinToken"
+      :ws-namespace="props.wsNamespace"
+      :api-base-url="props.apiBaseUrl || ''"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
-import type { Socket } from 'socket.io-client';
+import { onMounted } from 'vue';
+import { GameComponent } from './index';
 
-// Game Hub integration props
+// Game Hub integration props (from party:gameStarted)
 interface Props {
-  partyId: string;
-  playerId: string;
-  isHost: boolean;
-  gameSocket: Socket;
+  gameId: string;
+  sessionId: string;
+  wsNamespace: string;
+  joinToken: string;
+  apiBaseUrl?: string;
   onReady: () => void;
   onError: (error: Error) => void;
 }
@@ -295,20 +269,10 @@ const props = defineProps<Props>();
 
 onMounted(() => {
   try {
-    // TODO: Initialize game state
-    // TODO: Set up socket event listeners
-    // TODO: Join the game room
-    
-    // Signal that the game is ready
     props.onReady();
   } catch (error) {
     props.onError(error as Error);
   }
-});
-
-onUnmounted(() => {
-  // TODO: Clean up socket listeners
-  // TODO: Leave the game room
 });
 </script>
 
@@ -319,11 +283,6 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
 }
-
-.game-placeholder {
-  padding: 2rem;
-  text-align: center;
-}
 </style>
 `;
 
@@ -332,117 +291,7 @@ onUnmounted(() => {
     wrapperContent
   );
 
-  console.log('✓ Created Werewolves.vue wrapper component');
-}
-
-/**
- * Create server entry point with game definition
- */
-function createServerEntry() {
-  const serverEntryContent = `/**
- * Werewolves Game - Game Hub Integration Entry Point
- * 
- * This file exports the game definition and initialization function
- * for Game Hub integration.
- * 
- * TODO: This is a TEMPLATE that needs manual adaptation.
- * 
- * Integration Steps:
- * 1. Import socket handlers from the copied server code
- * 2. Set up the socket.io event listeners in initializeGame()
- * 3. Map Game Hub's context (partyId, playerId) to Werewolves' room/player model
- * 4. Ensure proper namespacing of socket events (e.g., 'werewolf:join')
- * 5. Handle cleanup when the game ends or party disbands
- * 
- * See the original server/src/handlers/socketHandlers.ts for the full implementation.
- */
-
-import type { Server as SocketIOServer, Socket } from 'socket.io';
-
-export interface GameDefinition {
-  id: string;
-  name: string;
-  description: string;
-  minPlayers: number;
-  maxPlayers: number;
-  icon: string;
-}
-
-export interface GameContext {
-  partyId: string;
-  playerId: string;
-  isHost: boolean;
-}
-
-export const gameDefinition: GameDefinition = {
-  id: 'werewolves',
-  name: 'Werewolves',
-  description: 'A moderator-free social deduction game. Villagers try to identify werewolves during the day, while werewolves hunt at night. Special roles add strategic depth.',
-  minPlayers: 5,
-  maxPlayers: 20,
-  icon: '🐺',
-};
-
-/**
- * Initialize the Werewolves game for a specific party
- * 
- * @param io - Socket.IO server instance
- * @param socket - The client socket connection
- * @param context - Game Hub context (partyId, playerId, isHost)
- */
-export function initializeGame(
-  io: SocketIOServer,
-  socket: Socket,
-  context: GameContext
-): void {
-  // TODO: Set up socket event handlers
-  // TODO: Map partyId to room code
-  // TODO: Handle player joins/leaves
-  // TODO: Delegate to existing Werewolves socket handlers
-  
-  console.log(\`Werewolves game initialized for party \${context.partyId}\`);
-  
-  // Example event handler structure:
-  socket.on('werewolf:join', (data) => {
-    // Handle player join
-  });
-  
-  socket.on('werewolf:startGame', (data) => {
-    // Handle game start
-  });
-  
-  socket.on('werewolf:vote', (data) => {
-    // Handle voting
-  });
-  
-  socket.on('disconnect', () => {
-    // Handle player disconnect
-  });
-  
-  // More event handlers...
-}
-`;
-
-  // Also create an index.ts that exports from the entry point
-  const indexContent = `export { gameDefinition, initializeGame } from './index';
-export type { GameDefinition, GameContext } from './index';
-`;
-
-  const targetServerSrc = path.join(EXPORT_DIR, 'server', 'src');
-  
-  // Rename the copied index.ts if it exists to avoid conflicts
-  const originalIndexPath = path.join(targetServerSrc, 'index.ts');
-  if (fs.existsSync(originalIndexPath)) {
-    fs.renameSync(originalIndexPath, path.join(targetServerSrc, 'server-original.ts'));
-    console.log('✓ Renamed original server index.ts to server-original.ts');
-  }
-
-  fs.writeFileSync(
-    originalIndexPath,
-    serverEntryContent
-  );
-
-  console.log('✓ Created server entry point');
+  console.log('Created Werewolves.vue wrapper component');
 }
 
 /**
@@ -453,53 +302,49 @@ function createReadme() {
 
 This directory contains the Werewolves game structured for Game Hub integration.
 
-## ⚠️ Important: Manual Adaptation Required
+## Important: Manual Adaptation Required
 
-This export is a **TEMPLATE** that requires manual integration work:
+This export is a TEMPLATE that still needs integration work:
 
 ### Web Component (web/src/Werewolves.vue)
-- [ ] Import and integrate the main App.vue component
-- [ ] Connect Game Hub props (partyId, playerId, isHost, gameSocket)
-- [ ] Set up socket event handlers using the provided gameSocket
-- [ ] Call onReady() when initialized and onError() on failures
-- [ ] Map Game Hub's party/player model to Werewolves' room/player structure
+- [ ] Pass Game Hub props from \`party:gameStarted\` (\`sessionId\`, \`joinToken\`, \`wsNamespace\`, \`apiBaseUrl\`).
+- [ ] Decide how to map platform \`sessionId\` to the game's room-code flow (auto-create/join or a mapping table).
+- [ ] Hide or replace the room-code landing UI if you want a seamless hub experience.
+- [ ] Call onReady() when initialized and onError() on failures.
 
 ### Server Handler (server/src/index.ts)
-- [ ] Import socket handlers from the copied server code
-- [ ] Implement initializeGame() to set up all socket listeners
-- [ ] Map Game Hub's partyId to Werewolves' room code system
-- [ ] Ensure proper event namespacing (e.g., 'werewolf:join')
-- [ ] Handle cleanup on game end or party disband
+- [ ] The server package already exports \`registerWerewolf(io)\` for namespace setup.
+- [ ] Ensure the hub registers it under \`/g/<gameId>\` (gameId = \`werewolves\`).
+- [ ] Add any platform-specific auth checks in the namespace middleware if required.
 
 ### Shared Types (shared/src/)
-- [ ] Review and ensure all types are exported correctly
-- [ ] Update import paths if needed for Game Hub structure
-- [ ] Verify no standalone-specific types leak through
+- [ ] Review and ensure all types are exported correctly.
+- [ ] Update import paths if needed for Game Hub structure.
+- [ ] Verify no standalone-only assumptions leak through.
 
 ## Structure
 
 \`\`\`
 werewolves/
-├── web/           # Vue component
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── src/
-│       ├── Werewolves.vue  # Game Hub integration wrapper (TEMPLATE)
-│       └── ...             # Original UI components
-├── server/        # Socket.IO handler
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── tsup.config.ts
-│   └── src/
-│       ├── index.ts              # Game Hub entry point (TEMPLATE)
-│       ├── server-original.ts    # Original server entry
-│       └── ...                   # Original server code
-└── shared/        # Shared types
-    ├── package.json
-    ├── tsconfig.json
-    ├── tsup.config.ts
-    └── src/
-        └── ...    # Shared types and constants
++-- web/           # Vue component
+|   +-- package.json
+|   +-- tsconfig.json
+|   +-- src/
+|       +-- Werewolves.vue  # Game Hub wrapper (TEMPLATE)
+|       +-- ...             # Original UI components
++-- server/        # Socket.IO handler
+|   +-- package.json
+|   +-- tsconfig.json
+|   +-- tsup.config.ts
+|   +-- src/
+|       +-- index.ts        # registerWerewolf(io) export
+|       +-- ...             # Original server code
++-- shared/        # Shared types
+    +-- package.json
+    +-- tsconfig.json
+    +-- tsup.config.ts
+    +-- src/
+        +-- ...    # Shared types and constants
 \`\`\`
 
 ## Game Info
@@ -536,13 +381,9 @@ Original standalone deployment is available at the source repository.
 
 Before submitting a PR to Game Hub:
 
-- [ ] Vue wrapper component properly integrates with Game Hub props
-- [ ] Server handlers use Game Hub's socket and context
-- [ ] All socket events are properly namespaced
-- [ ] Game state syncs correctly with party state
-- [ ] Player joins/leaves are handled
-- [ ] Error handling calls onError() appropriately
-- [ ] No standalone-specific code remains
+- [ ] Web wrapper passes \`sessionId\`, \`joinToken\`, and \`wsNamespace\` into GameComponent
+- [ ] SessionId-to-room mapping implemented (or alternate flow agreed)
+- [ ] Server registers \`registerWerewolf(io)\` under \`/g/werewolves\`
 - [ ] Type checking passes for all sub-packages
 - [ ] Manual testing in Game Hub environment successful
 
@@ -550,7 +391,7 @@ Before submitting a PR to Game Hub:
 
 - The transform script creates this structure automatically on CI
 - Manual adaptation is required before the game is fully functional in Game Hub
-- See the original source repository for the complete standalone implementation
+- The game uses room codes internally; the platform session is not automatically mapped
 `;
 
   fs.writeFileSync(
@@ -558,31 +399,30 @@ Before submitting a PR to Game Hub:
     readmeContent
   );
 
-  console.log('✓ Created README.md');
+  console.log('Created README.md');
 }
-
 /**
  * Main transform function
  */
 function transform() {
-  console.log('Starting Werewolves → Game Hub transformation...\n');
+  console.log('Starting Werewolves â†’ Game Hub transformation...\n');
 
   // Clean and create export directory
   if (fs.existsSync(EXPORT_DIR)) {
     fs.rmSync(EXPORT_DIR, { recursive: true, force: true });
-    console.log('✓ Cleaned existing export directory');
+    console.log('âœ“ Cleaned existing export directory');
   }
 
   // Copy source files
   console.log('\nCopying source files...');
   copyDir(SOURCE_DIRS.web, TARGET_DIRS.web);
-  console.log('✓ Copied ui-vue/src → web/src');
+  console.log('âœ“ Copied ui-vue/src â†’ web/src');
 
   copyDir(SOURCE_DIRS.server, TARGET_DIRS.server);
-  console.log('✓ Copied server/src → server/src');
+  console.log('âœ“ Copied server/src â†’ server/src');
 
   copyDir(SOURCE_DIRS.shared, TARGET_DIRS.shared);
-  console.log('✓ Copied core/src → shared/src');
+  console.log('âœ“ Copied core/src â†’ shared/src');
 
   // Create configuration files
   console.log('\nCreating configuration files...');
@@ -593,12 +433,12 @@ function transform() {
   // Create integration templates
   console.log('\nCreating integration templates...');
   createVueWrapper();
-  createServerEntry();
+
   createReadme();
 
-  console.log('\n✅ Transformation complete!');
+  console.log('\nâœ… Transformation complete!');
   console.log(`\nExported to: ${EXPORT_DIR}`);
-  console.log('\n⚠️  Remember: This is a TEMPLATE that requires manual adaptation.');
+  console.log('\nâš ï¸  Remember: This is a TEMPLATE that requires manual adaptation.');
   console.log('See game-export/werewolves/README.md for integration checklist.\n');
 }
 
@@ -606,6 +446,11 @@ function transform() {
 try {
   transform();
 } catch (error) {
-  console.error('\n❌ Transformation failed:', error);
+  console.error('\nâŒ Transformation failed:', error);
   process.exit(1);
 }
+
+
+
+
+

@@ -48,8 +48,6 @@ export interface Player {
   socketId: string | null;
   resumeToken: string;
   isHost: boolean;
-  voteTarget: string | null;
-  nightAction: { vote: string | null } | null;
   ready: boolean;
   seerResult: SeerResult | null;
 }

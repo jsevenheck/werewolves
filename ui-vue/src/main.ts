@@ -6,4 +6,8 @@ import './assets/styles.css';
 
 const app = createApp(App);
 app.use(createPinia());
+app.provide('werewolvesConfig', {
+  wsNamespace: '/g/werewolves',
+  standalone: true,
+});
 app.mount('#app');

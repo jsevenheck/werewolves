@@ -9,7 +9,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "tsx server.ts",
+      command: "tsx standalone-server/src/index.ts",
       port: 3001,
       reuseExistingServer: !process.env.CI,
       env: {

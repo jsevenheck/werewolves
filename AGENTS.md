@@ -26,7 +26,8 @@ Keep detailed guidance in docs/ and link to it from here.
 - docs/test-checklist.md: testing expectations and coverage
 
 ## Repo Map
-- server.ts: server entry point
+- standalone-server/src/index.ts: standalone server entry point (Express + Socket.IO)
+- server/src/index.ts: embedded namespace plugin export (registerWerewolf)
 - core/src/: shared types, events, constants (alias @shared/*)
 - server/src/...
   - config/: server-only constants and role data

@@ -21,8 +21,6 @@ const makePlayers = (count: number): Record<string, Player> => {
       socketId: null,
       resumeToken: 'token',
       isHost: false,
-      voteTarget: null,
-      nightAction: null,
       ready: false,
       seerResult: null
     };
@@ -64,7 +62,7 @@ describe('roleManager', () => {
     expect(validateCounts(noWolves)).toEqual({ error: 'Need at least 1 Werewolf' });
   });
 
-  test('assignRoles sets roles, teams, and night actions', () => {
+  test('assignRoles sets roles and teams', () => {
     const room = {
       players: makePlayers(3),
       roleConfig: { werewolf: 1, seer: 1, hunter: 0, witch: 0, armor: 0, joker: 0 } as RoleConfig
@@ -73,10 +71,8 @@ describe('roleManager', () => {
     const assigned = Object.values(room.players);
     expect(assigned[0].role).toBe('werewolf');
     expect(assigned[0].team).toBe(ROLE_INFO.werewolf.team);
-    expect(assigned[0].nightAction).toEqual({ vote: null });
     expect(assigned[1].role).toBe('seer');
     expect(assigned[1].team).toBe(ROLE_INFO.seer.team);
-    expect(assigned[1].nightAction).toBeNull();
     expect(assigned[2].role).toBe('villager');
     expect(assigned[2].team).toBe(ROLE_INFO.villager.team);
     assigned.forEach((player) => {

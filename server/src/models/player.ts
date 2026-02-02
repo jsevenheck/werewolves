@@ -14,8 +14,6 @@ function createPlayer(name: string, socketId: string, isHost: boolean): Player {
     socketId,
     resumeToken: RESUME_TOKEN(),
     isHost: !!isHost,
-    voteTarget: null,
-    nightAction: null,
     ready: false,
     seerResult: null
   };

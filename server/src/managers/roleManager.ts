@@ -60,11 +60,6 @@ function assignRoles(room: Room) {
     player.team = ROLE_INFO[role]?.team ?? 'village';
     player.ready = false;
     player.seerResult = null;
-    if (role === 'werewolf') {
-      player.nightAction = { vote: null };
-    } else {
-      player.nightAction = null;
-    }
   });
 }
 

@@ -15,7 +15,6 @@ standalone operation and embedding into the Game Hub platform.
 
 ```
 werewolves/
-├── server.ts                 # Legacy entry point (delegates to standalone)
 ├── core/                     # Pure game logic (no Vue, Pinia, Socket.IO, DOM)
 │   └── src/
 │       ├── types.ts          # Shared types (Role, Phase, Player, Room, etc.)
@@ -24,7 +23,6 @@ werewolves/
 ├── server/                   # Server-side game logic
 │   └── src/
 │       ├── index.ts          # registerWerewolf(io) - namespace plugin export
-│       ├── standalone.ts     # Legacy standalone entry (uses registerWerewolf)
 │       ├── config/           # Server-only constants and role data
 │       ├── handlers/         # Socket.IO event handlers
 │       ├── managers/         # Business logic (role, phase, vote, death, etc.)
@@ -33,8 +31,7 @@ werewolves/
 ├── ui-vue/                   # Vue 3 game UI
 │   └── src/
 │       ├── index.ts          # Hub exports: manifest, GameComponent
-│       ├── install.ts        # Legacy plugin installer (standalone only)
-│       ├── main.ts           # Standalone entry (with Pinia)
+│       ├── main.ts           # Local dev entry (with Pinia)
 │       ├── App.vue           # Root component with phase switching
 │       ├── components/       # Phase screens, panels, overlays
 │       ├── composables/      # Socket, narrator hooks
@@ -71,8 +68,7 @@ See [embedded-and-standalone.md](./embedded-and-standalone.md) for full details.
 ### Entry Points
 
 - `server/src/index.ts`: Exports `registerWerewolf(io)` for embedded use
-- `server/src/standalone.ts`: Legacy entry point (uses registerWerewolf internally)
-- `standalone-server/src/index.ts`: New standalone wrapper
+- `standalone-server/src/index.ts`: Standalone wrapper
 
 ### Namespace Plugin Pattern
 
@@ -81,7 +77,7 @@ The server exports a single function that attaches handlers to a Socket.IO names
 ```typescript
 // server/src/index.ts
 export function registerWerewolf(io: Server) {
-  const nsp = io.of('/g/werewolf');
+  const nsp = io.of('/g/werewolves');
   
   nsp.use((socket, next) => {
     const { joinToken, sessionId } = socket.handshake.auth as {
@@ -129,8 +125,8 @@ Business logic separated by concern:
 ### Entry Points
 
 - `ui-vue/src/index.ts`: Hub exports (manifest, GameComponent)
-- `ui-vue/src/main.ts`: Legacy standalone entry with Pinia
-- `standalone-web/src/main.ts`: New standalone wrapper
+- `ui-vue/src/main.ts`: Local dev entry with Pinia
+- `standalone-web/src/main.ts`: Standalone wrapper
 
 ### Components
 Phase-specific screens in `ui-vue/src/components/*Phase.vue`. Shared UI in

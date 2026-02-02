@@ -687,8 +687,6 @@ function setupSocketHandlers(
       player.role = null;
       player.team = null;
       player.alive = true;
-      player.voteTarget = null;
-      player.nightAction = null;
       player.ready = false;
       player.seerResult = null;
     });

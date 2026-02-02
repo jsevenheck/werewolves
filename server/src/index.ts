@@ -3,18 +3,18 @@ import { setupSocketHandlers } from './handlers/socketHandlers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../core/src/events';
 
 /**
- * Register the Werewolf game as a Socket.IO namespace plugin.
+ * Register the Werewolves game as a Socket.IO namespace plugin.
  *
  * When embedded in the game-hub platform, the hub server calls this function
  * once at startup.  It attaches all game event handlers to the
- * `/g/werewolf` namespace so they share the same underlying HTTP server /
+ * `/g/werewolves` namespace so they share the same underlying HTTP server /
  * Socket.IO instance as every other game.
  *
  * Clients connect with:
- *   io("/g/werewolf", { auth: { joinToken, sessionId } })
+ *   io("/g/werewolves", { auth: { joinToken, sessionId } })
  */
 export function registerWerewolf(io: Server) {
-  const nsp = io.of('/g/werewolf');
+  const nsp = io.of('/g/werewolves');
 
   // Namespace-level middleware: validate auth data from the handshake.
   nsp.use((socket, next) => {

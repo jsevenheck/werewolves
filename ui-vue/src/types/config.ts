@@ -21,8 +21,8 @@ export interface WerewolvesGameConfig {
   assetsBasePath?: string;
 
   /**
-   * Whether running in standalone mode (creates room/join flows).
-   * In embedded mode (false), sessionId is used as room key.
+   * Whether running in standalone mode (shows room create/join flows
+   * and standalone styling). Embedded hosts should pass false.
    * @default true
    */
   standalone?: boolean;
@@ -35,20 +35,19 @@ export interface WerewolvesGameConfig {
  */
 export interface HubIntegrationProps {
   /**
-   * Session ID from the platform.
-   * Used as room key in embedded mode.
+   * Session ID from the platform (party:gameStarted).
+   * Used for Socket.IO room grouping; the game still uses room codes.
    */
   sessionId?: string;
 
   /**
-   * JWT or opaque token for player authentication.
-   * Sent via Socket.IO handshake auth.
+   * Opaque token for player authentication.
+   * Sent via Socket.IO handshake auth (party:gameStarted).
    */
   joinToken?: string;
 
   /**
-   * Socket.IO namespace path (e.g. '/g/werewolf').
-   * When provided, standalone mode is automatically disabled.
+   * Socket.IO namespace path (e.g. '/g/werewolves').
    */
   wsNamespace?: string;
 

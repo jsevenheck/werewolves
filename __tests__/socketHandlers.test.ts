@@ -738,8 +738,6 @@ describe('socketHandlers restartGame', () => {
           team: 'wolves',
           alive: false,
           socketId: 'socket-1',
-          voteTarget: 'p2',
-          nightAction: { vote: 'p2' },
           ready: true,
           seerResult: { name: 'p2', result: 'Werewolf' }
         },
@@ -748,8 +746,6 @@ describe('socketHandlers restartGame', () => {
           role: 'villager',
           team: 'village',
           alive: false,
-          voteTarget: 'host',
-          nightAction: null,
           ready: true,
           seerResult: null
         }
@@ -818,8 +814,6 @@ describe('socketHandlers restartGame', () => {
       expect(player.role).toBeNull();
       expect(player.team).toBeNull();
       expect(player.alive).toBe(true);
-      expect(player.voteTarget).toBeNull();
-      expect(player.nightAction).toBeNull();
       expect(player.ready).toBe(false);
       expect(player.seerResult).toBeNull();
     });

@@ -58,7 +58,7 @@ pnpm run typecheck
 pnpm run build
 ```
 
-This compiles the TypeScript server code to `dist/` and builds the Vite client to `dist/client/`.
+This compiles the standalone server to `dist/standalone-server/` and builds the Vite client to `dist/client/`.
 
 ## Production build & static hosting
 
@@ -83,7 +83,7 @@ pnpm run test:e2e
 - `pnpm dev`: runs server + client together.
 - `pnpm build`: builds server + client for production.
 - `pnpm test`: runs unit tests.
-- `pnpm test:e2e`: runs Playwright. The Playwright config starts the server (`tsx server.ts`) and the client package (`pnpm -C ui-vue dev`).
+- `pnpm test:e2e`: runs Playwright. The Playwright config starts the server (`tsx standalone-server/src/index.ts`) and the client package (`pnpm -C ui-vue dev`).
 
 ## How to Play
 1. Host creates a room and shares the 4-letter code.
@@ -129,32 +129,23 @@ Note: The Docker image defaults to port 3001 (see `ENV PORT=3001`). Override wit
   ```
   This outputs UMD/ESM bundles to `ui-vue/dist-lib/`.
 - The Socket.IO `path` must match between client and server unless a proxy rewrites it.
-- Configuration options (standalone plugin via `installWerewolvesGame` or direct `GameComponent` props):
+- Configuration options (direct `GameComponent` props or `app.provide` config):
   - `socketUrl` (default: same origin)
   - `socketPath` (default: `/socket.io`)
   - `assetsBasePath` (default: `/audio`)
   - `standalone` (default: `true`, currently only affects styling)
-- Game Hub passes these props to the Vue component:
-  - `gameId` (ignored by this component)
+- Game Hub passes these props to the Vue component after `party:gameStarted`:
+  - `gameId` (used to choose `/g/<gameId>` namespace)
   - `sessionId` (used for socket room grouping; game logic still uses room codes unless adapted)
   - `joinToken` (sent via Socket.IO handshake auth)
-  - `wsNamespace` (e.g. `/g/werewolf`)
+  - `wsNamespace` (e.g. `/g/werewolves`)
   - `apiBaseUrl` (optional REST base URL)
 - Relative `assetsBasePath` values are resolved against Vite's base URL (`import.meta.env.BASE_URL`) for non-root deployments.
-
-## Migration / removal caveat
-
-- The legacy vanilla frontend has been removed; there is no parallel fallback client.
-- Correctness now relies on tests and E2E coverage:
-  - `pnpm run typecheck`
-  - `pnpm test`
-  - `pnpm run test:e2e`
-- If a future migration needs a fallback, it must reintroduce a parallel client directory.
 
 ## Game Hub Integration
 
 This repository automatically integrates with [Game Hub](https://github.com/jsevenheck/game-hub) via CI/CD. When tests pass on `main`, the game is transformed into Game Hub's structure and a PR is automatically created.
-Game Hub gameId is `werewolf` (namespace `/g/werewolf`).
+Game Hub gameId is `werewolves` (namespace `/g/werewolves`).
 
 ### How It Works
 1. Push to `main` triggers the workflow
@@ -174,4 +165,4 @@ node scripts/transform-for-gamehub.js
 ```
 This creates `game-export/werewolves/` with `web/`, `server/`, and `shared/` packages matching Game Hub's layout.
 
-**Note:** The transformed output is a template that requires manual adaptation for full Game Hub integration. The template currently uses legacy props (`partyId`, `playerId`, `isHost`, `gameSocket`) and must be updated to use Game Hub's current game props (`gameId`, `sessionId`, `joinToken`, `wsNamespace`, `apiBaseUrl`). See `game-export/werewolves/README.md` for the integration checklist.
+**Note:** The transformed output is a template that requires manual adaptation for full Game Hub integration. You still need to map the platform session (`sessionId`) into the game’s room-code model (or adjust the game flow to auto-create/join rooms). See `game-export/werewolves/README.md` for the integration checklist.

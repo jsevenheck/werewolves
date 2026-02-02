@@ -21,8 +21,6 @@ Werewolves is a social deduction game where:
 - `alive`: boolean.
 - `connected`: boolean for reconnect tracking.
 - `ready`: boolean for role-reveal readiness.
-- `voteTarget`: legacy field (cleared on death; day voting uses `voteState`).
-- `nightAction`: currently `null` for most roles; werewolves get `{ vote: null }` on assignment (not used by core flow).
 - `isHost`: boolean for the original host/owner (used to reclaim host on reconnect; UI uses `hostId`).
 - `seerResult`: last inspection result for seer UI (name + alignment).
 

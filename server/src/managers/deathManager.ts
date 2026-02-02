@@ -112,7 +112,6 @@ function resolveDeaths(
     const player = room.players[playerId];
     if (!player || !player.alive) continue;
     player.alive = false;
-    player.voteTarget = null;
     if (room.voteState?.votes) {
       delete room.voteState.votes[playerId];
     }

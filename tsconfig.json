@@ -15,9 +15,9 @@
     }
   },
   "include": [
-    "server.ts",
     "core/src/**/*.ts",
     "server/src/**/*.ts",
+    "standalone-server/src/**/*.ts",
     "__tests__/**/*.ts",
     "e2e/**/*.ts",
     "jest.setup.ts",
