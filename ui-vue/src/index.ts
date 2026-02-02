@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Werewolves UI module - hub-compatible entry point.
  *
  * Exports:
@@ -6,8 +6,9 @@
  *   GameComponent - Vue component to render the game UI
  *
  * The GameComponent accepts these props for hub integration:
- *   sessionId   - platform session id (used for socket room grouping)
- *   joinToken   - auth token passed via Socket.IO handshake
+ *   playerId  - optional platform player id (from localStorage)
+ *   sessionId - platform session id (used for socket room grouping)
+ *   joinToken - auth token passed via Socket.IO handshake
  *   wsNamespace - Socket.IO namespace path (e.g. "/g/werewolves")
  *   apiBaseUrl  - optional base URL for REST endpoints
  *

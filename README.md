@@ -105,6 +105,7 @@ Mobile browsers require a user gesture before audio can play. If a player enable
 ## Docker
 
 The Dockerfile uses a multi-stage build to compile TypeScript and bundle the client, then creates a production image with only runtime dependencies.
+It is intended for the standalone build only; Game Hub uses its own build/container in the game-hub repository.
 
 ```bash
 docker build -t werewolves .
@@ -137,26 +138,27 @@ Note: The Docker image defaults to port 3001 (see `ENV PORT=3001`). Override wit
 - Game Hub passes these props to the Vue component after `party:gameStarted`:
   - `gameId` (used to choose `/g/<gameId>` namespace)
   - `sessionId` (used for socket room grouping; game logic still uses room codes unless adapted)
-  - `joinToken` (sent via Socket.IO handshake auth)
+  - `joinToken` (sent via Socket.IO handshake auth; also accepted as `token`)
   - `wsNamespace` (e.g. `/g/werewolves`)
   - `apiBaseUrl` (optional REST base URL)
+  - Optional `playerId` from `localStorage.getItem('game-hub:player-id')`
 - Relative `assetsBasePath` values are resolved against Vite's base URL (`import.meta.env.BASE_URL`) for non-root deployments.
 
 ## Game Hub Integration
 
-This repository automatically integrates with [Game Hub](https://github.com/jsevenheck/game-hub) via CI/CD. When tests pass on `main`, the game is transformed into Game Hub's structure and a PR is automatically created.
+This repository automatically integrates with [Game Hub](https://github.com/jsevenheck/game-hub) via CI/CD. On pushes to `main` or `pre-main-vue`, the workflow runs tests, transforms the game into Game Hub's structure, and opens a PR automatically.
 Game Hub gameId is `werewolves` (namespace `/g/werewolves`).
 
 ### How It Works
-1. Push to `main` triggers the workflow
+1. Push to `main` or `pre-main-vue` triggers the workflow
 2. All tests run (typecheck, unit tests, E2E tests)
 3. If tests pass, `scripts/transform-for-gamehub.js` transforms the game
 4. A PR is created in the Game Hub repository with the transformed game
 
 ### Setup Requirements
 To enable the integration, add a GitHub Personal Access Token (PAT) as a repository secret:
-1. Create a PAT with `repo` and `workflow` permissions at [GitHub Settings → Developer settings → Personal access tokens](https://github.com/settings/tokens)
-2. Add it as a secret named `GAMEHUB_PAT` in this repository's Settings → Secrets and variables → Actions
+1. Create a PAT with `repo` and `workflow` permissions at [GitHub Settings -> Developer settings -> Personal access tokens](https://github.com/settings/tokens)
+2. Add it as a secret named `GAMEHUB_PAT` in this repository's Settings -> Secrets and variables -> Actions
 
 ### Manual Transform
 To test the transform locally without pushing:
@@ -165,4 +167,4 @@ node scripts/transform-for-gamehub.js
 ```
 This creates `game-export/werewolves/` with `web/`, `server/`, and `shared/` packages matching Game Hub's layout.
 
-**Note:** The transformed output is a template that requires manual adaptation for full Game Hub integration. You still need to map the platform session (`sessionId`) into the game’s room-code model (or adjust the game flow to auto-create/join rooms). See `game-export/werewolves/README.md` for the integration checklist.
+**Note:** The transformed output is a template that requires manual adaptation for full Game Hub integration. You still need to map the platform session (`sessionId`) into the game's room-code model (or adjust the game flow to auto-create/join rooms). See `game-export/werewolves/README.md` for the integration checklist.

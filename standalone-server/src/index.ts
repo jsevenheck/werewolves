@@ -13,7 +13,7 @@ import http from 'http';
 import path from 'path';
 import fs from 'fs';
 import { Server } from 'socket.io';
-import { registerWerewolf } from '../../server/src/index';
+import * as werewolfServer from '../../server/src/index';
 
 const PORT = process.env.PORT ?? 3001;
 
@@ -28,10 +28,18 @@ const io = new Server(server, {
 
 // Register the Werewolves game namespace (/g/werewolves).
 // In embedded mode the hub would call this; in standalone we call it ourselves.
+const registerWerewolf =
+  (werewolfServer as { registerWerewolf?: typeof werewolfServer.registerWerewolf }).registerWerewolf ??
+  (werewolfServer as { default?: { registerWerewolf?: typeof werewolfServer.registerWerewolf } }).default?.registerWerewolf;
+
+if (!registerWerewolf) {
+  throw new Error('registerWerewolf export not found in server module.');
+}
+
 registerWerewolf(io);
 
 // Serve built client assets (production) or fall back to ui-vue dir (dev).
-const builtClientDir = path.join(__dirname, '..', '..', 'dist', 'client');
+const builtClientDir = path.join(process.cwd(), 'dist', 'client');
 const devClientDir = path.join(process.cwd(), 'ui-vue');
 const standaloneWebDist = path.join(process.cwd(), 'standalone-web', 'dist');
 

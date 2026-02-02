@@ -34,6 +34,7 @@ interface Props {
   assetsBasePath?: string;
   standalone?: boolean;
   // Hub integration props
+  playerId?: string;
   sessionId?: string;
   joinToken?: string;
   wsNamespace?: string;
@@ -44,6 +45,7 @@ const props = withDefaults(defineProps<Props>(), {
   socketUrl: '',
   socketPath: '/socket.io',
   assetsBasePath: '/audio',
+  playerId: '',
   sessionId: '',
   joinToken: '',
   wsNamespace: '',
@@ -62,6 +64,7 @@ const effectiveAssetsBasePath = normalizeAssetsBasePath(
 );
 const explicitStandalone = props.standalone ?? injectedConfig.standalone;
 const effectiveStandalone = explicitStandalone ?? (effectiveWsNamespace ? false : true);
+const effectivePlayerId = props.playerId || injectedConfig.playerId || '';
 const effectiveSessionId = props.sessionId || injectedConfig.sessionId || '';
 const effectiveJoinToken = props.joinToken || injectedConfig.joinToken || '';
 
@@ -83,12 +86,18 @@ function normalizeAssetsBasePath(path: string) {
 }
 
 const store = useGameStore();
+const authPayload: Record<string, string> = {};
+if (effectiveJoinToken) {
+  authPayload.joinToken = effectiveJoinToken;
+  authPayload.token = effectiveJoinToken;
+}
+if (effectiveSessionId) authPayload.sessionId = effectiveSessionId;
+if (effectivePlayerId) authPayload.playerId = effectivePlayerId;
+
 const socket = useSocket({
   url: effectiveSocketUrl,
   path: effectiveSocketPath,
-  auth: effectiveJoinToken || effectiveSessionId
-    ? { joinToken: effectiveJoinToken, sessionId: effectiveSessionId }
-    : undefined
+  auth: Object.keys(authPayload).length ? authPayload : undefined
 });
 const { enabled: narratorEnabled, unlocked: narratorUnlocked, unlockInProgress: narratorUnlockInProgress, toggle: toggleNarrator, resetNarrator, bindGestureUnlock } = useNarrator(effectiveAssetsBasePath);
 

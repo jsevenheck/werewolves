@@ -4,6 +4,20 @@ import { createRoom } from '../server/src/models/room';
 import { createPlayer } from '../server/src/models/player';
 import type { Player, Room } from '../core/src/types';
 
+const makePlayer = (id: string, overrides: Partial<Player> = {}): Player => ({
+  id,
+  name: overrides.name ?? id,
+  role: overrides.role ?? 'villager',
+  team: overrides.team ?? 'village',
+  alive: overrides.alive ?? true,
+  connected: overrides.connected ?? true,
+  socketId: overrides.socketId ?? null,
+  resumeToken: overrides.resumeToken ?? 'test-token',
+  isHost: overrides.isHost ?? false,
+  ready: overrides.ready ?? false,
+  seerResult: overrides.seerResult ?? null
+});
+
 jest.mock('../server/src/managers/phaseManager', () => ({
   schedulePhaseTransition: jest.fn(),
   holdDayToNightTransition: jest.fn()
@@ -32,6 +46,8 @@ describe('Edge Cases', () => {
     test('lover dies of heartbreak when partner is voted out', () => {
       const room = {
         players: {
+          a: makePlayer('a'),
+          b: makePlayer('b'),
         },
         lovers: { aId: 'a', bId: 'b' },
         pendingDeaths: [],
@@ -63,18 +79,13 @@ describe('Edge Cases', () => {
       jest.useFakeTimers();
       const room = {
         players: {
-          hunter: {
-            id: 'hunter',
+          hunter: makePlayer('hunter', {
             name: 'Hunter',
             role: 'hunter',
             team: 'village',
-            alive: true,
-            connected: true,
-            socketId: 'socket-h',
-            isHost: false,
-            ready: false,
-            seerResult: null
-          },
+            socketId: 'socket-h'
+          }),
+          lover: makePlayer('lover'),
         },
         lovers: { aId: 'hunter', bId: 'lover' },
         pendingDeaths: [],
@@ -112,6 +123,8 @@ describe('Edge Cases', () => {
     test('both lovers dead - no repeated death processing', () => {
       const room = {
         players: {
+          a: makePlayer('a', { alive: false }),
+          b: makePlayer('b'),
         },
         lovers: { aId: 'a', bId: 'b' },
         pendingDeaths: [],
@@ -141,6 +154,8 @@ describe('Edge Cases', () => {
   describe('Vote Edge Cases', () => {
     test('single player voting themselves creates tie', () => {
       const players: Record<string, Player> = {
+        a: makePlayer('a'),
+        b: makePlayer('b')
       };
       const room = {
         players,
@@ -161,6 +176,9 @@ describe('Edge Cases', () => {
 
     test('unanimous vote resolves immediately', () => {
       const players: Record<string, Player> = {
+        a: makePlayer('a'),
+        b: makePlayer('b'),
+        c: makePlayer('c')
       };
       const room = {
         players,
@@ -188,6 +206,9 @@ describe('Edge Cases', () => {
 
     test('all players abstain - no elimination', () => {
       const players: Record<string, Player> = {
+        a: makePlayer('a'),
+        b: makePlayer('b'),
+        c: makePlayer('c')
       };
       const room = {
         players,
@@ -211,18 +232,13 @@ describe('Edge Cases', () => {
     test('disconnected hunter waits for a shot without auto resolution', () => {
       const room = {
         players: {
-          hunter: {
-            id: 'hunter',
+          hunter: makePlayer('hunter', {
             name: 'Hunter',
             role: 'hunter',
             team: 'village',
-            alive: true,
             connected: false,
-            socketId: 'socket-h',
-            isHost: false,
-            ready: false,
-            seerResult: null
-          }
+            socketId: 'socket-h'
+          })
         },
         pendingDeaths: [],
         logs: [],
@@ -253,18 +269,12 @@ describe('Edge Cases', () => {
     test('hunter without socket waits for a shot without auto resolution', () => {
       const room = {
         players: {
-          hunter: {
-            id: 'hunter',
+          hunter: makePlayer('hunter', {
             name: 'Hunter',
             role: 'hunter',
             team: 'village',
-            alive: true,
-            connected: true,
-            socketId: null,
-            isHost: false,
-            ready: false,
-            seerResult: null
-          }
+            socketId: null
+          })
         },
         pendingDeaths: [],
         logs: [],

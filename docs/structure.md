@@ -15,40 +15,40 @@ standalone operation and embedding into the Game Hub platform.
 
 ```
 werewolves/
-├── core/                     # Pure game logic (no Vue, Pinia, Socket.IO, DOM)
-│   └── src/
-│       ├── types.ts          # Shared types (Role, Phase, Player, Room, etc.)
-│       ├── events.ts         # Socket.IO event contracts
-│       └── constants.ts      # Shared timing constants
-├── server/                   # Server-side game logic
-│   └── src/
-│       ├── index.ts          # registerWerewolf(io) - namespace plugin export
-│       ├── config/           # Server-only constants and role data
-│       ├── handlers/         # Socket.IO event handlers
-│       ├── managers/         # Business logic (role, phase, vote, death, etc.)
-│       ├── models/           # Room and Player models
-│       └── utils/            # Server helpers
-├── ui-vue/                   # Vue 3 game UI
-│   └── src/
-│       ├── index.ts          # Hub exports: manifest, GameComponent
-│       ├── main.ts           # Local dev entry (with Pinia)
-│       ├── App.vue           # Root component with phase switching
-│       ├── components/       # Phase screens, panels, overlays
-│       ├── composables/      # Socket, narrator hooks
-│       ├── stores/           # Pinia stores
-│       ├── types/            # Client-only types
-│       └── utils/            # Client helpers
-├── standalone-server/        # Thin wrapper for standalone server
-│   └── src/
-│       └── index.ts          # HTTP + Socket.IO + registerWerewolf()
-├── standalone-web/           # Thin wrapper for standalone web client
-│   ├── index.html
-│   ├── vite.config.ts
-│   └── src/
-│       └── main.ts           # Vue app + Pinia + GameComponent
-├── docs/                     # Documentation
-├── __tests__/                # Jest unit tests
-└── e2e/                      # Playwright E2E tests
+|-- core/                     # Pure game logic (no Vue, Pinia, Socket.IO, DOM)
+|   `-- src/
+|       |-- types.ts          # Shared types (Role, Phase, Player, Room, etc.)
+|       |-- events.ts         # Socket.IO event contracts
+|       `-- constants.ts      # Shared timing constants
+|-- server/                   # Server-side game logic
+|   `-- src/
+|       |-- index.ts          # definition/register/handler + registerWerewolf
+|       |-- config/           # Server-only constants and role data
+|       |-- handlers/         # Socket.IO event handlers
+|       |-- managers/         # Business logic (role, phase, vote, death, etc.)
+|       |-- models/           # Room and Player models
+|       `-- utils/            # Server helpers
+|-- ui-vue/                   # Vue 3 game UI
+|   `-- src/
+|       |-- index.ts          # Hub exports: manifest, GameComponent
+|       |-- main.ts           # Local dev entry (with Pinia)
+|       |-- App.vue           # Root component with phase switching
+|       |-- components/       # Phase screens, panels, overlays
+|       |-- composables/      # Socket, narrator hooks
+|       |-- stores/           # Pinia stores
+|       |-- types/            # Client-only types
+|       `-- utils/            # Client helpers
+|-- standalone-server/        # Thin wrapper for standalone server
+|   `-- src/
+|       `-- index.ts          # HTTP + Socket.IO + registerWerewolf()
+|-- standalone-web/           # Thin wrapper for standalone web client
+|   |-- index.html
+|   |-- vite.config.ts
+|   `-- src/
+|       `-- main.ts           # Vue app + Pinia + GameComponent
+|-- docs/                     # Documentation
+|-- __tests__/                # Jest unit tests
+`-- e2e/                      # Playwright E2E tests
 ```
 
 ## Embedded vs Standalone
@@ -57,9 +57,9 @@ werewolves/
 |--------|---------------------|------------|
 | Vue app | Created by hub | Created by standalone-web |
 | Pinia | Installed by hub | Installed by standalone-web |
-| Socket.IO server | Hub calls `registerWerewolf()` | standalone-server creates + calls |
+| Socket.IO server | Hub calls `register()` or `registerWerewolf()` | standalone-server creates + calls |
 | Room creation | Room codes via UI unless you adapt to use `sessionId` | Room codes via UI |
-| Auth | `joinToken` stored from handshake (not enforced) + `resumeToken` for reconnect | `resumeToken` for reconnect |
+| Auth | `joinToken` or `token` stored from handshake (not enforced) + `resumeToken` for reconnect | `resumeToken` for reconnect |
 
 See [embedded-and-standalone.md](./embedded-and-standalone.md) for full details.
 
@@ -67,25 +67,28 @@ See [embedded-and-standalone.md](./embedded-and-standalone.md) for full details.
 
 ### Entry Points
 
-- `server/src/index.ts`: Exports `registerWerewolf(io)` for embedded use
+- `server/src/index.ts`: Exports `definition`, `register()`, `handler`, `registerWerewolf()`
 - `standalone-server/src/index.ts`: Standalone wrapper
 
 ### Namespace Plugin Pattern
 
-The server exports a single function that attaches handlers to a Socket.IO namespace:
+The server exports a definition plus a register helper that attaches handlers to a Socket.IO namespace:
 
 ```typescript
 // server/src/index.ts
-export function registerWerewolf(io: Server) {
-  const nsp = io.of('/g/werewolves');
+export function register(io: Server, namespace = '/g/werewolves') {
+  const nsp = io.of(namespace);
   
   nsp.use((socket, next) => {
-    const { joinToken, sessionId } = socket.handshake.auth as {
+    const { joinToken, token, sessionId, playerId } = socket.handshake.auth as {
       joinToken?: string;
+      token?: string;
       sessionId?: string;
+      playerId?: string;
     };
     socket.data.sessionId = sessionId ?? null;
-    socket.data.joinToken = joinToken ?? null;
+    socket.data.joinToken = joinToken ?? token ?? null;
+    socket.data.playerId = playerId ?? null;
     next();
   });
   nsp.on('connection', (socket) => {
@@ -145,20 +148,20 @@ Helper functions in `ui-vue/src/utils/`.
 
 ### Server Dependencies
 ```
-registerWerewolf(io)
-  └── setupSocketHandlers(nsp, socket)
-       ├── models/ (room, player)
-       ├── managers/ (role, phase, night, vote, death, broadcast)
-       └── utils/ (helpers)
+register(io)
+  `-- setupSocketHandlers(nsp, socket)
+       |-- models/ (room, player)
+       |-- managers/ (role, phase, night, vote, death, broadcast)
+       `-- utils/ (helpers)
 ```
 
 ### Client Dependencies
 ```
 GameComponent (App.vue)
-  ├── stores/ (game)
-  ├── composables/ (socket, narrator)
-  ├── components/ (phases, panels, overlays)
-  └── utils/helpers.ts, narrator.ts
+  |-- stores/ (game)
+  |-- composables/ (socket, narrator)
+  |-- components/ (phases, panels, overlays)
+  `-- utils/helpers.ts, narrator.ts
 ```
 
 **Narrator**: The `utils/narrator.ts` module handles audio playback with support

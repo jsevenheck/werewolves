@@ -55,11 +55,53 @@ function copyDir(src, dest) {
 }
 
 /**
+ * Rewrite shared import paths for Game Hub packages.
+ */
+function rewriteImports(rootDir) {
+  const targets = new Set(['.ts', '.tsx', '.vue']);
+  const replacements = [
+    ["from '@shared/", "from '@game-hub/werewolves-shared/"],
+    ['from "@shared/', 'from "@game-hub/werewolves-shared/'],
+    ["from '../../core/src/", "from '@game-hub/werewolves-shared/"],
+    ['from "../../core/src/', 'from "@game-hub/werewolves-shared/'],
+    ["from '../../../core/src/", "from '@game-hub/werewolves-shared/"],
+    ['from "../../../core/src/', 'from "@game-hub/werewolves-shared/'],
+    ["from '../../../../core/src/", "from '@game-hub/werewolves-shared/"],
+    ['from "../../../../core/src/', 'from "@game-hub/werewolves-shared/"],
+  ];
+
+  const stack = [rootDir];
+  while (stack.length) {
+    const current = stack.pop();
+    if (!current) continue;
+    const entries = fs.readdirSync(current, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(fullPath);
+        continue;
+      }
+      const ext = path.extname(entry.name);
+      if (!targets.has(ext)) continue;
+
+      let content = fs.readFileSync(fullPath, 'utf8');
+      let updated = content;
+      for (const [from, to] of replacements) {
+        updated = updated.split(from).join(to);
+      }
+      if (updated !== content) {
+        fs.writeFileSync(fullPath, updated);
+      }
+    }
+  }
+}
+
+/**
  * Create package.json files for each sub-package
  */
 function createPackageJsonFiles() {
   const webPackageJson = {
-    name: '@game-hub/game-werewolves-web',
+    name: '@game-hub/werewolves-web',
     version: '1.0.0',
     type: 'module',
     main: 'src/Werewolves.vue',
@@ -67,7 +109,7 @@ function createPackageJsonFiles() {
       typecheck: 'vue-tsc --noEmit',
     },
     dependencies: {
-      '@game-hub/game-werewolves-shared': 'workspace:*',
+      '@game-hub/werewolves-shared': 'workspace:*',
       'socket.io-client': '^4.8.3',
       'vue': '^3.5.0',
     },
@@ -78,7 +120,7 @@ function createPackageJsonFiles() {
   };
 
   const serverPackageJson = {
-    name: '@game-hub/game-werewolves-server',
+    name: '@game-hub/werewolves-server',
     version: '1.0.0',
     type: 'module',
     main: 'dist/index.js',
@@ -87,7 +129,7 @@ function createPackageJsonFiles() {
       typecheck: 'tsc --noEmit',
     },
     dependencies: {
-      '@game-hub/game-werewolves-shared': 'workspace:*',
+      '@game-hub/werewolves-shared': 'workspace:*',
       'socket.io': '^4.8.3',
       'nanoid': '^5.1.6',
     },
@@ -99,7 +141,7 @@ function createPackageJsonFiles() {
   };
 
   const sharedPackageJson = {
-    name: '@game-hub/game-werewolves-shared',
+    name: '@game-hub/werewolves-shared',
     version: '1.0.0',
     type: 'module',
     main: 'dist/index.js',
@@ -129,7 +171,7 @@ function createPackageJsonFiles() {
     JSON.stringify(sharedPackageJson, null, 2) + '\n'
   );
 
-  console.log('âœ“ Created package.json files');
+  console.log('Created package.json files');
 }
 
 /**
@@ -192,7 +234,7 @@ function createTsConfigFiles() {
     JSON.stringify(sharedTsConfig, null, 2) + '\n'
   );
 
-  console.log('âœ“ Created tsconfig.json files');
+  console.log('Created tsconfig.json files');
 }
 
 /**
@@ -231,7 +273,7 @@ export default defineConfig({
     sharedTsupConfig
   );
 
-  console.log('âœ“ Created tsup.config.ts files');
+  console.log('Created tsup.config.ts files');
 }
 
 /**
@@ -242,6 +284,7 @@ function createVueWrapper() {
   <div class="werewolves-game">
     <GameComponent
       :standalone="false"
+      :player-id="playerId"
       :session-id="props.sessionId"
       :join-token="props.joinToken"
       :ws-namespace="props.wsNamespace"
@@ -251,7 +294,6 @@ function createVueWrapper() {
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
 import { GameComponent } from './index';
 
 // Game Hub integration props (from party:gameStarted)
@@ -261,19 +303,10 @@ interface Props {
   wsNamespace: string;
   joinToken: string;
   apiBaseUrl?: string;
-  onReady: () => void;
-  onError: (error: Error) => void;
 }
 
 const props = defineProps<Props>();
-
-onMounted(() => {
-  try {
-    props.onReady();
-  } catch (error) {
-    props.onError(error as Error);
-  }
-});
+const playerId = localStorage.getItem('game-hub:player-id') ?? '';
 </script>
 
 <style scoped>
@@ -308,12 +341,13 @@ This export is a TEMPLATE that still needs integration work:
 
 ### Web Component (web/src/Werewolves.vue)
 - [ ] Pass Game Hub props from \`party:gameStarted\` (\`sessionId\`, \`joinToken\`, \`wsNamespace\`, \`apiBaseUrl\`).
+- [ ] Read \`game-hub:player-id\` from localStorage (if available) and pass it to the game component.
 - [ ] Decide how to map platform \`sessionId\` to the game's room-code flow (auto-create/join or a mapping table).
 - [ ] Hide or replace the room-code landing UI if you want a seamless hub experience.
-- [ ] Call onReady() when initialized and onError() on failures.
+- [ ] Verify the wrapper mounts the game component and handles initialization errors.
 
 ### Server Handler (server/src/index.ts)
-- [ ] The server package already exports \`registerWerewolf(io)\` for namespace setup.
+- [ ] The server package exports \`definition\`, \`register(io, namespace)\`, and \`handler\`.
 - [ ] Ensure the hub registers it under \`/g/<gameId>\` (gameId = \`werewolves\`).
 - [ ] Add any platform-specific auth checks in the namespace middleware if required.
 
@@ -405,24 +439,28 @@ Before submitting a PR to Game Hub:
  * Main transform function
  */
 function transform() {
-  console.log('Starting Werewolves â†’ Game Hub transformation...\n');
+  console.log('Starting Werewolves -> Game Hub transformation...\n');
 
   // Clean and create export directory
   if (fs.existsSync(EXPORT_DIR)) {
     fs.rmSync(EXPORT_DIR, { recursive: true, force: true });
-    console.log('âœ“ Cleaned existing export directory');
+    console.log('Cleaned existing export directory');
   }
 
   // Copy source files
   console.log('\nCopying source files...');
   copyDir(SOURCE_DIRS.web, TARGET_DIRS.web);
-  console.log('âœ“ Copied ui-vue/src â†’ web/src');
+  console.log('Copied ui-vue/src -> web/src');
 
   copyDir(SOURCE_DIRS.server, TARGET_DIRS.server);
-  console.log('âœ“ Copied server/src â†’ server/src');
+  console.log('Copied server/src -> server/src');
 
   copyDir(SOURCE_DIRS.shared, TARGET_DIRS.shared);
-  console.log('âœ“ Copied core/src â†’ shared/src');
+  console.log('Copied core/src -> shared/src');
+
+  console.log('\nRewriting shared imports for Game Hub packages...');
+  rewriteImports(path.join(EXPORT_DIR, 'web', 'src'));
+  rewriteImports(path.join(EXPORT_DIR, 'server', 'src'));
 
   // Create configuration files
   console.log('\nCreating configuration files...');
@@ -436,9 +474,9 @@ function transform() {
 
   createReadme();
 
-  console.log('\nâœ… Transformation complete!');
+  console.log('\nTransformation complete!');
   console.log(`\nExported to: ${EXPORT_DIR}`);
-  console.log('\nâš ï¸  Remember: This is a TEMPLATE that requires manual adaptation.');
+  console.log('\nRemember: This is a TEMPLATE that requires manual adaptation.');
   console.log('See game-export/werewolves/README.md for integration checklist.\n');
 }
 
@@ -446,9 +484,11 @@ function transform() {
 try {
   transform();
 } catch (error) {
-  console.error('\nâŒ Transformation failed:', error);
+  console.error('\nTransformation failed:', error);
   process.exit(1);
 }
+
+
 
 
 

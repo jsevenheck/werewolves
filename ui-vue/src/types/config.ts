@@ -35,6 +35,11 @@ export interface WerewolvesGameConfig {
  */
 export interface HubIntegrationProps {
   /**
+   * Stable platform player id (optional).
+   * Game Hub stores it in localStorage as `game-hub:player-id`.
+   */
+  playerId?: string;
+  /**
    * Session ID from the platform (party:gameStarted).
    * Used for Socket.IO room grouping; the game still uses room codes.
    */
@@ -42,7 +47,8 @@ export interface HubIntegrationProps {
 
   /**
    * Opaque token for player authentication.
-   * Sent via Socket.IO handshake auth (party:gameStarted).
+   * Sent via Socket.IO handshake auth (party:gameStarted) as `joinToken`
+   * and duplicated as `token` for backward compatibility.
    */
   joinToken?: string;
 

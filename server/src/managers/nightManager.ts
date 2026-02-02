@@ -200,6 +200,7 @@ function resolveNight(room: Room, broadcastRoom: (room: Room) => void, io: Names
       if (room.phase !== 'night' || room.phaseStep !== 'resolve') return;
       schedulePhaseTransition(room, 'nightToDay', broadcastRoom);
     }, NIGHT_RESOLVE_DELAY_MS);
+    room.phaseTimer.unref?.();
   }
 }
 
