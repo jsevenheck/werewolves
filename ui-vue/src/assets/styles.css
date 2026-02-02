@@ -225,6 +225,13 @@
   width: 100%;
 }
 
+.werewolves-root .role-hint {
+  color: rgba(148, 163, 184, 0.9);
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-left: 0.35rem;
+}
+
 .werewolves-root .notifications {
   display: flex;
   flex-direction: column;
