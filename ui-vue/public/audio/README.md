@@ -6,31 +6,65 @@ Place MP3 narrator clips in this folder using the exact filenames expected by th
 
 The narrator supports multiple audio variants for any clip. This allows for variety in narration so players don't hear the same audio every time.
 
+**Important:** Variants are only supported in the `custom/` folder. The standard audio files in the main `audio/` folder serve as fallbacks when no custom variants exist.
+
 **Naming Convention:**
-- Base file: `{key}.mp3` (e.g., `day.mp3`)
-- Variants: `{key}_1.mp3`, `{key}_2.mp3`, `{key}_3.mp3`, etc.
+- Standard file (fallback): `audio/{key}.mp3` (e.g., `audio/day.mp3`)
+- Custom variants: `audio/custom/{key}_1.mp3`, `audio/custom/{key}_2.mp3`, etc.
 
 **How it works:**
 1. **Auto-Discovery (Recommended):** Set the count to `-1` in `narrator.ts` (default)
-   - The narrator will automatically detect all numbered variants (up to 10)
-   - Just add files like `day_1.mp3`, `day_2.mp3`, etc.
+   - The narrator automatically detects all numbered custom variants (up to 10)
+   - Just add files like `custom/day_1.mp3`, `custom/day_2.mp3`, etc.
    - No configuration needed!
 
 2. **Manual Configuration:** Set a specific number in `narrator.ts`
-   - Example: `['day', 3]` means exactly 3 variants
-   - Files must be named `day_1.mp3`, `day_2.mp3`, `day_3.mp3`
+   - Example: `['day', 3]` means exactly 3 custom variants
+   - Files must be named `custom/day_1.mp3`, `custom/day_2.mp3`, `custom/day_3.mp3`
 
 3. **No Variants:** Set to `0` to disable variants for that key
-   - Only the base file (e.g., `day.mp3`) will be used
+   - Only the standard file (e.g., `day.mp3`) will be used
 
 **Example with Auto-Discovery:**
 ```
-day_1.mp3     ← Will be auto-detected
-day_2.mp3     ← Will be auto-detected  
-day_3.mp3     ← Will be auto-detected
+audio/
+  day.mp3              ← Standard AI-generated (used when no custom variants exist)
+  custom/
+    day_1.mp3          ← Will be auto-detected and randomly selected
+    day_2.mp3          ← Will be auto-detected and randomly selected
+    day_3.mp3          ← Will be auto-detected and randomly selected
 ```
 
-The narrator will randomly select one variant each time the clip is played.
+**Priority Logic:**
+1. If custom variants exist (`custom/day_1.mp3`, `custom/day_2.mp3`, ...): randomly select one
+2. If no custom variants exist: use the standard file (`day.mp3`)
+
+The narrator will randomly select one custom variant each time the clip is played. Standard files are only used when no custom variants are available.
+
+## Custom Audio Override
+
+You can override any AI-generated audio file with your own recordings by placing them in the `custom/` subdirectory.
+
+**How it works:**
+1. The `custom/` folder already exists inside this `audio/` directory
+2. Place your custom recordings with numbered suffixes (e.g., `custom/night_wolves_1.mp3`)
+3. The narrator will automatically discover and randomly select from your custom variants
+4. If no custom variants exist, it falls back to the AI-generated file in the main `audio/` folder
+
+**Priority:** `audio/custom/{key}_N.mp3` → `audio/{key}.mp3`
+
+**Examples:**
+```
+audio/
+  day.mp3              ← AI-generated (used when no custom variants)
+  night_wolves.mp3     ← AI-generated (used when no custom variants)
+  custom/
+    day_1.mp3          ← Custom recording (randomly selected)
+    day_2.mp3          ← Custom recording (randomly selected)
+    night_wolves_1.mp3 ← Custom recording (randomly selected)
+```
+
+**Note:** The `custom/` folder is automatically ignored by git, so your personal recordings won't be committed to the repository.
 
 ## Audio Files
 

@@ -98,8 +98,8 @@ Mobile browsers require a user gesture before audio can play. If a player enable
 - Canonical location: `ui-vue/public/audio/`
 - Runtime URL expectation: `/audio/<name>.mp3`
 - Vite serves files in `ui-vue/public/` at `/` during development and copies them into the build output as-is (so `ui-vue/public/audio/*.mp3` becomes `dist/client/audio/*.mp3`).
-- MP3 files are not stored in git; provide them locally for development or via deployment artifacts.
-- See `client/public/audio/README.md` for per-file meanings and when each clip plays.
+- MP3 files are stored in git (AI-generated). Custom recordings can be placed in `ui-vue/public/audio/custom/` (not tracked by git) and will override the defaults.
+- See `ui-vue/public/audio/README.md` for per-file meanings, audio variants, and custom audio override instructions.
 
 ## Docker
 

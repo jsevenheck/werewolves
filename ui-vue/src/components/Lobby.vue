@@ -23,6 +23,12 @@ const PASSIVE_ROLE_DETAILS: Record<string, { name: string }> = {
   mayor: { name: 'Mayor' }
 };
 
+const SINGLETON_ROLES = new Set(['seer', 'witch', 'armor', 'guard', 'harlot']);
+
+const isSingletonRole = (role: string): boolean => {
+  return SINGLETON_ROLES.has(role);
+};
+
 interface Props {
   socket: TypedSocket;
 }
@@ -69,11 +75,17 @@ function emitConfig() {
 }
 
 function onRoleChange(role: string, value: number) {
+  if (isSingletonRole(role)) {
+    value = Math.min(value, 1);
+  }
   localRoleConfig.value[role] = value;
   emitConfig();
 }
 
 function onRoleInput(role: string, value: number) {
+  if (isSingletonRole(role)) {
+    value = Math.min(value, 1);
+  }
   localRoleConfig.value[role] = value;
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = window.setTimeout(() => {
@@ -107,12 +119,16 @@ function startGame() {
         :key="role"
         class="role-row"
       >
-        <span>{{ ROLE_DETAILS[role]?.name || role }}</span>
+        <span>
+          {{ ROLE_DETAILS[role]?.name || role }}
+          <span v-if="isSingletonRole(role)" class="role-hint">(max 1)</span>
+        </span>
         <input
           type="number"
           class="role-input"
           :data-role="role"
           min="0"
+          :max="isSingletonRole(role) ? 1 : undefined"
           :value="count"
           @change="onRoleChange(role, Number(($event.target as HTMLInputElement).value))"
           @input="onRoleInput(role, Number(($event.target as HTMLInputElement).value))"

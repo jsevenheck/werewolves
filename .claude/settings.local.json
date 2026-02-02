@@ -1,0 +1,48 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm run test:e2e*)",
+      "Bash(pnpm run test*)",
+      "Bash(pnpm run typecheck)",
+      "Bash(pnpm test:e2e*)",
+      "Bash(pnpm test*)",
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm run dev*)",
+      "Bash(pnpm run build*)",
+      "Bash(pnpm install*)",
+      "Bash(pnpm add*)",
+      "Bash(pnpm exec playwright*)",
+      "Bash(git status)",
+      "Bash(git add *)",
+      "Bash(git commit*)",
+      "Bash(git diff*)",
+      "EditFile(**/*.ts)",
+      "EditFile(**/*.vue)",
+      "EditFile(**/*.tsx)",
+      "EditFile(**/*.js)",
+      "EditFile(**/*.json)",
+      "EditFile(**/*.md)",
+      "EditFile(**/*.css)",
+      "EditFile(**/*.html)",
+      "CreateFile(**/*.ts)",
+      "CreateFile(**/*.tsx)",
+      "CreateFile(**/*.test.ts)",
+      "CreateFile(**/*.spec.ts)",
+      "ReadFile(**/*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm test:e2e:*)"
+    ],
+    "deny": [
+      "EditFile(.env*)",
+      "EditFile(pnpm-lock.yaml)",
+      "DeleteFile(package.json)",
+      "DeleteFile(tsconfig*.json)",
+      "Bash(rm -rf*)",
+      "Bash(sudo*)"
+    ]
+  },
+  "claude.defaultModel": "claude-sonnet-4-5-20250929",
+  "claude.autoApproveEdits": true,
+  "customInstructions": "This is a TypeScript multiplayer Werewolves game with Socket.IO. Follow the instructions in AGENTS.md and the architecture in docs/structure.md. Use pnpm for package management. Run tests with 'pnpm test' and e2e tests with 'pnpm run test:e2e'."
+}
