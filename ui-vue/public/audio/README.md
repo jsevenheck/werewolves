@@ -72,7 +72,6 @@ audio/
 Lobby phase; also used for the initial audio unlock. Max length: no fixed limit.
 
 ### roleReveal.mp3
-### roleReveal.mp3
 Role reveal phase while players privately view their roles. Max length: no fixed limit.
 
 ### postReveal.mp3

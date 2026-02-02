@@ -17,7 +17,7 @@ Manual and automated testing expectations for the Werewolves game.
 - **Role reveal readiness**: During role reveal, each player must click Ready; host can only continue once all connected players are ready.
 - **Host skip armor step**: With an unresponsive or disconnected Armor, host uses Skip armor step and the game continues into night.
 - **Host skip night step**: With an unresponsive or disconnected Witch/Seer/Wolf, host uses Skip current action and the game continues normally.
-- **Transition delays**: Confirm ~3s delay after each night action step, ~5s after role reveal (postReveal), ~10s after armor (postArmor) before night_transition plays, and ~6s after night_resolve before the nightToDay transition.
+- **Transition delays**: Confirm ~3s delay after each night action step, ~6s after role reveal (postReveal), ~5s after mayor (postMayor), ~10s after armor (postArmor), ~6s after night_resolve, ~3s for nightToDay, and ~6s for dayToNight. In E2E mode (`E2E_TESTS=1`), these delays are 0.
 - **Witch potion tracking**: Use heal potion once to prevent the wolf kill, confirm potion becomes unavailable later, then poison a target on another night and ensure dead count + Lovers link apply before win checks. After using either potion, verify the button changes to 'Continue' instead of 'Skip'.
 - **Guard protection from wolves**: Guard selects a player at night; if wolves target that same player, confirm the player survives and appears in no death report.
 - **Guard protection from poison**: Guard selects a player that the Witch poisons; confirm the player survives the poison.
@@ -28,8 +28,8 @@ Manual and automated testing expectations for the Werewolves game.
 - **Harlot survives when guard protects wolf target**: Harlot visits wolf's target but the Guard protected that target; confirm both the target and the Harlot survive.
 - **dayVoteResolved flow**: After a day vote resolves (or abstain), and all actions complete (hunter shots, mayor succession), confirm the host sees 'Proceed to Night' button. Verify the button only appears after all pending actions are finished and that clicking it transitions to night.
 - **Win condition - strict majority**: Configure 3 wolves vs 2 villagers and verify the game ends immediately with wolves winning (even if there's a mayor alive).
-- **Win condition - parity with mayor**: Configure 2 wolves vs 2 villagers with a mayor alive and verify the game continues (mayor's tie-breaking power keeps village in the game).
-- **Win condition - parity without abilities**: Configure 2 wolves vs 2 villagers with no hunter, no witch with poison, and no mayor, and verify the game ends with wolves winning.
+- **Win condition - parity with mayor**: Configure 2 wolves vs 2 villagers with a mayor alive (and no witch with both potions) and verify the game continues (mayor's tie-breaking power keeps village in the game).
+- **Win condition - parity without abilities**: Configure 2 wolves vs 2 villagers with no hunter, no pending mayor selection, no mayor, and no witch with both potions, and verify the game ends with wolves winning.
 - **Seer and Witch private info**: Confirm Seer sees the last inspection result only on their device and Witch sees the wolves' target before acting.
 - **Voting UI**: Ensure vote submit is disabled until a selection is made; choose Abstain explicitly; test majority abstain -> no elimination.
 - **Lobby validation**: Attempt to start with fewer than 5 players; ensure the backend rejects the start and displays an error alert. Also test too many roles vs player count.
@@ -43,7 +43,7 @@ Manual and automated testing expectations for the Werewolves game.
 
 Place MP3 narrator clips in `ui-vue/public/audio/` with filenames matching the expected ones (for example, `night_wolves.mp3` or `dayToNight.mp3`) so the narrator continues to map phase changes correctly. The code falls back to an embedded silent clip when files are missing, so adding the real audio files is required for audible narration.
 
-**Audio Variants** (optional): The narrator supports multiple audio variants per clip for variety. Name files as `{key}_1.mp3`, `{key}_2.mp3`, etc. The system auto-detects variants (up to 10) and randomly selects one each time. See `ui-vue/public/audio/README.md` for details.
+**Audio Variants** (optional): The narrator supports multiple audio variants per clip for variety in `ui-vue/public/audio/custom/`. Name files as `custom/{key}_1.mp3`, `custom/{key}_2.mp3`, etc. The system auto-detects custom variants (up to 10) and randomly selects one each time. See `ui-vue/public/audio/README.md` for details.
 
 Expected narrator keys:
 - `lobby.mp3` (also used for the initial audio unlock)

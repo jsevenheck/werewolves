@@ -1,6 +1,6 @@
 # Audio Assets
 
-**Note:** This standalone-web build automatically uses `ui-vue/public/audio/` as its publicDir (configured in vite.config.ts).
+**Note:** This standalone-web build uses `ui-vue/public/` as its publicDir (configured in `standalone-web/vite.config.ts`).
 
 You don't need to copy or maintain files here - all audio files are served directly from `ui-vue/public/audio/`.
 

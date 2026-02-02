@@ -47,17 +47,26 @@ Werewolves is a social deduction game where:
 - `guardActed`: boolean, true if guard has submitted protection this night.
 - `harlotVisitedTarget`: player visited by harlot this night, or null.
 - `harlotActed`: boolean, true if harlot has submitted a visit this night.
-- `wolfVotes`: map playerId -> targetId (null for no vote).
+- `wolfVotes`: map playerId -> targetId (null for no vote, undefined = not voted yet).
 - `wolfTarget`: chosen target after wolf vote resolves.
+- `healedTarget`: player healed by Witch (usually wolf target), or null.
+- `poisonTarget`: player poisoned by Witch, or null.
+- `seerActed`: boolean, true once the Seer has inspected this night.
 - `voteState`: `{votes: map playerId -> targetId|null, revoteFromTie: array|null}`.
 - `pendingDeaths`: queue of `{playerId, reason}` awaiting resolution.
 - `logs`: array of structured entries for UI recap (`{ts, text, publicText}`).
 - `lastNightDeaths`: array of `{name, role}` announced in the day report.
+- `lastDayDeaths`: array of `{name, role}` announced after day vote.
+- `lastDayMessage`: string or null (used when no one is eliminated).
 - `awaitingHunterShot`: playerId awaiting a hunter shot, or null.
+- `hunterShotEndsAt`: timestamp for hunter shot timeout UI, or null.
 - `hunterShotTimer`: timeout for hunter shot (60 seconds; auto-skips if no target selected).
 - `hunterShotQueue`: queue of hunter death events awaiting shot prompts.
 - `phaseTransition`: pending phase transition kind (`postReveal`, `postMayor`, `postArmor`, `nightToDay`, `dayToNight`) or null.
 - `nextNightStep`: when `phaseStep` is `transition`, the next step to enter.
+- `transitionTimer`: timeout for night-step transitions.
+- `phaseTimer`: timeout for phase transitions (postReveal/postMayor/postArmor/nightToDay/dayToNight).
+- `dayVoteResolved`: boolean, true after day vote resolves and all pending actions are done.
 - `winner`: `{team: 'village' | 'wolves' | 'joker', reason}` when ended.
 - `createdAt`: timestamp when room was created.
 - `lastActivityAt`: timestamp of last room activity (updated on each broadcast; used for automatic cleanup).
@@ -91,6 +100,7 @@ loop:
         collect werewolf votes until all submitted
         once locked, compute target using majority (ties random)
         if no votes, pick a random alive non-wolf
+        if host skipped wolf step, allow no-kill (wolfTarget = null)
         store `wolfTarget` and advance to step='seer'
       if step='seer':
         if seer alive:
@@ -115,7 +125,15 @@ loop:
           harlot cannot visit themselves
           if harlot visits the wolf target (and target is not protected), harlot also dies
         advance step='resolve'
-      wait ~3 seconds between all phase transitions and night steps to allow players to reset
+      delays:
+        - night step transitions: ~3s
+        - postReveal: ~6s
+        - postMayor: ~5s
+        - postArmor: ~10s
+        - night_resolve: ~6s
+        - nightToDay: ~3s
+        - dayToNight: ~6s
+      (E2E mode sets these delays to 0)
       host may skip current step if a player is offline or unresponsive
       if step='resolve':
         apply wolf target unless healed or guarded -> queue death
@@ -132,8 +150,12 @@ loop:
       announce deaths to all
       collect votes from alive players
       abstain requires explicit selection; majority abstain -> no elimination
-      if tie: set revote list + reset votes limited to tied players
-      if tie again: choose random among tied players
+      if tie:
+        if mayor voted for a tied candidate: mayor breaks tie
+        else set revote list + reset votes limited to tied players
+      if tie again:
+        if mayor voted for a tied candidate: mayor breaks tie
+        else choose random among tied players
       once winner target established:
         if role(target)=='joker': endGame('joker', 'Joker voted out')
         else:
@@ -158,9 +180,10 @@ resolveDeaths():
     else if wolves > others (strict majority):
       endGame('wolves', 'Werewolves have the majority')
     else if wolves == others (parity):
-      check if village has abilities to turn the tide:
+      special case:
+        - if a witch is alive AND has both potions available -> endGame('village', 'Witch can heal and poison to break parity')
+      otherwise check if village still has counterplay:
         - hunter alive (can shoot)
-        - witch with poison (can kill)
         - pending mayor succession
         - mayor alive (has tie-breaking power in votes)
       if any of above true -> game continues
@@ -169,13 +192,13 @@ resolveDeaths():
 HunterShot(targetId):
   enqueue death for target
   resolveDeaths()
-  if no response within 60 seconds:
+  if no response within 60 seconds (30 seconds in E2E mode):
     auto-skip hunter shot and resume game flow
 
 MayorSuccession(newMayorId):
   set mayorId to newMayorId
   resume game flow
-  if no response within 60 seconds:
+  if no response within 60 seconds (30 seconds in E2E mode):
     randomly select an alive player as new mayor and resume game flow
 
 onPlayerDisconnect(playerId):

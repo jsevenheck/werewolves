@@ -1,7 +1,7 @@
 # Werewolves Game Setup
 
 ## Requirements
-- Node.js (>= 18)
+- Node.js (>= 18, CI uses 22)
 - pnpm (via Corepack or standalone install)
 
 ## Setup
@@ -30,6 +30,10 @@
   ```
 - The Vite dev server runs at `http://localhost:5173` and proxies to the backend on `3001`.
 - Running the server alone is not equivalent to running the client dev server.
+- Run only the client:
+  ```bash
+  pnpm -C ui-vue dev
+  ```
 
 ## Production Build & Static Hosting
 - The Vite client build outputs to `dist/client/`.

@@ -1,13 +1,13 @@
 # Werewolves Codebase Structure
 
 This document describes the codebase structure, designed to support both
-standalone operation and embedding into the game-hub platform.
+standalone operation and embedding into the Game Hub platform.
 
 ## Quick Summary
 - **core/**: Shared types, events, constants (used by both client and server)
 - **server/**: Node.js + Socket.IO backend with managers for game logic
 - **ui-vue/**: Vue 3 frontend with Pinia stores and phase components
-- **standalone-*/**: Thin wrappers for running without game-hub
+- **standalone-*/**: Thin wrappers for running without Game Hub
 - **__tests__/**: Jest unit tests
 - **e2e/**: Playwright E2E tests
 
@@ -56,13 +56,13 @@ werewolves/
 
 ## Embedded vs Standalone
 
-| Aspect | Embedded (game-hub) | Standalone |
+| Aspect | Embedded (Game Hub) | Standalone |
 |--------|---------------------|------------|
 | Vue app | Created by hub | Created by standalone-web |
 | Pinia | Installed by hub | Installed by standalone-web |
-| Socket.IO server | Hub calls registerWerewolf() | standalone-server creates + calls |
-| Room creation | Platform provides sessionId | User creates via UI |
-| Auth | Platform issues joinToken | Server issues resumeToken |
+| Socket.IO server | Hub calls `registerWerewolf()` | standalone-server creates + calls |
+| Room creation | Room codes via UI unless you adapt to use `sessionId` | Room codes via UI |
+| Auth | `joinToken` stored from handshake (not enforced) + `resumeToken` for reconnect | `resumeToken` for reconnect |
 
 See [embedded-and-standalone.md](./embedded-and-standalone.md) for full details.
 
@@ -83,7 +83,15 @@ The server exports a single function that attaches handlers to a Socket.IO names
 export function registerWerewolf(io: Server) {
   const nsp = io.of('/g/werewolf');
   
-  nsp.use(authMiddleware);
+  nsp.use((socket, next) => {
+    const { joinToken, sessionId } = socket.handshake.auth as {
+      joinToken?: string;
+      sessionId?: string;
+    };
+    socket.data.sessionId = sessionId ?? null;
+    socket.data.joinToken = joinToken ?? null;
+    next();
+  });
   nsp.on('connection', (socket) => {
     setupSocketHandlers(nsp, socket);
   });
@@ -157,10 +165,10 @@ GameComponent (App.vue)
   └── utils/helpers.ts, narrator.ts
 ```
 
-**Narrator**: The `utils/narrator.ts` module handles audio playback with support 
-for multiple audio variants per clip (e.g., `day_1.mp3`, `day_2.mp3`). It 
-auto-detects numbered variants via HEAD requests and randomly selects one per 
-playback for variety.
+**Narrator**: The `utils/narrator.ts` module handles audio playback with support
+for multiple audio variants per clip. Variants are discovered only in
+`/audio/custom/` (e.g., `custom/day_1.mp3`, `custom/day_2.mp3`) via HEAD requests
+and one is randomly selected per playback.
 
 ## Benefits of This Structure
 
@@ -213,4 +221,6 @@ import { functionName } from './path/to/module';
 - The main folders are `core/`, `server/`, `ui-vue/`, plus standalone wrappers.
 - In development, Vite runs on port 5173 and proxies `/socket.io` to port 3001.
 - Standalone-web and standalone-server reuse embedded modules as thin wrappers.
+- Game Hub export is produced by `scripts/transform-for-gamehub.js` into
+  `game-export/werewolves/{web,server,shared}`.
 - See [embedded-and-standalone.md](./embedded-and-standalone.md) for integration details.

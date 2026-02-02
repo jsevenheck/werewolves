@@ -14,7 +14,7 @@ Run a multiplayer Werewolf/Mafia party game in the browser with no human moderat
 - Automatic room cleanup (24h idle, 1h after game ends) to prevent memory leaks.
 - Full TypeScript codebase with type-safe Socket.IO events and shared types.
 - Vite-powered client development with hot module replacement.
-- **Automatic CI/CD integration with [Game Hub](https://github.com/jsevenheck/game-hub)** - Tests pass → PR created automatically
+- **Automatic CI/CD integration with [Game Hub](https://github.com/jsevenheck/game-hub)** - tests pass -> PR created automatically
 
 ## Quick Start
 
@@ -41,9 +41,9 @@ This runs the backend server on port 3001 and Vite dev server on port 5173 with 
 - The Vite dev server serves the client on port 5173 and proxies to the server on port 3001.
 - Running the server alone (e.g. `pnpm run dev:server` or `pnpm start`) is **not** equivalent to running the client dev server.
 
-The Vue client lives in the `ui-vue/` package (pnpm workspace). You can run only the client with:
+The Vue client lives in the `ui-vue/` package. You can run only the client with:
 ```bash
-pnpm --filter werewolves-ui-vue dev
+pnpm -C ui-vue dev
 ```
 
 ## Development
@@ -83,7 +83,7 @@ pnpm run test:e2e
 - `pnpm dev`: runs server + client together.
 - `pnpm build`: builds server + client for production.
 - `pnpm test`: runs unit tests.
-- `pnpm test:e2e`: runs Playwright. The Playwright config starts the server (`tsx server.ts`) and the client package (`pnpm --filter werewolves-client dev`).
+- `pnpm test:e2e`: runs Playwright. The Playwright config starts the server (`tsx server.ts`) and the client package (`pnpm -C ui-vue dev`).
 
 ## How to Play
 1. Host creates a room and shares the 4-letter code.
@@ -111,7 +111,7 @@ docker build -t werewolves .
 docker run --rm -p 3001:3001 werewolves
 ```
 
-Note: The Docker image defaults to port 3000. Override with `-e PORT=3001` if needed.
+Note: The Docker image defaults to port 3001 (see `ENV PORT=3001`). Override with `-e PORT=<port>` if needed.
 
 ## Project Docs
 - Setup: `docs/setup.md`
@@ -119,20 +119,27 @@ Note: The Docker image defaults to port 3000. Override with `-e PORT=3001` if ne
 - Manual tests: `docs/test-checklist.md`
 - Codebase structure: `docs/structure.md`
 - Adding roles: `docs/createNewRoles.md`
+- Embedded vs standalone: `docs/embedded-and-standalone.md`
 
 ## Embedding / host integration notes
 
 - The Vue client lives in `ui-vue/` and can be built as a library with:
   ```bash
-  pnpm --filter werewolves-ui-vue build:lib
+  pnpm -C ui-vue build:lib
   ```
   This outputs UMD/ESM bundles to `ui-vue/dist-lib/`.
 - The Socket.IO `path` must match between client and server unless a proxy rewrites it.
-- Configuration options (when embedding via `installWerewolvesGame`):
+- Configuration options (standalone plugin via `installWerewolvesGame` or direct `GameComponent` props):
   - `socketUrl` (default: same origin)
   - `socketPath` (default: `/socket.io`)
   - `assetsBasePath` (default: `/audio`)
-  - `standalone` (default: `true`)
+  - `standalone` (default: `true`, currently only affects styling)
+- Game Hub passes these props to the Vue component:
+  - `gameId` (ignored by this component)
+  - `sessionId` (used for socket room grouping; game logic still uses room codes unless adapted)
+  - `joinToken` (sent via Socket.IO handshake auth)
+  - `wsNamespace` (e.g. `/g/werewolf`)
+  - `apiBaseUrl` (optional REST base URL)
 - Relative `assetsBasePath` values are resolved against Vite's base URL (`import.meta.env.BASE_URL`) for non-root deployments.
 
 ## Migration / removal caveat
@@ -146,10 +153,11 @@ Note: The Docker image defaults to port 3000. Override with `-e PORT=3001` if ne
 
 ## Game Hub Integration
 
-This repository automatically integrates with [Game Hub](https://github.com/jsevenheck/game-hub) via CI/CD. When tests pass on the `main` or `pre-main-vue` branches, the game is transformed into Game Hub's structure and a PR is automatically created.
+This repository automatically integrates with [Game Hub](https://github.com/jsevenheck/game-hub) via CI/CD. When tests pass on `main`, the game is transformed into Game Hub's structure and a PR is automatically created.
+Game Hub gameId is `werewolf` (namespace `/g/werewolf`).
 
 ### How It Works
-1. Push to `main` or `pre-main-vue` triggers the workflow
+1. Push to `main` triggers the workflow
 2. All tests run (typecheck, unit tests, E2E tests)
 3. If tests pass, `scripts/transform-for-gamehub.js` transforms the game
 4. A PR is created in the Game Hub repository with the transformed game
@@ -164,6 +172,6 @@ To test the transform locally without pushing:
 ```bash
 node scripts/transform-for-gamehub.js
 ```
-This creates `game-export/werewolves/` with the transformed game structure.
+This creates `game-export/werewolves/` with `web/`, `server/`, and `shared/` packages matching Game Hub's layout.
 
-**Note:** The transformed output is a template that requires manual adaptation for full Game Hub integration. See `game-export/werewolves/README.md` for the integration checklist.
+**Note:** The transformed output is a template that requires manual adaptation for full Game Hub integration. The template currently uses legacy props (`partyId`, `playerId`, `isHost`, `gameSocket`) and must be updated to use Game Hub's current game props (`gameId`, `sessionId`, `joinToken`, `wsNamespace`, `apiBaseUrl`). See `game-export/werewolves/README.md` for the integration checklist.
