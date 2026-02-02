@@ -14,6 +14,7 @@ Run a multiplayer Werewolf/Mafia party game in the browser with no human moderat
 - Automatic room cleanup (24h idle, 1h after game ends) to prevent memory leaks.
 - Full TypeScript codebase with type-safe Socket.IO events and shared types.
 - Vite-powered client development with hot module replacement.
+- **Automatic CI/CD integration with [Game Hub](https://github.com/jsevenheck/game-hub)** - Tests pass → PR created automatically
 
 ## Quick Start
 
@@ -142,3 +143,27 @@ Note: The Docker image defaults to port 3000. Override with `-e PORT=3001` if ne
   - `pnpm test`
   - `pnpm run test:e2e`
 - If a future migration needs a fallback, it must reintroduce a parallel client directory.
+
+## Game Hub Integration
+
+This repository automatically integrates with [Game Hub](https://github.com/jsevenheck/game-hub) via CI/CD. When tests pass on the `main` or `pre-main-vue` branches, the game is transformed into Game Hub's structure and a PR is automatically created.
+
+### How It Works
+1. Push to `main` or `pre-main-vue` triggers the workflow
+2. All tests run (typecheck, unit tests, E2E tests)
+3. If tests pass, `scripts/transform-for-gamehub.js` transforms the game
+4. A PR is created in the Game Hub repository with the transformed game
+
+### Setup Requirements
+To enable the integration, add a GitHub Personal Access Token (PAT) as a repository secret:
+1. Create a PAT with `repo` and `workflow` permissions at [GitHub Settings → Developer settings → Personal access tokens](https://github.com/settings/tokens)
+2. Add it as a secret named `GAMEHUB_PAT` in this repository's Settings → Secrets and variables → Actions
+
+### Manual Transform
+To test the transform locally without pushing:
+```bash
+node scripts/transform-for-gamehub.js
+```
+This creates `game-export/werewolves/` with the transformed game structure.
+
+**Note:** The transformed output is a template that requires manual adaptation for full Game Hub integration. See `game-export/werewolves/README.md` for the integration checklist.
