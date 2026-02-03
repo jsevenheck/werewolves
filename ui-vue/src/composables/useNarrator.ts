@@ -10,9 +10,10 @@ const NARRATOR_UNLOCK_COOLDOWN_MS = 1500;
 
 export function useNarrator(basePath = '/audio') {
   const store = useGameStore();
-  const { room } = storeToRefs(store);
+  const { room, roomCode } = storeToRefs(store);
 
   const narrator: Narrator = createNarrator({ notify, basePath });
+  const storageKey = 'werewolves_narrator_enabled';
 
   const enabled = ref(false);
   const unlocked = ref(false);
@@ -21,8 +22,17 @@ export function useNarrator(basePath = '/audio') {
   let lastUnlockAttemptAt = 0;
   let gestureBound = false;
 
-  // Initialize from storage
-  narrator.initFromStorage();
+  function clearNarratorPreference() {
+    try {
+      localStorage.removeItem(storageKey);
+    } catch {
+      // Ignore storage errors (private mode, etc.)
+    }
+  }
+
+  // Narrator should default to off for every new room/session.
+  clearNarratorPreference();
+  narrator.setEnabled(false);
   enabled.value = narrator.isEnabled();
   unlocked.value = narrator.isUnlocked();
 
@@ -33,6 +43,18 @@ export function useNarrator(basePath = '/audio') {
       narrator.handleRoomUpdate(previousRoom, newRoom);
       previousRoom = newRoom;
     }
+  });
+  // Reset narrator whenever the player switches rooms or leaves.
+  watch(roomCode, (next, prev) => {
+    if (next === prev) return;
+    clearNarratorPreference();
+    narrator.setEnabled(false);
+    enabled.value = narrator.isEnabled();
+    unlocked.value = narrator.isUnlocked();
+    unlockInProgress.value = false;
+    unlockToken += 1;
+    lastUnlockAttemptAt = 0;
+    previousRoom = null;
   });
 
   async function attemptUnlock(force = false) {
@@ -48,6 +70,7 @@ export function useNarrator(basePath = '/audio') {
       if (currentToken !== unlockToken) return;
       if (!result) {
         notify('Tap again to enable audio.');
+        narrator.setEnabled(false);
         enabled.value = narrator.isEnabled();
         unlocked.value = narrator.isUnlocked();
         return;
@@ -57,28 +80,34 @@ export function useNarrator(basePath = '/audio') {
       enabled.value = narrator.isEnabled();
       unlocked.value = narrator.isUnlocked();
     } finally {
-      if (currentToken !== unlockToken) return;
-      unlockInProgress.value = false;
+      if (currentToken === unlockToken) {
+        unlockInProgress.value = false;
+      }
     }
   }
 
   async function toggle() {
-    if (narrator.isEnabled() && narrator.isUnlocked()) {
+    if (narrator.isEnabled()) {
       narrator.setEnabled(false);
       enabled.value = false;
       unlocked.value = narrator.isUnlocked();
       return;
     }
 
-    if (!narrator.isEnabled()) {
-      narrator.setEnabled(true);
-      enabled.value = true;
+    narrator.setEnabled(true);
+    enabled.value = true;
+    const snapshot = room.value;
+    if (snapshot) {
+      narrator.handleRoomUpdate(null, snapshot);
     }
-
     await attemptUnlock(true);
   }
 
   function resetNarrator() {
+    clearNarratorPreference();
+    narrator.setEnabled(false);
+    enabled.value = narrator.isEnabled();
+    unlocked.value = narrator.isUnlocked();
     unlockInProgress.value = false;
     unlockToken += 1;
     lastUnlockAttemptAt = 0;
@@ -98,6 +127,6 @@ export function useNarrator(basePath = '/audio') {
     unlockInProgress,
     toggle,
     resetNarrator,
-    bindGestureUnlock
+    bindGestureUnlock,
   };
 }

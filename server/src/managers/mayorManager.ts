@@ -41,7 +41,7 @@ function startMayorSelection(
   // Auto-select random alive player after timeout if no response
   room.mayorSelectionTimer = setTimeout(() => {
     if (room.awaitingMayorSelection === dyingMayorId) {
-      const alivePlayers = Object.values(room.players).filter(p => p.alive);
+      const alivePlayers = Object.values(room.players).filter((p) => p.alive);
       if (alivePlayers.length > 0) {
         const randomSuccessor = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
         room.mayorId = randomSuccessor.id;
@@ -90,7 +90,11 @@ function startNextMayorSelection(
   broadcastRoom: (room: Room) => void,
   io?: Namespace<ClientToServerEvents, ServerToClientEvents>
 ) {
-  if (room.awaitingMayorSelection || !room.mayorSelectionQueue || !room.mayorSelectionQueue.length) {
+  if (
+    room.awaitingMayorSelection ||
+    !room.mayorSelectionQueue ||
+    !room.mayorSelectionQueue.length
+  ) {
     return false;
   }
   const nextId = shiftNextValidMayorSelector(room);
@@ -101,11 +105,7 @@ function startNextMayorSelection(
   return true;
 }
 
-function finalizeMayorVote(
-  room: Room,
-  mayorId: string,
-  broadcastRoom: (room: Room) => void
-) {
+function finalizeMayorVote(room: Room, mayorId: string, broadcastRoom: (room: Room) => void) {
   const mayor = room.players[mayorId];
   if (!mayor || !mayor.alive) {
     return false;
@@ -144,9 +144,7 @@ function tryResolveMayorVote(
         }
       });
     }
-    const everyoneVoted = alivePlayers.every(
-      (p) => room.voteState.votes[p.id] !== undefined
-    );
+    const everyoneVoted = alivePlayers.every((p) => room.voteState.votes[p.id] !== undefined);
     if (!everyoneVoted) return false;
   }
 
@@ -182,8 +180,4 @@ function tryResolveMayorVote(
   return finalizeMayorVote(room, entries[0][0], broadcastRoom);
 }
 
-export {
-  startMayorSelection,
-  startNextMayorSelection,
-  tryResolveMayorVote
-};
+export { startMayorSelection, startNextMayorSelection, tryResolveMayorVote };

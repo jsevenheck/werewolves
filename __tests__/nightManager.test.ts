@@ -1,17 +1,21 @@
 import { scheduleNightStep, schedulePhaseTransition } from '../server/src/managers/phaseManager';
 import { queueDeath, resolveDeaths } from '../server/src/managers/deathManager';
-import { tryFinalizeWolfVote, handleWitchDecision, resolveNight } from '../server/src/managers/nightManager';
+import {
+  tryFinalizeWolfVote,
+  handleWitchDecision,
+  resolveNight,
+} from '../server/src/managers/nightManager';
 import { NIGHT_RESOLVE_DELAY_MS } from '../server/src/config/constants';
 import type { Player, Room, RoleConfig } from '../core/src/types';
 
 jest.mock('../server/src/managers/phaseManager', () => ({
   scheduleNightStep: jest.fn(),
-  schedulePhaseTransition: jest.fn()
+  schedulePhaseTransition: jest.fn(),
 }));
 
 jest.mock('../server/src/managers/deathManager', () => ({
   queueDeath: jest.fn(),
-  resolveDeaths: jest.fn()
+  resolveDeaths: jest.fn(),
 }));
 
 const makeRoom = (): Room => ({
@@ -22,7 +26,16 @@ const makeRoom = (): Room => ({
   dayCount: 0,
   players: {},
   minPlayers: 5,
-  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0, harlot: 0 } as RoleConfig,
+  roleConfig: {
+    werewolf: 1,
+    seer: 0,
+    hunter: 0,
+    witch: 0,
+    armor: 0,
+    joker: 0,
+    guard: 0,
+    harlot: 0,
+  } as RoleConfig,
   passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: null,
@@ -57,7 +70,7 @@ const makeRoom = (): Room => ({
   harlotActed: false,
   dayVoteResolved: false,
   createdAt: Date.now(),
-  lastActivityAt: Date.now()
+  lastActivityAt: Date.now(),
 });
 
 const buildPlayer = (overrides: Partial<Player>): Player => ({
@@ -70,11 +83,9 @@ const buildPlayer = (overrides: Partial<Player>): Player => ({
   socketId: null,
   resumeToken: 'token',
   isHost: false,
-  voteTarget: null,
-  nightAction: null,
   ready: false,
   seerResult: null,
-  ...overrides
+  ...overrides,
 });
 
 describe('nightManager', () => {
@@ -84,7 +95,7 @@ describe('nightManager', () => {
       w1: buildPlayer({ id: 'w1', role: 'werewolf', team: 'wolves', alive: true }),
       w2: buildPlayer({ id: 'w2', role: 'werewolf', team: 'wolves', alive: true }),
       v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
-      v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true })
+      v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true }),
     };
     room.wolfVotes = { w1: 'v1', w2: 'v2' };
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
@@ -99,7 +110,7 @@ describe('nightManager', () => {
   test('tryFinalizeWolfVote advances when no wolves are alive', () => {
     const room = makeRoom();
     room.players = {
-      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
     };
 
     tryFinalizeWolfVote(room, jest.fn(), undefined as never);
@@ -111,7 +122,7 @@ describe('nightManager', () => {
     const room = makeRoom();
     room.wolfTarget = 'v1';
     room.players = {
-      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
     };
 
     handleWitchDecision(room, 'w1', 'heal', null, jest.fn(), undefined as never);
@@ -125,7 +136,7 @@ describe('nightManager', () => {
     const room = makeRoom();
     room.wolfTarget = 'v1';
     room.players = {
-      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: false })
+      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: false }),
     };
     const broadcastRoom = jest.fn();
 
@@ -142,7 +153,7 @@ describe('nightManager', () => {
     room.wolfTarget = 'v1';
     room.players = {
       w1: buildPlayer({ id: 'w1', role: 'witch', team: 'village', alive: true }),
-      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
     };
     const broadcastRoom = jest.fn();
 
@@ -160,7 +171,7 @@ describe('nightManager', () => {
     room.wolfTarget = 'v1';
     room.players = {
       w1: buildPlayer({ id: 'w1', role: 'witch', team: 'village', alive: true }),
-      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
     };
     const broadcastRoom = jest.fn();
 
@@ -175,7 +186,9 @@ describe('nightManager', () => {
 
   test('handleWitchDecision uses poison potion and advances', () => {
     const room = makeRoom();
-    room.players = { v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true }) };
+    room.players = {
+      v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true }),
+    };
 
     handleWitchDecision(room, 'w1', 'poison', 'v2', jest.fn(), undefined as never);
 
@@ -200,7 +213,11 @@ describe('nightManager', () => {
       expect(room.healedTarget).toBeNull();
       expect(room.poisonTarget).toBeNull();
       jest.advanceTimersByTime(NIGHT_RESOLVE_DELAY_MS);
-      expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'nightToDay', expect.any(Function));
+      expect(schedulePhaseTransition).toHaveBeenCalledWith(
+        room,
+        'nightToDay',
+        expect.any(Function)
+      );
     } finally {
       jest.useRealTimers();
     }
@@ -213,7 +230,7 @@ describe('nightManager', () => {
       room.wolfTarget = 'v1';
       room.guardedTarget = 'v1';
       room.players = {
-        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
       };
 
       resolveNight(room, jest.fn(), undefined as never);
@@ -227,7 +244,7 @@ describe('nightManager', () => {
       room.poisonTarget = 'v1';
       room.guardedTarget = 'v1';
       room.players = {
-        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+        v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
       };
 
       resolveNight(room, jest.fn(), undefined as never);
@@ -242,7 +259,7 @@ describe('nightManager', () => {
       room.guardedTarget = 'v2';
       room.players = {
         v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
-        v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true })
+        v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true }),
       };
 
       resolveNight(room, jest.fn(), undefined as never);
@@ -259,7 +276,7 @@ describe('nightManager', () => {
       room.harlotVisitedTarget = 'v1';
       room.players = {
         v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
-        h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true })
+        h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true }),
       };
 
       resolveNight(room, jest.fn(), undefined as never);
@@ -276,7 +293,7 @@ describe('nightManager', () => {
       room.players = {
         v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
         v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true }),
-        h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true })
+        h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true }),
       };
 
       resolveNight(room, jest.fn(), undefined as never);
@@ -292,7 +309,7 @@ describe('nightManager', () => {
       room.harlotVisitedTarget = 'v1';
       room.players = {
         v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
-        h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true })
+        h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true }),
       };
 
       resolveNight(room, jest.fn(), undefined as never);
@@ -310,7 +327,7 @@ describe('nightManager', () => {
       room.harlotVisitedTarget = 'v1';
       room.players = {
         v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
-        h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true })
+        h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true }),
       };
 
       resolveNight(room, jest.fn(), undefined as never);
@@ -329,7 +346,7 @@ describe('nightManager', () => {
       room.harlotVisitedTarget = 'v1';
       room.players = {
         v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
-        h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true })
+        h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true }),
       };
 
       resolveNight(room, jest.fn(), undefined as never);

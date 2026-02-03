@@ -12,7 +12,7 @@ const ROLE_DETAILS: Record<string, { name: string }> = {
   joker: { name: 'Joker' },
   guard: { name: 'Guard' },
   harlot: { name: 'Harlot' },
-  villager: { name: 'Villager' }
+  villager: { name: 'Villager' },
 };
 
 const store = useGameStore();
@@ -32,14 +32,29 @@ const players = computed(() => room.value?.players || []);
         :class="{ dead: !player.alive }"
       >
         <strong>{{ player.name }}</strong>
-        <div style="margin-top:.35rem;font-size:.9rem;display:flex;flex-wrap:wrap;gap:.35rem;">
+        <div
+          style="
+            margin-top: 0.35rem;
+            font-size: 0.9rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+          "
+        >
           <span v-if="player.isHost" class="tag">Host</span>
-          <span v-if="room.mayorId === player.id" class="tag" style="border-color:#fbbf24;color:#fbbf24;">Mayor</span>
-          <span v-if="!player.connected" class="tag" style="border-color:#fbbf24;color:#fbbf24;">Disconnected</span>
+          <span
+            v-if="room.mayorId === player.id"
+            class="tag"
+            style="border-color: #fbbf24; color: #fbbf24"
+            >Mayor</span
+          >
+          <span v-if="!player.connected" class="tag" style="border-color: #fbbf24; color: #fbbf24"
+            >Disconnected</span
+          >
           <span
             v-if="(!player.alive || room.phase === 'ended') && player.role"
             class="tag"
-            style="border-color:#38bdf8;color:#38bdf8;"
+            style="border-color: #38bdf8; color: #38bdf8"
           >
             {{ ROLE_DETAILS[player.role]?.name || player.role }}
           </span>

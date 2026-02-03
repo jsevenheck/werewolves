@@ -5,7 +5,7 @@ import {
   configureRoles,
   createLobbyWithPlayers,
   startGameAndReady,
-  waitForDayOnAllPages
+  waitForDayOnAllPages,
 } from './helpers';
 
 test('host can start a 5-player game and reach day', async ({ browser }) => {
@@ -21,7 +21,7 @@ test('host can start a 5-player game and reach day', async ({ browser }) => {
       witch: 0,
       armor: 0,
       joker: 0,
-      guard: 0
+      guard: 0,
     });
 
     await startGameAndReady(pages);

@@ -1,8 +1,31 @@
-export type Role = 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'guard' | 'harlot' | 'villager';
+export type Role =
+  | 'werewolf'
+  | 'seer'
+  | 'hunter'
+  | 'witch'
+  | 'armor'
+  | 'joker'
+  | 'guard'
+  | 'harlot'
+  | 'villager';
 export type Team = 'wolves' | 'village' | 'neutral' | 'joker';
 export type Phase = 'lobby' | 'roleReveal' | 'mayor' | 'armor' | 'night' | 'day' | 'ended';
-export type NightStep = 'wolves' | 'seer' | 'witch' | 'guard' | 'harlot' | 'resolve' | 'transition' | null;
-export type PhaseTransition = 'postReveal' | 'postMayor' | 'postArmor' | 'nightToDay' | 'dayToNight' | null;
+export type NightStep =
+  | 'wolves'
+  | 'seer'
+  | 'witch'
+  | 'guard'
+  | 'harlot'
+  | 'resolve'
+  | 'transition'
+  | null;
+export type PhaseTransition =
+  | 'postReveal'
+  | 'postMayor'
+  | 'postArmor'
+  | 'nightToDay'
+  | 'dayToNight'
+  | null;
 export type PassiveRole = 'mayor';
 
 export interface RoleConfig {
@@ -27,13 +50,13 @@ export interface SeerResult {
 
 /**
  * Represents a player in the game.
- * 
+ *
  * @remarks
  * The `role` and `team` fields are `null` during the lobby phase, before roles are assigned.
  * Once the game starts (after the lobby phase), these fields are populated via the `assignRoles` function.
- * 
- * When displaying a player's role (e.g., in death/vote announcements), 'villager' is used as the 
- * default fallback if the role is somehow null, as villager is the base role filled in when 
+ *
+ * When displaying a player's role (e.g., in death/vote announcements), 'villager' is used as the
+ * default fallback if the role is somehow null, as villager is the base role filled in when
  * there aren't enough special roles configured.
  */
 export interface Player {
@@ -48,8 +71,6 @@ export interface Player {
   socketId: string | null;
   resumeToken: string;
   isHost: boolean;
-  voteTarget: string | null;
-  nightAction: { vote: string | null } | null;
   ready: boolean;
   seerResult: SeerResult | null;
 }
@@ -106,7 +127,7 @@ export interface Room {
   mayorSelectionTimer: NodeJS.Timeout | null;
   lovers: LoverPair | null;
   witchState: WitchState;
-  wolfVotes: Record<string, string | null>;
+  wolfVotes: Record<string, string | null | undefined>;
   wolfTarget: string | null;
   healedTarget: string | null;
   poisonTarget: string | null;
@@ -183,8 +204,12 @@ export interface RoomView {
   loversAssigned: boolean;
   loverName: string | null;
   witchState: { healAvailable: boolean | null; poisonAvailable: boolean | null };
-  wolfVotes: Record<string, string | null> | null;
-  wolfVoteState: { submitted: number; required: number; yourVote: string | null | undefined } | null;
+  wolfVotes: Record<string, string | null | undefined> | null;
+  wolfVoteState: {
+    submitted: number;
+    required: number;
+    yourVote: string | null | undefined;
+  } | null;
   wolfTarget: string | null;
   wolfPeers: string[];
   wolfIds: string[];

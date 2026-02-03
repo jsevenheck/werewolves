@@ -15,7 +15,9 @@ const { room, playerId } = storeToRefs(store);
 
 const self = computed(() => room.value?.self || null);
 const isHost = computed(() => room.value?.hostId === playerId.value);
-const isArmor = computed(() => self.value?.role === 'armor' && self.value.alive && !room.value?.loversAssigned);
+const isArmor = computed(
+  () => self.value?.role === 'armor' && self.value.alive && !room.value?.loversAssigned
+);
 
 const alivePlayers = computed(() => {
   if (!room.value || !self.value) return [];
@@ -34,7 +36,7 @@ function submitArmor() {
   props.socket.emit('submitArmor', {
     roomCode: room.value.code,
     playerId: playerId.value,
-    targets: [loverA.value, loverB.value]
+    targets: [loverA.value, loverB.value],
   });
 }
 

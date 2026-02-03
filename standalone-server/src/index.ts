@@ -13,7 +13,7 @@ import http from 'http';
 import path from 'path';
 import fs from 'fs';
 import { Server } from 'socket.io';
-import { registerWerewolf } from '../../server/src/index';
+import * as werewolfServer from '../../server/src/index';
 
 const PORT = process.env.PORT ?? 3001;
 
@@ -26,25 +26,28 @@ const io = new Server(server, {
   },
 });
 
-// Register the Werewolf game namespace (/g/werewolf).
+// Register the Werewolves game namespace (/g/werewolves).
 // In embedded mode the hub would call this; in standalone we call it ourselves.
+const registerWerewolf =
+  (werewolfServer as { registerWerewolf?: typeof werewolfServer.registerWerewolf })
+    .registerWerewolf ??
+  (werewolfServer as { default?: { registerWerewolf?: typeof werewolfServer.registerWerewolf } })
+    .default?.registerWerewolf;
+
+if (!registerWerewolf) {
+  throw new Error('registerWerewolf export not found in server module.');
+}
+
 registerWerewolf(io);
 
-// For standalone convenience, also expose a "legacy" root namespace that
-// redirects or mirrors the game namespace. This lets existing clients that
-// connect to "/" still work during the migration period.
-// Comment out if not needed.
-io.on('connection', (socket) => {
-  // Redirect legacy clients: tell them to reconnect to the namespace.
-  // For now we simply handle them at the namespace level too.
-  // The namespace handler won't pick these up automatically, so we can
-  // either ignore or manually re-emit. For simplicity, ignore legacy root.
-  socket.emit('error', { message: 'Please connect to /g/werewolf namespace' });
-  socket.disconnect(true);
-});
+// Serve audio assets from ui-vue for both standalone and embedded builds.
+const sharedAudioDir = path.join(process.cwd(), 'ui-vue', 'public', 'audio');
+if (fs.existsSync(sharedAudioDir)) {
+  app.use('/audio', express.static(sharedAudioDir));
+}
 
 // Serve built client assets (production) or fall back to ui-vue dir (dev).
-const builtClientDir = path.join(__dirname, '..', '..', 'dist', 'client');
+const builtClientDir = path.join(process.cwd(), 'dist', 'client');
 const devClientDir = path.join(process.cwd(), 'ui-vue');
 const standaloneWebDist = path.join(process.cwd(), 'standalone-web', 'dist');
 
@@ -73,7 +76,7 @@ app.get('/{*splat}', (req, res, next) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`[standalone-server] Werewolf server listening on port ${PORT}`);
-  console.log(`[standalone-server] Game namespace: /g/werewolf`);
+  console.log(`[standalone-server] Werewolves server listening on port ${PORT}`);
+  console.log(`[standalone-server] Game namespace: /g/werewolves`);
   console.log(`[standalone-server] Serving static files from: ${staticDir}`);
 });

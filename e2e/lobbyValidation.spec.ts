@@ -14,7 +14,7 @@ test('precheck blocks starting when there is no werewolf', async ({ browser }) =
       witch: 0,
       armor: 0,
       joker: 0,
-      guard: 0
+      guard: 0,
     });
 
     await host.waitForTimeout(600);
@@ -49,7 +49,7 @@ test('precheck blocks starting when role count exceeds players', async ({ browse
       witch: 0,
       armor: 0,
       joker: 0,
-      guard: 0
+      guard: 0,
     });
 
     await host.waitForTimeout(600);

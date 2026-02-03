@@ -11,7 +11,16 @@ const makeRoom = (): Room => ({
   dayCount: 1,
   players: {},
   minPlayers: 5,
-  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0, harlot: 0 } as RoleConfig,
+  roleConfig: {
+    werewolf: 1,
+    seer: 0,
+    hunter: 0,
+    witch: 0,
+    armor: 0,
+    joker: 0,
+    guard: 0,
+    harlot: 0,
+  } as RoleConfig,
   passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: null,
@@ -46,7 +55,7 @@ const makeRoom = (): Room => ({
   harlotActed: false,
   dayVoteResolved: false,
   createdAt: Date.now(),
-  lastActivityAt: Date.now()
+  lastActivityAt: Date.now(),
 });
 
 const buildPlayer = (overrides: Partial<Player>): Player => ({
@@ -59,11 +68,9 @@ const buildPlayer = (overrides: Partial<Player>): Player => ({
   socketId: null,
   resumeToken: 'token',
   isHost: false,
-  voteTarget: null,
-  nightAction: null,
   ready: false,
   seerResult: null,
-  ...overrides
+  ...overrides,
 });
 
 describe('deathManager', () => {
@@ -72,7 +79,14 @@ describe('deathManager', () => {
     room.players = {
       a: buildPlayer({ id: 'a', name: 'A', role: 'villager', alive: true, connected: true }),
       b: buildPlayer({ id: 'b', name: 'B', role: 'villager', alive: true, connected: true }),
-      wolf: buildPlayer({ id: 'wolf', name: 'Wolf', role: 'werewolf', team: 'wolves', alive: true, connected: true })
+      wolf: buildPlayer({
+        id: 'wolf',
+        name: 'Wolf',
+        role: 'werewolf',
+        team: 'wolves',
+        alive: true,
+        connected: true,
+      }),
     };
     room.lovers = { aId: 'a', bId: 'b' };
     const broadcastRoom = jest.fn();
@@ -97,9 +111,15 @@ describe('deathManager', () => {
         role: 'hunter',
         alive: true,
         connected: true,
-        socketId: 'socket-h'
+        socketId: 'socket-h',
       }),
-      villager: buildPlayer({ id: 'villager', name: 'Villager', role: 'villager', alive: true, connected: true })
+      villager: buildPlayer({
+        id: 'villager',
+        name: 'Villager',
+        role: 'villager',
+        alive: true,
+        connected: true,
+      }),
     };
     const emit = jest.fn();
     const io: IoStub = { sockets: new Map([['socket-h', { emit }]]) };
@@ -119,7 +139,7 @@ describe('deathManager', () => {
     room.players = {
       w1: buildPlayer({ id: 'w1', role: 'werewolf', team: 'wolves', alive: true }),
       w2: buildPlayer({ id: 'w2', role: 'werewolf', team: 'wolves', alive: true }),
-      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
     };
 
     checkWinners(room);
@@ -137,13 +157,16 @@ describe('deathManager', () => {
     const room = makeRoom();
     room.players = {
       wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: true }),
-      witch: buildPlayer({ id: 'witch', role: 'witch', team: 'village', alive: true })
+      witch: buildPlayer({ id: 'witch', role: 'witch', team: 'village', alive: true }),
     };
     room.witchState = { healAvailable: true, poisonAvailable: true };
 
     checkWinners(room);
 
-    expect(room.winner).toEqual({ team: 'village', reason: 'Witch can heal and poison to break parity.' });
+    expect(room.winner).toEqual({
+      team: 'village',
+      reason: 'Witch can heal and poison to break parity.',
+    });
     expect(room.phase).toBe('ended');
   });
 });

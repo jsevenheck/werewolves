@@ -9,7 +9,16 @@ const makeRoom = (): Room => ({
   players: {},
   hostId: 'p1',
   minPlayers: 5,
-  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0, harlot: 0 },
+  roleConfig: {
+    werewolf: 1,
+    seer: 0,
+    hunter: 0,
+    witch: 0,
+    armor: 0,
+    joker: 0,
+    guard: 0,
+    harlot: 0,
+  },
   passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: null,
@@ -44,7 +53,7 @@ const makeRoom = (): Room => ({
   harlotActed: false,
   dayVoteResolved: false,
   createdAt: Date.now(),
-  lastActivityAt: Date.now()
+  lastActivityAt: Date.now(),
 });
 
 const buildPlayer = (overrides: Partial<Player>): Player => ({
@@ -57,11 +66,9 @@ const buildPlayer = (overrides: Partial<Player>): Player => ({
   socketId: null,
   resumeToken: 'token',
   isHost: false,
-  voteTarget: null,
-  nightAction: null,
   ready: false,
   seerResult: null,
-  ...overrides
+  ...overrides,
 });
 
 describe('broadcastManager', () => {
@@ -69,7 +76,7 @@ describe('broadcastManager', () => {
     const room = makeRoom();
     room.players = {
       p1: buildPlayer({ id: 'p1', name: 'Alice', role: 'villager', team: 'village', isHost: true }),
-      p2: buildPlayer({ id: 'p2', name: 'Bob', role: 'werewolf', team: 'wolves' })
+      p2: buildPlayer({ id: 'p2', name: 'Bob', role: 'werewolf', team: 'wolves' }),
     };
     room.logs.push({ ts: 1, text: 'Full log', publicText: 'Public log' });
 
@@ -92,7 +99,7 @@ describe('broadcastManager', () => {
     room.players = {
       p1: buildPlayer({ id: 'p1', name: 'Alice', role: 'villager', team: 'village', isHost: true }),
       p2: buildPlayer({ id: 'p2', name: 'Bob', role: 'villager', team: 'village' }),
-      p3: buildPlayer({ id: 'p3', name: 'Cara', role: 'villager', team: 'village' })
+      p3: buildPlayer({ id: 'p3', name: 'Cara', role: 'villager', team: 'village' }),
     };
     room.lovers = { aId: 'p1', bId: 'p2' };
 

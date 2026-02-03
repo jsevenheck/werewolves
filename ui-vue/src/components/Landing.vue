@@ -19,7 +19,12 @@ const joinCode = ref('');
 
 const { storedSession: savedSession } = storeToRefs(store);
 
-function enterRoom(params: { roomCode: string; playerId: string; name: string; resumeToken: string }) {
+function enterRoom(params: {
+  roomCode: string;
+  playerId: string;
+  name: string;
+  resumeToken: string;
+}) {
   store.setPlayer(params.playerId, params.name, params.resumeToken);
   store.roomCode = params.roomCode;
   props.socket.emit('requestState', { roomCode: params.roomCode, playerId: params.playerId });
@@ -54,7 +59,12 @@ function createRoom() {
       return;
     }
     if (!payload.roomCode || !payload.playerId || !payload.resumeToken) return;
-    enterRoom({ roomCode: payload.roomCode, playerId: payload.playerId, name, resumeToken: payload.resumeToken });
+    enterRoom({
+      roomCode: payload.roomCode,
+      playerId: payload.playerId,
+      name,
+      resumeToken: payload.resumeToken,
+    });
   });
 }
 
@@ -70,7 +80,12 @@ function joinRoom() {
       return;
     }
     if (!payload.roomCode || !payload.playerId || !payload.resumeToken) return;
-    enterRoom({ roomCode: payload.roomCode, playerId: payload.playerId, name, resumeToken: payload.resumeToken });
+    enterRoom({
+      roomCode: payload.roomCode,
+      playerId: payload.playerId,
+      name,
+      resumeToken: payload.resumeToken,
+    });
   });
 }
 
@@ -102,11 +117,21 @@ function resumeSession() {
       </label>
       <label>
         <span>Room code</span>
-        <input v-model="joinCode" name="code" required maxlength="4" placeholder="ABCD" style="text-transform:uppercase" />
+        <input
+          v-model="joinCode"
+          name="code"
+          required
+          maxlength="4"
+          placeholder="ABCD"
+          style="text-transform: uppercase"
+        />
       </label>
       <button type="submit">Join Game</button>
     </form>
-    <div v-if="savedSession?.resumeToken" style="margin-top:1rem;display:flex;flex-direction:column;gap:.5rem;">
+    <div
+      v-if="savedSession?.resumeToken"
+      style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem"
+    >
       <button id="resume-btn" @click="resumeSession">
         Resume {{ savedSession.roomCode }} as {{ savedSession.name }}
       </button>

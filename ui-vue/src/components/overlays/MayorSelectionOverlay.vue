@@ -15,9 +15,7 @@ const { room, roomCode, playerId } = storeToRefs(store);
 const selectedTarget = ref('');
 
 const targets = computed(() => {
-  return (room.value?.players || []).filter(
-    (p) => p.alive && p.id !== playerId.value
-  );
+  return (room.value?.players || []).filter((p) => p.alive && p.id !== playerId.value);
 });
 
 function submitSelection() {
@@ -25,7 +23,7 @@ function submitSelection() {
   props.socket.emit('selectMayor', {
     roomCode: roomCode.value,
     playerId: playerId.value,
-    targetId: selectedTarget.value
+    targetId: selectedTarget.value,
   });
   store.mayorPrompt = false;
 }

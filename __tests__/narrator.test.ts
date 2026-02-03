@@ -21,7 +21,7 @@ const baseRoom = (): RoomView => ({
     armor: 0,
     joker: 0,
     guard: 0,
-    harlot: 0
+    harlot: 0,
   },
   passiveRoleConfig: { mayor: true },
   mayorId: null,
@@ -41,7 +41,7 @@ const baseRoom = (): RoomView => ({
     revoteFromTie: null,
     submitted: 0,
     required: 0,
-    yourVote: null
+    yourVote: null,
   },
   lastNightDeaths: [],
   lastDayDeaths: [],
@@ -57,12 +57,12 @@ const baseRoom = (): RoomView => ({
   wolfIds: [],
   harlotVisitedTarget: null,
   dayVoteResolved: false,
-  self: null
+  self: null,
 });
 
 const buildRoom = (overrides: RoomOverrides = {}): RoomView => ({
   ...baseRoom(),
-  ...overrides
+  ...overrides,
 });
 
 const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -76,7 +76,7 @@ describe('computeNarrationKey', () => {
     const room = buildRoom({
       phase: 'night',
       phaseStep: 'wolves',
-      phaseTransition: 'dayToNight'
+      phaseTransition: 'dayToNight',
     });
     expect(computeNarrationKey(room)).toBe('dayToNight');
   });
@@ -103,7 +103,7 @@ describe('narrator dedupe', () => {
       initialEnabled: true,
       initialUnlocked: true,
       storage: null,
-      playClip
+      playClip,
     });
     const room = buildRoom({ phase: 'day' });
 
@@ -119,7 +119,7 @@ describe('narrator dedupe', () => {
       initialEnabled: true,
       initialUnlocked: true,
       storage: null,
-      playClip
+      playClip,
     });
     const roomDay = buildRoom({ phase: 'day' });
     const roomNight = buildRoom({ phase: 'night', phaseStep: 'wolves' });
@@ -173,7 +173,9 @@ describe('narrator playback', () => {
 
     expect(initialHowl.unload).toHaveBeenCalled();
     expect(fallbackHowl.play).toHaveBeenCalled();
-    expect(String(fallbackHowl.options.src)).toBe('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=');
+    expect(String(fallbackHowl.options.src)).toBe(
+      'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA='
+    );
   });
 
   test('resolves fallback playerror after loaderror', async () => {
@@ -216,7 +218,7 @@ describe('narrator playback', () => {
       initialEnabled: true,
       initialUnlocked: false,
       storage: null,
-      playClip
+      playClip,
     });
     const room = buildRoom({ phase: 'day' });
 
@@ -231,7 +233,7 @@ describe('narrator playback', () => {
       initialEnabled: true,
       initialUnlocked: true,
       storage: null,
-      playClip
+      playClip,
     });
     const room = buildRoom({ phase: 'day' });
 
@@ -255,7 +257,7 @@ describe('narrator persistence', () => {
       clear: jest.fn(),
       key: jest.fn(() => null),
       removeItem: jest.fn(),
-      length: 0
+      length: 0,
     };
     const narrator = createNarrator({ storage, initialEnabled: false });
 
@@ -272,7 +274,7 @@ describe('narrator persistence', () => {
       clear: jest.fn(),
       key: jest.fn(() => null),
       removeItem: jest.fn(),
-      length: 0
+      length: 0,
     };
     const narrator = createNarrator({ storage, initialEnabled: false });
 
@@ -328,12 +330,12 @@ describe('narrator audio variants', () => {
   test('uses base filename when no variants configured', async () => {
     // Mock fetch to return 404 for all variants
     global.fetch = jest.fn().mockResolvedValue({ ok: false });
-    
+
     const narrator = createNarrator({
       initialEnabled: true,
       initialUnlocked: true,
       basePath: '/audio',
-      storage: null
+      storage: null,
     });
     const room = buildRoom({ phase: 'lobby' });
 
@@ -348,9 +350,15 @@ describe('narrator audio variants', () => {
     // Mock fetch to return success for 2 variants in custom folder only
     global.fetch = jest.fn().mockImplementation((url: string) => {
       if (url.includes('/custom/day_1.mp3') || url.includes('/custom/day_2.mp3')) {
-        return Promise.resolve({ ok: true });
+        return Promise.resolve({
+          ok: true,
+          headers: { get: () => 'audio/mpeg' },
+        });
       }
-      return Promise.resolve({ ok: false });
+      return Promise.resolve({
+        ok: false,
+        headers: { get: () => 'text/html' },
+      });
     });
 
     const originalRandom = Math.random;
@@ -361,7 +369,7 @@ describe('narrator audio variants', () => {
         initialEnabled: true,
         initialUnlocked: true,
         basePath: '/audio',
-        storage: null
+        storage: null,
       });
 
       const roomDay = buildRoom({ phase: 'day' });
@@ -378,12 +386,12 @@ describe('narrator audio variants', () => {
 
   test('caches variants separately', async () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: false });
-    
+
     const narrator = createNarrator({
       initialEnabled: true,
       initialUnlocked: true,
       basePath: '/audio',
-      storage: null
+      storage: null,
     });
 
     const room1 = buildRoom({ phase: 'day' });
@@ -414,16 +422,22 @@ describe('narrator custom audio override', () => {
     // Mock fetch to return success for custom file
     global.fetch = jest.fn().mockImplementation((url: string) => {
       if (url.includes('/custom/day.mp3')) {
-        return Promise.resolve({ ok: true });
+        return Promise.resolve({
+          ok: true,
+          headers: { get: () => 'audio/mpeg' },
+        });
       }
-      return Promise.resolve({ ok: false });
+      return Promise.resolve({
+        ok: false,
+        headers: { get: () => 'text/html' },
+      });
     });
 
     const narrator = createNarrator({
       initialEnabled: true,
       initialUnlocked: true,
       basePath: '/audio',
-      storage: null
+      storage: null,
     });
 
     const room = buildRoom({ phase: 'day' });
@@ -447,7 +461,7 @@ describe('narrator custom audio override', () => {
       initialEnabled: true,
       initialUnlocked: true,
       basePath: '/audio',
-      storage: null
+      storage: null,
     });
 
     const room = buildRoom({ phase: 'night', phaseStep: 'wolves' });
@@ -462,12 +476,21 @@ describe('narrator custom audio override', () => {
     // Mock: custom/day_1 exists, default day_2 exists (but should be ignored)
     global.fetch = jest.fn().mockImplementation((url: string) => {
       if (url.includes('/custom/day_1.mp3')) {
-        return Promise.resolve({ ok: true });
+        return Promise.resolve({
+          ok: true,
+          headers: { get: () => 'audio/mpeg' },
+        });
       }
       if (url.includes('day_2.mp3') && !url.includes('/custom/')) {
-        return Promise.resolve({ ok: true });
+        return Promise.resolve({
+          ok: true,
+          headers: { get: () => 'audio/mpeg' },
+        });
       }
-      return Promise.resolve({ ok: false });
+      return Promise.resolve({
+        ok: false,
+        headers: { get: () => 'text/html' },
+      });
     });
 
     const originalRandom = Math.random;
@@ -478,7 +501,7 @@ describe('narrator custom audio override', () => {
         initialEnabled: true,
         initialUnlocked: true,
         basePath: '/audio',
-        storage: null
+        storage: null,
       });
 
       const room = buildRoom({ phase: 'day' });
@@ -511,7 +534,7 @@ describe('narrator custom audio override', () => {
       initialEnabled: true,
       initialUnlocked: true,
       basePath: '/audio',
-      storage: null
+      storage: null,
     });
 
     const room = buildRoom({ phase: 'night' });

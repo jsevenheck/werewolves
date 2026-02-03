@@ -1,161 +1,96 @@
-name: Integrate to Game Hub
+﻿name: Integrate to Game Hub
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types:
-      - completed
+  push:
     branches:
       - main
+      - pre-main-vue
   workflow_dispatch:
 
-# Prevent concurrent runs on the same branch
-concurrency:
-  group: gamehub-integration-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
-  test-and-integrate:
-    name: Test & Create Game Hub PR
+  test:
     runs-on: ubuntu-latest
-    
-    # Run after successful CI, or when manually dispatched.
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
-    
     steps:
-      - name: Checkout Werewolves Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 10.28.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Format check
+        run: pnpm format:check
+      - name: Type check
+        run: pnpm typecheck
+      - name: Run unit tests
+        run: pnpm test
+      - name: Install Playwright
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run E2E tests
+        run: pnpm test:e2e
+
+  integrate:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout game repo
+        uses: actions/checkout@v4
+        with:
+          path: game-repo
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'pnpm'
 
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Transform for Game Hub
-        run: node scripts/transform-for-gamehub.js
-
-      - name: Verify Export Structure
+      - name: Transform game structure
         run: |
-          echo "Verifying game-export structure..."
-          if [ ! -d "game-export/werewolves" ]; then
-            echo "❌ game-export/werewolves directory not found"
-            exit 1
-          fi
-          
-          if [ ! -f "game-export/werewolves/README.md" ]; then
-            echo "❌ README.md not found"
-            exit 1
-          fi
-          
-          if [ ! -d "game-export/werewolves/web/src" ]; then
-            echo "❌ web/src directory not found"
-            exit 1
-          fi
-          
-          if [ ! -d "game-export/werewolves/server/src" ]; then
-            echo "❌ server/src directory not found"
-            exit 1
-          fi
-          
-          if [ ! -d "game-export/werewolves/shared/src" ]; then
-            echo "❌ shared/src directory not found"
-            exit 1
-          fi
-          
-          echo "✅ Export structure verified"
+          cd game-repo
+          node scripts/transform-for-gamehub.js
 
-      - name: Checkout Game Hub Repository
+      - name: Checkout Game Hub
         uses: actions/checkout@v4
         with:
           repository: jsevenheck/game-hub
-          # GAMEHUB_PAT is a manually configured repository secret
-          token: ${{ secrets.GAMEHUB_PAT }}
           path: game-hub
-          fetch-depth: 0
+          token: ${{ secrets.GAMEHUB_PAT }}
 
-      - name: Copy Transformed Game to Game Hub
+      - name: Copy transformed game
         run: |
-          echo "Copying werewolves game to game-hub/games/..."
           rm -rf game-hub/games/werewolves
-          mkdir -p game-hub/games
-          cp -r game-export/werewolves game-hub/games/
-          echo "✅ Copy complete"
+          cp -r game-repo/game-export/werewolves game-hub/games/
 
-      - name: Create Pull Request to Game Hub
+      - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
-          # GAMEHUB_PAT is a manually configured repository secret
           token: ${{ secrets.GAMEHUB_PAT }}
           path: game-hub
-          commit-message: |
-            🐺 Update Werewolves Game
-            
-            Auto-generated from werewolves repo
-            Source commit: ${{ github.event.workflow_run.head_sha }}
-          branch: update-werewolves-game
+          commit-message: 'feat(games): update werewolves from ${{ github.sha }}'
+          branch: integrate/werewolves-${{ github.run_number }}
           delete-branch: true
-          title: '🐺 Update Werewolves Game'
+          title: 'Update Werewolves Game'
           body: |
             ## Werewolves Game Update
-            
-            This PR updates the Werewolves game with the latest changes from the standalone repository.
-            
-            ### Source Information
-            - **Repository:** ${{ github.repository }}
-            - **Branch:** ${{ github.event.workflow_run.head_branch }}
-            - **Commit:** ${{ github.event.workflow_run.head_sha }}
-            - **Commit Message:** ${{ github.event.workflow_run.head_commit.message }}
-            - **Author:** ${{ github.event.workflow_run.head_commit.author.name }} <${{ github.event.workflow_run.head_commit.author.email }}>
-            - **Timestamp:** ${{ github.event.workflow_run.head_commit.timestamp }}
-            
-            ### Tests Status
-            ✅ All tests passed in source repository:
-            - Type checking
-            - Unit tests
-            - E2E tests
-            
-            ### Integration Notes
-            ⚠️ **Manual adaptation required** - This is a template export that needs integration work:
-            - [ ] Review and adapt `web/src/Werewolves.vue` for Game Hub props
-            - [ ] Review and adapt `server/src/index.ts` for Game Hub context
-            - [ ] Verify socket event namespacing
-            - [ ] Test in Game Hub environment
-            - [ ] Update integration checklist in `games/werewolves/README.md`
-            
-            See `games/werewolves/README.md` for the complete integration checklist.
-            
-            ---
-            *This PR was automatically generated by the Werewolves CI/CD workflow.*
-          labels: |
-            game-update
-            werewolves
-            automated-pr
-          reviewers: jsevenheck
 
-      - name: Summary
-        if: success()
-        run: |
-          echo "✅ Integration workflow completed successfully!"
-          echo ""
-          echo "📦 Transformed Werewolves game and created PR in Game Hub"
-          echo "🔗 Source commit: ${{ github.event.workflow_run.head_sha }}"
-          echo "🌿 Branch: ${{ github.event.workflow_run.head_branch }}"
+            **Source Commit**: ${{ github.repository }}@${{ github.sha }}
+            **Triggered by**: @${{ github.actor }}
+            **Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-      - name: Upload Export Artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: werewolves-game-export-${{ github.event.workflow_run.head_sha }}
-          path: game-export/
-          retention-days: 7
+            ### Changes
+            - Automatic integration from werewolves repository
+            - All tests passed in source repo
+
+            ### Review Checklist
+            - [ ] Game structure follows conventions
+            - [ ] No breaking changes to platform contracts
+            - [ ] Game registry updated if needed
+            - [ ] E2E tests pass in Game Hub

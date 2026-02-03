@@ -1,6 +1,5 @@
 import type { Namespace } from 'socket.io';
 import { addLog, clearRoomTimers, getPlayerRoleLabel } from '../utils/helpers';
-import { holdDayToNightTransition } from './phaseManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { Room } from '../../../core/src/types';
 
@@ -15,7 +14,9 @@ function tryResolveDayVote(
   const connectedAlive = alivePlayers.filter((p) => p.connected);
   const disconnectedAlive = alivePlayers.filter((p) => !p.connected);
   if (!allowEarly) {
-    const everyoneConnectedVoted = connectedAlive.every((p) => room.voteState.votes[p.id] !== undefined);
+    const everyoneConnectedVoted = connectedAlive.every(
+      (p) => room.voteState.votes[p.id] !== undefined
+    );
     if (connectedAlive.length > 0 && everyoneConnectedVoted && disconnectedAlive.length) {
       disconnectedAlive.forEach((player) => {
         if (room.voteState.votes[player.id] === undefined) {
@@ -44,7 +45,7 @@ function tryResolveDayVote(
   // This is intentional game design to give the mayor meaningful authority.
   const mayorAlive = room.mayorId && room.players[room.mayorId]?.alive;
   const mayorVote = mayorAlive ? room.voteState.votes[room.mayorId!] : undefined;
-  
+
   const entries = Object.entries(tallies);
   if (!effectiveVotes.length || !entries.length) {
     addLog(room, 'Vote skipped. No one eliminated.', 'Vote skipped. No one eliminated.');
@@ -61,7 +62,11 @@ function tryResolveDayVote(
   // the vote is considered skipped. The case where everyone abstains is
   // already handled above when entries.length === 0.
   if (abstainCount > participantCount / 2) {
-    addLog(room, 'Majority abstained. No one eliminated.', 'Majority abstained. No one eliminated.');
+    addLog(
+      room,
+      'Majority abstained. No one eliminated.',
+      'Majority abstained. No one eliminated.'
+    );
     room.lastDayDeaths = [];
     room.lastDayMessage = 'No one was eliminated.';
     room.dayVoteResolved = true;
@@ -73,11 +78,15 @@ function tryResolveDayVote(
     // Check if mayor voted for one of the tied candidates
     if (mayorAlive && mayorVote && tied.includes(mayorVote)) {
       // Mayor's vote breaks the tie
-      addLog(room, `Vote tied. Mayor's vote decided the outcome.`, `Vote tied. Mayor's vote decided the outcome.`);
+      addLog(
+        room,
+        `Vote tied. Mayor's vote decided the outcome.`,
+        `Vote tied. Mayor's vote decided the outcome.`
+      );
       resolveDayKill(room, mayorVote, broadcastRoom, io);
       return;
     }
-    
+
     if (!room.voteState.revoteFromTie) {
       room.voteState.revoteFromTie = tied;
       room.voteState.votes = {};
@@ -87,7 +96,11 @@ function tryResolveDayVote(
     }
     // On revote, also check if mayor can break the tie
     if (mayorAlive && mayorVote && tied.includes(mayorVote)) {
-      addLog(room, `Revote tied. Mayor's vote decided the outcome.`, `Revote tied. Mayor's vote decided the outcome.`);
+      addLog(
+        room,
+        `Revote tied. Mayor's vote decided the outcome.`,
+        `Revote tied. Mayor's vote decided the outcome.`
+      );
       resolveDayKill(room, mayorVote, broadcastRoom, io);
       return;
     }
@@ -133,7 +146,4 @@ function resolveDayKill(
   resolveDeaths(room, 'day', broadcastRoom, io);
 }
 
-export {
-  tryResolveDayVote,
-  resolveDayKill
-};
+export { tryResolveDayVote, resolveDayKill };

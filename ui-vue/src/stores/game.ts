@@ -1,7 +1,7 @@
-import { defineStore } from "pinia";
-import type { RoomView, StoredSession } from "@shared/types";
+import { defineStore } from 'pinia';
+import type { RoomView, StoredSession } from '@shared/types';
 
-const STORAGE_KEY = "werewolves.session";
+const STORAGE_KEY = 'werewolves.session';
 
 interface GameState {
   room: RoomView | null;
@@ -20,21 +20,19 @@ interface GameState {
   readyButtonTimeoutId: number | null;
 }
 
-export const useGameStore = defineStore("game", {
+export const useGameStore = defineStore('game', {
   state: (): GameState => ({
     room: null,
-    roomCode: "",
-    playerId: "",
-    playerName: "",
-    resumeToken: "",
+    roomCode: '',
+    playerId: '',
+    playerName: '',
+    resumeToken: '',
     hunterPrompt: false,
     mayorPrompt: false,
     roleVisible: false,
     storedSession: (() => {
       try {
-        return JSON.parse(
-          localStorage.getItem(STORAGE_KEY) || "null",
-        ) as StoredSession | null;
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') as StoredSession | null;
       } catch {
         return null;
       }
@@ -47,7 +45,7 @@ export const useGameStore = defineStore("game", {
   }),
 
   getters: {
-    self(state): RoomView["self"] {
+    self(state): RoomView['self'] {
       return state.room?.self || null;
     },
     isAlive(state): boolean {
@@ -57,7 +55,7 @@ export const useGameStore = defineStore("game", {
       return state.room?.hostId === state.playerId;
     },
     phase(state): string {
-      return state.room?.phase || "lobby";
+      return state.room?.phase || 'lobby';
     },
   },
 
@@ -85,10 +83,10 @@ export const useGameStore = defineStore("game", {
 
     resetState() {
       this.room = null;
-      this.roomCode = "";
-      this.playerId = "";
-      this.playerName = "";
-      this.resumeToken = "";
+      this.roomCode = '';
+      this.playerId = '';
+      this.playerName = '';
+      this.resumeToken = '';
       this.hunterPrompt = false;
       this.mayorPrompt = false;
       this.pendingVote = undefined;
@@ -112,38 +110,34 @@ export const useGameStore = defineStore("game", {
         this.playerId = room.self.id;
       }
       if (room.self?.id === this.playerId) {
-        this.playerName =
-          room.players.find((p) => p.id === room.self?.id)?.name ||
-          this.playerName;
+        this.playerName = room.players.find((p) => p.id === room.self?.id)?.name || this.playerName;
         this.saveSession();
       }
       // Clear pending votes when server confirms
-      if (room.voteState?.yourVote !== undefined && room.phase === "day") {
+      if (room.voteState?.yourVote !== undefined && room.phase === 'day') {
         this.pendingVote = undefined;
       }
-      if (room.voteState?.yourVote !== undefined && room.phase === "mayor") {
+      if (room.voteState?.yourVote !== undefined && room.phase === 'mayor') {
         this.pendingMayorVote = undefined;
       }
-      const currentWolfVote = this.playerId
-        ? room.wolfVotes?.[this.playerId]
-        : undefined;
+      const currentWolfVote = this.playerId ? room.wolfVotes?.[this.playerId] : undefined;
       if (currentWolfVote !== undefined && currentWolfVote !== null) {
         this.pendingWolfVote = undefined;
       }
-      if (room.phase === "lobby") {
+      if (room.phase === 'lobby') {
         this.roleVisible = false;
       }
       // Sync overlay prompts from room state
       this.hunterPrompt = !!room.awaitingHunterShot;
       this.mayorPrompt = !!room.awaitingMayorSelection;
       // Clear phase-specific state
-      if (room.phase !== "day") {
+      if (room.phase !== 'day') {
         this.pendingVote = undefined;
       }
-      if (room.phase !== "mayor") {
+      if (room.phase !== 'mayor') {
         this.pendingMayorVote = undefined;
       }
-      if (room.phase !== "night" || room.phaseStep !== "wolves") {
+      if (room.phase !== 'night' || room.phaseStep !== 'wolves') {
         this.pendingWolfVote = undefined;
       }
     },

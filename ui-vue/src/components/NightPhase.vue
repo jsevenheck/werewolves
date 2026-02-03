@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '@/stores/game';
-import { getPlayerName, escapeHtml, notify } from '@/utils/helpers';
+import { getPlayerName, notify } from '@/utils/helpers';
 import { NIGHT_DELAY_MS } from '@shared/constants';
 import type { TypedSocket } from '@/composables/useSocket';
 
@@ -29,13 +29,24 @@ const nextLabel = computed(() => room.value?.nextNightStep?.toUpperCase() || '..
 const durationSeconds = computed(() => Math.round(NIGHT_DELAY_MS / 1000));
 
 // Wolf form
-const isWolf = computed(() => room.value?.phaseStep === 'wolves' && self.value?.role === 'werewolf' && self.value.alive);
+const isWolf = computed(
+  () => room.value?.phaseStep === 'wolves' && self.value?.role === 'werewolf' && self.value.alive
+);
 const wolfIds = computed(() => room.value?.wolfIds || []);
-const votesCast = computed(() => Object.values(room.value?.wolfVotes || {}).filter((v) => v !== undefined && v !== null).length);
-const aliveTargets = computed(() => (room.value?.players ?? []).filter((p) => p.alive && !wolfIds.value.includes(p.id)));
+const votesCast = computed(
+  () =>
+    Object.values(room.value?.wolfVotes || {}).filter((v) => v !== undefined && v !== null).length
+);
+const aliveTargets = computed(() =>
+  (room.value?.players ?? []).filter((p) => p.alive && !wolfIds.value.includes(p.id))
+);
 const currentWolfVote = computed(() => room.value?.wolfVotes?.[playerId.value]);
-const wolfLocked = computed(() => currentWolfVote.value !== undefined && currentWolfVote.value !== null);
-const selectedWolfVote = computed(() => wolfLocked.value ? currentWolfVote.value : pendingWolfVote.value);
+const wolfLocked = computed(
+  () => currentWolfVote.value !== undefined && currentWolfVote.value !== null
+);
+const selectedWolfVote = computed(() =>
+  wolfLocked.value ? currentWolfVote.value : pendingWolfVote.value
+);
 const wolfPeers = computed(() => room.value?.wolfPeers || []);
 const targetVoteCounts = computed(() => {
   const entries = Object.entries(room.value?.wolfVotes || {}).filter(([, targetId]) => targetId);
@@ -47,30 +58,61 @@ const targetVoteCounts = computed(() => {
 });
 
 // Seer form
-const isSeer = computed(() => room.value?.phaseStep === 'seer' && self.value?.role === 'seer' && self.value.alive);
-const seerTargets = computed(() => (room.value?.players ?? []).filter((p) => p.alive && p.id !== playerId.value));
+const isSeer = computed(
+  () => room.value?.phaseStep === 'seer' && self.value?.role === 'seer' && self.value.alive
+);
+const seerTargets = computed(() =>
+  (room.value?.players ?? []).filter((p) => p.alive && p.id !== playerId.value)
+);
 const seerResult = computed(() => room.value?.seerResult || null);
 
 // Witch form
-const isWitch = computed(() => room.value?.phaseStep === 'witch' && self.value?.role === 'witch' && self.value.alive);
-const witchState = computed(() => room.value?.witchState ?? { healAvailable: false, poisonAvailable: false });
+const isWitch = computed(
+  () => room.value?.phaseStep === 'witch' && self.value?.role === 'witch' && self.value.alive
+);
+const witchState = computed(
+  () => room.value?.witchState ?? { healAvailable: false, poisonAvailable: false }
+);
 const witchWolfTarget = computed(() => room.value?.wolfTarget || null);
-const healedText = computed(() => witchWolfTarget.value && room.value ? `Wolves targeted ${getPlayerName(room.value, witchWolfTarget.value)}.` : 'Wolves have no target.');
-const aliveWitchTargets = computed(() => (room.value?.players ?? []).filter((p) => p && p.alive && p.id !== playerId.value));
-const skipLabel = computed(() => witchActionTaken.value ? 'Continue' : 'Skip');
+const healedText = computed(() =>
+  witchWolfTarget.value && room.value
+    ? `Wolves targeted ${getPlayerName(room.value, witchWolfTarget.value)}.`
+    : 'Wolves have no target.'
+);
+const aliveWitchTargets = computed(() =>
+  (room.value?.players ?? []).filter((p) => p && p.alive && p.id !== playerId.value)
+);
+const skipLabel = computed(() => (witchActionTaken.value ? 'Continue' : 'Skip'));
 
 // Guard form
-const isGuard = computed(() => room.value?.phaseStep === 'guard' && self.value?.role === 'guard' && self.value.alive);
+const isGuard = computed(
+  () => room.value?.phaseStep === 'guard' && self.value?.role === 'guard' && self.value.alive
+);
 const lastGuardedTarget = computed(() => room.value?.lastGuardedTarget || null);
-const guardTargets = computed(() => (room.value?.players ?? []).filter((p) => p.alive && p.id !== playerId.value && p.id !== lastGuardedTarget.value));
-const lastProtectedName = computed(() => lastGuardedTarget.value && room.value ? getPlayerName(room.value, lastGuardedTarget.value) : null);
+const guardTargets = computed(() =>
+  (room.value?.players ?? []).filter(
+    (p) => p.alive && p.id !== playerId.value && p.id !== lastGuardedTarget.value
+  )
+);
+const lastProtectedName = computed(() =>
+  lastGuardedTarget.value && room.value ? getPlayerName(room.value, lastGuardedTarget.value) : null
+);
 
 // Harlot form
-const isHarlot = computed(() => room.value?.phaseStep === 'harlot' && self.value?.role === 'harlot' && self.value.alive);
-const harlotTargets = computed(() => (room.value?.players ?? []).filter((p) => p.alive && p.id !== playerId.value));
-const harlotVisitedTarget = computed(() => room.value?.harlotVisitedTarget || null);
+const isHarlot = computed(
+  () => room.value?.phaseStep === 'harlot' && self.value?.role === 'harlot' && self.value.alive
+);
+const harlotTargets = computed(() =>
+  (room.value?.players ?? []).filter((p) => p.alive && p.id !== playerId.value)
+);
 
-const showHostSkip = computed(() => isHost.value && ['wolves', 'seer', 'witch', 'guard', 'harlot', 'transition'].includes(room.value?.phaseStep || ''));
+const showHostSkip = computed(
+  () =>
+    isHost.value &&
+    ['wolves', 'seer', 'witch', 'guard', 'harlot', 'transition'].includes(
+      room.value?.phaseStep || ''
+    )
+);
 
 function onWolfSelectChange() {
   store.pendingWolfVote = wolfTarget.value || undefined;
@@ -82,64 +124,89 @@ function submitWolfVote() {
   props.socket.emit('submitWolfVote', {
     roomCode: room.value.code,
     playerId: playerId.value,
-    targetId: wolfTarget.value
+    targetId: wolfTarget.value,
   });
 }
 
 function submitSeerInspect() {
   if (!seerTarget.value || !playerId.value || !room.value) return;
-  props.socket.emit('submitSeerInspect', {
-    roomCode: room.value.code,
-    playerId: playerId.value,
-    targetId: seerTarget.value
-  }, (res) => {
-    if (res && 'error' in res && res.error) {
-      notify(`Error: ${res.error}`);
+  props.socket.emit(
+    'submitSeerInspect',
+    {
+      roomCode: room.value.code,
+      playerId: playerId.value,
+      targetId: seerTarget.value,
+    },
+    (res) => {
+      if (res && 'error' in res && res.error) {
+        notify(`Error: ${res.error}`);
+      }
     }
-  });
+  );
 }
 
 function healTarget() {
   if (!playerId.value || !room.value) return;
   witchActionTaken.value = true;
-  props.socket.emit('submitWitchDecision', { roomCode: room.value.code, playerId: playerId.value, action: 'heal' });
+  props.socket.emit('submitWitchDecision', {
+    roomCode: room.value.code,
+    playerId: playerId.value,
+    action: 'heal',
+  });
 }
 
 function poisonSubmit() {
   if (!poisonTarget.value || !playerId.value || !room.value) return;
   witchActionTaken.value = true;
-  props.socket.emit('submitWitchDecision', { roomCode: room.value.code, playerId: playerId.value, action: 'poison', targetId: poisonTarget.value });
+  props.socket.emit('submitWitchDecision', {
+    roomCode: room.value.code,
+    playerId: playerId.value,
+    action: 'poison',
+    targetId: poisonTarget.value,
+  });
 }
 
 function skipWitch() {
   if (!playerId.value || !room.value) return;
-  props.socket.emit('submitWitchDecision', { roomCode: room.value.code, playerId: playerId.value, action: 'skip' });
+  props.socket.emit('submitWitchDecision', {
+    roomCode: room.value.code,
+    playerId: playerId.value,
+    action: 'skip',
+  });
 }
 
 function submitGuardProtection() {
   if (!guardTarget.value || !playerId.value || !room.value) return;
-  props.socket.emit('submitGuardProtection', {
-    roomCode: room.value.code,
-    playerId: playerId.value,
-    targetId: guardTarget.value
-  }, (res) => {
-    if (res && 'error' in res && res.error) {
-      notify(`Error: ${res.error}`);
+  props.socket.emit(
+    'submitGuardProtection',
+    {
+      roomCode: room.value.code,
+      playerId: playerId.value,
+      targetId: guardTarget.value,
+    },
+    (res) => {
+      if (res && 'error' in res && res.error) {
+        notify(`Error: ${res.error}`);
+      }
     }
-  });
+  );
 }
 
 function submitHarlotVisit() {
   if (!harlotTarget.value || !playerId.value || !room.value) return;
-  props.socket.emit('submitHarlotVisit', {
-    roomCode: room.value.code,
-    playerId: playerId.value,
-    targetId: harlotTarget.value
-  }, (res) => {
-    if (res && 'error' in res && res.error) {
-      notify(`Error: ${res.error}`);
+  props.socket.emit(
+    'submitHarlotVisit',
+    {
+      roomCode: room.value.code,
+      playerId: playerId.value,
+      targetId: harlotTarget.value,
+    },
+    (res) => {
+      if (res && 'error' in res && res.error) {
+        notify(`Error: ${res.error}`);
+      }
     }
-  });
+  );
 }
 
 function skipStep() {
@@ -148,11 +215,14 @@ function skipStep() {
 }
 
 // Reset witch action flag when witch phase starts
-watch(() => isWitch.value, (newIsWitch) => {
-  if (newIsWitch) {
-    witchActionTaken.value = false;
+watch(
+  () => isWitch.value,
+  (newIsWitch) => {
+    if (newIsWitch) {
+      witchActionTaken.value = false;
+    }
   }
-});
+);
 </script>
 
 <template>
@@ -172,23 +242,21 @@ watch(() => isWitch.value, (newIsWitch) => {
         <p v-if="Object.keys(targetVoteCounts).length">
           Wolf votes:
           <template v-for="(count, targetId) in targetVoteCounts" :key="targetId">
-            {{ getPlayerName(room, targetId as string) }} ({{ count }} vote{{ count > 1 ? 's' : '' }}){{ ' ' }}
+            {{ getPlayerName(room, targetId as string) }} ({{ count }} vote{{
+              count > 1 ? 's' : ''
+            }}){{ ' ' }}
           </template>
         </p>
         <template v-if="wolfLocked">
-          <p style="color:#4ade80;">
-            Vote submitted{{ currentWolfVote ? `: ${getPlayerName(room, currentWolfVote)}` : '' }}. Awaiting other wolves.
+          <p style="color: #4ade80">
+            Vote submitted{{ currentWolfVote ? `: ${getPlayerName(room, currentWolfVote)}` : '' }}.
+            Awaiting other wolves.
           </p>
         </template>
         <template v-else>
           <label>
             <span>Select a victim</span>
-            <select
-              v-model="wolfTarget"
-              name="target"
-              required
-              @change="onWolfSelectChange"
-            >
+            <select v-model="wolfTarget" name="target" required @change="onWolfSelectChange">
               <option value="">Pick target</option>
               <option
                 v-for="player in aliveTargets"
@@ -227,14 +295,23 @@ watch(() => isWitch.value, (newIsWitch) => {
     <template v-else-if="isWitch">
       <div class="actions">
         <p>{{ healedText }}</p>
-        <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
-          <button type="button" id="heal-btn" :disabled="!witchState.healAvailable || !witchWolfTarget" @click="healTarget">
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap">
+          <button
+            id="heal-btn"
+            type="button"
+            :disabled="!witchState.healAvailable || !witchWolfTarget"
+            @click="healTarget"
+          >
             Use heal potion
           </button>
-          <div style="flex:1;min-width:220px;">
+          <div style="flex: 1; min-width: 220px">
             <label>
               <span>Poison target</span>
-              <select id="poison-select" v-model="poisonTarget" :disabled="!witchState.poisonAvailable">
+              <select
+                id="poison-select"
+                v-model="poisonTarget"
+                :disabled="!witchState.poisonAvailable"
+              >
                 <option value="">Choose player</option>
                 <option v-for="player in aliveWitchTargets" :key="player.id" :value="player.id">
                   {{ player.name }}
@@ -242,18 +319,25 @@ watch(() => isWitch.value, (newIsWitch) => {
               </select>
             </label>
           </div>
-          <button type="button" id="poison-btn" :disabled="!witchState.poisonAvailable" @click="poisonSubmit">
+          <button
+            id="poison-btn"
+            type="button"
+            :disabled="!witchState.poisonAvailable"
+            @click="poisonSubmit"
+          >
             Use poison
           </button>
         </div>
-        <button type="button" id="skip-witch" @click="skipWitch">{{ skipLabel }}</button>
+        <button id="skip-witch" type="button" @click="skipWitch">{{ skipLabel }}</button>
       </div>
     </template>
 
     <!-- Guard form -->
     <template v-else-if="isGuard">
       <form id="guard-form" class="actions" @submit.prevent="submitGuardProtection">
-        <p v-if="lastProtectedName">Last night you protected {{ lastProtectedName }}. You cannot protect them again tonight.</p>
+        <p v-if="lastProtectedName">
+          Last night you protected {{ lastProtectedName }}. You cannot protect them again tonight.
+        </p>
         <label>
           <span>Protect a player</span>
           <select v-model="guardTarget" name="target" required>

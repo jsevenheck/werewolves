@@ -3,7 +3,7 @@ import {
   closeContexts,
   configureRoles,
   createLobbyWithPlayers,
-  startGameAndReady
+  startGameAndReady,
 } from './helpers';
 
 const getRoleName = async (page: Page) => {
@@ -40,7 +40,7 @@ test('werewolves cannot target other werewolves in the vote dropdown', async ({ 
       witch: 0,
       armor: 0,
       joker: 0,
-      passiveRoles: { mayor: false }
+      passiveRoles: { mayor: false },
     });
 
     await startGameAndReady(pages);
@@ -56,10 +56,9 @@ test('werewolves cannot target other werewolves in the vote dropdown', async ({ 
     const wolfNames = wolfIndexes.map((index) => names[index]);
     const wolfPage = pages[wolfIndexes[0]];
     await wolfPage.waitForSelector('#wolf-form', { timeout: 15000 });
-    const optionTexts = (await wolfPage
-      .locator('#wolf-form select[name="target"] option')
-      .allTextContents())
-      .map((text) => text.trim());
+    const optionTexts = (
+      await wolfPage.locator('#wolf-form select[name="target"] option').allTextContents()
+    ).map((text) => text.trim());
 
     wolfNames.forEach((name) => expect(optionTexts).not.toContain(name));
   } finally {

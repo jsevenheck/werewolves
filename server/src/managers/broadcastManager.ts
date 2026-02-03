@@ -8,7 +8,11 @@ function broadcastRoom(room: Room, io: Namespace<ClientToServerEvents, ServerToC
   Object.values(room.players).forEach((player) => sendStateToPlayer(room, player, io));
 }
 
-function sendStateToPlayer(room: Room, player: Player, io: Namespace<ClientToServerEvents, ServerToClientEvents>) {
+function sendStateToPlayer(
+  room: Room,
+  player: Player,
+  io: Namespace<ClientToServerEvents, ServerToClientEvents>
+) {
   if (!player.socketId) return;
   const socket = io.sockets.get(player.socketId);
   if (!socket) return;
@@ -24,12 +28,12 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     connected: player.connected,
     isHost: player.id === room.hostId,
     role: player.id === viewerId || room.phase === 'ended' || !player.alive ? player.role : null,
-    ...(room.phase === 'roleReveal' ? { ready: player.ready } : {})
+    ...(room.phase === 'roleReveal' ? { ready: player.ready } : {}),
   }));
   const viewerAlive = viewer ? viewer.alive : false;
   const logs = room.logs.slice(-8).map((log) => ({
     ts: log.ts,
-    text: viewerAlive && log.publicText ? log.publicText : log.text
+    text: viewerAlive && log.publicText ? log.publicText : log.text,
   }));
   return {
     code: room.code,
@@ -48,29 +52,36 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     loversAssigned: !!room.lovers,
     loverName: room.lovers
       ? room.lovers.aId === viewerId
-        ? room.players[room.lovers.bId]?.name ?? null
+        ? (room.players[room.lovers.bId]?.name ?? null)
         : room.lovers.bId === viewerId
-          ? room.players[room.lovers.aId]?.name ?? null
+          ? (room.players[room.lovers.aId]?.name ?? null)
           : null
       : null,
-    witchState: viewer?.role === 'witch' ? room.witchState : { healAvailable: null, poisonAvailable: null },
+    witchState:
+      viewer?.role === 'witch' ? room.witchState : { healAvailable: null, poisonAvailable: null },
     wolfVotes: viewer?.role === 'werewolf' ? room.wolfVotes : null,
-    wolfVoteState: viewer?.role === 'werewolf' ? {
-      submitted: Object.values(room.wolfVotes).filter((value) => value !== undefined).length,
-      required: Object.values(room.players).filter((p) => p.role === 'werewolf' && p.alive).length,
-      yourVote: room.wolfVotes[viewerId]
-    } : null,
+    wolfVoteState:
+      viewer?.role === 'werewolf'
+        ? {
+            submitted: Object.values(room.wolfVotes).filter((value) => value !== undefined).length,
+            required: Object.values(room.players).filter((p) => p.role === 'werewolf' && p.alive)
+              .length,
+            yourVote: room.wolfVotes[viewerId],
+          }
+        : null,
     wolfTarget: viewer?.role === 'witch' || viewer?.role === 'werewolf' ? room.wolfTarget : null,
-    wolfPeers: viewer?.role === 'werewolf'
-      ? Object.values(room.players)
-          .filter((p) => p.role === 'werewolf' && p.id !== viewerId && p.alive)
-          .map((p) => p.name)
-      : [],
-    wolfIds: viewer?.role === 'werewolf'
-      ? Object.values(room.players)
-          .filter((p) => p.role === 'werewolf' && p.alive)
-          .map((p) => p.id)
-      : [],
+    wolfPeers:
+      viewer?.role === 'werewolf'
+        ? Object.values(room.players)
+            .filter((p) => p.role === 'werewolf' && p.id !== viewerId && p.alive)
+            .map((p) => p.name)
+        : [],
+    wolfIds:
+      viewer?.role === 'werewolf'
+        ? Object.values(room.players)
+            .filter((p) => p.role === 'werewolf' && p.alive)
+            .map((p) => p.id)
+        : [],
     guardedTarget: viewer?.role === 'guard' ? room.guardedTarget : null,
     lastGuardedTarget: viewer?.role === 'guard' ? room.lastGuardedTarget : null,
     harlotVisitedTarget: viewer?.role === 'harlot' ? room.harlotVisitedTarget : null,
@@ -81,7 +92,7 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
       revoteFromTie: room.voteState.revoteFromTie,
       submitted: Object.values(room.voteState.votes).filter((value) => value !== undefined).length,
       required: Object.values(room.players).filter((p) => p.alive).length,
-      yourVote: room.voteState.votes[viewerId]
+      yourVote: room.voteState.votes[viewerId],
     },
     lastNightDeaths: room.lastNightDeaths,
     lastDayDeaths: room.lastDayDeaths,
@@ -98,14 +109,10 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
           role: viewer.role,
           team: viewer.team,
           alive: viewer.alive,
-          ready: room.phase === 'roleReveal' ? viewer.ready : undefined
+          ready: room.phase === 'roleReveal' ? viewer.ready : undefined,
         }
-      : null
+      : null,
   };
 }
 
-export {
-  broadcastRoom,
-  sendStateToPlayer,
-  sanitizeRoom
-};
+export { broadcastRoom, sendStateToPlayer, sanitizeRoom };

@@ -4,14 +4,18 @@ import type { ClientToServerEvents, ServerToClientEvents } from '@shared/events'
 
 export type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
-export function useSocket(config: { url?: string; path?: string; auth?: Record<string, string> }): TypedSocket {
+export function useSocket(config: {
+  url?: string;
+  path?: string;
+  auth?: Record<string, string>;
+}): TypedSocket {
   const socket: TypedSocket = io(config.url || '', {
     path: config.path || '/socket.io',
     transports: ['websocket', 'polling'],
     reconnection: true,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
-    ...(config.auth ? { auth: config.auth } : {})
+    ...(config.auth ? { auth: config.auth } : {}),
   });
 
   onBeforeUnmount(() => {

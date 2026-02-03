@@ -5,7 +5,6 @@ import { useGameStore } from '@/stores/game';
 import { notify } from '@/utils/helpers';
 import { MIN_PLAYERS } from '@shared/constants';
 import type { TypedSocket } from '@/composables/useSocket';
-import type { RoleConfig, PassiveRole } from '@shared/types';
 
 const ROLE_DETAILS: Record<string, { name: string }> = {
   werewolf: { name: 'Werewolf' },
@@ -16,11 +15,11 @@ const ROLE_DETAILS: Record<string, { name: string }> = {
   joker: { name: 'Joker' },
   guard: { name: 'Guard' },
   harlot: { name: 'Harlot' },
-  villager: { name: 'Villager' }
+  villager: { name: 'Villager' },
 };
 
 const PASSIVE_ROLE_DETAILS: Record<string, { name: string }> = {
-  mayor: { name: 'Mayor' }
+  mayor: { name: 'Mayor' },
 };
 
 const SINGLETON_ROLES = new Set(['seer', 'witch', 'armor', 'guard', 'harlot']);
@@ -39,9 +38,23 @@ const { room, playerId } = storeToRefs(store);
 
 const canStart = computed(() => playerId.value === room.value?.hostId);
 const minPlayers = computed(() => room.value?.minPlayers ?? MIN_PLAYERS);
-const roleConfig = computed(() => room.value?.roleConfig || { werewolf: 2, seer: 1, hunter: 1, witch: 1, armor: 1, joker: 1, guard: 0, harlot: 0 });
+const roleConfig = computed(
+  () =>
+    room.value?.roleConfig || {
+      werewolf: 2,
+      seer: 1,
+      hunter: 1,
+      witch: 1,
+      armor: 1,
+      joker: 1,
+      guard: 0,
+      harlot: 0,
+    }
+);
 const passiveRoleConfig = computed(() => room.value?.passiveRoleConfig || { mayor: true });
-const totals = computed(() => Object.values(roleConfig.value).reduce((sum, count) => sum + count, 0));
+const totals = computed(() =>
+  Object.values(roleConfig.value).reduce((sum, count) => sum + count, 0)
+);
 const playersCount = computed(() => room.value?.players.length || 0);
 const villagerSlots = computed(() => Math.max(playersCount.value - totals.value, 0));
 const needsAdjust = computed(() => totals.value > playersCount.value);
@@ -60,7 +73,9 @@ onBeforeUnmount(() => {
 
 function emitConfig() {
   if (!canStart.value || !playerId.value) return;
-  const config: Record<string, number | Record<string, boolean>> & { passiveRoles?: Record<string, boolean> } = {};
+  const config: Record<string, number | Record<string, boolean>> & {
+    passiveRoles?: Record<string, boolean>;
+  } = {};
   for (const [role, count] of Object.entries(localRoleConfig.value)) {
     (config as Record<string, number>)[role] = count;
   }
@@ -70,7 +85,7 @@ function emitConfig() {
   props.socket.emit('updateRoleConfig', {
     roomCode: room.value!.code,
     playerId: playerId.value,
-    config
+    config,
   });
 }
 
@@ -101,24 +116,26 @@ function onPassiveRoleChange(role: string, checked: boolean) {
 
 function startGame() {
   if (!playerId.value) return;
-  props.socket.emit('startGame', { roomCode: room.value!.code, playerId: playerId.value }, (res) => {
-    if (res && 'error' in res && res.error) {
-      notify(res.error);
+  props.socket.emit(
+    'startGame',
+    { roomCode: room.value!.code, playerId: playerId.value },
+    (res) => {
+      if (res && 'error' in res && res.error) {
+        notify(res.error);
+      }
     }
-  });
+  );
 }
 </script>
 
 <template>
   <section v-if="room" class="panel">
     <h2>Lobby</h2>
-    <p>Share this code so friends can join: <strong>{{ room.code }}</strong></p>
+    <p>
+      Share this code so friends can join: <strong>{{ room.code }}</strong>
+    </p>
     <form v-if="canStart" id="role-config" class="actions" @submit.prevent>
-      <label
-        v-for="[role, count] in Object.entries(roleConfig)"
-        :key="role"
-        class="role-row"
-      >
+      <label v-for="[role, count] in Object.entries(roleConfig)" :key="role" class="role-row">
         <span>
           {{ ROLE_DETAILS[role]?.name || role }}
           <span v-if="isSingletonRole(role)" class="role-hint">(max 1)</span>
@@ -156,9 +173,11 @@ function startGame() {
       </div>
     </form>
     <p v-else>Waiting for host to configure roles.</p>
-    <p class="role-summary">Configured roles: {{ totals }} / {{ playersCount }}. Villagers auto-fill: {{ villagerSlots }}</p>
+    <p class="role-summary">
+      Configured roles: {{ totals }} / {{ playersCount }}. Villagers auto-fill: {{ villagerSlots }}
+    </p>
     <p>Minimum players to start: {{ minPlayers }}</p>
-    <p v-if="needsAdjust" style="color:#fca5a5;">Too many roles for current players.</p>
+    <p v-if="needsAdjust" style="color: #fca5a5">Too many roles for current players.</p>
     <button id="start-game" :disabled="!canStart" @click="startGame">Start Game</button>
   </section>
 </template>

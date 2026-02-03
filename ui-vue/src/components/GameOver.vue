@@ -14,7 +14,7 @@ const ROLE_DETAILS: Record<string, { name: string }> = {
   joker: { name: 'Joker' },
   guard: { name: 'Guard' },
   harlot: { name: 'Harlot' },
-  villager: { name: 'Villager' }
+  villager: { name: 'Villager' },
 };
 
 interface Props {
@@ -49,10 +49,13 @@ function restartGame() {
     <h2>Game Over</h2>
     <p>{{ winner.reason }}</p>
     <p><strong>Winner:</strong> {{ winner.team.toUpperCase() }}</p>
-    <button v-if="isHost" id="restart-btn" type="button" @click="restartGame">Return to lobby</button>
-    <div style="margin-top:1rem;">
+    <button v-if="isHost" id="restart-btn" type="button" @click="restartGame">
+      Return to lobby
+    </button>
+    <div style="margin-top: 1rem">
       <div v-for="player in players" :key="player.id">
-        {{ player.name }} - {{ ROLE_DETAILS[player.role || 'villager']?.name || player.role || 'Unknown' }}
+        {{ player.name }} -
+        {{ ROLE_DETAILS[player.role || 'villager']?.name || player.role || 'Unknown' }}
       </div>
     </div>
   </section>

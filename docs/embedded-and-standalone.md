@@ -1,291 +1,171 @@
-# Embedded and Standalone Modes
+﻿# Embedded and Standalone Modes
 
-This document explains how the Werewolves game can run in two modes:
+This document explains how the Werewolves game can run in two modes.
 
-1. **Embedded mode** - as a game plugin inside the Game Hub platform
-2. **Standalone mode** - as an independent web application
-
----
-
-## Table of Contents
-
-- [Architecture Overview](#architecture-overview)
-- [Export Contracts](#export-contracts)
-  - [ui-vue exports (manifest + GameComponent)](#ui-vue-exports)
-  - [server exports (registerWerewolf)](#server-exports)
-- [Socket.IO Namespace Design](#socketio-namespace-design)
-- [Authentication Flow](#authentication-flow)
-- [Standalone Wrappers](#standalone-wrappers)
-  - [standalone-server](#standalone-server)
-  - [standalone-web](#standalone-web)
-- [Running Standalone Locally](#running-standalone-locally)
-- [Game Hub integration](#game-hub-integration)
-- [Gotchas and Best Practices](#gotchas-and-best-practices)
-
----
+1. Embedded mode: as a game plugin inside the Game Hub platform.
+2. Standalone mode: as an independent web application.
 
 ## Architecture Overview
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                         Shared Core                              │
-│  core/src/                                                       │
-│    ├── types.ts      (Role, Phase, Player, Room, etc.)          │
-│    ├── events.ts     (Socket.IO event contracts)                 │
-│    └── constants.ts  (timing constants, MIN_PLAYERS)            │
-└──────────────────────────────────────────────────────────────────┘
-                           │
-          ┌────────────────┼────────────────┐
-          ▼                ▼                ▼
-┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-│   server/src/   │ │   ui-vue/src/   │ │  (game-hub)     │
-│                 │ │                 │ │                 │
-│ registerWerewolf│ │ GameComponent   │ │ Calls register  │
-│ (namespace      │ │ manifest        │ │ Renders comp    │
-│  plugin)        │ │                 │ │                 │
-└────────┬────────┘ └────────┬────────┘ └─────────────────┘
-         │                   │
-         ▼                   ▼
-┌─────────────────────────────────────────┐
-│         Standalone Wrappers             │
-│  (THIN layers for local development)    │
-│                                         │
-│  standalone-server/   standalone-web/   │
-│  └── starts HTTP      └── Vite app      │
-│      + Socket.IO          mounts        │
-│      + calls              GameComponent │
-│      registerWerewolf     + Pinia       │
-└─────────────────────────────────────────┘
-```
-
----
+- `core/src`: shared types, events, constants
+- `server/src`: Socket.IO handlers and game logic (embedded)
+- `ui-vue/src`: Vue UI and Pinia stores (embedded)
+- `standalone-server/src`: thin wrapper for standalone server
+- `standalone-web/src`: thin wrapper for standalone web client
 
 ## Export Contracts
 
 ### ui-vue exports
 
-**File:** `ui-vue/src/index.ts`
+File: `ui-vue/src/index.ts`
 
-```typescript
-// Game manifest – metadata for the platform
+```ts
 export const manifest = {
-  id: 'werewolf',
+  id: 'werewolves',
   title: 'Werewolves',
   minPlayers: 5,
   maxPlayers: 20,
 } as const;
 
-// Primary Vue component
 export const GameComponent = WerewolvesGameRoot;
 
-// Types for props
 export type { GameComponentProps, HubIntegrationProps } from './types/config';
 ```
 
 **GameComponent Props:**
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `sessionId` | `string` | ✓ (embedded) | Platform session ID, used for socket room grouping (game logic still uses room codes unless adapted) |
-| `joinToken` | `string` | ✓ (embedded) | Auth token for Socket.IO handshake |
-| `wsNamespace` | `string` | ✓ (embedded) | Namespace path, e.g. `/g/werewolf` |
-| `apiBaseUrl` | `string` | ○ | Base URL for REST calls |
-| `socketUrl` | `string` | ○ | Socket.IO server URL (default: same origin) |
-| `socketPath` | `string` | ○ | Socket.IO path (default: `/socket.io`) |
-| `assetsBasePath` | `string` | ○ | Audio assets path (default: `/audio`) |
-| `standalone` | `boolean` | ○ | Currently affects styling only; create/join UI is still shown unless you customize it |
+| Prop             | Type      | Required            | Description                                                                                        |
+| ---------------- | --------- | ------------------- | -------------------------------------------------------------------------------------------------- |
+| `playerId`       | `string`  | optional            | Stable platform player id – used directly as the in-game ID when present                           |
+| `playerName`     | `string`  | optional            | Display name shown in-game; falls back to `playerId` when omitted                                  |
+| `sessionId`      | `string`  | required (embedded) | Platform session ID – triggers `autoJoinRoom`; server maps it to an internal room code             |
+| `joinToken`      | `string`  | required (embedded) | Auth token for Socket.IO handshake (also accepted as `token`, stored but not enforced server-side) |
+| `wsNamespace`    | `string`  | required (embedded) | Namespace path, e.g. `/g/werewolves`                                                               |
+| `apiBaseUrl`     | `string`  | optional            | Base URL for REST calls                                                                            |
+| `socketUrl`      | `string`  | optional            | Socket.IO server URL (default: same origin)                                                        |
+| `socketPath`     | `string`  | optional            | Socket.IO path (default: `/socket.io`)                                                             |
+| `assetsBasePath` | `string`  | optional            | Audio assets path (default: `/audio`)                                                              |
+| `standalone`     | `boolean` | optional            | `true` → Landing page (create/join UI); `false` + `sessionId` → `autoJoinRoom` fires automatically |
 
 **Usage in Game Hub:**
 
-Game Hub renders the game component and passes these props:
+Game Hub emits `party:gameStarted` with `{ gameId, sessionId, wsNamespace, joinToken }`.
+The host UI passes these props into the game component:
+
 - `gameId` (string, Game Hub internal identifier)
-- `sessionId` (string, used for socket room grouping; game logic still uses room codes unless adapted)
+- `sessionId` (string, triggers `autoJoinRoom`; server maps it to an internal room code)
 - `joinToken` (string, per-player auth token)
 - `wsNamespace` (string, `/g/<gameId>`)
 - `apiBaseUrl` (string, optional REST base URL)
+- Optional `playerId` from `localStorage.getItem('game-hub:player-id')` – used directly as the in-game player ID
 
-This component consumes `sessionId`, `joinToken`, `wsNamespace`, and `apiBaseUrl`. `gameId` is passed by the platform but not used by the component.
+Once `standalone=false` and `sessionId` are present the component skips the Landing
+page and emits `autoJoinRoom` automatically on connect.
 
 ### server exports
 
-**File:** `server/src/index.ts`
+File: `server/src/index.ts`
 
-```typescript
-import type { Server } from 'socket.io';
-
-/**
- * Register the Werewolf game as a Socket.IO namespace plugin.
- * Call this once at server startup.
- */
-export function registerWerewolf(io: Server): Namespace;
+```ts
+export const definition: GameDefinition;
+export function register(io: Server, namespace?: string): Namespace;
+export const handler: { definition: GameDefinition; register: typeof register };
+export function registerWerewolf(io: Server, namespace?: string): Namespace;
 ```
 
 **Usage (standalone or manual host):**
 
-```typescript
-import { createServer } from 'http';
-import { Server } from 'socket.io';
+```ts
 import { registerWerewolf } from '../server/src/index';
 
-const httpServer = createServer(app);
-const io = new Server(httpServer);
-
-// Attaches handlers to /g/werewolf
-registerWerewolf(io);
-
-httpServer.listen(3000);
+// Attaches handlers to /g/werewolves
+registerWerewolf(io, '/g/werewolves');
 ```
-
----
 
 ## Socket.IO Namespace Design
 
-The game uses a dedicated namespace `/g/werewolf` (not the root `/`). Game Hub
-convention is `/g/<gameId>`, so `gameId = werewolf` maps to `/g/werewolf`.
-The legacy standalone server also registers handlers on the root namespace `/`
-to support the `ui-vue` dev server when `wsNamespace` is not provided.
+- The game uses a dedicated namespace `/g/werewolves` (not the root `/`).
+- Game Hub convention is `/g/<gameId>`.
+- Room names are scoped per namespace.
 
-**Why namespaces?**
+Namespace middleware (auth):
 
-- Multiple games share one Socket.IO server
-- Each game has isolated event handlers
-- Room names are scoped per namespace
-- Middleware can be namespace-specific
-
-**Namespace middleware (auth):**
-
-```typescript
+```ts
 nsp.use((socket, next) => {
-  const { joinToken, sessionId } = socket.handshake.auth as {
+  const { joinToken, token, sessionId, playerId } = socket.handshake.auth as {
     joinToken?: string;
+    token?: string;
     sessionId?: string;
+    playerId?: string;
   };
-  // Default implementation stores auth data but does not validate it.
   socket.data.sessionId = sessionId ?? null;
-  socket.data.joinToken = joinToken ?? null;
+  socket.data.joinToken = joinToken ?? token ?? null;
+  socket.data.playerId = playerId ?? null;
   next();
 });
 ```
-If you need strict auth, add validation in this middleware (for example, verify the join token against the Game Hub platform token service).
-
----
 
 ## Authentication Flow
 
 ### Embedded mode (Game Hub)
 
-1. Platform authenticates user and starts a game session for the party
-2. Platform issues a per-player `joinToken` and a shared `sessionId`
-3. Client receives `{ gameId, sessionId, wsNamespace, joinToken }`
-4. Client connects: `io(wsNamespace, { auth: { joinToken, sessionId } })`
-5. Namespace middleware stores auth data (validation is optional/host-specific)
-6. Event handlers use `socket.data.sessionId` for socket room grouping (game logic still uses room codes internally)
-7. Reconnects still use `resumeToken`; `joinToken` is not used for reconnect logic
+Party creation/join and lobby live on `/platform`; the game only connects to `/g/<gameId>`.
+
+1. Platform issues `joinToken` (per player) and `sessionId` (shared) on `party:gameStarted`.
+2. Client connects: `io(wsNamespace, { auth: { token, joinToken, sessionId, playerId } })`.
+3. Namespace middleware stores auth data on `socket.data`.
+4. Client emits `autoJoinRoom({ sessionId, playerId, name })` – the server either
+   creates a new room and persists a `sessionId → roomCode` mapping, or reuses
+   the existing room if one was already linked to this `sessionId`.
+5. The hub-supplied `playerId` is stored directly as the player's in-game ID, so the
+   platform can correlate game state back to its user records without an extra lookup.
+6. Reconnects use the `resumeToken` that was returned by `autoJoinRoom`; no second
+   room is created.
 
 ### Standalone mode
 
-1. Player visits standalone-web
-2. Creates or joins a room via UI (room code flow)
-3. Server issues `resumeToken` on join
-4. Client stores token in localStorage
-5. On reconnect, client sends `resumePlayer` with token
-
-**Important:** Never use `socket.id` as stable identity. It changes on:
-- Page refresh
-- Network reconnection
-- Server restart
-
-Always use `resumeToken` for reconnects. `joinToken` + `sessionId` are handshake-only data in embedded mode.
-
----
+1. Player creates or joins a room via UI (room code flow).
+2. Server issues `resumeToken` on join.
+3. Client stores `resumeToken` in localStorage.
+4. On reconnect, client sends `resumePlayer` with `resumeToken`.
 
 ## Standalone Wrappers
 
 ### standalone-server
 
-**File:** `standalone-server/src/index.ts`
+File: `standalone-server/src/index.ts`
 
 A thin wrapper that:
+
 1. Creates Express + HTTP server
 2. Creates Socket.IO server
 3. Calls `registerWerewolf(io)`
 4. Serves static files
 5. Provides health endpoint
 
-```typescript
-import { Server } from 'socket.io';
-import { registerWerewolf } from '../../server/src/index';
-
-const io = new Server(httpServer, { cors: { origin: '*' } });
-registerWerewolf(io);
-
-httpServer.listen(3001);
-```
+**Audio:** The standalone server mounts `ui-vue/public/audio` at `/audio`, so the
+standalone web build does not need to bundle its own audio files.
 
 ### standalone-web
 
-**File:** `standalone-web/src/main.ts`
+File: `standalone-web/src/main.ts`
 
 A thin Vite app that:
+
 1. Creates Vue app instance
-2. Installs Pinia (required!)
+2. Installs Pinia (required)
 3. Renders `GameComponent` with standalone props
-
-```typescript
-import { createApp, h } from 'vue';
-import { createPinia } from 'pinia';
-import { GameComponent } from '../../ui-vue/src/index';
-
-const app = createApp({
-  render: () => h(GameComponent, {
-    standalone: true,
-    wsNamespace: '/g/werewolf',
-  }),
-});
-
-app.use(createPinia());
-app.mount('#app');
-```
-
----
 
 ## Running Standalone Locally
 
-### Quick start
-
 ```bash
-# Install dependencies
 pnpm install
 pnpm -C standalone-server install
 pnpm -C standalone-web install
-# Or: pnpm run install:standalone
 
-# Terminal 1: Start server
 pnpm run dev:standalone-server
-
-# Terminal 2: Start web client
 pnpm run dev:standalone-web
-
-# Open http://localhost:5173
 ```
-
-### With legacy scripts
-
-```bash
-# Uses server/src/standalone.ts (backward compatible)
-pnpm run dev
-
-# Open http://localhost:5173
-```
-
-### Production build
-
-```bash
-pnpm run build:standalone
-pnpm run start:standalone
-```
-
----
 
 ## Game Hub Integration
 
@@ -294,95 +174,96 @@ via `scripts/transform-for-gamehub.js`, which generates `game-export/werewolves/
 that structure.
 
 ### Recommended flow
+
 1. Run `node scripts/transform-for-gamehub.js` (CI does this after tests).
 2. Copy `game-export/werewolves` into the Game Hub repo at `games/werewolves/`.
-3. Update `web/src/Werewolves.vue` to mount `GameComponent` and wire Game Hub props
-   (`gameId`, `sessionId`, `joinToken`, `wsNamespace`, `apiBaseUrl`).
-4. Update `server/src/index.ts` to register Socket.IO handlers (or call `registerWerewolf(io)`).
-5. Update `shared/src/*` imports to `@game-hub/contracts` if needed.
-6. Register the game in the server registry (`apps/platform-server/src/games/registry.ts`).
-7. Register the game in the web registry (`apps/platform-web/src/gameRegistry.ts`).
+3. The transform rewrites `@shared/*` and `core/src/*` imports to `@game-hub/werewolves-shared/*`.
+4. Update `web/src/Werewolves.vue` to mount `GameComponent` and pass Game Hub props
+   (`sessionId`, `joinToken`, `wsNamespace`, `apiBaseUrl`) plus optional `playerId` from localStorage.
+5. `sessionId` → room mapping is handled automatically: the server's `autoJoinRoom`
+   handler creates or reuses a room keyed by `sessionId`, and accepts the hub-supplied
+   `playerId` directly – no manual mapping step required.
+6. Ensure the server package registers `register(io, namespace)` (or `registerWerewolf(io)`) under `/g/<gameId>`.
+7. Update `shared/src/*` imports to `@game-hub/contracts` if needed.
+8. Register the game in the server registry (`apps/platform-server/src/games/registry.ts`).
+9. Register the game in the web registry (`apps/platform-web/src/gameRegistry.ts`).
 
 ### Notes
-1. `registerWerewolf(io)` attaches to `/g/werewolf` (Game Hub uses `/g/<gameId>`).
-2. The transform output is a template and requires manual adaptation before it works in Game Hub.
-3. The generated `web/src/Werewolves.vue` template still references legacy props and must be updated to the current Game Hub props.
 
----
+1. `register(io, '/g/werewolves')` attaches to the game namespace.
+2. `game-export/` is git-ignored; it is regenerated by the transform script on every CI run.
+3. Game Hub emits `party:gameStarted` with `{ gameId, sessionId, wsNamespace, joinToken }`.
 
 ## Gotchas and Best Practices
 
-### ⚠️ Duplicate Vue/Pinia instances
+### Warning: Duplicate Vue/Pinia instances
 
-**Problem:** If ui-vue bundles its own Vue or creates its own Pinia, state won't sync with the hub.
+Problem: If ui-vue bundles its own Vue or creates its own Pinia, state won't sync with the hub.
 
-**Solution:**
-- `vite.lib.config.ts` externalizes `vue` and `pinia`
-- ui-vue NEVER calls `createPinia()` or `createApp()`
-- Hub app installs Pinia before rendering GameComponent
+Solution:
 
-### ⚠️ socket.id instability
+- `vite.lib.config.ts` externalizes `vue` and `pinia`.
+- ui-vue never calls `createPinia()` or `createApp()`.
+- Hub app installs Pinia before rendering GameComponent.
 
-**Problem:** `socket.id` changes on every reconnect.
+### Warning: socket.id instability
 
-**Solution:**
-- Use `joinToken` for authentication (sent via handshake)
-- Store `resumeToken` in localStorage for reconnection
-- Server identifies players by token, not socket.id
+Problem: `socket.id` changes on every reconnect.
 
-### ⚠️ Handshake auth timing
+Solution:
 
-**Problem:** Auth data must be available before connection.
+- `joinToken` (or `token`) is sent via handshake but is not enforced server-side today.
+- Store `resumeToken` in localStorage for reconnection.
+- Server identifies returning players via `resumeToken` (and `playerId` in embedded mode), not socket.id.
 
-**Solution:**
-```typescript
-// ✅ Correct: auth in connection options
-io(namespace, { auth: { joinToken, sessionId } });
+### Warning: Handshake auth timing
 
-// ❌ Wrong: emitting after connection
+Correct:
+
+```ts
+io(namespace, { auth: { token, joinToken, sessionId, playerId } });
+```
+
+Wrong:
+
+```ts
 socket.emit('auth', { joinToken });
 ```
-This game expects `joinToken` and `sessionId` keys in `socket.handshake.auth` (not `token`).
 
-### ⚠️ Namespace vs root
+### Warning: Namespace vs root
 
-**Problem:** Handlers attached to `io` don't see namespace connections.
+Correct:
 
-**Solution:**
-```typescript
-// ✅ Correct: attach to namespace
-const nsp = io.of('/g/werewolf');
+```ts
+const nsp = io.of('/g/werewolves');
 nsp.on('connection', handler);
+```
 
-// ❌ Wrong: only sees root connections
+Wrong:
+
+```ts
 io.on('connection', handler);
 ```
 
-### ⚠️ Room scoping
+### Warning: Room scoping
 
-**Problem:** Socket.IO rooms are per-namespace.
+Room "game-123" in `/g/werewolves` is separate from room "game-123" in `/g/othergame`.
 
-**Solution:**
-```typescript
-// Room "game-123" in /g/werewolf is separate from
-// Room "game-123" in /g/othergame
-socket.join(sessionId);
-nsp.to(sessionId).emit('roomUpdate', data);
-```
+### Note: SessionId vs room code
 
-### ⚠️ SessionId vs room code
+Game logic still uses 4-letter room codes internally. In embedded mode the
+`autoJoinRoom` handler maintains a `sessionId → roomCode` map in memory so that
+every player in the same platform session lands in the same room without needing to
+know the code. The map is cleaned up automatically when the room is deleted.
 
-**Problem:** Game logic still uses 4-letter room codes internally, while `sessionId`
-is only used for Socket.IO room grouping in embedded mode.
+### Warning: playerId is required for reconnection in embedded mode
 
-**Solution:** If Game Hub needs sessionId-based rooms, adapt `createRoom`/`joinRoom`
-handlers to use the provided `sessionId` (or map sessionId to a room code).
+`autoJoinRoom` identifies returning players by looking up `playerId` in the room's
+player map. If the platform does **not** supply a `playerId`, the server has no way
+to match the incoming request to an existing player — it will always treat the
+connection as a new player and create a duplicate slot (blocked only by the lobby
+phase and duplicate-name checks).
 
----
-
-## Related Documentation
-
-- [Socket.IO Namespaces](https://socket.io/docs/v4/namespaces/)
-- [Socket.IO Middleware](https://socket.io/docs/v4/middlewares/)
-- [Pinia Outside Components](https://pinia.vuejs.org/core-concepts/outside-component-stores.html)
-- [Vite Library Mode](https://vitejs.dev/guide/build.html#library-mode)
+Game Hub provides `playerId` via `localStorage` (`game-hub:player-id`); make sure
+that value is passed through as the `playerId` prop whenever `autoJoinRoom` is the
+expected join path.

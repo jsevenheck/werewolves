@@ -26,7 +26,7 @@ class MockHowl {
 }
 
 jest.mock('howler', () => ({
-  Howl: MockHowl
+  Howl: MockHowl,
 }));
 
 // Mock localStorage
@@ -34,9 +34,15 @@ const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
     getItem: jest.fn((key: string) => store[key] || null),
-    setItem: jest.fn((key: string, value: string) => { store[key] = value; }),
-    removeItem: jest.fn((key: string) => { delete store[key]; }),
-    clear: jest.fn(() => { store = {}; })
+    setItem: jest.fn((key: string, value: string) => {
+      store[key] = value;
+    }),
+    removeItem: jest.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: jest.fn(() => {
+      store = {};
+    }),
   };
 })();
 
@@ -54,7 +60,16 @@ describe('computeNarrationKey', () => {
     players: [],
     hostId: null,
     minPlayers: 5,
-    roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0, harlot: 0 },
+    roleConfig: {
+      werewolf: 1,
+      seer: 0,
+      hunter: 0,
+      witch: 0,
+      armor: 0,
+      joker: 0,
+      guard: 0,
+      harlot: 0,
+    },
     passiveRoleConfig: { mayor: true },
     mayorId: null,
     awaitingMayorSelection: false,
@@ -84,7 +99,7 @@ describe('computeNarrationKey', () => {
     dayVoteResolved: false,
     winner: null,
     logs: [],
-    self: null
+    self: null,
   });
 
   test('returns phaseTransition when present', () => {
@@ -165,7 +180,7 @@ describe('Narrator', () => {
 
   test('custom notify callback is called', () => {
     const notifyMock = jest.fn();
-    const narrator = createNarrator({ notify: notifyMock });
+    const _narrator = createNarrator({ notify: notifyMock });
     // Narrator calls notify internally for certain errors
     expect(notifyMock).not.toHaveBeenCalled();
   });
@@ -187,7 +202,16 @@ describe('Narrator handleRoomUpdate', () => {
     players: [],
     hostId: null,
     minPlayers: 5,
-    roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0, harlot: 0 },
+    roleConfig: {
+      werewolf: 1,
+      seer: 0,
+      hunter: 0,
+      witch: 0,
+      armor: 0,
+      joker: 0,
+      guard: 0,
+      harlot: 0,
+    },
     passiveRoleConfig: { mayor: true },
     mayorId: null,
     awaitingMayorSelection: false,
@@ -217,7 +241,7 @@ describe('Narrator handleRoomUpdate', () => {
     dayVoteResolved: false,
     winner: null,
     logs: [],
-    self: null
+    self: null,
   });
 
   beforeEach(() => {
@@ -241,10 +265,10 @@ describe('Narrator handleRoomUpdate', () => {
 
   test('plays clip when enabled and unlocked', () => {
     const playClipMock = jest.fn();
-    const narrator = createNarrator({ 
-      playClip: playClipMock, 
-      initialEnabled: true, 
-      initialUnlocked: true 
+    const narrator = createNarrator({
+      playClip: playClipMock,
+      initialEnabled: true,
+      initialUnlocked: true,
     });
     narrator.handleRoomUpdate(null, baseRoom());
     expect(playClipMock).toHaveBeenCalledWith('lobby');
@@ -252,10 +276,10 @@ describe('Narrator handleRoomUpdate', () => {
 
   test('does not replay same key', () => {
     const playClipMock = jest.fn();
-    const narrator = createNarrator({ 
-      playClip: playClipMock, 
-      initialEnabled: true, 
-      initialUnlocked: true 
+    const narrator = createNarrator({
+      playClip: playClipMock,
+      initialEnabled: true,
+      initialUnlocked: true,
     });
     const room = baseRoom();
     narrator.handleRoomUpdate(null, room);
@@ -265,10 +289,10 @@ describe('Narrator handleRoomUpdate', () => {
 
   test('plays new key when phase changes', () => {
     const playClipMock = jest.fn();
-    const narrator = createNarrator({ 
-      playClip: playClipMock, 
-      initialEnabled: true, 
-      initialUnlocked: true 
+    const narrator = createNarrator({
+      playClip: playClipMock,
+      initialEnabled: true,
+      initialUnlocked: true,
     });
     const lobbyRoom = baseRoom();
     const dayRoom = { ...baseRoom(), phase: 'day' as const };

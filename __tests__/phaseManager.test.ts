@@ -1,4 +1,9 @@
-import { startNight, scheduleNightStep, schedulePhaseTransition, advanceFromReveal } from '../server/src/managers/phaseManager';
+import {
+  startNight,
+  scheduleNightStep,
+  schedulePhaseTransition,
+  advanceFromReveal,
+} from '../server/src/managers/phaseManager';
 import type { Player, Room, RoleConfig } from '../core/src/types';
 
 const makeRoom = (): Room => ({
@@ -29,7 +34,16 @@ const makeRoom = (): Room => ({
   logs: [],
   winner: null,
   minPlayers: 5,
-  roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0, harlot: 0 } as RoleConfig,
+  roleConfig: {
+    werewolf: 1,
+    seer: 0,
+    hunter: 0,
+    witch: 0,
+    armor: 0,
+    joker: 0,
+    guard: 0,
+    harlot: 0,
+  } as RoleConfig,
   passiveRoleConfig: { mayor: true },
   mayorId: null,
   awaitingMayorSelection: null,
@@ -44,7 +58,7 @@ const makeRoom = (): Room => ({
   harlotActed: false,
   dayVoteResolved: false,
   createdAt: Date.now(),
-  lastActivityAt: Date.now()
+  lastActivityAt: Date.now(),
 });
 
 const buildPlayer = (overrides: Partial<Player>): Player => ({
@@ -57,11 +71,9 @@ const buildPlayer = (overrides: Partial<Player>): Player => ({
   socketId: null,
   resumeToken: 'token',
   isHost: false,
-  voteTarget: null,
-  nightAction: null,
   ready: false,
   seerResult: null,
-  ...overrides
+  ...overrides,
 });
 
 describe('phaseManager', () => {
@@ -70,7 +82,7 @@ describe('phaseManager', () => {
     room.players = {
       w1: buildPlayer({ id: 'w1', role: 'werewolf', team: 'wolves', alive: true }),
       w2: buildPlayer({ id: 'w2', role: 'werewolf', team: 'wolves', alive: false }),
-      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true })
+      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
     };
 
     startNight(room);
@@ -93,7 +105,7 @@ describe('phaseManager', () => {
     room.phaseStep = 'wolves';
     room.seerActed = false;
     room.players = {
-      s1: buildPlayer({ id: 's1', role: 'seer', alive: true })
+      s1: buildPlayer({ id: 's1', role: 'seer', alive: true }),
     };
     const broadcastRoom = jest.fn();
 
@@ -118,7 +130,7 @@ describe('phaseManager', () => {
     room.phaseStep = 'wolves';
     room.seerActed = false;
     room.players = {
-      w1: buildPlayer({ id: 'w1', role: 'witch', alive: true })
+      w1: buildPlayer({ id: 'w1', role: 'witch', alive: true }),
     };
     const broadcastRoom = jest.fn();
 
@@ -165,7 +177,7 @@ describe('phaseManager', () => {
     room.roleConfig.armor = 1;
     room.players = {
       armor: buildPlayer({ id: 'armor', role: 'armor', alive: true }),
-      villager: buildPlayer({ id: 'villager', role: 'villager', alive: true })
+      villager: buildPlayer({ id: 'villager', role: 'villager', alive: true }),
     };
     const broadcastRoom = jest.fn();
 
@@ -182,7 +194,7 @@ describe('phaseManager', () => {
     room.roleConfig.armor = 0;
     room.players = {
       wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: true }),
-      villager: buildPlayer({ id: 'villager', role: 'villager', alive: true })
+      villager: buildPlayer({ id: 'villager', role: 'villager', alive: true }),
     };
     const broadcastRoom = jest.fn();
 

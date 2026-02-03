@@ -3,7 +3,9 @@
 This document describes the game rules, data model, and phase flow for the Werewolves game.
 
 ## Overview
+
 Werewolves is a social deduction game where:
+
 - **Werewolves** secretly kill a villager each night
 - **Villagers** vote to eliminate suspects during the day
 - Special roles (Seer, Witch, Hunter, Guard, etc.) have unique abilities
@@ -12,21 +14,22 @@ Werewolves is a social deduction game where:
 ## Data Model
 
 ### Player
+
 - `id`: string player id.
 - `socketId`: string or null active socket id for reconnect.
 - `resumeToken`: random token required to resume a session (stored client-side).
 - `name`: display name shown to others.
 - `role`: enum (`werewolf`, `seer`, `hunter`, `witch`, `armor`, `joker`, `guard`, `harlot`, `villager`).
-- `team`: derived team id for win logic (`wolves`, `village`, `neutral`).
+- `team`: derived team id for win logic (`wolves`, `village`, `neutral`). Joker players are
+  `neutral`; the `winner.team` can be `joker` when the Joker is voted out.
 - `alive`: boolean.
 - `connected`: boolean for reconnect tracking.
 - `ready`: boolean for role-reveal readiness.
-- `voteTarget`: legacy field (cleared on death; day voting uses `voteState`).
-- `nightAction`: currently `null` for most roles; werewolves get `{ vote: null }` on assignment (not used by core flow).
 - `isHost`: boolean for the original host/owner (used to reclaim host on reconnect; UI uses `hostId`).
 - `seerResult`: last inspection result for seer UI (name + alignment).
 
 ### Room
+
 - `code`: 4-letter uppercase join code.
 - `phase`: enum (`lobby`, `roleReveal`, `mayor`, `armor`, `night`, `day`, `ended`).
 - `phaseStep`: helper for night substeps (`wolves`, `seer`, `witch`, `guard`, `harlot`, `resolve`, `transition`).
@@ -52,7 +55,7 @@ Werewolves is a social deduction game where:
 - `healedTarget`: player healed by Witch (usually wolf target), or null.
 - `poisonTarget`: player poisoned by Witch, or null.
 - `seerActed`: boolean, true once the Seer has inspected this night.
-- `voteState`: `{votes: map playerId -> targetId|null, revoteFromTie: array|null}`.
+- `voteState`: `{votes: map playerId -> targetId|null|undefined, revoteFromTie: array|null}`.
 - `pendingDeaths`: queue of `{playerId, reason}` awaiting resolution.
 - `logs`: array of structured entries for UI recap (`{ts, text, publicText}`).
 - `lastNightDeaths`: array of `{name, role}` announced in the day report.

@@ -3,7 +3,7 @@ import {
   closeContexts,
   configureRoles,
   createLobbyWithPlayers,
-  startGameAndReady
+  startGameAndReady,
 } from './helpers';
 
 const getRoleName = async (page: Page) => {
@@ -53,7 +53,7 @@ test('harlot dies when visiting the wolf victim', async ({ browser }) => {
       joker: 0,
       guard: 0,
       harlot: 1,
-      passiveRoles: { mayor: false }
+      passiveRoles: { mayor: false },
     });
 
     await startGameAndReady(pages);
@@ -70,13 +70,17 @@ test('harlot dies when visiting the wolf victim', async ({ browser }) => {
 
     // Wolf targets the villager
     await wolf.page.waitForSelector('#wolf-form', { timeout: 15000 });
-    await wolf.page.locator('#wolf-form select[name="target"]').selectOption({ label: target.name });
+    await wolf.page
+      .locator('#wolf-form select[name="target"]')
+      .selectOption({ label: target.name });
     await wolf.page.locator('#wolf-form button[type="submit"]').click();
     await wolf.page.locator('#wolf-form').waitFor({ state: 'detached', timeout: 15000 });
 
     // Harlot visits the same villager (wolf's target)
     await harlot.page.waitForSelector('#harlot-form', { timeout: 15000 });
-    await harlot.page.locator('#harlot-form select[name="target"]').selectOption({ label: target.name });
+    await harlot.page
+      .locator('#harlot-form select[name="target"]')
+      .selectOption({ label: target.name });
     await harlot.page.locator('#harlot-form button[type="submit"]').click();
     await harlot.page.locator('#harlot-form').waitFor({ state: 'detached', timeout: 15000 });
 
@@ -105,7 +109,7 @@ test('harlot survives when visiting someone other than the wolf victim', async (
       joker: 0,
       guard: 0,
       harlot: 1,
-      passiveRoles: { mayor: false }
+      passiveRoles: { mayor: false },
     });
 
     await startGameAndReady(pages);
@@ -131,13 +135,17 @@ test('harlot survives when visiting someone other than the wolf victim', async (
 
     // Wolf targets first villager
     await wolf.page.waitForSelector('#wolf-form', { timeout: 15000 });
-    await wolf.page.locator('#wolf-form select[name="target"]').selectOption({ label: target1.name });
+    await wolf.page
+      .locator('#wolf-form select[name="target"]')
+      .selectOption({ label: target1.name });
     await wolf.page.locator('#wolf-form button[type="submit"]').click();
     await wolf.page.locator('#wolf-form').waitFor({ state: 'detached', timeout: 15000 });
 
     // Harlot visits second villager (different from wolf's target)
     await harlot.page.waitForSelector('#harlot-form', { timeout: 15000 });
-    await harlot.page.locator('#harlot-form select[name="target"]').selectOption({ label: target2.name });
+    await harlot.page
+      .locator('#harlot-form select[name="target"]')
+      .selectOption({ label: target2.name });
     await harlot.page.locator('#harlot-form button[type="submit"]').click();
     await harlot.page.locator('#harlot-form').waitFor({ state: 'detached', timeout: 15000 });
 
@@ -171,7 +179,7 @@ test('harlot survives when wolf kill is blocked by guard', async ({ browser }) =
       joker: 0,
       guard: 1,
       harlot: 1,
-      passiveRoles: { mayor: false }
+      passiveRoles: { mayor: false },
     });
 
     await startGameAndReady(pages);
@@ -189,19 +197,25 @@ test('harlot survives when wolf kill is blocked by guard', async ({ browser }) =
 
     // Wolf targets the villager
     await wolf.page.waitForSelector('#wolf-form', { timeout: 15000 });
-    await wolf.page.locator('#wolf-form select[name="target"]').selectOption({ label: target.name });
+    await wolf.page
+      .locator('#wolf-form select[name="target"]')
+      .selectOption({ label: target.name });
     await wolf.page.locator('#wolf-form button[type="submit"]').click();
     await wolf.page.locator('#wolf-form').waitFor({ state: 'detached', timeout: 15000 });
 
     // Guard protects the same villager
     await guard.page.waitForSelector('#guard-form', { timeout: 15000 });
-    await guard.page.locator('#guard-form select[name="target"]').selectOption({ label: target.name });
+    await guard.page
+      .locator('#guard-form select[name="target"]')
+      .selectOption({ label: target.name });
     await guard.page.locator('#guard-form button[type="submit"]').click();
     await guard.page.locator('#guard-form').waitFor({ state: 'detached', timeout: 15000 });
 
     // Harlot visits the same villager (wolf's target, but guard protected)
     await harlot.page.waitForSelector('#harlot-form', { timeout: 15000 });
-    await harlot.page.locator('#harlot-form select[name="target"]').selectOption({ label: target.name });
+    await harlot.page
+      .locator('#harlot-form select[name="target"]')
+      .selectOption({ label: target.name });
     await harlot.page.locator('#harlot-form button[type="submit"]').click();
     await harlot.page.locator('#harlot-form').waitFor({ state: 'detached', timeout: 15000 });
 

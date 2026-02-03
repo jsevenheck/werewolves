@@ -1,14 +1,16 @@
 import { startNextMayorSelection, tryResolveMayorVote } from '../server/src/managers/mayorManager';
 import { createVoteState } from '../server/src/utils/helpers';
 import { schedulePhaseTransition } from '../server/src/managers/phaseManager';
-import type { Room, Player } from '../core/src/types';
+import type { Room } from '../core/src/types';
 
 jest.mock('../server/src/managers/phaseManager', () => ({
-  schedulePhaseTransition: jest.fn()
+  schedulePhaseTransition: jest.fn(),
 }));
 
 describe('mayorManager', () => {
-  const mockSchedulePhaseTransition = schedulePhaseTransition as jest.MockedFunction<typeof schedulePhaseTransition>;
+  const mockSchedulePhaseTransition = schedulePhaseTransition as jest.MockedFunction<
+    typeof schedulePhaseTransition
+  >;
 
   describe('startNextMayorSelection', () => {
     test('returns false when no selection is queued', () => {
@@ -19,13 +21,13 @@ describe('mayorManager', () => {
         mayorSelectionTimer: null,
         players: {
           p1: { id: 'p1', name: 'Player 1', alive: true, socketId: 'socket1' },
-          p2: { id: 'p2', name: 'Player 2', alive: true, socketId: 'socket2' }
-        }
+          p2: { id: 'p2', name: 'Player 2', alive: true, socketId: 'socket2' },
+        },
       } as unknown as Room;
       const broadcastRoom = jest.fn();
-      
+
       const result = startNextMayorSelection(room, broadcastRoom);
-      
+
       expect(result).toBe(false);
       expect(broadcastRoom).not.toHaveBeenCalled();
     });
@@ -38,13 +40,13 @@ describe('mayorManager', () => {
         mayorSelectionTimer: null,
         players: {
           p1: { id: 'p1', name: 'Player 1', alive: false, socketId: 'socket1' },
-          p2: { id: 'p2', name: 'Player 2', alive: false, socketId: 'socket2' }
-        }
+          p2: { id: 'p2', name: 'Player 2', alive: false, socketId: 'socket2' },
+        },
       } as unknown as Room;
       const broadcastRoom = jest.fn();
-      
+
       const result = startNextMayorSelection(room, broadcastRoom);
-      
+
       expect(result).toBe(false);
     });
 
@@ -56,19 +58,17 @@ describe('mayorManager', () => {
         mayorSelectionTimer: null,
         players: {
           p1: { id: 'p1', name: 'Player 1', alive: false, socketId: 'socket1' },
-          p2: { id: 'p2', name: 'Player 2', alive: true, socketId: 'socket2' }
+          p2: { id: 'p2', name: 'Player 2', alive: true, socketId: 'socket2' },
         },
-        logs: []
+        logs: [],
       } as unknown as Room;
       const broadcastRoom = jest.fn();
       const io = {
-        sockets: new Map([
-          ['socket1', { emit: jest.fn() }]
-        ])
+        sockets: new Map([['socket1', { emit: jest.fn() }]]),
       };
 
       const result = startNextMayorSelection(room, broadcastRoom, io as any);
-      
+
       expect(result).toBe(true);
       expect(room.awaitingMayorSelection).toBe('p1');
     });
@@ -82,15 +82,13 @@ describe('mayorManager', () => {
         players: {
           p1: { id: 'p1', name: 'Player 1', alive: false, socketId: 'socket1' },
           p2: { id: 'p2', name: 'Player 2', alive: true, socketId: 'socket2' },
-          p3: { id: 'p3', name: 'Player 3', alive: false, socketId: 'socket3' }
+          p3: { id: 'p3', name: 'Player 3', alive: false, socketId: 'socket3' },
         },
-        logs: []
+        logs: [],
       } as unknown as Room;
       const broadcastRoom = jest.fn();
       const io = {
-        sockets: new Map([
-          ['socket3', { emit: jest.fn() }]
-        ])
+        sockets: new Map([['socket3', { emit: jest.fn() }]]),
       };
 
       const result = startNextMayorSelection(room, broadcastRoom, io as any);
@@ -106,12 +104,12 @@ describe('mayorManager', () => {
         awaitingMayorSelection: null,
         mayorSelectionQueue: undefined,
         mayorSelectionTimer: null,
-        players: {}
+        players: {},
       } as unknown as Room;
       const broadcastRoom = jest.fn();
-      
+
       const result = startNextMayorSelection(room, broadcastRoom);
-      
+
       expect(result).toBe(false);
     });
   });
@@ -129,9 +127,9 @@ describe('mayorManager', () => {
         players: {
           p1: { id: 'p1', name: 'Player 1', alive: true, connected: true },
           p2: { id: 'p2', name: 'Player 2', alive: true, connected: true },
-          p3: { id: 'p3', name: 'Player 3', alive: true, connected: true }
+          p3: { id: 'p3', name: 'Player 3', alive: true, connected: true },
         },
-        logs: []
+        logs: [],
       } as unknown as Room;
       room.voteState.votes = { p1: 'p2', p2: 'p2', p3: 'p1' };
       const broadcastRoom = jest.fn();
@@ -152,9 +150,9 @@ describe('mayorManager', () => {
           p1: { id: 'p1', name: 'Player 1', alive: true, connected: true },
           p2: { id: 'p2', name: 'Player 2', alive: true, connected: true },
           p3: { id: 'p3', name: 'Player 3', alive: true, connected: true },
-          p4: { id: 'p4', name: 'Player 4', alive: true, connected: true }
+          p4: { id: 'p4', name: 'Player 4', alive: true, connected: true },
         },
-        logs: []
+        logs: [],
       } as unknown as Room;
       room.voteState.votes = { p1: 'p2', p2: 'p1', p3: 'p1', p4: 'p2' };
       const broadcastRoom = jest.fn();
@@ -179,9 +177,9 @@ describe('mayorManager', () => {
           p1: { id: 'p1', name: 'Player 1', alive: true, connected: true },
           p2: { id: 'p2', name: 'Player 2', alive: true, connected: true },
           p3: { id: 'p3', name: 'Player 3', alive: true, connected: true },
-          p4: { id: 'p4', name: 'Player 4', alive: true, connected: true }
+          p4: { id: 'p4', name: 'Player 4', alive: true, connected: true },
         },
-        logs: []
+        logs: [],
       } as unknown as Room;
       room.voteState.revoteFromTie = ['p1', 'p2'];
       room.voteState.votes = { p1: 'p1', p2: 'p2', p3: 'p1', p4: 'p2' };
@@ -207,9 +205,9 @@ describe('mayorManager', () => {
         players: {
           p1: { id: 'p1', name: 'Player 1', alive: true, connected: true },
           p2: { id: 'p2', name: 'Player 2', alive: true, connected: true },
-          p3: { id: 'p3', name: 'Player 3', alive: true, connected: true }
+          p3: { id: 'p3', name: 'Player 3', alive: true, connected: true },
         },
-        logs: []
+        logs: [],
       } as unknown as Room;
       room.voteState.votes = { p1: 'p3', p2: 'p3' };
       const broadcastRoom = jest.fn();
@@ -229,9 +227,9 @@ describe('mayorManager', () => {
         players: {
           p1: { id: 'p1', name: 'Player 1', alive: true, connected: true },
           p2: { id: 'p2', name: 'Player 2', alive: true, connected: true },
-          p3: { id: 'p3', name: 'Player 3', alive: true, connected: false }
+          p3: { id: 'p3', name: 'Player 3', alive: true, connected: false },
         },
-        logs: []
+        logs: [],
       } as unknown as Room;
       room.voteState.votes = { p1: 'p2', p2: 'p2' };
       const broadcastRoom = jest.fn();

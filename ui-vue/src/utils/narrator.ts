@@ -1,6 +1,5 @@
 import { Howl } from 'howler';
 import type { RoomView } from '@shared/types';
-import { notify } from './helpers';
 
 type NarrationKey = string | null;
 
@@ -39,6 +38,7 @@ class Narrator {
   private currentHowl: Howl | null = null;
   private readonly howls = new Map<string, Howl>();
   private readonly howlPromises = new Map<string, Promise<Howl>>();
+  private pendingTimer: ReturnType<typeof setTimeout> | null = null;
   private disableToken = 0;
   private lastPlayAttemptAt = 0;
   private lastUserMessageAt = 0;
@@ -66,7 +66,7 @@ class Narrator {
     ['postMayor', -1],
     ['armor', -1],
     ['postArmor', -1],
-    ['ended', -1]
+    ['ended', -1],
   ]);
   private readonly discoveredVariants = new Map<string, string[]>();
 
@@ -103,6 +103,10 @@ class Narrator {
     if (!next) {
       this.lastAnnouncedKey = null;
       this.pendingKey = null;
+      if (this.pendingTimer) {
+        clearTimeout(this.pendingTimer);
+        this.pendingTimer = null;
+      }
       this.disableToken += 1;
       this.stop();
       for (const howl of this.howls.values()) {
@@ -129,7 +133,7 @@ class Narrator {
           src,
           html5: true,
           preload: 'metadata',
-          volume: 0
+          volume: 0,
         });
       unlockHowl = createUnlockHowl(`${this.basePath}/lobby.mp3`);
       const tryFallback = (playAfterSwap: boolean) => {
@@ -225,7 +229,9 @@ class Narrator {
 
     try {
       const response = await fetch(customPath, { method: 'HEAD' });
-      if (response.ok) {
+      const contentType = response.headers.get('content-type') || '';
+      // Only accept if response is OK AND content-type indicates audio (not HTML fallback)
+      if (response.ok && contentType.includes('audio')) {
         return customPath;
       }
     } catch {
@@ -245,11 +251,17 @@ class Narrator {
       const customUrl = `${this.basePath}/custom/${variantKey}.mp3`;
       try {
         const response = await fetch(customUrl, { method: 'HEAD' });
-        if (response.ok) {
+        const contentType = response.headers.get('content-type') || '';
+        // Only accept if response is OK AND content-type indicates audio (not HTML fallback)
+        if (response.ok && contentType.includes('audio')) {
           variants.push(variantKey);
+        } else if (response.ok && !contentType.includes('audio')) {
+          // Server returned HTML fallback (SPA), file doesn't actually exist
+          break; // Stop searching, subsequent variants won't exist either
         }
       } catch {
-        // Custom variant doesn't exist, skip
+        // Network error or file doesn't exist, stop searching
+        break;
       }
     }
 
@@ -258,7 +270,7 @@ class Narrator {
 
   private async selectVariant(key: string): Promise<string> {
     const count = this.variants.get(key);
-    
+
     // Auto-discovery mode
     if (count === -1) {
       let available = this.discoveredVariants.get(key);
@@ -266,14 +278,14 @@ class Narrator {
         available = await this.discoverVariants(key);
         this.discoveredVariants.set(key, available);
       }
-      
+
       if (available.length === 0) return key;
       return available[Math.floor(Math.random() * available.length)];
     }
-    
+
     // Manual configuration mode
     if (!count || count === 0) return key;
-    
+
     const index = Math.floor(Math.random() * count) + 1;
     return `${key}_${index}`;
   }
@@ -285,6 +297,16 @@ class Narrator {
     const now = Date.now();
     if (now - this.lastPlayAttemptAt < this.playDebounceMs) {
       this.pendingKey = key;
+      if (!this.pendingTimer) {
+        const delay = Math.max(this.playDebounceMs - (now - this.lastPlayAttemptAt), 0);
+        this.pendingTimer = setTimeout(() => {
+          this.pendingTimer = null;
+          const pending = this.pendingKey;
+          if (!pending || !this.enabled || !this.unlocked) return;
+          this.pendingKey = null;
+          this.playClip(pending);
+        }, delay);
+      }
       return;
     }
     this.lastPlayAttemptAt = now;
@@ -312,7 +334,7 @@ class Narrator {
           src,
           html5: true,
           preload: 'metadata',
-          volume: DEFAULT_VOLUME
+          volume: DEFAULT_VOLUME,
         });
       let activeHowl = createHowl(audioPath);
 
@@ -410,6 +432,9 @@ class Narrator {
       }
     }
     this.unlocked = false;
+    if (this.enabled) {
+      this.setEnabled(false);
+    }
     this.informUser('Audio is blocked. Tap to enable narrator.');
   }
 
