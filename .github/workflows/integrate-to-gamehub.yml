@@ -22,9 +22,9 @@ jobs:
       - name: Install dependencies
         run: |
           pnpm install --frozen-lockfile
-          pnpm -C ui-vue install --frozen-lockfile
-          pnpm -C standalone-server install --frozen-lockfile
-          pnpm -C standalone-web install --frozen-lockfile
+          pnpm -C ui-vue install
+          pnpm -C standalone-server install
+          pnpm -C standalone-web install
       - name: Lint
         run: pnpm lint
       - name: Format check
