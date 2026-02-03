@@ -46,6 +46,7 @@ Place MP3 narrator clips in `ui-vue/public/audio/` with filenames matching the e
 **Audio Variants** (optional): The narrator supports multiple audio variants per clip for variety in `ui-vue/public/audio/custom/`. Name files as `custom/{key}_1.mp3`, `custom/{key}_2.mp3`, etc. The system auto-detects custom variants (up to 10) and randomly selects one each time. See `ui-vue/public/audio/README.md` for details.
 
 Expected narrator keys:
+
 - `lobby.mp3` (also used for the initial audio unlock)
 - `roleReveal.mp3`
 - `armor.mp3`

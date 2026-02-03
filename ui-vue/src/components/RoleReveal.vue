@@ -22,13 +22,13 @@ const ROLE_DETAILS: Record<string, { name: string }> = {
   joker: { name: 'Joker' },
   guard: { name: 'Guard' },
   harlot: { name: 'Harlot' },
-  villager: { name: 'Villager' }
+  villager: { name: 'Villager' },
 };
 
 const players = computed(() => room.value?.players ?? []);
 const self = computed(() => players.value.find((p) => p.id === playerId.value) || null);
 const selfRole = computed(() => self.value?.role || null);
-const info = computed(() => selfRole.value ? ROLE_DETAILS[selfRole.value] : null);
+const info = computed(() => (selfRole.value ? ROLE_DETAILS[selfRole.value] : null));
 const readyCount = computed(() => players.value.filter((p) => p.connected && p.ready).length);
 const totalCount = computed(() => players.value.filter((p) => p.connected).length);
 const isSelfReady = computed(() => self.value?.ready ?? false);
@@ -56,20 +56,16 @@ function markReady() {
     readyButtonTimeout = null;
   }, 10000);
 
-  props.socket.emit(
-    'markReady',
-    { roomCode: room.value.code, playerId: playerId.value },
-    (res) => {
-      if (readyButtonTimeout) {
-        clearTimeout(readyButtonTimeout);
-        readyButtonTimeout = null;
-      }
-      if (res && 'error' in res && res.error) {
-        notify(res.error);
-        readyDisabled.value = false;
-      }
+  props.socket.emit('markReady', { roomCode: room.value.code, playerId: playerId.value }, (res) => {
+    if (readyButtonTimeout) {
+      clearTimeout(readyButtonTimeout);
+      readyButtonTimeout = null;
     }
-  );
+    if (res && 'error' in res && res.error) {
+      notify(res.error);
+      readyDisabled.value = false;
+    }
+  });
 }
 
 function continueAfterReveal() {
@@ -93,7 +89,7 @@ function continueAfterReveal() {
     <template v-else-if="!isSelfReady">
       <button id="ready-btn" :disabled="readyDisabled" @click="markReady">I'm Ready</button>
     </template>
-    <p v-else style="color:#4ade80;">You are ready. Waiting for others...</p>
+    <p v-else style="color: #4ade80">You are ready. Waiting for others...</p>
 
     <p>Players ready: {{ readyCount }} / {{ totalCount }}</p>
   </section>

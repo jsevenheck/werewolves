@@ -21,6 +21,10 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Format check
+        run: pnpm format:check
       - name: Type check
         run: pnpm typecheck
       - name: Run unit tests
@@ -70,21 +74,21 @@ jobs:
         with:
           token: ${{ secrets.GAMEHUB_PAT }}
           path: game-hub
-          commit-message: "feat(games): update werewolves from ${{ github.sha }}"
+          commit-message: 'feat(games): update werewolves from ${{ github.sha }}'
           branch: integrate/werewolves-${{ github.run_number }}
           delete-branch: true
-          title: "Update Werewolves Game"
+          title: 'Update Werewolves Game'
           body: |
             ## Werewolves Game Update
-            
+
             **Source Commit**: ${{ github.repository }}@${{ github.sha }}
             **Triggered by**: @${{ github.actor }}
             **Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            
+
             ### Changes
             - Automatic integration from werewolves repository
             - All tests passed in source repo
-            
+
             ### Review Checklist
             - [ ] Game structure follows conventions
             - [ ] No breaking changes to platform contracts

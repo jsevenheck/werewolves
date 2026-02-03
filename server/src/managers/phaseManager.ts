@@ -5,7 +5,7 @@ import {
   DAY_TO_NIGHT_DELAY_MS,
   POST_ARMOR_DELAY_MS,
   POST_MAYOR_DELAY_MS,
-  POST_REVEAL_DELAY_MS
+  POST_REVEAL_DELAY_MS,
 } from '../config/constants';
 import { createVoteState, addLog, clearRoomTimers } from '../utils/helpers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
@@ -58,7 +58,12 @@ function scheduleNightStep(
     if (resolvedStep === 'resolve') {
       const { resolveNight } = require('./nightManager');
       resolveNight(room, broadcastRoom, io);
-    } else if (resolvedStep === 'seer' || resolvedStep === 'witch' || resolvedStep === 'guard' || resolvedStep === 'harlot') {
+    } else if (
+      resolvedStep === 'seer' ||
+      resolvedStep === 'witch' ||
+      resolvedStep === 'guard' ||
+      resolvedStep === 'harlot'
+    ) {
       const { advanceNightStep } = require('./nightManager');
       advanceNightStep(room, broadcastRoom, io);
     } else {
@@ -80,12 +85,17 @@ function schedulePhaseTransition(
   }
   broadcastRoom(room);
   const delayMs =
-    kind === 'postReveal' ? POST_REVEAL_DELAY_MS :
-    kind === 'postMayor' ? POST_MAYOR_DELAY_MS :
-    kind === 'postArmor' ? POST_ARMOR_DELAY_MS :
-    kind === 'nightToDay' ? NIGHT_TO_DAY_DELAY_MS :
-    kind === 'dayToNight' ? DAY_TO_NIGHT_DELAY_MS :
-    NIGHT_TO_DAY_DELAY_MS;
+    kind === 'postReveal'
+      ? POST_REVEAL_DELAY_MS
+      : kind === 'postMayor'
+        ? POST_MAYOR_DELAY_MS
+        : kind === 'postArmor'
+          ? POST_ARMOR_DELAY_MS
+          : kind === 'nightToDay'
+            ? NIGHT_TO_DAY_DELAY_MS
+            : kind === 'dayToNight'
+              ? DAY_TO_NIGHT_DELAY_MS
+              : NIGHT_TO_DAY_DELAY_MS;
   room.phaseTimer = setTimeout(() => {
     room.phaseTimer = null;
     if (room.winner) return;
@@ -174,7 +184,10 @@ function advanceFromReveal(room: Room, broadcastRoom: (room: Room) => void) {
     return;
   }
   addLog(room, 'Mayor role disabled. Skipping election.');
-  if (room.roleConfig.armor > 0 && Object.values(room.players).some((p) => p.role === 'armor' && p.alive)) {
+  if (
+    room.roleConfig.armor > 0 &&
+    Object.values(room.players).some((p) => p.role === 'armor' && p.alive)
+  ) {
     room.phase = 'armor';
   } else {
     startNight(room);
@@ -183,7 +196,10 @@ function advanceFromReveal(room: Room, broadcastRoom: (room: Room) => void) {
 }
 
 function advanceFromMayor(room: Room, broadcastRoom: (room: Room) => void) {
-  if (room.roleConfig.armor > 0 && Object.values(room.players).some((p) => p.role === 'armor' && p.alive)) {
+  if (
+    room.roleConfig.armor > 0 &&
+    Object.values(room.players).some((p) => p.role === 'armor' && p.alive)
+  ) {
     room.phase = 'armor';
     room.phaseStep = null;
   } else {
@@ -197,7 +213,11 @@ function notifyLovers(room: Room) {
   const loverA = room.players[room.lovers.aId];
   const loverB = room.players[room.lovers.bId];
   if (loverA && loverB) {
-    addLog(room, `${loverA.name} and ${loverB.name} are now Lovers.`, 'Two players are now Lovers.');
+    addLog(
+      room,
+      `${loverA.name} and ${loverB.name} are now Lovers.`,
+      'Two players are now Lovers.'
+    );
   }
 }
 
@@ -208,5 +228,5 @@ export {
   holdDayToNightTransition,
   advanceFromReveal,
   advanceFromMayor,
-  notifyLovers
+  notifyLovers,
 };

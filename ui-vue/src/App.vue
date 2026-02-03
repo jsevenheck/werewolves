@@ -5,13 +5,13 @@ import { useSocket } from '@/composables/useSocket';
 import { useNarrator } from '@/composables/useNarrator';
 import { notify } from '@/utils/helpers';
 import type { GameComponentProps } from '@/types/config';
-import type { StoredSession, RoomView } from '@shared/types';
+import type { StoredSession } from '@shared/types';
 import {
   NIGHT_TO_DAY_DELAY_MS,
   DAY_TO_NIGHT_DELAY_MS,
   POST_REVEAL_DELAY_MS,
   POST_MAYOR_DELAY_MS,
-  POST_ARMOR_DELAY_MS
+  POST_ARMOR_DELAY_MS,
 } from '@shared/constants';
 
 import Landing from '@/components/Landing.vue';
@@ -35,6 +35,7 @@ interface Props {
   standalone?: boolean;
   // Hub integration props
   playerId?: string;
+  playerName?: string;
   sessionId?: string;
   joinToken?: string;
   wsNamespace?: string;
@@ -46,10 +47,11 @@ const props = withDefaults(defineProps<Props>(), {
   socketPath: '/socket.io',
   assetsBasePath: '/audio',
   playerId: '',
+  playerName: '',
   sessionId: '',
   joinToken: '',
   wsNamespace: '',
-  apiBaseUrl: ''
+  apiBaseUrl: '',
 });
 
 // Check for injected config from host app (app.provide)
@@ -62,9 +64,11 @@ const effectiveSocketPath = props.socketPath || injectedConfig.socketPath || '/s
 const effectiveAssetsBasePath = normalizeAssetsBasePath(
   props.assetsBasePath || injectedConfig.assetsBasePath || '/audio'
 );
-const explicitStandalone = props.standalone ?? injectedConfig.standalone;
-const effectiveStandalone = explicitStandalone ?? (effectiveWsNamespace ? false : true);
+// Vue Boolean-casts a missing `standalone` prop to false, so the injected
+// config must be checked first (it is undefined when no provide is present).
+const effectiveStandalone = injectedConfig.standalone ?? props.standalone ?? !effectiveWsNamespace;
 const effectivePlayerId = props.playerId || injectedConfig.playerId || '';
+const effectivePlayerName = props.playerName || injectedConfig.playerName || '';
 const effectiveSessionId = props.sessionId || injectedConfig.sessionId || '';
 const effectiveJoinToken = props.joinToken || injectedConfig.joinToken || '';
 
@@ -97,9 +101,16 @@ if (effectivePlayerId) authPayload.playerId = effectivePlayerId;
 const socket = useSocket({
   url: effectiveSocketUrl,
   path: effectiveSocketPath,
-  auth: Object.keys(authPayload).length ? authPayload : undefined
+  auth: Object.keys(authPayload).length ? authPayload : undefined,
 });
-const { enabled: narratorEnabled, unlocked: narratorUnlocked, unlockInProgress: narratorUnlockInProgress, toggle: toggleNarrator, resetNarrator, bindGestureUnlock } = useNarrator(effectiveAssetsBasePath);
+const {
+  enabled: narratorEnabled,
+  unlocked: narratorUnlocked,
+  unlockInProgress: narratorUnlockInProgress,
+  toggle: toggleNarrator,
+  resetNarrator,
+  bindGestureUnlock,
+} = useNarrator(effectiveAssetsBasePath);
 
 const phase = computed(() => store.room?.phase || null);
 const hasRoom = computed(() => !!store.room);
@@ -122,7 +133,7 @@ const ROLE_DETAILS: Record<string, { name: string }> = {
   joker: { name: 'Joker' },
   guard: { name: 'Guard' },
   harlot: { name: 'Harlot' },
-  villager: { name: 'Villager' }
+  villager: { name: 'Villager' },
 };
 
 const transitionMessages: Record<string, string> = {
@@ -130,7 +141,7 @@ const transitionMessages: Record<string, string> = {
   postMayor: 'Mayor elected. Preparing the next phase...',
   postArmor: 'Starting the first night...',
   nightToDay: 'Dawn is breaking. Day phase begins soon...',
-  dayToNight: 'Night falls. Close your eyes...'
+  dayToNight: 'Night falls. Close your eyes...',
 };
 
 const transitionDurations: Record<string, number> = {
@@ -138,7 +149,7 @@ const transitionDurations: Record<string, number> = {
   postMayor: POST_MAYOR_DELAY_MS,
   postArmor: POST_ARMOR_DELAY_MS,
   nightToDay: NIGHT_TO_DAY_DELAY_MS,
-  dayToNight: DAY_TO_NIGHT_DELAY_MS
+  dayToNight: DAY_TO_NIGHT_DELAY_MS,
 };
 
 const transitionMessage = computed(() => {
@@ -148,7 +159,10 @@ const transitionMessage = computed(() => {
       ? `Mayor elected: ${mayorName.value}. Preparing the next phase...`
       : transitionMessages.postMayor;
   }
-  return transitionMessages[phaseTransition.value] || 'Next phase in a few seconds. Close your eyes if needed.';
+  return (
+    transitionMessages[phaseTransition.value] ||
+    'Next phase in a few seconds. Close your eyes if needed.'
+  );
 });
 
 const transitionDurationSeconds = computed(() => {
@@ -161,18 +175,21 @@ const dayResults = computed(() => {
   if (store.room.lastDayDeaths.length) {
     return { type: 'deaths' as const, deaths: store.room.lastDayDeaths };
   }
-  return { type: 'message' as const, message: store.room.lastDayMessage || 'No one was eliminated.' };
+  return {
+    type: 'message' as const,
+    message: store.room.lastDayMessage || 'No one was eliminated.',
+  };
 });
 
 const isHost = computed(() => store.room?.hostId === store.playerId);
 const showHostSkip = computed(() => isHost.value && !!phaseTransition.value);
 
 // Pending actions
-const mayorSelectionPending = computed(() =>
-  store.room?.mayorSelectionPending && !store.room?.awaitingMayorSelection
+const mayorSelectionPending = computed(
+  () => store.room?.mayorSelectionPending && !store.room?.awaitingMayorSelection
 );
-const hunterShotPending = computed(() =>
-  store.room?.hunterShotPending && !store.room?.awaitingHunterShot
+const hunterShotPending = computed(
+  () => store.room?.hunterShotPending && !store.room?.awaitingHunterShot
 );
 
 function skipStep() {
@@ -198,27 +215,69 @@ function attemptResume(saved: StoredSession) {
   });
 }
 
+// Hub auto-join: emit autoJoinRoom so the server creates/locates the room
+// keyed by sessionId.  Falls back to attemptResume on reconnects.
+function hubAutoJoin() {
+  socket.emit(
+    'autoJoinRoom',
+    {
+      sessionId: effectiveSessionId,
+      playerId: effectivePlayerId,
+      name: effectivePlayerName || effectivePlayerId,
+    },
+    (res) => {
+      if (!res || 'error' in res) {
+        notify(res?.error ?? 'Failed to join room');
+        return;
+      }
+      if (res.roomCode && res.playerId && res.resumeToken) {
+        store.setPlayer(res.playerId, effectivePlayerName || effectivePlayerId, res.resumeToken);
+        store.roomCode = res.roomCode;
+        socket.emit('requestState', { roomCode: res.roomCode, playerId: res.playerId });
+      }
+    }
+  );
+}
+
 onMounted(() => {
   // Bind gesture-based narrator unlock
   bindGestureUnlock();
 
-  // Auto-resume session if available
-  const saved = store.loadSession();
-  if (saved?.resumeToken) {
-    attemptResume(saved);
-  }
-
-  // Reconnect handler
-  socket.on('connect', () => {
-    if (store.playerId && store.roomCode && store.resumeToken) {
-      attemptResume({
-        roomCode: store.roomCode,
-        playerId: store.playerId,
-        name: store.playerName || '',
-        resumeToken: store.resumeToken
-      });
+  if (!effectiveStandalone && effectiveSessionId) {
+    // Hub mode: auto-join on first connect, resume on reconnect
+    if (socket.connected) {
+      hubAutoJoin();
     }
-  });
+    socket.on('connect', () => {
+      if (store.playerId && store.roomCode && store.resumeToken) {
+        attemptResume({
+          roomCode: store.roomCode,
+          playerId: store.playerId,
+          name: store.playerName || '',
+          resumeToken: store.resumeToken,
+        });
+      } else {
+        hubAutoJoin();
+      }
+    });
+  } else {
+    // Standalone mode: restore saved session or wait for Landing interaction
+    const saved = store.loadSession();
+    if (saved?.resumeToken) {
+      attemptResume(saved);
+    }
+
+    socket.on('connect', () => {
+      if (store.playerId && store.roomCode && store.resumeToken) {
+        attemptResume({
+          roomCode: store.roomCode,
+          playerId: store.playerId,
+          name: store.playerName || '',
+          resumeToken: store.resumeToken,
+        });
+      }
+    });
+  }
 
   // Room update handler
   socket.on('roomUpdate', (room) => {
@@ -246,8 +305,13 @@ onMounted(() => {
 
 <template>
   <div class="werewolves-root" :class="{ app: effectiveStandalone }">
-    <!-- Landing page (no room) -->
-    <Landing v-if="!hasRoom" :socket="socket" />
+    <!-- Standalone: show Landing when no room is active -->
+    <Landing v-if="!hasRoom && effectiveStandalone" :socket="socket" />
+
+    <!-- Hub: waiting for autoJoinRoom response -->
+    <section v-else-if="!hasRoom" class="panel">
+      <p>Connecting...</p>
+    </section>
 
     <!-- In-game view -->
     <template v-else>
@@ -271,7 +335,9 @@ onMounted(() => {
             <template v-if="dayResults.type === 'deaths'">
               <ul>
                 <li v-for="(entry, i) in dayResults.deaths" :key="i">
-                  {{ entry.name }} ({{ ROLE_DETAILS[entry.role || 'villager']?.name || entry.role || 'Unknown' }})
+                  {{ entry.name }} ({{
+                    ROLE_DETAILS[entry.role || 'villager']?.name || entry.role || 'Unknown'
+                  }})
                 </li>
               </ul>
             </template>

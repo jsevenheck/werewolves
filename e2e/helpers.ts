@@ -2,11 +2,25 @@ import { expect, type Browser, type Locator, type Page } from '@playwright/test'
 import { MIN_PLAYERS } from '@shared/constants';
 import type { PassiveRole } from '@shared/types';
 
-type SubmissionState = { wolf: boolean; seer: boolean; witch: boolean; guard: boolean; mayor: boolean };
+type SubmissionState = {
+  wolf: boolean;
+  seer: boolean;
+  witch: boolean;
+  guard: boolean;
+  mayor: boolean;
+};
 
 export type PassiveRoleConfig = Partial<Record<PassiveRole, boolean>>;
 
-type RoleCountKey = 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'guard' | 'harlot';
+type RoleCountKey =
+  | 'werewolf'
+  | 'seer'
+  | 'hunter'
+  | 'witch'
+  | 'armor'
+  | 'joker'
+  | 'guard'
+  | 'harlot';
 
 export type RoleConfig = {
   werewolf: number;
@@ -27,7 +41,16 @@ type AdvanceToDayResult = {
   dayPage?: Page | null;
 };
 
-const ROLE_FIELDS: RoleCountKey[] = ['werewolf', 'seer', 'hunter', 'witch', 'armor', 'joker', 'guard', 'harlot'];
+const ROLE_FIELDS: RoleCountKey[] = [
+  'werewolf',
+  'seer',
+  'hunter',
+  'witch',
+  'armor',
+  'joker',
+  'guard',
+  'harlot',
+];
 
 const joinRoom = async (page: Page, name: string, code: string) => {
   await page.goto('/');
@@ -103,13 +126,15 @@ export const configureRoles = async (host: Page, config: RoleConfig) => {
           const minText = Array.from(document.querySelectorAll('p')).find((el) =>
             (el.textContent || '').includes('Minimum players to start:')
           );
-          const passiveOk = !passive || Object.entries(passive).every(([role, value]) => {
-            const input = document.querySelector<HTMLInputElement>(
-              `.passive-role-input[data-passive-role="${role}"]`
-            );
-            if (!input) return false;
-            return input.checked === Boolean(value);
-          });
+          const passiveOk =
+            !passive ||
+            Object.entries(passive).every(([role, value]) => {
+              const input = document.querySelector<HTMLInputElement>(
+                `.passive-role-input[data-passive-role="${role}"]`
+              );
+              if (!input) return false;
+              return input.checked === Boolean(value);
+            });
           const summaryText = summary?.textContent || '';
           const minPlayersText = minText?.textContent || '';
           return (
@@ -156,9 +181,7 @@ export const startGameAndReady = async (pages: Page[]) => {
     throw new Error('Start game did not transition to role reveal.');
   }
   await Promise.all(
-    pages.map((page) =>
-      page.waitForSelector('h2:has-text("Your Role")', { timeout: 30000 })
-    )
+    pages.map((page) => page.waitForSelector('h2:has-text("Your Role")', { timeout: 30000 }))
   );
   for (const page of pages) {
     const readyBtn = page.locator('#ready-btn');
@@ -246,17 +269,21 @@ const trySubmitNightActions = async (
   const { wolfTargetName, avoidWolfTargetName, guardTargetName, avoidGuardTargetName } = options;
   let acted = false;
   for (const page of pages) {
-    const state =
-      submissionState.get(page) || { wolf: false, seer: false, witch: false, guard: false, mayor: false };
+    const state = submissionState.get(page) || {
+      wolf: false,
+      seer: false,
+      witch: false,
+      guard: false,
+      mayor: false,
+    };
 
     const wolfForm = page.locator('#wolf-form');
     if ((await wolfForm.count()) && (await wolfForm.isVisible())) {
       if (!state.wolf) {
         const select = wolfForm.locator('select[name="target"]');
-        const picked = wolfTargetName
-          ? await selectOptionByLabel(select, wolfTargetName)
-          : false;
-        const selected = picked || await selectFirstOptionAvoidingLabel(select, avoidWolfTargetName);
+        const picked = wolfTargetName ? await selectOptionByLabel(select, wolfTargetName) : false;
+        const selected =
+          picked || (await selectFirstOptionAvoidingLabel(select, avoidWolfTargetName));
         if (selected) {
           await wolfForm.locator('button[type="submit"]').click();
           state.wolf = true;
@@ -297,7 +324,8 @@ const trySubmitNightActions = async (
       if (!state.guard) {
         const select = guardForm.locator('select[name="target"]');
         const picked = guardTargetName ? await selectOptionByLabel(select, guardTargetName) : false;
-        const selected = picked || (await selectFirstOptionAvoidingLabel(select, avoidGuardTargetName));
+        const selected =
+          picked || (await selectFirstOptionAvoidingLabel(select, avoidGuardTargetName));
         if (selected) {
           await guardForm.locator('button[type="submit"]').click();
           state.guard = true;
@@ -321,23 +349,28 @@ const trySubmitMayorVotes = async (
   const { mayorTargetName } = options;
   let acted = false;
   for (const page of pages) {
-    const state =
-      submissionState.get(page) || { wolf: false, seer: false, witch: false, guard: false, mayor: false };
+    const state = submissionState.get(page) || {
+      wolf: false,
+      seer: false,
+      witch: false,
+      guard: false,
+      mayor: false,
+    };
     try {
       const form = page.locator('#mayor-vote-form');
       if ((await form.count()) && (await form.isVisible())) {
         if (!state.mayor) {
-        const select = form.locator('select[name="target"]');
-        const picked = mayorTargetName
-          ? await selectOptionByLabel(select, mayorTargetName)
-          : false;
-        if (mayorTargetName && !picked) {
-          continue;
-        }
-        const selected = picked || (await selectFirstOption(select));
-        if (!selected) {
-          continue;
-        }
+          const select = form.locator('select[name="target"]');
+          const picked = mayorTargetName
+            ? await selectOptionByLabel(select, mayorTargetName)
+            : false;
+          if (mayorTargetName && !picked) {
+            continue;
+          }
+          const selected = picked || (await selectFirstOption(select));
+          if (!selected) {
+            continue;
+          }
           await form.locator('button[type="submit"]').click();
           state.mayor = true;
           acted = true;
@@ -489,9 +522,7 @@ export const reconnectPage = async (page: Page, roomCode?: string) => {
 export const waitForDayOnAllPages = async (pages: Page[]) => {
   await Promise.all(
     pages.map((page) =>
-      page
-        .waitForSelector('h3:has-text("Night Report")', { timeout: 15000 })
-        .catch(() => null)
+      page.waitForSelector('h3:has-text("Night Report")', { timeout: 15000 }).catch(() => null)
     )
   );
 };
@@ -541,7 +572,7 @@ export const advanceToDay = async (
     avoidWolfTargetName,
     guardTargetName,
     avoidGuardTargetName,
-    mayorTargetName
+    mayorTargetName,
   } = options;
   const submissionState = new Map<Page, SubmissionState>();
   const dayReportSelector = 'h3:has-text("Night Report")';
@@ -581,7 +612,7 @@ export const advanceToDay = async (
         wolfTargetName,
         avoidWolfTargetName,
         guardTargetName,
-        avoidGuardTargetName
+        avoidGuardTargetName,
       })
     ) {
       await host.waitForTimeout(200);
@@ -640,7 +671,10 @@ export const voteAllForTarget = async (
     } else {
       const picked = await selectOptionByLabel(select, targetName);
       if (!picked) {
-        await select.locator('option', { hasText: targetName }).first().waitFor({ state: 'attached', timeout: 5000 });
+        await select
+          .locator('option', { hasText: targetName })
+          .first()
+          .waitFor({ state: 'attached', timeout: 5000 });
         await select.selectOption({ label: targetName });
       }
     }
@@ -664,7 +698,9 @@ export const proceedToNightIfAvailable = async (hostPage: Page) => {
   return false;
 };
 
-export const closeContexts = async (contexts: Array<Awaited<ReturnType<Browser['newContext']>>>) => {
+export const closeContexts = async (
+  contexts: Array<Awaited<ReturnType<Browser['newContext']>>>
+) => {
   for (const context of contexts) {
     try {
       await context.close();

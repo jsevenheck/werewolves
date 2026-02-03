@@ -4,11 +4,12 @@ This document describes the codebase structure, designed to support both
 standalone operation and embedding into the Game Hub platform.
 
 ## Quick Summary
+
 - **core/**: Shared types, events, constants (used by both client and server)
 - **server/**: Node.js + Socket.IO backend with managers for game logic
 - **ui-vue/**: Vue 3 frontend with Pinia stores and phase components
-- **standalone-*/**: Thin wrappers for running without Game Hub
-- **__tests__/**: Jest unit tests
+- **standalone-\*/**: Thin wrappers for running without Game Hub
+- \***\*tests**/\*\*: Jest unit tests
 - **e2e/**: Playwright E2E tests
 
 ## Project Structure
@@ -53,13 +54,14 @@ werewolves/
 
 ## Embedded vs Standalone
 
-| Aspect | Embedded (Game Hub) | Standalone |
-|--------|---------------------|------------|
-| Vue app | Created by hub | Created by standalone-web |
-| Pinia | Installed by hub | Installed by standalone-web |
-| Socket.IO server | Hub calls `register()` or `registerWerewolf()` | standalone-server creates + calls |
-| Room creation | Room codes via UI unless you adapt to use `sessionId` | Room codes via UI |
-| Auth | `joinToken` or `token` stored from handshake (not enforced) + `resumeToken` for reconnect | `resumeToken` for reconnect |
+| Aspect           | Embedded (Game Hub)                                                                       | Standalone                        |
+| ---------------- | ----------------------------------------------------------------------------------------- | --------------------------------- |
+| Vue app          | Created by hub                                                                            | Created by standalone-web         |
+| Pinia            | Installed by hub                                                                          | Installed by standalone-web       |
+| Socket.IO server | Hub calls `register()` or `registerWerewolf()`                                            | standalone-server creates + calls |
+| Room creation    | `autoJoinRoom` – server maps `sessionId` → room code automatically                        | Room codes via Landing UI         |
+| Player ID        | Hub-supplied `playerId` used directly (no server-generated ID)                            | Server generates 12-char ID       |
+| Auth             | `joinToken` or `token` stored from handshake (not enforced) + `resumeToken` for reconnect | `resumeToken` for reconnect       |
 
 See [embedded-and-standalone.md](./embedded-and-standalone.md) for full details.
 
@@ -78,7 +80,7 @@ The server exports a definition plus a register helper that attaches handlers to
 // server/src/index.ts
 export function register(io: Server, namespace = '/g/werewolves') {
   const nsp = io.of(namespace);
-  
+
   nsp.use((socket, next) => {
     const { joinToken, token, sessionId, playerId } = socket.handshake.auth as {
       joinToken?: string;
@@ -94,21 +96,25 @@ export function register(io: Server, namespace = '/g/werewolves') {
   nsp.on('connection', (socket) => {
     setupSocketHandlers(nsp, socket);
   });
-  
+
   return nsp;
 }
 ```
 
 ### Config Layer
+
 - `server/src/config/constants.ts`: Server-only constants, role data, timing (E2E override)
 - `core/src/constants.ts`: Shared timing constants for client + server
 
 ### Models Layer
-- `server/src/models/room.ts`: Room creation, storage, and retrieval
+
+- `server/src/models/room.ts`: Room creation, storage, retrieval, and the `sessionId → roomCode` map used by `autoJoinRoom`
 - `server/src/models/player.ts`: Player creation and socket-player mapping
 
 ### Managers Layer
+
 Business logic separated by concern:
+
 - `roleManager.ts`: Role configuration, validation, and assignment
 - `phaseManager.ts`: Phase transitions and scheduling
 - `nightManager.ts`: Night phase actions (wolf votes, seer, witch)
@@ -118,9 +124,11 @@ Business logic separated by concern:
 - `broadcastManager.ts`: Room state sanitization and broadcasting
 
 ### Handlers Layer
+
 - `socketHandlers.ts`: All Socket.IO event handlers organized by game phase
 
 ### Utils Layer
+
 - `helpers.ts`: Common utility functions (shuffle, sanitize, logging)
 
 ## Client-Side Architecture
@@ -132,21 +140,26 @@ Business logic separated by concern:
 - `standalone-web/src/main.ts`: Standalone wrapper
 
 ### Components
+
 Phase-specific screens in `ui-vue/src/components/*Phase.vue`. Shared UI in
 `ui-vue/src/components/panels` and `ui-vue/src/components/overlays`.
 
 ### Composables
+
 Reusable client logic (socket setup, narrator audio) in `ui-vue/src/composables/`.
 
 ### Stores
+
 Pinia stores in `ui-vue/src/stores/` (game/session state, pending actions).
 
 ### Utils
+
 Helper functions in `ui-vue/src/utils/`.
 
 ## Module Dependencies
 
 ### Server Dependencies
+
 ```
 register(io)
   `-- setupSocketHandlers(nsp, socket)
@@ -156,6 +169,7 @@ register(io)
 ```
 
 ### Client Dependencies
+
 ```
 GameComponent (App.vue)
   |-- stores/ (game)
@@ -180,9 +194,21 @@ and one is randomly selected per playback.
 
 ## Development Guidelines
 
+### Quality gates (run before every commit)
+
+```bash
+pnpm lint            # ESLint – must be 0 errors
+pnpm format:check    # Prettier – no diffs allowed
+pnpm typecheck       # tsc + vue-tsc
+pnpm test            # Jest unit tests
+```
+
+CI runs these in the same order; the `integrate` job only fires when all pass.
+
 ### Adding New Features
 
 **Server-side:**
+
 1. Add shared timing constants to `core/src/constants.ts` when both client + server need them
 2. Add server-only constants to `server/src/config/constants.ts`
 3. Update models if new data structures are needed
@@ -190,6 +216,7 @@ and one is randomly selected per playback.
 5. Add socket event handlers to `server/src/handlers/socketHandlers.ts`
 
 **Client-side:**
+
 1. Add shared timing constants to `core/src/constants.ts` when both client + server need them
 2. Update client state in `ui-vue/src/stores/` if needed
 3. Add UI in `ui-vue/src/components/` and wiring in `ui-vue/src/App.vue`
@@ -198,6 +225,7 @@ and one is randomly selected per playback.
 ### Module Export/Import Pattern
 
 **Server (CommonJS output):**
+
 ```typescript
 // Exporting
 export { functionName };
@@ -207,6 +235,7 @@ import { functionName } from './path/to/module';
 ```
 
 **Client (ES Modules):**
+
 ```typescript
 // Exporting
 export { functionName };
@@ -221,5 +250,6 @@ import { functionName } from './path/to/module';
 - In development, Vite runs on port 5173 and proxies `/socket.io` to port 3001.
 - Standalone-web and standalone-server reuse embedded modules as thin wrappers.
 - Game Hub export is produced by `scripts/transform-for-gamehub.js` into
-  `game-export/werewolves/{web,server,shared}`.
+  `game-export/werewolves/{web,server,shared}`. That directory is **git-ignored**
+  – it is a build artefact regenerated by the transform script (and by CI).
 - See [embedded-and-standalone.md](./embedded-and-standalone.md) for integration details.

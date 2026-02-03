@@ -1,15 +1,35 @@
 import type { Namespace, Socket } from 'socket.io';
 import { sanitizeName, createVoteState, addLog, clearRoomTimers } from '../utils/helpers';
-import { createRoom, getRoom } from '../models/room';
+import { createRoom, getRoom, getRoomCodeBySessionId, linkSessionToRoom } from '../models/room';
 import { createPlayer, setSocketIndex, getSocketIndex, deleteSocketIndex } from '../models/player';
 import { broadcastRoom, sendStateToPlayer } from '../managers/broadcastManager';
-import { normalizeRoleConfig, normalizePassiveRoleConfig, validateCounts, assignRoles } from '../managers/roleManager';
-import { schedulePhaseTransition, advanceFromReveal, advanceFromMayor, startNight, notifyLovers, holdDayToNightTransition } from '../managers/phaseManager';
-import { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision } from '../managers/nightManager';
+import {
+  normalizeRoleConfig,
+  normalizePassiveRoleConfig,
+  validateCounts,
+  assignRoles,
+} from '../managers/roleManager';
+import {
+  schedulePhaseTransition,
+  advanceFromReveal,
+  advanceFromMayor,
+  startNight,
+  notifyLovers,
+  holdDayToNightTransition,
+} from '../managers/phaseManager';
+import {
+  tryFinalizeWolfVote,
+  advanceNightStep,
+  handleWitchDecision,
+} from '../managers/nightManager';
 import { tryResolveDayVote } from '../managers/voteManager';
-import { queueDeath, resolveDeaths, startNextHunterShot, checkWinners } from '../managers/deathManager';
+import {
+  queueDeath,
+  resolveDeaths,
+  startNextHunterShot,
+  checkWinners,
+} from '../managers/deathManager';
 import { startNextMayorSelection, tryResolveMayorVote } from '../managers/mayorManager';
-import { MAYOR_SUCCESSION_DELAY_MS } from '../config/constants';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { Room } from '../../../core/src/types';
 
@@ -99,6 +119,84 @@ function setupSocketHandlers(
     broadcastRoom(room, io);
   });
 
+  // Hub integration: automatically create or join a room keyed by platform sessionId.
+  // The platform player ID is accepted as-is so that the hub can correlate game state
+  // back to its own user records.
+  socket.on('autoJoinRoom', ({ sessionId, playerId: hubPlayerId, name }, cb) => {
+    if (!sessionId) return cb?.({ error: 'sessionId required' });
+    detachSocketFromRoom(io, socket.id, 'left the room');
+
+    const cleanName = sanitizeName(name) || 'Player';
+    const existingCode = getRoomCodeBySessionId(sessionId);
+    let room = existingCode ? getRoom(existingCode) : undefined;
+
+    if (!room) {
+      // First player for this session → create the room
+      const created = createRoom(cleanName, socket.id, (n, sid, isHost) => {
+        const player = createPlayer(n, sid, isHost);
+        // Override generated ID with the hub-supplied one when available
+        if (hubPlayerId) player.id = hubPlayerId;
+        return player;
+      });
+      room = created.room;
+      linkSessionToRoom(sessionId, room.code);
+      setSocketIndex(socket.id, room.code, created.player.id);
+      cb?.({
+        roomCode: room.code,
+        playerId: created.player.id,
+        resumeToken: created.player.resumeToken,
+      });
+      broadcastRoom(room, io);
+      return;
+    }
+
+    // Room already exists – check if this player is already present (reconnect).
+    // Reconnect detection relies on a stable hubPlayerId supplied by the platform.
+    // Without it existingPlayer is always undefined and the request falls through
+    // to the "new player" branch, which will create a duplicate slot.
+    const existingPlayer = hubPlayerId ? room.players[hubPlayerId] : undefined;
+    if (existingPlayer) {
+      // Detach the previous socket so its socketIndex entry is removed and the
+      // old connection is torn down – prevents a stale disconnect from later
+      // marking this player as disconnected.
+      if (existingPlayer.socketId && existingPlayer.socketId !== socket.id) {
+        const previousSocketId = existingPlayer.socketId;
+        const previousSocket = (
+          io.sockets as unknown as { sockets: Map<string, typeof socket> }
+        ).sockets.get(previousSocketId);
+        if (previousSocket) {
+          detachSocketFromRoom(io, previousSocketId);
+          previousSocket.disconnect(true);
+        } else {
+          deleteSocketIndex(previousSocketId);
+        }
+      }
+      // Reconnect: reuse the existing player slot
+      existingPlayer.socketId = socket.id;
+      existingPlayer.connected = true;
+      setSocketIndex(socket.id, room.code, existingPlayer.id);
+      cb?.({
+        roomCode: room.code,
+        playerId: existingPlayer.id,
+        resumeToken: existingPlayer.resumeToken,
+      });
+      broadcastRoom(room, io);
+      return;
+    }
+
+    // New player joining an existing room
+    if (room.phase !== 'lobby') return cb?.({ error: 'Game already started' });
+    const nameExists = Object.values(room.players).some((p) => p.name === cleanName);
+    if (nameExists) return cb?.({ error: 'Name already taken' });
+    const player = createPlayer(cleanName, socket.id, false);
+    if (hubPlayerId) player.id = hubPlayerId;
+    room.players[player.id] = player;
+    setSocketIndex(socket.id, room.code, player.id);
+    updateHostIfNeeded(room);
+    cb?.({ roomCode: room.code, playerId: player.id, resumeToken: player.resumeToken });
+    broadcastRoom(room, io);
+  });
+
   socket.on('resumePlayer', ({ roomCode, playerId, resumeToken }, cb) => {
     const existingRef = getSocketIndex(socket.id);
     if (existingRef && (existingRef.roomCode !== roomCode || existingRef.playerId !== playerId)) {
@@ -116,7 +214,9 @@ function setupSocketHandlers(
     }
     if (player.socketId && player.socketId !== socket.id) {
       const previousSocketId = player.socketId;
-      const existingSocket = (io.sockets as unknown as { sockets: Map<string, typeof socket> }).sockets.get(previousSocketId);
+      const existingSocket = (
+        io.sockets as unknown as { sockets: Map<string, typeof socket> }
+      ).sockets.get(previousSocketId);
       if (existingSocket) {
         detachSocketFromRoom(io, previousSocketId);
         existingSocket.disconnect(true);
@@ -205,19 +305,23 @@ function setupSocketHandlers(
       room.mayorSelectionTimer = null;
     }
     room.mayorId = targetId;
-    addLog(room, `${target.name} has been appointed as the new Mayor by ${player.name}.`, `${target.name} has been appointed as the new Mayor.`);
+    addLog(
+      room,
+      `${target.name} has been appointed as the new Mayor by ${player.name}.`,
+      `${target.name} has been appointed as the new Mayor.`
+    );
     room.awaitingMayorSelection = null;
-    
+
     // Check if there are more mayor selections pending
     if (startNextMayorSelection(room, (r) => broadcastRoom(r, io), io)) {
       return;
     }
-    
+
     // Continue with hunter shots if any are pending
     if (startNextHunterShot(room, (r) => broadcastRoom(r, io), io)) {
       return;
     }
-    
+
     // Check win conditions and continue
     checkWinners(room);
     if (!room.winner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
@@ -240,7 +344,11 @@ function setupSocketHandlers(
     if (!player || !player.alive) return;
     if (player.socketId !== socket.id) return;
     if (room.voteState.votes[playerId] !== undefined) return;
-    if (room.voteState.revoteFromTie && targetId && !room.voteState.revoteFromTie.includes(targetId)) {
+    if (
+      room.voteState.revoteFromTie &&
+      targetId &&
+      !room.voteState.revoteFromTie.includes(targetId)
+    ) {
       return;
     }
     if (!targetId) return;
@@ -265,7 +373,11 @@ function setupSocketHandlers(
     if (!targetA || !targetB || !targetA.alive || !targetB.alive) return;
     room.lovers = { aId: a, bId: b };
     notifyLovers(room);
-    addLog(room, `${player.name} linked two souls together as Lovers.`, 'The Lovers have been chosen.');
+    addLog(
+      room,
+      `${player.name} linked two souls together as Lovers.`,
+      'The Lovers have been chosen.'
+    );
     schedulePhaseTransition(room, 'postArmor', (r) => broadcastRoom(r, io));
   });
 
@@ -283,7 +395,10 @@ function setupSocketHandlers(
     // Inform wolves when they update their vote
     if (alreadyVoted) {
       const votedPlayer = targetId ? room.players[targetId] : null;
-      addLog(room, `${player.name} changed their wolf vote${votedPlayer ? ` to ${votedPlayer.name}` : ''}.`);
+      addLog(
+        room,
+        `${player.name} changed their wolf vote${votedPlayer ? ` to ${votedPlayer.name}` : ''}.`
+      );
     }
     tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io), io);
     broadcastRoom(room, io);
@@ -291,9 +406,11 @@ function setupSocketHandlers(
 
   socket.on('submitSeerInspect', ({ roomCode, playerId, targetId }, cb) => {
     const room = getRoom(roomCode);
-    if (!room || room.phase !== 'night' || room.phaseStep !== 'seer') return cb?.({ error: 'Invalid room or phase' });
+    if (!room || room.phase !== 'night' || room.phaseStep !== 'seer')
+      return cb?.({ error: 'Invalid room or phase' });
     const player = getPlayerForSocket(room, playerId, socket.id);
-    if (!player || player.role !== 'seer' || !player.alive) return cb?.({ error: 'Invalid player' });
+    if (!player || player.role !== 'seer' || !player.alive)
+      return cb?.({ error: 'Invalid player' });
     if (targetId === playerId) return cb?.({ error: 'Cannot inspect yourself' });
     const target = room.players[targetId];
     if (!target || !target.alive) return cb?.({ error: 'Invalid target' });
@@ -321,16 +438,14 @@ function setupSocketHandlers(
     if (!player || player.role !== 'guard' || !player.alive)
       return cb?.({ error: 'Invalid player' });
 
-    if (targetId === playerId)
-      return cb?.({ error: 'Cannot protect yourself' });
+    if (targetId === playerId) return cb?.({ error: 'Cannot protect yourself' });
 
     // Check consecutive protection rule
     if (room.lastGuardedTarget && room.lastGuardedTarget === targetId)
       return cb?.({ error: 'Cannot protect the same player two nights in a row' });
 
     const target = room.players[targetId];
-    if (!target || !target.alive)
-      return cb?.({ error: 'Invalid target' });
+    if (!target || !target.alive) return cb?.({ error: 'Invalid target' });
 
     room.guardedTarget = targetId;
     room.guardActed = true;
@@ -348,12 +463,10 @@ function setupSocketHandlers(
     if (!player || player.role !== 'harlot' || !player.alive)
       return cb?.({ error: 'Invalid player' });
 
-    if (targetId === playerId)
-      return cb?.({ error: 'Cannot visit yourself' });
+    if (targetId === playerId) return cb?.({ error: 'Cannot visit yourself' });
 
     const target = room.players[targetId];
-    if (!target || !target.alive)
-      return cb?.({ error: 'Invalid target' });
+    if (!target || !target.alive) return cb?.({ error: 'Invalid target' });
 
     room.harlotVisitedTarget = targetId;
     room.harlotActed = true;
@@ -366,7 +479,15 @@ function setupSocketHandlers(
     const room = getRoom(roomCode);
     if (!room || room.hostId !== playerId) return;
     if (!getPlayerForSocket(room, playerId, socket.id)) return;
-    if (room.phase !== 'night' && room.phase !== 'mayor' && room.phase !== 'armor' && !room.phaseTransition && !room.awaitingHunterShot && !room.awaitingMayorSelection) return;
+    if (
+      room.phase !== 'night' &&
+      room.phase !== 'mayor' &&
+      room.phase !== 'armor' &&
+      !room.phaseTransition &&
+      !room.awaitingHunterShot &&
+      !room.awaitingMayorSelection
+    )
+      return;
 
     if (room.awaitingMayorSelection) {
       room.awaitingMayorSelection = null;
@@ -385,9 +506,7 @@ function setupSocketHandlers(
       }
       if (!room.winner) {
         const transition =
-          room.phase === 'night' ? 'nightToDay' :
-          room.phase === 'day' ? 'dayToNight' :
-          null;
+          room.phase === 'night' ? 'nightToDay' : room.phase === 'day' ? 'dayToNight' : null;
         if (transition) {
           if (transition === 'dayToNight') {
             holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
@@ -416,9 +535,7 @@ function setupSocketHandlers(
       }
       if (!room.winner) {
         const transition =
-          room.phase === 'night' ? 'nightToDay' :
-          room.phase === 'day' ? 'dayToNight' :
-          null;
+          room.phase === 'night' ? 'nightToDay' : room.phase === 'day' ? 'dayToNight' : null;
         if (transition) {
           if (transition === 'dayToNight') {
             holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
@@ -498,7 +615,9 @@ function setupSocketHandlers(
     }
 
     if (room.phaseStep === 'wolves') {
-      const livingWolves = Object.values(room.players).filter((p) => p.role === 'werewolf' && p.alive);
+      const livingWolves = Object.values(room.players).filter(
+        (p) => p.role === 'werewolf' && p.alive
+      );
       if (livingWolves.length === 0) {
         room.wolfTarget = null;
         const { scheduleNightStep } = require('../managers/phaseManager');
@@ -551,7 +670,11 @@ function setupSocketHandlers(
     // Require explicit selection: targetId must be provided (string for player, null for abstain)
     // Reject undefined which indicates no selection was made
     if (targetId === undefined) return;
-    if (room.voteState.revoteFromTie && targetId && !room.voteState.revoteFromTie.includes(targetId)) {
+    if (
+      room.voteState.revoteFromTie &&
+      targetId &&
+      !room.voteState.revoteFromTie.includes(targetId)
+    ) {
       return;
     }
     if (targetId && !room.players[targetId]?.alive) return;
@@ -614,10 +737,7 @@ function setupSocketHandlers(
     room.hunterShotEndsAt = null;
     queueDeath(room, targetId, 'shot by Hunter');
     room.awaitingHunterShot = null;
-    const context =
-      room.phase === 'night' ? 'night' :
-      room.phase === 'day' ? 'day' :
-      'general';
+    const context = room.phase === 'night' ? 'night' : room.phase === 'day' ? 'day' : 'general';
     resolveDeaths(room, context, (r) => broadcastRoom(r, io), io);
     if (startNextHunterShot(room, (r) => broadcastRoom(r, io), io)) {
       return;
@@ -629,9 +749,7 @@ function setupSocketHandlers(
     }
     if (!room.winner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
       const transition =
-        room.phase === 'night' ? 'nightToDay' :
-        room.phase === 'day' ? 'dayToNight' :
-        null;
+        room.phase === 'night' ? 'nightToDay' : room.phase === 'day' ? 'dayToNight' : null;
       if (transition) {
         if (transition === 'dayToNight') {
           holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
@@ -740,6 +858,4 @@ function setupSocketHandlers(
   });
 }
 
-export {
-  setupSocketHandlers
-};
+export { setupSocketHandlers };

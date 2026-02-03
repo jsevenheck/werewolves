@@ -27,10 +27,6 @@ export const manifest = {
 
 export const GameComponent = WerewolvesGameRoot;
 
-export type {
-  WerewolvesGameConfig,
-  HubIntegrationProps,
-  GameComponentProps,
-} from './types/config';
+export type { WerewolvesGameConfig, HubIntegrationProps, GameComponentProps } from './types/config';
 export type { RoomView, Player, Role } from '@shared/types';
 export type { ClientToServerEvents, ServerToClientEvents } from '@shared/events';

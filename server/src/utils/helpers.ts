@@ -1,4 +1,4 @@
-import type { Room, VoteState, Role, Player } from '../../../core/src/types';
+import type { Room, VoteState, Player } from '../../../core/src/types';
 import { ROLE_INFO } from '../config/constants';
 
 function sanitizeName(name: string) {
@@ -20,7 +20,7 @@ function shuffle<T>(arr: T[]) {
 function createVoteState(): VoteState {
   return {
     votes: {},
-    revoteFromTie: null
+    revoteFromTie: null,
   };
 }
 
@@ -50,11 +50,11 @@ function clearRoomTimers(room: Room) {
 
 /**
  * Gets the display label for a player's role, with proper fallback behavior.
- * 
+ *
  * @param player - The player whose role label to retrieve
  * @returns The role's display label from ROLE_INFO, or the role itself as fallback.
  *          Returns 'villager' if the player's role is null (e.g., during lobby phase).
- * 
+ *
  * @remarks
  * This function centralizes the fallback logic for displaying player roles.
  * The 'villager' default is used because:
@@ -67,11 +67,4 @@ function getPlayerRoleLabel(player: Player): string {
   return ROLE_INFO[role]?.label || role;
 }
 
-export {
-  sanitizeName,
-  shuffle,
-  createVoteState,
-  addLog,
-  clearRoomTimers,
-  getPlayerRoleLabel
-};
+export { sanitizeName, shuffle, createVoteState, addLog, clearRoomTimers, getPlayerRoleLabel };

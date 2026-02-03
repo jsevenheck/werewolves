@@ -29,8 +29,10 @@ const io = new Server(server, {
 // Register the Werewolves game namespace (/g/werewolves).
 // In embedded mode the hub would call this; in standalone we call it ourselves.
 const registerWerewolf =
-  (werewolfServer as { registerWerewolf?: typeof werewolfServer.registerWerewolf }).registerWerewolf ??
-  (werewolfServer as { default?: { registerWerewolf?: typeof werewolfServer.registerWerewolf } }).default?.registerWerewolf;
+  (werewolfServer as { registerWerewolf?: typeof werewolfServer.registerWerewolf })
+    .registerWerewolf ??
+  (werewolfServer as { default?: { registerWerewolf?: typeof werewolfServer.registerWerewolf } })
+    .default?.registerWerewolf;
 
 if (!registerWerewolf) {
   throw new Error('registerWerewolf export not found in server module.');

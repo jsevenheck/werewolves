@@ -63,9 +63,4 @@ function assignRoles(room: Room) {
   });
 }
 
-export {
-  normalizeRoleConfig,
-  normalizePassiveRoleConfig,
-  validateCounts,
-  assignRoles
-};
+export { normalizeRoleConfig, normalizePassiveRoleConfig, validateCounts, assignRoles };

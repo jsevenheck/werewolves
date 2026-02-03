@@ -11,7 +11,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const store = useGameStore();
-const { room, playerId, pendingMayorVote } = storeToRefs(store);
+const { room, playerId } = storeToRefs(store);
 
 const selectedTarget = ref('');
 
@@ -46,13 +46,16 @@ function submitVote() {
   props.socket.emit('submitMayorVote', {
     roomCode: room.value.code,
     playerId: playerId.value,
-    targetId: selectedTarget.value
+    targetId: selectedTarget.value,
   });
 }
 
 function endVoting() {
   if (!playerId.value || !room.value) return;
-  props.socket.emit('hostFinalizeMayorVote', { roomCode: room.value.code, playerId: playerId.value });
+  props.socket.emit('hostFinalizeMayorVote', {
+    roomCode: room.value.code,
+    playerId: playerId.value,
+  });
 }
 </script>
 
@@ -63,8 +66,10 @@ function endVoting() {
 
     <template v-if="self?.alive">
       <template v-if="hasVoted">
-        <p v-if="yourVote === null" style="color:#4ade80;">Vote submitted: Abstain.</p>
-        <p v-else style="color:#4ade80;">Vote submitted: {{ yourVote ? getPlayerName(room, yourVote) : '' }}.</p>
+        <p v-if="yourVote === null" style="color: #4ade80">Vote submitted: Abstain.</p>
+        <p v-else style="color: #4ade80">
+          Vote submitted: {{ yourVote ? getPlayerName(room, yourVote) : '' }}.
+        </p>
         <small v-if="showVoteProgress">{{ submitted }} / {{ required }} votes submitted.</small>
       </template>
       <template v-else>
@@ -72,23 +77,16 @@ function endVoting() {
           <p v-if="isRevote">Revote among tied candidates.</p>
           <label>
             <span>Choose the Mayor</span>
-            <select
-              v-model="selectedTarget"
-              name="target"
-              required
-              @change="onSelectChange"
-            >
+            <select v-model="selectedTarget" name="target" required @change="onSelectChange">
               <option value="">Select a player</option>
-              <option
-                v-for="player in eligible"
-                :key="player.id"
-                :value="player.id"
-              >
+              <option v-for="player in eligible" :key="player.id" :value="player.id">
                 {{ player.name }}
               </option>
             </select>
           </label>
-          <button type="submit" id="mayor-vote-submit" :disabled="!selectedTarget">Submit vote</button>
+          <button id="mayor-vote-submit" type="submit" :disabled="!selectedTarget">
+            Submit vote
+          </button>
           <small v-if="showVoteProgress">{{ submitted }} / {{ required }} votes submitted.</small>
         </form>
       </template>

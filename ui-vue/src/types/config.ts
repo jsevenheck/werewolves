@@ -40,6 +40,11 @@ export interface HubIntegrationProps {
    */
   playerId?: string;
   /**
+   * Display name shown inside the game.
+   * Falls back to playerId when not provided.
+   */
+  playerName?: string;
+  /**
    * Session ID from the platform (party:gameStarted).
    * Used for Socket.IO room grouping; the game still uses room codes.
    */

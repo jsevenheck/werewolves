@@ -15,7 +15,7 @@ function createPlayer(name: string, socketId: string, isHost: boolean): Player {
     resumeToken: RESUME_TOKEN(),
     isHost: !!isHost,
     ready: false,
-    seerResult: null
+    seerResult: null,
   };
 }
 
@@ -31,9 +31,4 @@ function deleteSocketIndex(socketId: string): void {
   socketIndex.delete(socketId);
 }
 
-export {
-  createPlayer,
-  setSocketIndex,
-  getSocketIndex,
-  deleteSocketIndex
-};
+export { createPlayer, setSocketIndex, getSocketIndex, deleteSocketIndex };

@@ -3,6 +3,7 @@
 Run a multiplayer Werewolf/Mafia party game in the browser with no human moderator. Players join from their own devices and the app enforces all phases, actions, and win conditions.
 
 ## Features
+
 - Lobby with join code and host role configuration.
 - Private roles per device, werewolf team awareness, and lover linking.
 - Day/night phases with voting and role actions.
@@ -19,6 +20,7 @@ Run a multiplayer Werewolf/Mafia party game in the browser with no human moderat
 ## Quick Start
 
 **Production mode:**
+
 ```bash
 pnpm install
 pnpm run build
@@ -28,6 +30,7 @@ pnpm start
 Open `http://localhost:3001` (or set `PORT` for another port).
 
 **Development mode** (with hot reload):
+
 ```bash
 pnpm install
 pnpm run dev
@@ -42,6 +45,7 @@ This runs the backend server on port 3001 and Vite dev server on port 5173 with 
 - Running the server alone (e.g. `pnpm run dev:server` or `pnpm start`) is **not** equivalent to running the client dev server.
 
 The Vue client lives in the `ui-vue/` package. You can run only the client with:
+
 ```bash
 pnpm -C ui-vue dev
 ```
@@ -49,11 +53,30 @@ pnpm -C ui-vue dev
 ## Development
 
 **Type checking:**
+
 ```bash
 pnpm run typecheck
 ```
 
+**Linting & formatting:**
+
+```bash
+pnpm lint            # ESLint check (0 errors and 0 warnings required)
+pnpm lint:fix        # Auto-fix fixable issues
+pnpm format          # Prettier – rewrite all files in place
+pnpm format:check    # Prettier – dry-run, exit 1 on diffs
+```
+
+ESLint 9 flat config lives in [`eslint.config.mjs`](eslint.config.mjs). Rules are split by environment:
+
+- **Server** (`server/`, `standalone-server/`, `scripts/`) – Node.js globals, `require()` allowed.
+- **Client** (`ui-vue/`, `standalone-web/`, `*.vue`) – Browser globals, Vue plugin rules.
+- **Tests** (`__tests__/`, `e2e/`) – relaxed `any` and `require` rules.
+
+Prettier config is in [`.prettierrc`](.prettierrc); enforced style: single quotes, 100-char width, LF line endings.
+
 **Build:**
+
 ```bash
 pnpm run build
 ```
@@ -69,23 +92,34 @@ This compiles the standalone server to `dist/standalone-server/` and builds the 
 ## Tests
 
 **Unit tests:**
+
 ```bash
 pnpm test
 ```
 
 **End-to-end tests:**
+
 ```bash
 pnpm exec playwright install
 pnpm run test:e2e
 ```
 
 ## Workspace scripts
-- `pnpm dev`: runs server + client together.
-- `pnpm build`: builds server + client for production.
-- `pnpm test`: runs unit tests.
-- `pnpm test:e2e`: runs Playwright. The Playwright config starts the server (`tsx standalone-server/src/index.ts`) and the client package (`pnpm -C ui-vue dev`).
+
+| Script              | What it does                                 |
+| ------------------- | -------------------------------------------- |
+| `pnpm dev`          | Server + Vite client together                |
+| `pnpm build`        | Production build (server + client)           |
+| `pnpm typecheck`    | `tsc` + `vue-tsc`                            |
+| `pnpm lint`         | ESLint check                                 |
+| `pnpm lint:fix`     | ESLint auto-fix                              |
+| `pnpm format`       | Prettier rewrite                             |
+| `pnpm format:check` | Prettier dry-run                             |
+| `pnpm test`         | Jest unit tests                              |
+| `pnpm test:e2e`     | Playwright E2E (auto-starts server + client) |
 
 ## How to Play
+
 1. Host creates a room and shares the 4-letter code.
 2. Host configures role counts, then starts the game (minimum 5 players required).
 3. Players see their private role on their device and click Ready.
@@ -115,6 +149,7 @@ docker run --rm -p 3001:3001 werewolves
 Note: The Docker image defaults to port 3001 (see `ENV PORT=3001`). Override with `-e PORT=<port>` if needed.
 
 ## Project Docs
+
 - Setup: `docs/setup.md`
 - Data model + phase engine: `docs/spec.md`
 - Manual tests: `docs/test-checklist.md`
@@ -142,6 +177,7 @@ Note: The Docker image defaults to port 3001 (see `ENV PORT=3001`). Override wit
   - `wsNamespace` (e.g. `/g/werewolves`)
   - `apiBaseUrl` (optional REST base URL)
   - Optional `playerId` from `localStorage.getItem('game-hub:player-id')`
+  - Optional `playerName` – display name inside the game (falls back to `playerId`)
 - Relative `assetsBasePath` values are resolved against Vite's base URL (`import.meta.env.BASE_URL`) for non-root deployments.
 
 ## Game Hub Integration
@@ -150,21 +186,38 @@ This repository automatically integrates with [Game Hub](https://github.com/jsev
 Game Hub gameId is `werewolves` (namespace `/g/werewolves`).
 
 ### How It Works
+
 1. Push to `main` or `pre-main-vue` triggers the workflow
 2. All tests run (typecheck, unit tests, E2E tests)
 3. If tests pass, `scripts/transform-for-gamehub.js` transforms the game
 4. A PR is created in the Game Hub repository with the transformed game
 
 ### Setup Requirements
+
 To enable the integration, add a GitHub Personal Access Token (PAT) as a repository secret:
+
 1. Create a PAT with `repo` and `workflow` permissions at [GitHub Settings -> Developer settings -> Personal access tokens](https://github.com/settings/tokens)
 2. Add it as a secret named `GAMEHUB_PAT` in this repository's Settings -> Secrets and variables -> Actions
 
 ### Manual Transform
+
 To test the transform locally without pushing:
+
 ```bash
 node scripts/transform-for-gamehub.js
 ```
+
 This creates `game-export/werewolves/` with `web/`, `server/`, and `shared/` packages matching Game Hub's layout.
 
-**Note:** The transformed output is a template that requires manual adaptation for full Game Hub integration. You still need to map the platform session (`sessionId`) into the game's room-code model (or adjust the game flow to auto-create/join rooms). See `game-export/werewolves/README.md` for the integration checklist.
+**Note:** The transformed output is a template that requires manual adaptation for full Game Hub integration. See `game-export/werewolves/README.md` for the integration checklist.
+
+### Hub Auto-Join Flow
+
+When the game runs inside Game Hub (`standalone = false`), the client emits an `autoJoinRoom` event on connect instead of showing the Landing page. The server uses a `sessionId → roomCode` mapping to locate or create the room transparently:
+
+1. Client connects and emits `autoJoinRoom({ sessionId, playerId, name })`.
+2. Server checks `sessionId` → if a room already exists for this session it is reused; otherwise a new room is created and the mapping is stored.
+3. The hub-supplied `playerId` is used directly, so Game Hub can correlate game state back to its own user records without a separate lookup.
+4. On reconnect the client resumes via the stored `resumeToken`; no second room is created.
+
+The `game-export/` directory (generated by the transform script) is git-ignored – it is a build artefact.

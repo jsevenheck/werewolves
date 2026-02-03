@@ -5,7 +5,7 @@ afterEach(() => {
 });
 
 jest.mock('nanoid', () => ({
-  customAlphabet: () => () => 'mock-id'
+  customAlphabet: () => () => 'mock-id',
 }));
 
 jest.mock('howler', () => ({ Howl: MockHowl }), { virtual: true });

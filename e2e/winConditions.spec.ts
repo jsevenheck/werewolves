@@ -8,7 +8,7 @@ import {
   proceedToNightIfAvailable,
   startGameAndReady,
   submitMayorSelection,
-  voteAllForTarget
+  voteAllForTarget,
 } from './helpers';
 
 test('village wins after the last werewolf is eliminated', async ({ browser }) => {
@@ -25,7 +25,7 @@ test('village wins after the last werewolf is eliminated', async ({ browser }) =
       witch: 0,
       armor: 0,
       joker: 0,
-      guard: 0
+      guard: 0,
     });
 
     await startGameAndReady(pages);
@@ -49,7 +49,10 @@ test('village wins after the last werewolf is eliminated', async ({ browser }) =
         continue;
       }
 
-      const gameOver = await dayPage.locator('h2:has-text("Game Over")').isVisible().catch(() => false);
+      const gameOver = await dayPage
+        .locator('h2:has-text("Game Over")')
+        .isVisible()
+        .catch(() => false);
       if (gameOver) break;
 
       // Also check for skip button if host needs to skip
@@ -83,7 +86,7 @@ test('wolves win when they reach parity', async ({ browser }) => {
       armor: 0,
       joker: 0,
       guard: 0,
-      passiveRoles: { mayor: false }
+      passiveRoles: { mayor: false },
     });
 
     await startGameAndReady(pages);
@@ -111,7 +114,7 @@ test('joker wins when voted out during the day', async ({ browser }) => {
       witch: 0,
       armor: 0,
       joker: 1,
-      guard: 0
+      guard: 0,
     });
 
     await startGameAndReady(pages);
@@ -134,7 +137,10 @@ test('joker wins when voted out during the day', async ({ browser }) => {
         continue;
       }
 
-      const gameOver = await dayPage.locator('h2:has-text("Game Over")').isVisible().catch(() => false);
+      const gameOver = await dayPage
+        .locator('h2:has-text("Game Over")')
+        .isVisible()
+        .catch(() => false);
       if (gameOver) break;
 
       // Also check for skip button if host needs to skip

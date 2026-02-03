@@ -4,6 +4,7 @@ This guide explains how to add a new role to the Werewolves game.
 Roles can be **active** (with night/day actions like Seer, Witch) or **passive** (no actions, like a simple villager variant).
 
 ## Quick Checklist
+
 - Add the role to shared types in `core/src/types.ts` (Role union, RoleConfig, optional Team/NightStep/Phase).
 - Add server role metadata and defaults in `server/src/config/constants.ts` (ROLE_INFO, DEFAULT_ROLE_CONFIG).
 - Update client role labels/details in Vue components (e.g., `ui-vue/src/components/RoleReveal.vue`,
@@ -14,6 +15,7 @@ Roles can be **active** (with night/day actions like Seer, Witch) or **passive**
 - Update tests and docs.
 
 ## Flowchart: What to Update Where
+
 ```
 [Define role + rules]
         |
@@ -40,8 +42,10 @@ Roles can be **active** (with night/day actions like Seer, Witch) or **passive**
 ```
 
 ## Passive System Roles (On/Off Toggles)
+
 Some roles are passive system features (e.g., Mayor) and are not part of `RoleConfig`
 counts. These are single-instance toggles:
+
 1. Types:
    - `core/src/types.ts`: add to `PassiveRole` and `PassiveRoleConfig`.
 2. Defaults + room state:
@@ -55,9 +59,11 @@ counts. These are single-instance toggles:
    - `server/src/managers/phaseManager.ts`: gate the phase(s) with the toggle.
 
 ## Minimal Path (Passive Role, No Actions)
+
 Passive roles are roles without night/day actions or special prompts. They exist only for
 win conditions, role counts, and UI display. Think "Elder" (extra resilience) or a simple
 villager variant with no active abilities.
+
 1. Types:
    - `core/src/types.ts`: extend `Role` and `RoleConfig`.
    - Add to `Team` only if you need a new faction.
@@ -73,16 +79,19 @@ villager variant with no active abilities.
    - Update any test snapshots or role lists in `__tests__`.
 
 ### Passive Role Checklist (Quick Reference)
+
 - No new phases or night steps.
 - No socket events or client interaction needed.
 - Only update types, constants, and tests.
-- If the role has *passive effects* (e.g., extra life), implement that in:
+- If the role has _passive effects_ (e.g., extra life), implement that in:
   - `server/src/managers/deathManager.ts` (death resolution), or
   - `server/src/managers/voteManager.ts` (day voting outcomes), or
   - `server/src/managers/phaseManager.ts` (flow tweaks without new phases).
 
 ## Active Role (Night/Day/Phase Actions)
+
 In addition to the "Minimal Path":
+
 1. Server flow:
    - `core/src/types.ts`: add to `NightStep` or `Phase` if a new step/phase is needed.
    - `server/src/managers/phaseManager.ts`: insert your step in the night flow.
@@ -101,6 +110,7 @@ In addition to the "Minimal Path":
    - Add narrator files for new steps or phases in `ui-vue/public/audio/` (see `ui-vue/public/audio/README.md`).
 
 ## Example 1: Passive Role "Elder"
+
 Goal: add a village role with no active ability.
 
 1. `core/src/types.ts`
@@ -115,9 +125,20 @@ Goal: add a village role with no active ability.
    - Update role list and default config expectations in `__tests__/roleManager.test.ts` and any other role-specific tests.
 
 Minimal code shape:
+
 ```ts
 // core/src/types.ts
-export type Role = 'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'guard' | 'harlot' | 'villager' | 'elder';
+export type Role =
+  | 'werewolf'
+  | 'seer'
+  | 'hunter'
+  | 'witch'
+  | 'armor'
+  | 'joker'
+  | 'guard'
+  | 'harlot'
+  | 'villager'
+  | 'elder';
 
 export interface RoleConfig {
   // ...
@@ -126,6 +147,7 @@ export interface RoleConfig {
 ```
 
 ## Example 2: Night Action Role "Guard"
+
 Goal: the Guard picks a player at night to protect from wolves for that night.
 
 1. Types
@@ -149,11 +171,14 @@ Goal: the Guard picks a player at night to protect from wolves for that night.
    - Update `__tests__/nightManager.test.ts`, `__tests__/phaseManager.test.ts`, `__tests__/socketHandlers.test.ts`.
 
 ## Win and Death Logic
+
 If the role affects win conditions or death resolution:
+
 - `server/src/managers/deathManager.ts`: update death chains and winner checks.
 - `server/src/managers/voteManager.ts`: update day-vote outcomes (e.g., instant win role).
 
 ## File Reference (Short List)
+
 - Shared types: `core/src/types.ts`
 - Server constants: `server/src/config/constants.ts`
 - Client UI root: `ui-vue/src/App.vue`
@@ -169,6 +194,7 @@ If the role affects win conditions or death resolution:
 - Tests: `__tests__/*.test.ts`
 
 ## Pitfalls and Notes
+
 - `DEFAULT_ROLE_CONFIG` must match `RoleConfig`, otherwise lobby validation breaks.
 - `validateCounts` in `server/src/managers/roleManager.ts` may need updates if your role has minimums.
 - `assignRoles` in `server/src/managers/roleManager.ts` is the place to initialize any per-role player state you add.
@@ -176,8 +202,8 @@ If the role affects win conditions or death resolution:
 - If you add a new phase or transition, also update `Phase`/`PhaseTransition` and narrator handling.
 
 ## Tests and Docs
+
 - Update tests with role lists or config changes, e.g. `__tests__/roleManager.test.ts`, `__tests__/phaseManager.test.ts`, `__tests__/nightManager.test.ts`, `__tests__/socketHandlers.test.ts`.
 - Update specs: `docs/spec.md`.
 - Update manual checks: `docs/test-checklist.md`.
 - Integration tests (Playwright): add or extend scenarios in `e2e/`, then run `pnpm run test:e2e` (first time: `pnpm exec playwright install`).
-

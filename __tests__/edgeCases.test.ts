@@ -15,12 +15,12 @@ const makePlayer = (id: string, overrides: Partial<Player> = {}): Player => ({
   resumeToken: overrides.resumeToken ?? 'test-token',
   isHost: overrides.isHost ?? false,
   ready: overrides.ready ?? false,
-  seerResult: overrides.seerResult ?? null
+  seerResult: overrides.seerResult ?? null,
 });
 
 jest.mock('../server/src/managers/phaseManager', () => ({
   schedulePhaseTransition: jest.fn(),
-  holdDayToNightTransition: jest.fn()
+  holdDayToNightTransition: jest.fn(),
 }));
 
 describe('Edge Cases', () => {
@@ -62,7 +62,7 @@ describe('Edge Cases', () => {
         phaseTransition: null,
         transitionTimer: null,
         phaseTimer: null,
-        hunterShotQueue: []
+        hunterShotQueue: [],
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -83,7 +83,7 @@ describe('Edge Cases', () => {
             name: 'Hunter',
             role: 'hunter',
             team: 'village',
-            socketId: 'socket-h'
+            socketId: 'socket-h',
           }),
           lover: makePlayer('lover'),
         },
@@ -100,7 +100,7 @@ describe('Edge Cases', () => {
         phaseTransition: null,
         transitionTimer: null,
         phaseTimer: null,
-        hunterShotQueue: []
+        hunterShotQueue: [],
       } as unknown as Room;
       const emit = jest.fn();
       const io = { sockets: new Map([['socket-h', { emit }]]) };
@@ -139,7 +139,7 @@ describe('Edge Cases', () => {
         phaseTransition: null,
         transitionTimer: null,
         phaseTimer: null,
-        hunterShotQueue: []
+        hunterShotQueue: [],
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -155,7 +155,7 @@ describe('Edge Cases', () => {
     test('single player voting themselves creates tie', () => {
       const players: Record<string, Player> = {
         a: makePlayer('a'),
-        b: makePlayer('b')
+        b: makePlayer('b'),
       };
       const room = {
         players,
@@ -165,7 +165,7 @@ describe('Edge Cases', () => {
         winner: null,
         hunterShotQueue: [],
         mayorSelectionQueue: [],
-        awaitingMayorSelection: null
+        awaitingMayorSelection: null,
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -178,7 +178,7 @@ describe('Edge Cases', () => {
       const players: Record<string, Player> = {
         a: makePlayer('a'),
         b: makePlayer('b'),
-        c: makePlayer('c')
+        c: makePlayer('c'),
       };
       const room = {
         players,
@@ -195,7 +195,7 @@ describe('Edge Cases', () => {
         awaitingMayorSelection: null,
         transitionTimer: null,
         phaseTimer: null,
-        hunterShotQueue: []
+        hunterShotQueue: [],
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -208,7 +208,7 @@ describe('Edge Cases', () => {
       const players: Record<string, Player> = {
         a: makePlayer('a'),
         b: makePlayer('b'),
-        c: makePlayer('c')
+        c: makePlayer('c'),
       };
       const room = {
         players,
@@ -218,7 +218,7 @@ describe('Edge Cases', () => {
         winner: null,
         hunterShotQueue: [],
         mayorSelectionQueue: [],
-        awaitingMayorSelection: null
+        awaitingMayorSelection: null,
       } as unknown as Room;
       const broadcastRoom = jest.fn();
 
@@ -237,8 +237,8 @@ describe('Edge Cases', () => {
             role: 'hunter',
             team: 'village',
             connected: false,
-            socketId: 'socket-h'
-          })
+            socketId: 'socket-h',
+          }),
         },
         pendingDeaths: [],
         logs: [],
@@ -252,7 +252,7 @@ describe('Edge Cases', () => {
         phaseTransition: null,
         transitionTimer: null,
         phaseTimer: null,
-        hunterShotQueue: []
+        hunterShotQueue: [],
       } as unknown as Room;
       const emit = jest.fn();
       const io = { sockets: new Map([['socket-h', { emit }]]) };
@@ -273,8 +273,8 @@ describe('Edge Cases', () => {
             name: 'Hunter',
             role: 'hunter',
             team: 'village',
-            socketId: null
-          })
+            socketId: null,
+          }),
         },
         pendingDeaths: [],
         logs: [],
@@ -288,7 +288,7 @@ describe('Edge Cases', () => {
         phaseTransition: null,
         transitionTimer: null,
         phaseTimer: null,
-        hunterShotQueue: []
+        hunterShotQueue: [],
       } as unknown as Room;
       const io = { sockets: new Map() };
       const broadcastRoom = jest.fn();

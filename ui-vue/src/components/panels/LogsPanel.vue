@@ -23,7 +23,7 @@ watch(logs, () => {
 </script>
 
 <template>
-  <section v-if="room" class="panel" id="logs-panel">
+  <section v-if="room" id="logs-panel" class="panel">
     <h2>Events</h2>
     <div ref="logsContainer" class="logs">
       <template v-if="logs.length">

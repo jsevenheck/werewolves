@@ -2,10 +2,10 @@
 
 /**
  * Transform Werewolves game into Game Hub-compatible structure
- * 
+ *
  * This script creates a game-export/ directory with the Werewolves game
  * structured for integration into the Game Hub platform.
- * 
+ *
  * Usage: node scripts/transform-for-gamehub.js
  */
 
@@ -67,7 +67,7 @@ function rewriteImports(rootDir) {
     ["from '../../../core/src/", "from '@game-hub/werewolves-shared/"],
     ['from "../../../core/src/', 'from "@game-hub/werewolves-shared/'],
     ["from '../../../../core/src/", "from '@game-hub/werewolves-shared/"],
-    ['from "../../../../core/src/', 'from "@game-hub/werewolves-shared/"],
+    ['from "../../../../core/src/', 'from "@game-hub/werewolves-shared/'],
   ];
 
   const stack = [rootDir];
@@ -111,11 +111,11 @@ function createPackageJsonFiles() {
     dependencies: {
       '@game-hub/werewolves-shared': 'workspace:*',
       'socket.io-client': '^4.8.3',
-      'vue': '^3.5.0',
+      vue: '^3.5.0',
     },
     devDependencies: {
       'vue-tsc': '^2.2.1',
-      'typescript': '^5.9.3',
+      typescript: '^5.9.3',
     },
   };
 
@@ -131,11 +131,11 @@ function createPackageJsonFiles() {
     dependencies: {
       '@game-hub/werewolves-shared': 'workspace:*',
       'socket.io': '^4.8.3',
-      'nanoid': '^5.1.6',
+      nanoid: '^5.1.6',
     },
     devDependencies: {
-      'tsup': '^8.4.2',
-      'typescript': '^5.9.3',
+      tsup: '^8.4.2',
+      typescript: '^5.9.3',
       '@types/node': '^22.19.7',
     },
   };
@@ -151,8 +151,8 @@ function createPackageJsonFiles() {
       typecheck: 'tsc --noEmit',
     },
     devDependencies: {
-      'tsup': '^8.4.2',
-      'typescript': '^5.9.3',
+      tsup: '^8.4.2',
+      typescript: '^5.9.3',
     },
   };
 
@@ -263,15 +263,9 @@ export default defineConfig({
 });
 `;
 
-  fs.writeFileSync(
-    path.join(EXPORT_DIR, 'server', 'tsup.config.ts'),
-    serverTsupConfig
-  );
+  fs.writeFileSync(path.join(EXPORT_DIR, 'server', 'tsup.config.ts'), serverTsupConfig);
 
-  fs.writeFileSync(
-    path.join(EXPORT_DIR, 'shared', 'tsup.config.ts'),
-    sharedTsupConfig
-  );
+  fs.writeFileSync(path.join(EXPORT_DIR, 'shared', 'tsup.config.ts'), sharedTsupConfig);
 
   console.log('Created tsup.config.ts files');
 }
@@ -319,10 +313,7 @@ const playerId = localStorage.getItem('game-hub:player-id') ?? '';
 </style>
 `;
 
-  fs.writeFileSync(
-    path.join(EXPORT_DIR, 'web', 'src', 'Werewolves.vue'),
-    wrapperContent
-  );
+  fs.writeFileSync(path.join(EXPORT_DIR, 'web', 'src', 'Werewolves.vue'), wrapperContent);
 
   console.log('Created Werewolves.vue wrapper component');
 }
@@ -428,10 +419,7 @@ Before submitting a PR to Game Hub:
 - The game uses room codes internally; the platform session is not automatically mapped
 `;
 
-  fs.writeFileSync(
-    path.join(EXPORT_DIR, 'README.md'),
-    readmeContent
-  );
+  fs.writeFileSync(path.join(EXPORT_DIR, 'README.md'), readmeContent);
 
   console.log('Created README.md');
 }
@@ -487,10 +475,3 @@ try {
   console.error('\nTransformation failed:', error);
   process.exit(1);
 }
-
-
-
-
-
-
-

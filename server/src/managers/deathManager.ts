@@ -196,7 +196,7 @@ function checkWinners(room: Room) {
     return;
   }
   const others = alive.length - wolves.length;
-  
+
   // Wolves have strict majority - game over regardless of special abilities
   if (wolves.length > others) {
     room.winner = { team: 'wolves', reason: 'Werewolves have the majority.' };
@@ -209,15 +209,16 @@ function checkWinners(room: Room) {
     clearRoomTimers(room);
     return;
   }
-  
+
   // Wolves at parity - check if village has abilities that could turn the tide
   if (wolves.length === others) {
     // Special case: witch with both potions at parity = guaranteed village win
     // (Witch heals self + poisons wolf = wolf dies, witch lives)
-    const witchWithBothPotions = alive.some((p) => p.role === 'witch') && 
-      room.witchState.poisonAvailable && 
+    const witchWithBothPotions =
+      alive.some((p) => p.role === 'witch') &&
+      room.witchState.poisonAvailable &&
       room.witchState.healAvailable;
-    
+
     if (witchWithBothPotions) {
       room.winner = { team: 'village', reason: 'Witch can heal and poison to break parity.' };
       room.phase = 'ended';
@@ -229,10 +230,11 @@ function checkWinners(room: Room) {
       clearRoomTimers(room);
       return;
     }
-    
+
     const hunterAlive = alive.some((p) => p.role === 'hunter');
-    const hasPendingMayorSelection = room.awaitingMayorSelection || room.mayorSelectionQueue.length > 0;
-    
+    const hasPendingMayorSelection =
+      room.awaitingMayorSelection || room.mayorSelectionQueue.length > 0;
+
     // At parity, mayor's tie-breaking power in voting is crucial
     const mayorAlive = room.mayorId && room.players[room.mayorId]?.alive;
 
@@ -252,9 +254,4 @@ function checkWinners(room: Room) {
   }
 }
 
-export {
-  queueDeath,
-  resolveDeaths,
-  startNextHunterShot,
-  checkWinners
-};
+export { queueDeath, resolveDeaths, startNextHunterShot, checkWinners };

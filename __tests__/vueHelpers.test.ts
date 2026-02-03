@@ -4,11 +4,17 @@ import type { RoomView } from '../core/src/types';
 const alertMock = jest.fn();
 Object.defineProperty(global, 'window', {
   value: { alert: alertMock },
-  writable: true
+  writable: true,
 });
 
 // Import after mocking
-import { escapeHtml, getPlayerName, formatPhase, capitalize, notify } from '../ui-vue/src/utils/helpers';
+import {
+  escapeHtml,
+  getPlayerName,
+  formatPhase,
+  capitalize,
+  notify,
+} from '../ui-vue/src/utils/helpers';
 
 describe('escapeHtml', () => {
   test('escapes < and > characters', () => {
@@ -45,11 +51,27 @@ describe('getPlayerName', () => {
     dayCount: 0,
     players: [
       { id: 'p1', name: 'Alice', alive: true, connected: true, isHost: false, role: null },
-      { id: 'p2', name: '<script>Bob</script>', alive: true, connected: true, isHost: false, role: null }
+      {
+        id: 'p2',
+        name: '<script>Bob</script>',
+        alive: true,
+        connected: true,
+        isHost: false,
+        role: null,
+      },
     ],
     hostId: 'p1',
     minPlayers: 5,
-    roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0, harlot: 0 },
+    roleConfig: {
+      werewolf: 1,
+      seer: 0,
+      hunter: 0,
+      witch: 0,
+      armor: 0,
+      joker: 0,
+      guard: 0,
+      harlot: 0,
+    },
     passiveRoleConfig: { mayor: true },
     mayorId: null,
     awaitingMayorSelection: false,
@@ -79,7 +101,7 @@ describe('getPlayerName', () => {
     dayVoteResolved: false,
     winner: null,
     logs: [],
-    self: null
+    self: null,
   });
 
   test('returns escaped player name', () => {
@@ -107,7 +129,16 @@ describe('formatPhase', () => {
     players: [],
     hostId: null,
     minPlayers: 5,
-    roleConfig: { werewolf: 1, seer: 0, hunter: 0, witch: 0, armor: 0, joker: 0, guard: 0, harlot: 0 },
+    roleConfig: {
+      werewolf: 1,
+      seer: 0,
+      hunter: 0,
+      witch: 0,
+      armor: 0,
+      joker: 0,
+      guard: 0,
+      harlot: 0,
+    },
     passiveRoleConfig: { mayor: true },
     mayorId: null,
     awaitingMayorSelection: false,
@@ -137,11 +168,14 @@ describe('formatPhase', () => {
     dayVoteResolved: false,
     winner: null,
     logs: [],
-    self: null
+    self: null,
   });
 
   test('returns Ended when winner exists', () => {
-    const room: RoomView = { ...baseRoom(), winner: { team: 'village', reason: 'All wolves eliminated' } };
+    const room: RoomView = {
+      ...baseRoom(),
+      winner: { team: 'village', reason: 'All wolves eliminated' },
+    };
     expect(formatPhase(room)).toBe('Ended');
   });
 

@@ -4,7 +4,7 @@ import {
   configureRoles,
   createLobbyWithPlayers,
   startGameAndReady,
-  completeMayorElection
+  completeMayorElection,
 } from './helpers';
 
 test('seer can inspect and see the result', async ({ browser }) => {
@@ -20,7 +20,7 @@ test('seer can inspect and see the result', async ({ browser }) => {
       witch: 0,
       armor: 0,
       joker: 0,
-      guard: 0
+      guard: 0,
     });
 
     await startGameAndReady(pages);
@@ -46,9 +46,7 @@ test('seer can inspect and see the result', async ({ browser }) => {
         await seer.waitForTimeout(200);
       }
     }
-    await expect(seer.locator('.role-card')).toContainText(
-      `Last vision: ${names[0]} is Werewolf`
-    );
+    await expect(seer.locator('.role-card')).toContainText(`Last vision: ${names[0]} is Werewolf`);
   } finally {
     await closeContexts(contexts);
   }

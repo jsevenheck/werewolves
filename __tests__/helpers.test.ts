@@ -1,4 +1,10 @@
-import { sanitizeName, shuffle, createVoteState, addLog, getPlayerRoleLabel } from '../server/src/utils/helpers';
+import {
+  sanitizeName,
+  shuffle,
+  createVoteState,
+  addLog,
+  getPlayerRoleLabel,
+} from '../server/src/utils/helpers';
 import type { Room, Player, Role } from '../core/src/types';
 
 describe('helpers', () => {
@@ -60,7 +66,7 @@ describe('helpers', () => {
         { role: 'witch' as Role, expected: 'Witch' },
         { role: 'armor' as Role, expected: 'Armor' },
         { role: 'joker' as Role, expected: 'Joker' },
-        { role: 'villager' as Role, expected: 'Villager' }
+        { role: 'villager' as Role, expected: 'Villager' },
       ];
 
       roles.forEach(({ role, expected }) => {

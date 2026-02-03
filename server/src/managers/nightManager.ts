@@ -15,9 +15,7 @@ function tryFinalizeWolfVote(
     scheduleNightStep(room, 'seer', broadcastRoom, io);
     return;
   }
-  const pending = wolves.some(
-    (wolf) => room.wolfVotes[wolf.id] === undefined
-  );
+  const pending = wolves.some((wolf) => room.wolfVotes[wolf.id] === undefined);
   if (pending) return;
   const tally: Record<string, number> = {};
   Object.values(room.wolfVotes).forEach((targetId) => {
@@ -45,7 +43,9 @@ function tryFinalizeWolfVote(
     return;
   }
   if (!chosen && wolves.length) {
-    const aliveNonWolves = Object.values(room.players).filter((p) => p.alive && p.role !== 'werewolf');
+    const aliveNonWolves = Object.values(room.players).filter(
+      (p) => p.alive && p.role !== 'werewolf'
+    );
     if (aliveNonWolves.length) {
       chosen = aliveNonWolves[Math.floor(Math.random() * aliveNonWolves.length)].id;
     }
@@ -54,7 +54,11 @@ function tryFinalizeWolfVote(
   scheduleNightStep(room, 'seer', broadcastRoom, io);
 }
 
-function advanceNightStep(room: Room, broadcastRoom: (room: Room) => void, io: Namespace<ClientToServerEvents, ServerToClientEvents>) {
+function advanceNightStep(
+  room: Room,
+  broadcastRoom: (room: Room) => void,
+  io: Namespace<ClientToServerEvents, ServerToClientEvents>
+) {
   if (room.phaseStep === 'seer') {
     const seerAlive = Object.values(room.players).some((p) => p.role === 'seer' && p.alive);
     if (!seerAlive || room.seerActed) {
@@ -132,10 +136,7 @@ function handleWitchDecision(
   // Check if witch can still perform actions after applying the current action
   const targetPlayer = room.wolfTarget ? room.players[room.wolfTarget] : null;
   const canHeal =
-    room.witchState.healAvailable &&
-    !!room.wolfTarget &&
-    !!targetPlayer &&
-    targetPlayer.alive;
+    room.witchState.healAvailable && !!room.wolfTarget && !!targetPlayer && targetPlayer.alive;
 
   const alivePlayers = Object.values(room.players).filter((p) => p.alive);
   const actingWitch = playerId ? room.players[playerId] : null;
@@ -157,11 +158,16 @@ function handleWitchDecision(
   broadcastRoom(room);
 }
 
-function resolveNight(room: Room, broadcastRoom: (room: Room) => void, io: Namespace<ClientToServerEvents, ServerToClientEvents>) {
+function resolveNight(
+  room: Room,
+  broadcastRoom: (room: Room) => void,
+  io: Namespace<ClientToServerEvents, ServerToClientEvents>
+) {
   const { queueDeath, resolveDeaths } = require('./deathManager');
 
   // Determine if wolf kill succeeds (blocked by heal OR guard)
-  const wolfKillSucceeds = room.wolfTarget &&
+  const wolfKillSucceeds =
+    room.wolfTarget &&
     room.healedTarget !== room.wolfTarget &&
     room.guardedTarget !== room.wolfTarget;
 
@@ -204,9 +210,4 @@ function resolveNight(room: Room, broadcastRoom: (room: Room) => void, io: Names
   }
 }
 
-export {
-  tryFinalizeWolfVote,
-  advanceNightStep,
-  handleWitchDecision,
-  resolveNight
-};
+export { tryFinalizeWolfVote, advanceNightStep, handleWitchDecision, resolveNight };

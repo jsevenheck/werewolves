@@ -4,9 +4,5 @@
     "rootDir": "..",
     "outDir": "../dist/standalone-server"
   },
-  "include": [
-    "src/**/*.ts",
-    "../server/src/**/*.ts",
-    "../core/src/**/*.ts"
-  ]
+  "include": ["src/**/*.ts", "../server/src/**/*.ts", "../core/src/**/*.ts"]
 }

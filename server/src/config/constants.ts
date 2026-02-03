@@ -9,7 +9,7 @@ import {
   POST_ARMOR_DELAY_MS as BASE_POST_ARMOR_DELAY_MS,
   NIGHT_RESOLVE_DELAY_MS as BASE_NIGHT_RESOLVE_DELAY_MS,
   MAYOR_SUCCESSION_DELAY_MS as BASE_MAYOR_SUCCESSION_DELAY_MS,
-  MIN_PLAYERS as BASE_MIN_PLAYERS
+  MIN_PLAYERS as BASE_MIN_PLAYERS,
 } from '../../../core/src/constants';
 
 const PORT = process.env.PORT ?? 3001;
@@ -33,48 +33,53 @@ const ROLE_INFO: RoleInfo = {
   werewolf: {
     label: 'Werewolf',
     team: 'wolves',
-    description: 'Work with other wolves to eliminate the village. At night vote on a target to devour.'
+    description:
+      'Work with other wolves to eliminate the village. At night vote on a target to devour.',
   },
   seer: {
     label: 'Seer',
     team: 'village',
-    description: 'Each night inspect one player to learn if they are a Werewolf.'
+    description: 'Each night inspect one player to learn if they are a Werewolf.',
   },
   hunter: {
     label: 'Hunter',
     team: 'village',
-    description: 'If you die, instantly shoot one player to take down with you.'
+    description: 'If you die, instantly shoot one player to take down with you.',
   },
   witch: {
     label: 'Witch',
     team: 'village',
-    description: 'You have one heal potion and one poison potion for the whole game. You may use both in the same night.'
+    description:
+      'You have one heal potion and one poison potion for the whole game. You may use both in the same night.',
   },
   armor: {
     label: 'Armor',
     team: 'village',
-    description: 'On the first night choose two players to be Lovers. If one Lover dies, the other dies too.'
+    description:
+      'On the first night choose two players to be Lovers. If one Lover dies, the other dies too.',
   },
   joker: {
     label: 'Joker',
     team: 'neutral',
-    description: 'If you are voted out during the day, you instantly win.'
+    description: 'If you are voted out during the day, you instantly win.',
   },
   guard: {
     label: 'Guard',
     team: 'village',
-    description: 'Each night protect one player from all attacks. Cannot protect the same player two nights in a row.'
+    description:
+      'Each night protect one player from all attacks. Cannot protect the same player two nights in a row.',
   },
   harlot: {
     label: 'Harlot',
     team: 'village',
-    description: 'Each night you must visit another player. If wolves attack that player, you die along with them.'
+    description:
+      'Each night you must visit another player. If wolves attack that player, you die along with them.',
   },
   villager: {
     label: 'Villager',
     team: 'village',
-    description: 'No special powers. Find and eliminate the Werewolves.'
-  }
+    description: 'No special powers. Find and eliminate the Werewolves.',
+  },
 };
 
 const DEFAULT_ROLE_CONFIG: RoleConfig = {
@@ -85,11 +90,11 @@ const DEFAULT_ROLE_CONFIG: RoleConfig = {
   armor: 1,
   joker: 1,
   guard: 0,
-  harlot: 0
+  harlot: 0,
 };
 
 const DEFAULT_PASSIVE_ROLE_CONFIG: PassiveRoleConfig = {
-  mayor: true
+  mayor: true,
 };
 
 export {
@@ -108,5 +113,5 @@ export {
   RESUME_TOKEN,
   ROLE_INFO,
   DEFAULT_ROLE_CONFIG,
-  DEFAULT_PASSIVE_ROLE_CONFIG
+  DEFAULT_PASSIVE_ROLE_CONFIG,
 };

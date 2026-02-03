@@ -3,7 +3,9 @@
 This document describes the game rules, data model, and phase flow for the Werewolves game.
 
 ## Overview
+
 Werewolves is a social deduction game where:
+
 - **Werewolves** secretly kill a villager each night
 - **Villagers** vote to eliminate suspects during the day
 - Special roles (Seer, Witch, Hunter, Guard, etc.) have unique abilities
@@ -12,6 +14,7 @@ Werewolves is a social deduction game where:
 ## Data Model
 
 ### Player
+
 - `id`: string player id.
 - `socketId`: string or null active socket id for reconnect.
 - `resumeToken`: random token required to resume a session (stored client-side).
@@ -25,6 +28,7 @@ Werewolves is a social deduction game where:
 - `seerResult`: last inspection result for seer UI (name + alignment).
 
 ### Room
+
 - `code`: 4-letter uppercase join code.
 - `phase`: enum (`lobby`, `roleReveal`, `mayor`, `armor`, `night`, `day`, `ended`).
 - `phaseStep`: helper for night substeps (`wolves`, `seer`, `witch`, `guard`, `harlot`, `resolve`, `transition`).

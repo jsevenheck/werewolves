@@ -16,17 +16,7 @@ export const definition: GameDefinition = {
   name: 'Werewolves',
   minPlayers: 5,
   maxPlayers: 20,
-  roles: [
-    'werewolf',
-    'seer',
-    'hunter',
-    'witch',
-    'armor',
-    'joker',
-    'guard',
-    'harlot',
-    'villager'
-  ],
+  roles: ['werewolf', 'seer', 'hunter', 'witch', 'armor', 'joker', 'guard', 'harlot', 'villager'],
 };
 
 /**
@@ -66,7 +56,7 @@ export function registerWerewolf(io: Server, namespace = '/g/werewolves') {
   nsp.on('connection', (socket) => {
     setupSocketHandlers(
       nsp as unknown as import('socket.io').Namespace<ClientToServerEvents, ServerToClientEvents>,
-      socket as unknown as import('socket.io').Socket<ClientToServerEvents, ServerToClientEvents>,
+      socket as unknown as import('socket.io').Socket<ClientToServerEvents, ServerToClientEvents>
     );
 
     // Auto-join a Socket.IO room matching the sessionId so broadcasts

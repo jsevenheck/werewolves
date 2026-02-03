@@ -39,7 +39,7 @@ function submitShot() {
   props.socket.emit('hunterShoot', {
     roomCode: roomCode.value,
     playerId: playerId.value,
-    targetId: selectedTarget.value
+    targetId: selectedTarget.value,
   });
   store.hunterPrompt = false;
 }

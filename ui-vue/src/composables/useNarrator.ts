@@ -57,8 +57,9 @@ export function useNarrator(basePath = '/audio') {
       enabled.value = narrator.isEnabled();
       unlocked.value = narrator.isUnlocked();
     } finally {
-      if (currentToken !== unlockToken) return;
-      unlockInProgress.value = false;
+      if (currentToken === unlockToken) {
+        unlockInProgress.value = false;
+      }
     }
   }
 
@@ -98,6 +99,6 @@ export function useNarrator(basePath = '/audio') {
     unlockInProgress,
     toggle,
     resetNarrator,
-    bindGestureUnlock
+    bindGestureUnlock,
   };
 }

@@ -6,6 +6,8 @@ dist/
 dist-lib/
 test-results/
 coverage/
+settings.local.json
+game-export/
 *.mp3
 !**/audio/*.mp3
 **/audio/custom/*.mp3

@@ -14,7 +14,7 @@ const ROLE_DETAILS: Record<string, { name: string }> = {
   joker: { name: 'Joker' },
   guard: { name: 'Guard' },
   harlot: { name: 'Harlot' },
-  villager: { name: 'Villager' }
+  villager: { name: 'Villager' },
 };
 
 interface Props {
@@ -57,7 +57,7 @@ const filtered = computed(() => {
 
 function onSelectChange() {
   const selected = selectedTarget.value;
-  store.pendingVote = selected === '__abstain__' ? null : (selected || null);
+  store.pendingVote = selected === '__abstain__' ? null : selected || null;
 }
 
 function submitVote() {
@@ -65,12 +65,12 @@ function submitVote() {
     notify('Unable to submit vote: missing player state.');
     return;
   }
-  const normalized = selectedTarget.value === '__abstain__' ? null : (selectedTarget.value || null);
+  const normalized = selectedTarget.value === '__abstain__' ? null : selectedTarget.value || null;
   store.pendingVote = normalized;
   props.socket.emit('submitDayVote', {
     roomCode: room.value.code,
     playerId: playerId.value,
-    targetId: normalized
+    targetId: normalized,
   });
 }
 
@@ -102,8 +102,10 @@ function proceedToNight() {
     <h3>Vote to eliminate</h3>
     <template v-if="self?.alive">
       <template v-if="hasVoted">
-        <p v-if="yourVote === null" style="color:#4ade80;">Vote submitted: Abstain.</p>
-        <p v-else style="color:#4ade80;">Vote submitted: {{ yourVote ? getPlayerName(room, yourVote) : '' }}.</p>
+        <p v-if="yourVote === null" style="color: #4ade80">Vote submitted: Abstain.</p>
+        <p v-else style="color: #4ade80">
+          Vote submitted: {{ yourVote ? getPlayerName(room, yourVote) : '' }}.
+        </p>
         <small v-if="showVoteProgress">{{ submitted }} / {{ required }} votes submitted.</small>
       </template>
       <template v-else>
@@ -111,12 +113,7 @@ function proceedToNight() {
           <p v-if="isRevote">Revote among tied players.</p>
           <label>
             <span>Choose someone to eliminate</span>
-            <select
-              v-model="selectedTarget"
-              name="target"
-              required
-              @change="onSelectChange"
-            >
+            <select v-model="selectedTarget" name="target" required @change="onSelectChange">
               <option value="">Select a player</option>
               <option value="__abstain__" :selected="pendingVote === null">Abstain</option>
               <option
@@ -129,7 +126,7 @@ function proceedToNight() {
               </option>
             </select>
           </label>
-          <button type="submit" id="vote-submit" :disabled="!selectedTarget">Submit vote</button>
+          <button id="vote-submit" type="submit" :disabled="!selectedTarget">Submit vote</button>
           <small v-if="showVoteProgress">{{ submitted }} / {{ required }} votes submitted.</small>
         </form>
       </template>
@@ -141,7 +138,8 @@ function proceedToNight() {
       <div class="vote-result">
         <template v-if="lastDayDeaths.length">
           <p v-for="(death, i) in lastDayDeaths" :key="i">
-            {{ death.name }} ({{ ROLE_DETAILS[death.role || 'villager']?.name || death.role }}) was eliminated.
+            {{ death.name }} ({{ ROLE_DETAILS[death.role || 'villager']?.name || death.role }}) was
+            eliminated.
           </p>
         </template>
         <p v-else-if="lastDayMessage">{{ lastDayMessage }}</p>
@@ -149,8 +147,17 @@ function proceedToNight() {
     </template>
 
     <div v-if="isHost" class="actions host-actions">
-      <button v-if="!dayVoteResolved" id="end-vote-btn" type="button" @click="endVoting">End Voting</button>
-      <button v-if="dayVoteResolved && !awaitingActions" id="proceed-to-night-btn" type="button" @click="proceedToNight">Proceed to Night</button>
+      <button v-if="!dayVoteResolved" id="end-vote-btn" type="button" @click="endVoting">
+        End Voting
+      </button>
+      <button
+        v-if="dayVoteResolved && !awaitingActions"
+        id="proceed-to-night-btn"
+        type="button"
+        @click="proceedToNight"
+      >
+        Proceed to Night
+      </button>
     </div>
   </section>
 </template>

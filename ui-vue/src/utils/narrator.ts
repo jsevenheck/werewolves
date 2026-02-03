@@ -1,6 +1,5 @@
 import { Howl } from 'howler';
 import type { RoomView } from '@shared/types';
-import { notify } from './helpers';
 
 type NarrationKey = string | null;
 
@@ -66,7 +65,7 @@ class Narrator {
     ['postMayor', -1],
     ['armor', -1],
     ['postArmor', -1],
-    ['ended', -1]
+    ['ended', -1],
   ]);
   private readonly discoveredVariants = new Map<string, string[]>();
 
@@ -129,7 +128,7 @@ class Narrator {
           src,
           html5: true,
           preload: 'metadata',
-          volume: 0
+          volume: 0,
         });
       unlockHowl = createUnlockHowl(`${this.basePath}/lobby.mp3`);
       const tryFallback = (playAfterSwap: boolean) => {
@@ -258,7 +257,7 @@ class Narrator {
 
   private async selectVariant(key: string): Promise<string> {
     const count = this.variants.get(key);
-    
+
     // Auto-discovery mode
     if (count === -1) {
       let available = this.discoveredVariants.get(key);
@@ -266,14 +265,14 @@ class Narrator {
         available = await this.discoverVariants(key);
         this.discoveredVariants.set(key, available);
       }
-      
+
       if (available.length === 0) return key;
       return available[Math.floor(Math.random() * available.length)];
     }
-    
+
     // Manual configuration mode
     if (!count || count === 0) return key;
-    
+
     const index = Math.floor(Math.random() * count) + 1;
     return `${key}_${index}`;
   }
@@ -312,7 +311,7 @@ class Narrator {
           src,
           html5: true,
           preload: 'metadata',
-          volume: DEFAULT_VOLUME
+          volume: DEFAULT_VOLUME,
         });
       let activeHowl = createHowl(audioPath);
 

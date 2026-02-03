@@ -10,7 +10,7 @@ import {
   startGameAndReady,
   submitHunterShot,
   voteAllForTarget,
-  waitForDayOnAllPages
+  waitForDayOnAllPages,
 } from './helpers';
 
 test('hunter prompt allows a follow-up shot', async ({ browser }) => {
@@ -27,7 +27,7 @@ test('hunter prompt allows a follow-up shot', async ({ browser }) => {
       witch: 0,
       armor: 0,
       joker: 0,
-      guard: 0
+      guard: 0,
     });
 
     await startGameAndReady(pages);
@@ -35,7 +35,7 @@ test('hunter prompt allows a follow-up shot', async ({ browser }) => {
     const safeTarget = players[2]?.name || players[3]?.name || players[4]?.name;
     const advanceResult = await advanceToDay(host, pages, {
       allowHunterStop: true,
-      wolfTargetName: safeTarget
+      wolfTargetName: safeTarget,
     });
 
     if (!advanceResult.hunterShot && !advanceResult.gameOver) {

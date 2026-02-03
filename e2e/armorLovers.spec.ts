@@ -4,7 +4,7 @@ import {
   configureRoles,
   createLobbyWithPlayers,
   startGameAndReady,
-  completeMayorElection
+  completeMayorElection,
 } from './helpers';
 
 test('armor can link two lovers', async ({ browser }) => {
@@ -59,7 +59,7 @@ test('armor can link two lovers', async ({ browser }) => {
       witch: 0,
       armor: 1,
       joker: 0,
-      guard: 0
+      guard: 0,
     });
 
     await startGameAndReady(pages);
