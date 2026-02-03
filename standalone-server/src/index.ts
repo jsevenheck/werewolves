@@ -40,6 +40,12 @@ if (!registerWerewolf) {
 
 registerWerewolf(io);
 
+// Serve audio assets from ui-vue for both standalone and embedded builds.
+const sharedAudioDir = path.join(process.cwd(), 'ui-vue', 'public', 'audio');
+if (fs.existsSync(sharedAudioDir)) {
+  app.use('/audio', express.static(sharedAudioDir));
+}
+
 // Serve built client assets (production) or fall back to ui-vue dir (dev).
 const builtClientDir = path.join(process.cwd(), 'dist', 'client');
 const devClientDir = path.join(process.cwd(), 'ui-vue');

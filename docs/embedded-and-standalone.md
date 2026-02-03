@@ -143,6 +143,9 @@ A thin wrapper that:
 4. Serves static files
 5. Provides health endpoint
 
+**Audio:** The standalone server mounts `ui-vue/public/audio` at `/audio`, so the
+standalone web build does not need to bundle its own audio files.
+
 ### standalone-web
 
 File: `standalone-web/src/main.ts`

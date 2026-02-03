@@ -37,7 +37,7 @@ Manual and automated testing expectations for the Werewolves game.
 - **Host handoff / reclaim**: Disconnect the host, confirm another connected player becomes Host and can use host actions; reconnect the original host and verify the Host label returns to them.
 - **Endgame reveal**: When a team wins, ensure all roles reveal in the player list and that win condition matches expectations (wolves parity, all wolves dead, or Joker instant win).
 - **Narrator audio toggle**: On mobile Safari/Chrome, tap "Narrator: Off" to enable sound, confirm audio unlock succeeds, and verify announcements only fire on phase/step/transition changes.
-- **Narrator persistence**: Reload the page and confirm the narrator toggle state persists in localStorage.
+- **Narrator default state**: Reload or join a new room and confirm the narrator resets to Off.
 
 ## Narrator Audio Assets
 

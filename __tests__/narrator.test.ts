@@ -350,9 +350,15 @@ describe('narrator audio variants', () => {
     // Mock fetch to return success for 2 variants in custom folder only
     global.fetch = jest.fn().mockImplementation((url: string) => {
       if (url.includes('/custom/day_1.mp3') || url.includes('/custom/day_2.mp3')) {
-        return Promise.resolve({ ok: true });
+        return Promise.resolve({
+          ok: true,
+          headers: { get: () => 'audio/mpeg' },
+        });
       }
-      return Promise.resolve({ ok: false });
+      return Promise.resolve({
+        ok: false,
+        headers: { get: () => 'text/html' },
+      });
     });
 
     const originalRandom = Math.random;
@@ -416,9 +422,15 @@ describe('narrator custom audio override', () => {
     // Mock fetch to return success for custom file
     global.fetch = jest.fn().mockImplementation((url: string) => {
       if (url.includes('/custom/day.mp3')) {
-        return Promise.resolve({ ok: true });
+        return Promise.resolve({
+          ok: true,
+          headers: { get: () => 'audio/mpeg' },
+        });
       }
-      return Promise.resolve({ ok: false });
+      return Promise.resolve({
+        ok: false,
+        headers: { get: () => 'text/html' },
+      });
     });
 
     const narrator = createNarrator({
@@ -464,12 +476,21 @@ describe('narrator custom audio override', () => {
     // Mock: custom/day_1 exists, default day_2 exists (but should be ignored)
     global.fetch = jest.fn().mockImplementation((url: string) => {
       if (url.includes('/custom/day_1.mp3')) {
-        return Promise.resolve({ ok: true });
+        return Promise.resolve({
+          ok: true,
+          headers: { get: () => 'audio/mpeg' },
+        });
       }
       if (url.includes('day_2.mp3') && !url.includes('/custom/')) {
-        return Promise.resolve({ ok: true });
+        return Promise.resolve({
+          ok: true,
+          headers: { get: () => 'audio/mpeg' },
+        });
       }
-      return Promise.resolve({ ok: false });
+      return Promise.resolve({
+        ok: false,
+        headers: { get: () => 'text/html' },
+      });
     });
 
     const originalRandom = Math.random;
