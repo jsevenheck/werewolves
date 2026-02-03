@@ -127,7 +127,7 @@ export interface Room {
   mayorSelectionTimer: NodeJS.Timeout | null;
   lovers: LoverPair | null;
   witchState: WitchState;
-  wolfVotes: Record<string, string | null>;
+  wolfVotes: Record<string, string | null | undefined>;
   wolfTarget: string | null;
   healedTarget: string | null;
   poisonTarget: string | null;
@@ -204,7 +204,7 @@ export interface RoomView {
   loversAssigned: boolean;
   loverName: string | null;
   witchState: { healAvailable: boolean | null; poisonAvailable: boolean | null };
-  wolfVotes: Record<string, string | null> | null;
+  wolfVotes: Record<string, string | null | undefined> | null;
   wolfVoteState: {
     submitted: number;
     required: number;

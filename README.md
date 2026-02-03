@@ -169,7 +169,7 @@ Note: The Docker image defaults to port 3001 (see `ENV PORT=3001`). Override wit
   - `socketUrl` (default: same origin)
   - `socketPath` (default: `/socket.io`)
   - `assetsBasePath` (default: `/audio`)
-  - `standalone` (default: `true`, currently only affects styling)
+- `standalone` (default: `true`, controls Landing vs auto-join flow and standalone styling)
 - Game Hub passes these props to the Vue component after `party:gameStarted`:
   - `gameId` (used to choose `/g/<gameId>` namespace)
   - `sessionId` (used for socket room grouping; game logic still uses room codes unless adapted)

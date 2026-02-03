@@ -39,7 +39,7 @@ export type { GameComponentProps, HubIntegrationProps } from './types/config';
 | `playerId`       | `string`  | optional            | Stable platform player id – used directly as the in-game ID when present                           |
 | `playerName`     | `string`  | optional            | Display name shown in-game; falls back to `playerId` when omitted                                  |
 | `sessionId`      | `string`  | required (embedded) | Platform session ID – triggers `autoJoinRoom`; server maps it to an internal room code             |
-| `joinToken`      | `string`  | required (embedded) | Auth token for Socket.IO handshake (also accepted as `token`)                                      |
+| `joinToken`      | `string`  | required (embedded) | Auth token for Socket.IO handshake (also accepted as `token`, stored but not enforced server-side) |
 | `wsNamespace`    | `string`  | required (embedded) | Namespace path, e.g. `/g/werewolves`                                                               |
 | `apiBaseUrl`     | `string`  | optional            | Base URL for REST calls                                                                            |
 | `socketUrl`      | `string`  | optional            | Socket.IO server URL (default: same origin)                                                        |
@@ -126,8 +126,8 @@ Party creation/join and lobby live on `/platform`; the game only connects to `/g
 
 1. Player creates or joins a room via UI (room code flow).
 2. Server issues `resumeToken` on join.
-3. Client stores token in localStorage.
-4. On reconnect, client sends `resumePlayer` with token.
+3. Client stores `resumeToken` in localStorage.
+4. On reconnect, client sends `resumePlayer` with `resumeToken`.
 
 ## Standalone Wrappers
 
@@ -209,9 +209,9 @@ Problem: `socket.id` changes on every reconnect.
 
 Solution:
 
-- Use `joinToken` (or `token`) for authentication (sent via handshake).
+- `joinToken` (or `token`) is sent via handshake but is not enforced server-side today.
 - Store `resumeToken` in localStorage for reconnection.
-- Server identifies players by token, not socket.id.
+- Server identifies returning players via `resumeToken` (and `playerId` in embedded mode), not socket.id.
 
 ### Warning: Handshake auth timing
 

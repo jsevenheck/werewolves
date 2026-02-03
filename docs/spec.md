@@ -20,7 +20,8 @@ Werewolves is a social deduction game where:
 - `resumeToken`: random token required to resume a session (stored client-side).
 - `name`: display name shown to others.
 - `role`: enum (`werewolf`, `seer`, `hunter`, `witch`, `armor`, `joker`, `guard`, `harlot`, `villager`).
-- `team`: derived team id for win logic (`wolves`, `village`, `neutral`).
+- `team`: derived team id for win logic (`wolves`, `village`, `neutral`). Joker players are
+  `neutral`; the `winner.team` can be `joker` when the Joker is voted out.
 - `alive`: boolean.
 - `connected`: boolean for reconnect tracking.
 - `ready`: boolean for role-reveal readiness.
@@ -54,7 +55,7 @@ Werewolves is a social deduction game where:
 - `healedTarget`: player healed by Witch (usually wolf target), or null.
 - `poisonTarget`: player poisoned by Witch, or null.
 - `seerActed`: boolean, true once the Seer has inspected this night.
-- `voteState`: `{votes: map playerId -> targetId|null, revoteFromTie: array|null}`.
+- `voteState`: `{votes: map playerId -> targetId|null|undefined, revoteFromTie: array|null}`.
 - `pendingDeaths`: queue of `{playerId, reason}` awaiting resolution.
 - `logs`: array of structured entries for UI recap (`{ts, text, publicText}`).
 - `lastNightDeaths`: array of `{name, role}` announced in the day report.
