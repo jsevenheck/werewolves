@@ -20,7 +20,11 @@ jobs:
           node-version: '22'
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm -C ui-vue install --frozen-lockfile
+          pnpm -C standalone-server install --frozen-lockfile
+          pnpm -C standalone-web install --frozen-lockfile
       - name: Lint
         run: pnpm lint
       - name: Format check
