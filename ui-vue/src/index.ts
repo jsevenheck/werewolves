@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Werewolves UI module - hub-compatible entry point.
  *
  * Exports:

@@ -1,4 +1,4 @@
-﻿name: Integrate to Game Hub
+name: Integrate to Game Hub
 
 on:
   push:

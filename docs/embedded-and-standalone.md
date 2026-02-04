@@ -1,4 +1,4 @@
-﻿# Embedded and Standalone Modes
+# Embedded and Standalone Modes
 
 This document explains how the Werewolves game can run in two modes.
 
