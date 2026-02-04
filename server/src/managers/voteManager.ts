@@ -2,6 +2,7 @@ import type { Namespace } from 'socket.io';
 import { addLog, clearRoomTimers, getPlayerRoleLabel } from '../utils/helpers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { Room } from '../../../core/src/types';
+import { queueDeath, resolveDeaths } from './deathManager';
 
 function tryResolveDayVote(
   room: Room,
@@ -141,7 +142,6 @@ function resolveDayKill(
     broadcastRoom(room);
     return;
   }
-  const { queueDeath, resolveDeaths } = require('./deathManager');
   queueDeath(room, targetId, 'executed by vote');
   resolveDeaths(room, 'day', broadcastRoom, io);
 }

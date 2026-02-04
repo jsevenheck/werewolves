@@ -10,6 +10,7 @@ import {
 import { createVoteState, addLog, clearRoomTimers } from '../utils/helpers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { NightStep, PhaseTransition, Room } from '../../../core/src/types';
+import { resolveNight, advanceNightStep } from './nightManager';
 
 function startNight(room: Room) {
   room.phase = 'night';
@@ -56,7 +57,6 @@ function scheduleNightStep(
     room.phaseStep = resolvedStep;
     room.nextNightStep = null;
     if (resolvedStep === 'resolve') {
-      const { resolveNight } = require('./nightManager');
       resolveNight(room, broadcastRoom, io);
     } else if (
       resolvedStep === 'seer' ||
@@ -64,7 +64,6 @@ function scheduleNightStep(
       resolvedStep === 'guard' ||
       resolvedStep === 'harlot'
     ) {
-      const { advanceNightStep } = require('./nightManager');
       advanceNightStep(room, broadcastRoom, io);
     } else {
       broadcastRoom(room);

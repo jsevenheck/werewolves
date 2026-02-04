@@ -3,6 +3,7 @@ import { NIGHT_RESOLVE_DELAY_MS } from '../config/constants';
 import { scheduleNightStep, schedulePhaseTransition } from './phaseManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { Room } from '../../../core/src/types';
+import { queueDeath, resolveDeaths } from './deathManager';
 
 function tryFinalizeWolfVote(
   room: Room,
@@ -163,8 +164,6 @@ function resolveNight(
   broadcastRoom: (room: Room) => void,
   io: Namespace<ClientToServerEvents, ServerToClientEvents>
 ) {
-  const { queueDeath, resolveDeaths } = require('./deathManager');
-
   // Determine if wolf kill succeeds (blocked by heal OR guard)
   const wolfKillSucceeds =
     room.wolfTarget &&
@@ -172,7 +171,7 @@ function resolveNight(
     room.guardedTarget !== room.wolfTarget;
 
   // Wolf kill - blocked by heal OR guard
-  if (wolfKillSucceeds) {
+  if (wolfKillSucceeds && room.wolfTarget) {
     queueDeath(room, room.wolfTarget, 'eaten by Werewolves');
   }
 

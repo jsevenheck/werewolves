@@ -2,6 +2,8 @@ import type { Namespace } from 'socket.io';
 import { addLog, clearRoomTimers, getPlayerRoleLabel } from '../utils/helpers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { NightDeathAnnouncement, Room } from '../../../core/src/types';
+import { startNextMayorSelection } from './mayorManager';
+import { schedulePhaseTransition } from './phaseManager';
 
 const IS_E2E = process.env.E2E_TESTS === '1';
 const HUNTER_SHOT_TIMEOUT_MS = IS_E2E ? 30 * 1000 : 60 * 1000;
@@ -53,13 +55,11 @@ function startHunterShot(
       // Check for next hunter in queue
       if (!startNextHunterShot(room, broadcastRoom, io)) {
         // No more hunters, check for mayor selections before checking win conditions
-        const { startNextMayorSelection } = require('./mayorManager');
         if (!startNextMayorSelection(room, broadcastRoom, io)) {
           // No more mayor selections, check win conditions
           checkWinners(room);
           if (!room.winner) {
             // No winner, resume game flow
-            const { schedulePhaseTransition } = require('../managers/phaseManager');
             if (!room.awaitingHunterShot && !room.awaitingMayorSelection) {
               if (room.phase === 'day') {
                 // Mark vote as resolved; host must manually proceed to night
@@ -165,7 +165,6 @@ function resolveDeaths(
     }
   }
   if (!room.awaitingHunterShot && room.hunterShotQueue.length === 0) {
-    const { startNextMayorSelection } = require('./mayorManager');
     const hasMoreMayorSelections = startNextMayorSelection(room, broadcastRoom, io);
     // Check winners if no new mayor selections were started
     // If a mayor selection is already in progress, we'll check winners after it completes

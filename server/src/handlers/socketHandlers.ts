@@ -11,6 +11,7 @@ import {
 } from '../managers/roleManager';
 import {
   schedulePhaseTransition,
+  scheduleNightStep,
   advanceFromReveal,
   advanceFromMayor,
   startNight,
@@ -21,6 +22,7 @@ import {
   tryFinalizeWolfVote,
   advanceNightStep,
   handleWitchDecision,
+  resolveNight,
 } from '../managers/nightManager';
 import { tryResolveDayVote } from '../managers/voteManager';
 import {
@@ -555,7 +557,6 @@ function setupSocketHandlers(
       room.phaseStep = step;
       room.nextNightStep = null;
       if (step === 'resolve') {
-        const { resolveNight } = require('../managers/nightManager');
         resolveNight(room, (r: typeof room) => broadcastRoom(r, io), io);
       } else if (step === 'seer' || step === 'witch' || step === 'guard' || step === 'harlot') {
         advanceNightStep(room, (r) => broadcastRoom(r, io), io);
@@ -620,7 +621,6 @@ function setupSocketHandlers(
       );
       if (livingWolves.length === 0) {
         room.wolfTarget = null;
-        const { scheduleNightStep } = require('../managers/phaseManager');
         scheduleNightStep(room, 'seer', (r: typeof room) => broadcastRoom(r, io), io);
         return;
       }
@@ -635,7 +635,6 @@ function setupSocketHandlers(
 
     if (room.phaseStep === 'seer') {
       room.seerActed = true;
-      const { scheduleNightStep } = require('../managers/phaseManager');
       scheduleNightStep(room, 'witch', (r: typeof room) => broadcastRoom(r, io), io);
       return;
     }
@@ -647,14 +646,12 @@ function setupSocketHandlers(
 
     if (room.phaseStep === 'guard') {
       room.guardActed = true;
-      const { scheduleNightStep } = require('../managers/phaseManager');
       scheduleNightStep(room, 'harlot', (r: typeof room) => broadcastRoom(r, io), io);
       return;
     }
 
     if (room.phaseStep === 'harlot') {
       room.harlotActed = true;
-      const { scheduleNightStep } = require('../managers/phaseManager');
       scheduleNightStep(room, 'resolve', (r: typeof room) => broadcastRoom(r, io), io);
       return;
     }
@@ -703,7 +700,6 @@ function setupSocketHandlers(
       return;
     }
     // Check win conditions before starting the night
-    const { checkWinners } = require('../managers/deathManager');
     checkWinners(room);
     if (room.winner) {
       broadcastRoom(room, io);
@@ -743,7 +739,6 @@ function setupSocketHandlers(
       return;
     }
     // After all hunter shots, check for mayor succession
-    const { startNextMayorSelection } = require('../managers/mayorManager');
     if (startNextMayorSelection(room, (r: Room) => broadcastRoom(r, io), io)) {
       return;
     }
