@@ -114,6 +114,7 @@ function createPackageJsonFiles() {
       '@game-hub/werewolves-shared': 'workspace:*',
       'socket.io-client': '^4.8.3',
       vue: '^3.5.0',
+      pinia: '^3.0.0',
       howler: '^2.2.4',
     },
     devDependencies: {
@@ -205,7 +206,6 @@ function createTsConfigFiles() {
     compilerOptions: {
       jsx: 'preserve',
       lib: ['ES2020', 'DOM', 'DOM.Iterable'],
-      types: ['vite/client'],
       moduleResolution: 'bundler',
       resolveJsonModule: true,
       allowImportingTsExtensions: true,

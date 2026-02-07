@@ -280,7 +280,7 @@ class Narrator {
       }
 
       if (available.length === 0) return key;
-      return available[Math.floor(Math.random() * available.length)];
+      return available[Math.floor(Math.random() * available.length)] ?? key;
     }
 
     // Manual configuration mode
