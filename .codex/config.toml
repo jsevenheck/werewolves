@@ -1,0 +1,32 @@
+# Project-scoped MCP servers for Codex
+# Docs: https://developers.openai.com/codex/mcp/
+
+[mcp_servers.filesystem]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-filesystem", "."]
+startup_timeout_sec = 20
+
+[mcp_servers.github]
+# GitHub's hosted MCP endpoint (authenticate via PAT header).
+url = "https://api.githubcopilot.com/mcp/"
+# Codex will send Authorization: Bearer <value of env var>.
+bearer_token_env_var = "GITHUB_MCP_PAT"
+
+[mcp_servers.ripgrep]
+command = "npx"
+args = ["-y", "mcp-ripgrep@latest"]
+
+[mcp_servers.pnpm]
+command = "npx"
+args = ["-y", "@jixo/mcp-pnpm"]
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["-y", "@playwright/mcp@latest"]
+startup_timeout_sec = 30
+tool_timeout_sec = 120
+
+[mcp_servers.fetch]
+# Web content fetcher (HTML -> Markdown). Requires `uv` installed for `uvx`.
+command = "uvx"
+args = ["mcp-server-fetch"]

@@ -146,6 +146,24 @@ function createPackageJsonFiles() {
     type: 'module',
     main: 'dist/index.js',
     types: 'dist/index.d.ts',
+    exports: {
+      '.': {
+        import: './dist/index.js',
+        types: './dist/index.d.ts',
+      },
+      './events': {
+        import: './dist/events.js',
+        types: './dist/events.d.ts',
+      },
+      './types': {
+        import: './dist/types.js',
+        types: './dist/types.d.ts',
+      },
+      './constants': {
+        import: './dist/constants.js',
+        types: './dist/constants.d.ts',
+      },
+    },
     scripts: {
       build: 'tsup',
       typecheck: 'tsc --noEmit',
@@ -255,7 +273,7 @@ export default defineConfig({
   const sharedTsupConfig = `import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts'],
+  entry: ['src/index.ts', 'src/events.ts', 'src/types.ts', 'src/constants.ts'],
   format: ['esm'],
   dts: true,
   clean: true,

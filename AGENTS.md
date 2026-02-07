@@ -103,6 +103,23 @@ Environment splits in ESLint:
 - **Socket events** defined in `core/src/events.ts` (shared contract)
 - **Phase flow**: lobby → roleReveal → mayor? → armor? → night ↔ day → ended
 
+## MCP Tool Support
+
+Both Claude Code and Codex have project-scoped MCP servers configured:
+
+| Server       | What it provides                        | Config                        |
+| ------------ | --------------------------------------- | ----------------------------- |
+| github       | GitHub API (issues, PRs, repos)         | `.mcp.json` / `.codex/config.toml` |
+| fetch        | Web content fetching (HTML → Markdown)  | `.mcp.json` / `.codex/config.toml` |
+| filesystem   | File system read/write access           | `.mcp.json` / `.codex/config.toml` |
+| ripgrep      | Fast code search                        | `.mcp.json` / `.codex/config.toml` |
+| pnpm         | Package manager integration             | `.mcp.json` / `.codex/config.toml` |
+| playwright   | Browser automation for E2E              | `.mcp.json` / `.codex/config.toml` |
+
+- **Claude Code**: configured via `.mcp.json` (JSON, stdio/http transports)
+- **Codex**: configured via `.codex/config.toml` (TOML, includes startup/tool timeouts)
+- The GitHub MCP server in Codex requires a `GITHUB_MCP_PAT` env var for authentication.
+
 ## When Unsure
 
 - Search for a similar pattern in src/ and tests.
