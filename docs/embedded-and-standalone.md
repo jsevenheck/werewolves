@@ -183,10 +183,12 @@ The transform script creates:
   - `package.json` - includes `pinia`, `howler`, and `@types/howler` dependencies
 - **server/**: Socket.IO handlers
   - `src/` - Game logic (copied from `server/src/`)
+  - `tsconfig.build.json` - tsup-compatible config (`composite: false`)
   - `tsup.config.ts` - builds to ESM
 - **shared/**: TypeScript types and constants
   - `src/` - Shared contracts (copied from `core/src/`)
   - `package.json` - includes subpath `exports` for `/events`, `/types`, `/constants`
+  - `tsconfig.build.json` - tsup-compatible config (`composite: false`)
   - `tsup.config.ts` - builds multiple entry points for subpath imports
 
 ### Recommended flow

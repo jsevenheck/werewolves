@@ -260,6 +260,33 @@ function createTsConfigFiles() {
   );
 
   console.log('Created tsconfig.json files');
+
+  // tsconfig.build.json files for tsup (composite must be false for dts generation)
+  const serverTsBuildConfig = {
+    extends: './tsconfig.json',
+    compilerOptions: {
+      composite: false,
+    },
+  };
+
+  const sharedTsBuildConfig = {
+    extends: './tsconfig.json',
+    compilerOptions: {
+      composite: false,
+    },
+  };
+
+  fs.writeFileSync(
+    path.join(EXPORT_DIR, 'server', 'tsconfig.build.json'),
+    JSON.stringify(serverTsBuildConfig, null, 2) + '\n'
+  );
+
+  fs.writeFileSync(
+    path.join(EXPORT_DIR, 'shared', 'tsconfig.build.json'),
+    JSON.stringify(sharedTsBuildConfig, null, 2) + '\n'
+  );
+
+  console.log('Created tsconfig.build.json files');
 }
 
 /**
@@ -272,6 +299,7 @@ export default defineConfig({
   entry: ['src/index.ts'],
   format: ['esm'],
   dts: true,
+  tsconfig: 'tsconfig.build.json',
   clean: true,
   sourcemap: true,
 });
@@ -283,6 +311,7 @@ export default defineConfig({
   entry: ['src/index.ts', 'src/events.ts', 'src/types.ts', 'src/constants.ts'],
   format: ['esm'],
   dts: true,
+  tsconfig: 'tsconfig.build.json',
   clean: true,
   sourcemap: true,
 });
@@ -385,6 +414,7 @@ werewolves/
 +-- server/        # Socket.IO handler
 |   +-- package.json
 |   +-- tsconfig.json
+|   +-- tsconfig.build.json
 |   +-- tsup.config.ts
 |   +-- src/
 |       +-- index.ts        # registerWerewolf(io) export
@@ -392,6 +422,7 @@ werewolves/
 +-- shared/        # Shared types
     +-- package.json
     +-- tsconfig.json
+    +-- tsconfig.build.json
     +-- tsup.config.ts
     +-- src/
         +-- ...    # Shared types and constants
