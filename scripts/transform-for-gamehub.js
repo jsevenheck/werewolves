@@ -333,9 +333,11 @@ function createVueWrapper() {
     <GameComponent
       :standalone="false"
       :player-id="playerId"
+      :player-name="props.playerName || ''"
       :session-id="props.sessionId"
       :join-token="props.joinToken"
       :ws-namespace="props.wsNamespace"
+      :socket-url="props.apiBaseUrl || ''"
       :api-base-url="props.apiBaseUrl || ''"
     />
   </div>
@@ -351,6 +353,7 @@ interface Props {
   wsNamespace: string;
   joinToken: string;
   apiBaseUrl?: string;
+  playerName?: string;
 }
 
 const props = defineProps<Props>();

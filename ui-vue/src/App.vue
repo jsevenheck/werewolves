@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, inject } from 'vue';
+import { computed, onMounted, onBeforeUnmount, ref, inject } from 'vue';
 import { useGameStore } from './stores/game';
 import { useSocket } from './composables/useSocket';
 import { useNarrator } from './composables/useNarrator';
@@ -112,6 +112,11 @@ const {
   bindGestureUnlock,
 } = useNarrator(effectiveAssetsBasePath);
 
+const HUB_JOIN_TIMEOUT_MS = 10000;
+let hubRetryTimer: number | undefined;
+let hubJoinTimeoutTimer: number | undefined;
+const hubJoinError = ref<string | null>(null);
+
 const phase = computed(() => store.room?.phase || null);
 const hasRoom = computed(() => !!store.room);
 const hunterPrompt = computed(() => store.hunterPrompt && store.room?.awaitingHunterShot);
@@ -197,16 +202,18 @@ function skipStep() {
   socket.emit('hostSkipStep', { roomCode: store.room.code, playerId: store.playerId });
 }
 
-function attemptResume(saved: StoredSession) {
+function attemptResume(saved: StoredSession, onFailure?: () => void) {
   if (!saved.resumeToken) {
     notify('Saved session expired. Please rejoin the room.');
     store.clearSession();
+    onFailure?.();
     return;
   }
   socket.emit('resumePlayer', saved, (res) => {
     if (res && 'error' in res && res.error) {
       notify(res.error);
       store.clearSession();
+      onFailure?.();
     } else {
       store.setPlayer(saved.playerId, saved.name, saved.resumeToken);
       store.roomCode = saved.roomCode;
@@ -227,16 +234,72 @@ function hubAutoJoin() {
     },
     (res) => {
       if (!res || 'error' in res) {
-        notify(res?.error ?? 'Failed to join room');
+        const message = res?.error ?? 'Failed to join room';
+        hubJoinError.value = message;
+        notify(message);
         return;
       }
       if (res.roomCode && res.playerId && res.resumeToken) {
+        hubJoinError.value = null;
         store.setPlayer(res.playerId, effectivePlayerName || effectivePlayerId, res.resumeToken);
         store.roomCode = res.roomCode;
         socket.emit('requestState', { roomCode: res.roomCode, playerId: res.playerId });
+        startHubJoinTimeout();
       }
     }
   );
+}
+
+function clearHubTimers() {
+  if (hubRetryTimer !== undefined) {
+    clearTimeout(hubRetryTimer);
+    hubRetryTimer = undefined;
+  }
+  if (hubJoinTimeoutTimer !== undefined) {
+    clearTimeout(hubJoinTimeoutTimer);
+    hubJoinTimeoutTimer = undefined;
+  }
+}
+
+function startHubJoinTimeout() {
+  if (hubJoinTimeoutTimer !== undefined) {
+    clearTimeout(hubJoinTimeoutTimer);
+  }
+  hubJoinTimeoutTimer = window.setTimeout(() => {
+    if (!store.room) {
+      hubJoinError.value = 'Could not load game state. Please retry.';
+    }
+  }, HUB_JOIN_TIMEOUT_MS);
+}
+
+function runHubConnectFlow() {
+  hubJoinError.value = null;
+
+  if (store.playerId && store.roomCode && store.resumeToken) {
+    attemptResume(
+      {
+        roomCode: store.roomCode,
+        playerId: store.playerId,
+        name: store.playerName || '',
+        resumeToken: store.resumeToken,
+      },
+      () => hubAutoJoin()
+    );
+    startHubJoinTimeout();
+    return;
+  }
+
+  hubAutoJoin();
+}
+
+function retryHubJoin() {
+  hubJoinError.value = null;
+  if (socket.connected) {
+    runHubConnectFlow();
+    return;
+  }
+  startHubJoinTimeout();
+  socket.connect();
 }
 
 onMounted(() => {
@@ -244,22 +307,28 @@ onMounted(() => {
   bindGestureUnlock();
 
   if (!effectiveStandalone && effectiveSessionId) {
+    startHubJoinTimeout();
+
     // Hub mode: auto-join on first connect, resume on reconnect
     if (socket.connected) {
-      hubAutoJoin();
+      runHubConnectFlow();
     }
     socket.on('connect', () => {
-      if (store.playerId && store.roomCode && store.resumeToken) {
-        attemptResume({
-          roomCode: store.roomCode,
-          playerId: store.playerId,
-          name: store.playerName || '',
-          resumeToken: store.resumeToken,
-        });
-      } else {
-        hubAutoJoin();
+      runHubConnectFlow();
+    });
+
+    socket.on('connect_error', () => {
+      if (!store.room) {
+        hubJoinError.value = 'Connection failed. Please retry.';
       }
     });
+
+    // Retry hubAutoJoin if no room after 3 seconds (guards against race conditions)
+    hubRetryTimer = window.setTimeout(() => {
+      if (!store.room && socket.connected) {
+        hubAutoJoin();
+      }
+    }, 3000);
   } else {
     // Standalone mode: restore saved session or wait for Landing interaction
     const saved = store.loadSession();
@@ -282,6 +351,8 @@ onMounted(() => {
   // Room update handler
   socket.on('roomUpdate', (room) => {
     store.updateRoom(room);
+    hubJoinError.value = null;
+    clearHubTimers();
   });
 
   // Hunter prompt
@@ -301,6 +372,10 @@ onMounted(() => {
     }
   });
 });
+
+onBeforeUnmount(() => {
+  clearHubTimers();
+});
 </script>
 
 <template>
@@ -310,7 +385,13 @@ onMounted(() => {
 
     <!-- Hub: waiting for autoJoinRoom response -->
     <section v-else-if="!hasRoom" class="panel">
-      <p>Connecting...</p>
+      <template v-if="!hubJoinError">
+        <p>Connecting...</p>
+      </template>
+      <template v-else>
+        <p>{{ hubJoinError }}</p>
+        <button type="button" @click="retryHubJoin">Retry</button>
+      </template>
     </section>
 
     <!-- In-game view -->
