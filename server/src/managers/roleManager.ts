@@ -55,7 +55,7 @@ function assignRoles(room: Room) {
   }
   deck = shuffle(deck);
   players.forEach((player, index) => {
-    const role = deck[index];
+    const role = deck[index] ?? 'villager';
     player.role = role;
     player.team = ROLE_INFO[role]?.team ?? 'village';
     player.ready = false;

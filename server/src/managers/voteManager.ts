@@ -58,6 +58,7 @@ function tryResolveDayVote(
   }
   entries.sort((a, b) => b[1] - a[1]);
   const top = entries[0];
+  if (!top) return;
   const participantCount = allowEarly ? effectiveVotes.length : alivePlayers.length;
   // If a strict majority (> 50%) of alive players abstain (vote null),
   // the vote is considered skipped. The case where everyone abstains is
@@ -106,6 +107,7 @@ function tryResolveDayVote(
       return;
     }
     const randomPick = tied[Math.floor(Math.random() * tied.length)];
+    if (!randomPick) return;
     const randomPlayer = room.players[randomPick];
     const selectionMessage = randomPlayer
       ? `Vote tied again. Randomly selected ${randomPlayer.name}.`

@@ -217,6 +217,7 @@ function createTsConfigFiles() {
   const serverTsConfig = {
     extends: '../../../tsconfig.base.json',
     compilerOptions: {
+      composite: true,
       module: 'ESNext',
       target: 'ES2022',
       lib: ['ES2022'],
@@ -225,11 +226,13 @@ function createTsConfigFiles() {
       rootDir: 'src',
     },
     include: ['src/**/*'],
+    references: [{ path: '../shared' }],
   };
 
   const sharedTsConfig = {
     extends: '../../../tsconfig.base.json',
     compilerOptions: {
+      composite: true,
       module: 'ESNext',
       target: 'ES2022',
       lib: ['ES2022'],

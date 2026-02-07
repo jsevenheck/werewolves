@@ -180,7 +180,7 @@ The transform script creates:
 - **web/**: Vue components + public assets
   - `src/` - UI components (copied from `ui-vue/src/`)
   - `public/audio/` - 19 narrator audio files (MP3s, ~2.3 MB total)
-  - `package.json` - includes `howler` and `@types/howler` dependencies
+  - `package.json` - includes `pinia`, `howler`, and `@types/howler` dependencies
 - **server/**: Socket.IO handlers
   - `src/` - Game logic (copied from `server/src/`)
   - `tsup.config.ts` - builds to ESM

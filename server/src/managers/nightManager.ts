@@ -36,7 +36,7 @@ function tryFinalizeWolfVote(
     }
   });
   if (tied.length > 1) {
-    chosen = tied[Math.floor(Math.random() * tied.length)];
+    chosen = tied[Math.floor(Math.random() * tied.length)] ?? null;
   }
   if (!chosen && options.allowNoKill) {
     room.wolfTarget = null;
@@ -48,7 +48,8 @@ function tryFinalizeWolfVote(
       (p) => p.alive && p.role !== 'werewolf'
     );
     if (aliveNonWolves.length) {
-      chosen = aliveNonWolves[Math.floor(Math.random() * aliveNonWolves.length)].id;
+      const pick = aliveNonWolves[Math.floor(Math.random() * aliveNonWolves.length)];
+      if (pick) chosen = pick.id;
     }
   }
   room.wolfTarget = chosen;

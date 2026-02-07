@@ -45,6 +45,7 @@ function startMayorSelection(
       const alivePlayers = Object.values(room.players).filter((p) => p.alive);
       if (alivePlayers.length > 0) {
         const randomSuccessor = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+        if (!randomSuccessor) return;
         room.mayorId = randomSuccessor.id;
         addLog(
           room,
@@ -160,7 +161,9 @@ function tryResolveMayorVote(
   }
 
   entries.sort((a, b) => b[1] - a[1]);
-  const topCount = entries[0][1];
+  const topEntry = entries[0];
+  if (!topEntry) return false;
+  const topCount = topEntry[1];
   const tied = entries.filter(([, count]) => count === topCount).map(([id]) => id);
   if (tied.length > 1) {
     if (!room.voteState.revoteFromTie) {
@@ -172,10 +175,11 @@ function tryResolveMayorVote(
     }
     // Second tie after a revote resolves by random pick among tied candidates.
     const randomPick = tied[Math.floor(Math.random() * tied.length)];
+    if (!randomPick) return false;
     return finalizeMayorVote(room, randomPick, broadcastRoom);
   }
 
-  return finalizeMayorVote(room, entries[0][0], broadcastRoom);
+  return finalizeMayorVote(room, topEntry[0], broadcastRoom);
 }
 
 export { startMayorSelection, startNextMayorSelection, tryResolveMayorVote };
