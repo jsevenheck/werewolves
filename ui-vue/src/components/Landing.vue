@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useGameStore } from '@/stores/game';
-import { pushNotification, notify } from '@/utils/helpers';
-import type { TypedSocket } from '@/composables/useSocket';
+import { useGameStore } from '../stores/game';
+import { pushNotification, notify } from '../utils/helpers';
+import type { TypedSocket } from '../composables/useSocket';
 import type { StoredSession } from '@shared/types';
 
 interface Props {

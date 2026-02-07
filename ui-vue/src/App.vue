@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, inject } from 'vue';
-import { useGameStore } from '@/stores/game';
-import { useSocket } from '@/composables/useSocket';
-import { useNarrator } from '@/composables/useNarrator';
-import { notify } from '@/utils/helpers';
-import type { GameComponentProps } from '@/types/config';
+import { useGameStore } from './stores/game';
+import { useSocket } from './composables/useSocket';
+import { useNarrator } from './composables/useNarrator';
+import { notify } from './utils/helpers';
+import type { GameComponentProps } from './types/config';
 import type { StoredSession } from '@shared/types';
 import {
   NIGHT_TO_DAY_DELAY_MS,
@@ -14,19 +14,19 @@ import {
   POST_ARMOR_DELAY_MS,
 } from '@shared/constants';
 
-import Landing from '@/components/Landing.vue';
-import Lobby from '@/components/Lobby.vue';
-import RoleReveal from '@/components/RoleReveal.vue';
-import MayorPhase from '@/components/MayorPhase.vue';
-import ArmorPhase from '@/components/ArmorPhase.vue';
-import NightPhase from '@/components/NightPhase.vue';
-import DayPhase from '@/components/DayPhase.vue';
-import GameOver from '@/components/GameOver.vue';
-import HunterOverlay from '@/components/overlays/HunterOverlay.vue';
-import MayorSelectionOverlay from '@/components/overlays/MayorSelectionOverlay.vue';
-import HeaderPanel from '@/components/panels/Header.vue';
-import PlayersPanel from '@/components/panels/PlayersPanel.vue';
-import LogsPanel from '@/components/panels/LogsPanel.vue';
+import Landing from './components/Landing.vue';
+import Lobby from './components/Lobby.vue';
+import RoleReveal from './components/RoleReveal.vue';
+import MayorPhase from './components/MayorPhase.vue';
+import ArmorPhase from './components/ArmorPhase.vue';
+import NightPhase from './components/NightPhase.vue';
+import DayPhase from './components/DayPhase.vue';
+import GameOver from './components/GameOver.vue';
+import HunterOverlay from './components/overlays/HunterOverlay.vue';
+import MayorSelectionOverlay from './components/overlays/MayorSelectionOverlay.vue';
+import HeaderPanel from './components/panels/Header.vue';
+import PlayersPanel from './components/panels/PlayersPanel.vue';
+import LogsPanel from './components/panels/LogsPanel.vue';
 
 interface Props {
   socketUrl?: string;

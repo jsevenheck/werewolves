@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, watch, nextTick, ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useGameStore } from '@/stores/game';
+import { useGameStore } from '../../stores/game';
 
 const store = useGameStore();
 const { room } = storeToRefs(store);

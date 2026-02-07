@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useGameStore } from '@/stores/game';
+import { useGameStore } from '../../stores/game';
 
 const ROLE_DETAILS: Record<string, { name: string }> = {
   werewolf: { name: 'Werewolf' },

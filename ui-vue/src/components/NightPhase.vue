@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useGameStore } from '@/stores/game';
-import { getPlayerName, notify } from '@/utils/helpers';
+import { useGameStore } from '../stores/game';
+import { getPlayerName, notify } from '../utils/helpers';
 import { NIGHT_DELAY_MS } from '@shared/constants';
-import type { TypedSocket } from '@/composables/useSocket';
+import type { TypedSocket } from '../composables/useSocket';
 
 interface Props {
   socket: TypedSocket;

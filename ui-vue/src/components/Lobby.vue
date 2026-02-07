@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, onBeforeUnmount } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useGameStore } from '@/stores/game';
-import { notify } from '@/utils/helpers';
+import { useGameStore } from '../stores/game';
+import { notify } from '../utils/helpers';
 import { MIN_PLAYERS } from '@shared/constants';
-import type { TypedSocket } from '@/composables/useSocket';
+import type { TypedSocket } from '../composables/useSocket';
 
 const ROLE_DETAILS: Record<string, { name: string }> = {
   werewolf: { name: 'Werewolf' },

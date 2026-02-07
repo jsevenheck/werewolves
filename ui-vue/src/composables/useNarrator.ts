@@ -1,9 +1,9 @@
 import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useGameStore } from '@/stores/game';
-import { createNarrator } from '@/utils/narrator';
-import type { Narrator } from '@/utils/narrator';
-import { notify } from '@/utils/helpers';
+import { useGameStore } from '../stores/game';
+import { createNarrator } from '../utils/narrator';
+import type { Narrator } from '../utils/narrator';
+import { notify } from '../utils/helpers';
 import type { RoomView } from '@shared/types';
 
 const NARRATOR_UNLOCK_COOLDOWN_MS = 1500;

@@ -156,6 +156,32 @@ Pinia stores in `ui-vue/src/stores/` (game/session state, pending actions).
 
 Helper functions in `ui-vue/src/utils/`.
 
+## Import Conventions
+
+### Server Imports
+
+- **Shared modules**: Use `@shared/*` alias (maps to `core/src/*` via tsconfig paths)
+  - Example: `import type { Role } from '@shared/types';`
+- **Internal imports**: Use relative paths
+  - Example: `import { broadcastRoom } from './broadcastManager';`
+
+### Client Imports (ui-vue/)
+
+- **Shared modules**: Use `@shared/*` alias (maps to `core/src/*` via tsconfig paths)
+  - Example: `import type { RoomView } from '@shared/types';`
+- **Internal imports**: Use relative paths (NOT `@/` alias)
+  - Example: `import { useGameStore } from './stores/game';`
+  - Example: `import Landing from './components/Landing.vue';`
+  - **Important**: `@/` alias exists in `vite.config.ts` for local dev convenience, but source files use relative imports for game-hub compatibility (consumed as raw source files)
+
+### Game Hub Transform
+
+When exported to game-hub via `scripts/transform-for-gamehub.js`:
+
+- `@shared/*` imports → `@game-hub/werewolves-shared/*` (with subpath support: `/events`, `/types`, `/constants`)
+- Relative imports remain unchanged
+- `@/` alias is NOT used in source files (only in vite.config.ts for local dev)
+
 ## Module Dependencies
 
 ### Server Dependencies

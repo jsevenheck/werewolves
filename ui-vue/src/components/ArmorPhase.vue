@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useGameStore } from '@/stores/game';
-import { notify } from '@/utils/helpers';
-import type { TypedSocket } from '@/composables/useSocket';
+import { useGameStore } from '../stores/game';
+import { notify } from '../utils/helpers';
+import type { TypedSocket } from '../composables/useSocket';
 
 interface Props {
   socket: TypedSocket;
