@@ -7,42 +7,27 @@
     "fetch": {
       "type": "stdio",
       "command": "uvx",
-      "args": [
-        "mcp-server-fetch"
-      ],
+      "args": ["mcp-server-fetch"],
       "env": {}
     },
     "filesystem": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "."
-      ],
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."],
       "env": {}
     },
     "ripgrep": {
       "command": "npx",
-      "args": [
-        "-y",
-        "mcp-ripgrep@latest"
-      ],
+      "args": ["-y", "mcp-ripgrep@latest"],
       "env": {}
     },
     "pnpm": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@jixo/mcp-pnpm"
-      ],
+      "args": ["-y", "@jixo/mcp-pnpm"],
       "env": {}
     },
     "playwright": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@playwright/mcp@latest"
-      ],
+      "args": ["-y", "@playwright/mcp@latest"],
       "env": {}
     }
   }

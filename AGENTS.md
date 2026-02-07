@@ -62,6 +62,9 @@ Keep detailed guidance in docs/ and link to it from here.
 Every change must pass `pnpm lint` (ESLint 9) and `pnpm format:check` (Prettier).
 CI runs both before typecheck and tests – a failure there blocks integration.
 
+**IMPORTANT**: After making changes, always run `pnpm format` to auto-fix formatting before committing.
+CI will fail if any files have formatting issues.
+
 | Command             | What it does                              |
 | ------------------- | ----------------------------------------- |
 | `pnpm lint`         | ESLint – 0 errors and 0 warnings required |
@@ -107,14 +110,14 @@ Environment splits in ESLint:
 
 Both Claude Code and Codex have project-scoped MCP servers configured:
 
-| Server       | What it provides                        | Config                        |
-| ------------ | --------------------------------------- | ----------------------------- |
-| github       | GitHub API (issues, PRs, repos)         | `.mcp.json` / `.codex/config.toml` |
-| fetch        | Web content fetching (HTML → Markdown)  | `.mcp.json` / `.codex/config.toml` |
-| filesystem   | File system read/write access           | `.mcp.json` / `.codex/config.toml` |
-| ripgrep      | Fast code search                        | `.mcp.json` / `.codex/config.toml` |
-| pnpm         | Package manager integration             | `.mcp.json` / `.codex/config.toml` |
-| playwright   | Browser automation for E2E              | `.mcp.json` / `.codex/config.toml` |
+| Server     | What it provides                       | Config                             |
+| ---------- | -------------------------------------- | ---------------------------------- |
+| github     | GitHub API (issues, PRs, repos)        | `.mcp.json` / `.codex/config.toml` |
+| fetch      | Web content fetching (HTML → Markdown) | `.mcp.json` / `.codex/config.toml` |
+| filesystem | File system read/write access          | `.mcp.json` / `.codex/config.toml` |
+| ripgrep    | Fast code search                       | `.mcp.json` / `.codex/config.toml` |
+| pnpm       | Package manager integration            | `.mcp.json` / `.codex/config.toml` |
+| playwright | Browser automation for E2E             | `.mcp.json` / `.codex/config.toml` |
 
 - **Claude Code**: configured via `.mcp.json` (JSON, stdio/http transports)
 - **Codex**: configured via `.codex/config.toml` (TOML, includes startup/tool timeouts)
