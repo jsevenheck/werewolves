@@ -18,6 +18,7 @@ const EXPORT_DIR = path.join(ROOT_DIR, 'game-export', 'werewolves');
 // Source directories
 const SOURCE_DIRS = {
   web: path.join(ROOT_DIR, 'ui-vue', 'src'),
+  webPublic: path.join(ROOT_DIR, 'ui-vue', 'public'),
   server: path.join(ROOT_DIR, 'server', 'src'),
   shared: path.join(ROOT_DIR, 'core', 'src'),
 };
@@ -25,6 +26,7 @@ const SOURCE_DIRS = {
 // Target directories
 const TARGET_DIRS = {
   web: path.join(EXPORT_DIR, 'web', 'src'),
+  webPublic: path.join(EXPORT_DIR, 'web', 'public'),
   server: path.join(EXPORT_DIR, 'server', 'src'),
   shared: path.join(EXPORT_DIR, 'shared', 'src'),
 };
@@ -112,10 +114,12 @@ function createPackageJsonFiles() {
       '@game-hub/werewolves-shared': 'workspace:*',
       'socket.io-client': '^4.8.3',
       vue: '^3.5.0',
+      howler: '^2.2.4',
     },
     devDependencies: {
       'vue-tsc': '^2.2.1',
       typescript: '^5.9.3',
+      '@types/howler': '^2.2.11',
     },
   };
 
@@ -457,6 +461,9 @@ function transform() {
   console.log('\nCopying source files...');
   copyDir(SOURCE_DIRS.web, TARGET_DIRS.web);
   console.log('Copied ui-vue/src -> web/src');
+
+  copyDir(SOURCE_DIRS.webPublic, TARGET_DIRS.webPublic);
+  console.log('Copied ui-vue/public -> web/public (includes audio files)');
 
   copyDir(SOURCE_DIRS.server, TARGET_DIRS.server);
   console.log('Copied server/src -> server/src');
