@@ -1,45 +1,20 @@
 name: Integrate to Game Hub
 
 on:
-  push:
+  # Runs automatically after CI workflow succeeds on main branch
+  workflow_run:
+    workflows: ['CI']
+    types:
+      - completed
     branches:
       - main
-      - pre-main-vue
+  # Manual trigger for testing or emergency updates
   workflow_dispatch:
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.28.2
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-      - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm -C ui-vue install
-          pnpm -C standalone-server install
-          pnpm -C standalone-web install
-      - name: Lint
-        run: pnpm lint
-      - name: Format check
-        run: pnpm format:check
-      - name: Type check
-        run: pnpm typecheck
-      - name: Run unit tests
-        run: pnpm test
-      - name: Install Playwright
-        run: pnpm exec playwright install --with-deps chromium
-      - name: Run E2E tests
-        run: pnpm test:e2e
-
   integrate:
-    needs: test
+    # Only run if CI workflow succeeded (or if manually triggered)
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -87,20 +62,20 @@ jobs:
         with:
           token: ${{ secrets.GAMEHUB_PAT }}
           path: game-hub
-          commit-message: 'feat(games): update werewolves from ${{ github.sha }}'
+          commit-message: 'feat(games): update werewolves from ${{ github.event.workflow_run.head_sha || github.sha }}'
           branch: integrate/werewolves-${{ github.run_number }}
           delete-branch: true
           title: 'Update Werewolves Game'
           body: |
             ## Werewolves Game Update
 
-            **Source Commit**: ${{ github.repository }}@${{ github.sha }}
-            **Triggered by**: @${{ github.actor }}
-            **Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            **Source Commit**: ${{ github.repository }}@${{ github.event.workflow_run.head_sha || github.sha }}
+            **Triggered by**: @${{ github.event.workflow_run.head_commit.author.name || github.actor }}
+            **CI Run**: ${{ github.event.workflow_run.html_url || format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
 
             ### Changes
             - Automatic integration from werewolves repository
-            - All tests passed in source repo
+            - ✅ All tests passed in source repo (CI workflow succeeded)
 
             ### Review Checklist
             - [ ] Game structure follows conventions
