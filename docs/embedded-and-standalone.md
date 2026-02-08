@@ -123,6 +123,8 @@ Party creation/join and lobby live on `/platform`; the game only connects to `/g
    platform can correlate game state back to its user records without an extra lookup.
 6. Reconnects use the `resumeToken` that was returned by `autoJoinRoom`; no second
    room is created.
+7. If auto-join fails or state load times out, the UI shows an error with a `Retry`
+   button so the player can reconnect without a full page reload.
 
 ### Standalone mode
 
@@ -142,8 +144,10 @@ A thin wrapper that:
 1. Creates Express + HTTP server
 2. Creates Socket.IO server
 3. Calls `registerWerewolf(io)`
-4. Serves static files
-5. Provides health endpoint
+4. Serves static files (built client or dev fallback)
+5. Provides health endpoint (`/health`)
+6. Handles server listen errors (e.g. `EADDRINUSE`)
+7. Graceful shutdown on `SIGTERM`/`SIGINT` (closes Socket.IO → HTTP, 10s force-exit timeout)
 
 **Audio:** The standalone server mounts `ui-vue/public/audio` at `/audio`, so the
 standalone web build does not need to bundle its own audio files.

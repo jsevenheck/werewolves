@@ -5,6 +5,7 @@ import { useGameStore } from '../stores/game';
 import { pushNotification, notify } from '../utils/helpers';
 import type { TypedSocket } from '../composables/useSocket';
 import type { StoredSession } from '@shared/types';
+import { MAX_PLAYER_NAME_LENGTH } from '@shared/constants';
 
 interface Props {
   socket: TypedSocket;
@@ -103,7 +104,13 @@ function resumeSession() {
     <form id="create-form" @submit.prevent="createRoom">
       <label>
         <span>Your name</span>
-        <input v-model="createName" name="name" required maxlength="20" placeholder="e.g. Alex" />
+        <input
+          v-model="createName"
+          name="name"
+          required
+          :maxlength="MAX_PLAYER_NAME_LENGTH"
+          placeholder="e.g. Alex"
+        />
       </label>
       <button type="submit">Create Lobby</button>
     </form>
@@ -113,7 +120,7 @@ function resumeSession() {
     <form id="join-form" @submit.prevent="joinRoom">
       <label>
         <span>Your name</span>
-        <input v-model="joinName" name="name" required maxlength="20" />
+        <input v-model="joinName" name="name" required :maxlength="MAX_PLAYER_NAME_LENGTH" />
       </label>
       <label>
         <span>Room code</span>

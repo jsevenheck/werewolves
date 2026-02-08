@@ -125,7 +125,7 @@ function setupSocketHandlers(
   // The platform player ID is accepted as-is so that the hub can correlate game state
   // back to its own user records.
   socket.on('autoJoinRoom', ({ sessionId, playerId: hubPlayerId, name }, cb) => {
-    if (!sessionId) return cb?.({ error: 'sessionId required' });
+    if (!sessionId || typeof sessionId !== 'string') return cb?.({ error: 'sessionId required' });
     detachSocketFromRoom(io, socket.id, 'left the room');
 
     const cleanName = sanitizeName(name) || 'Player';
@@ -837,6 +837,19 @@ function setupSocketHandlers(
     room.mayorSelectionQueue = room.mayorSelectionQueue.filter((id) => id !== playerId);
     delete room.wolfVotes[playerId];
     delete room.voteState.votes[playerId];
+    // Remove stale votes targeting the departed player
+    for (const [voterId, targetId] of Object.entries(room.voteState.votes)) {
+      if (targetId === playerId) {
+        delete room.voteState.votes[voterId];
+      }
+    }
+    // Remove from revote tie list
+    if (room.voteState.revoteFromTie) {
+      room.voteState.revoteFromTie = room.voteState.revoteFromTie.filter((id) => id !== playerId);
+      if (room.voteState.revoteFromTie.length === 0) {
+        room.voteState.revoteFromTie = null;
+      }
+    }
     updateHostIfNeeded(room);
 
     // --- Game flow continuation after player removal ---

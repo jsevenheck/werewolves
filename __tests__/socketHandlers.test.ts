@@ -10,6 +10,7 @@ import {
   schedulePhaseTransition,
   startNight,
   advanceFromReveal,
+  advanceFromMayor,
   holdDayToNightTransition,
 } from '../server/src/managers/phaseManager';
 import {
@@ -46,6 +47,7 @@ jest.mock('../server/src/managers/phaseManager', () => ({
   schedulePhaseTransition: jest.fn(),
   holdDayToNightTransition: jest.fn(),
   advanceFromReveal: jest.fn(),
+  advanceFromMayor: jest.fn(),
   startNight: jest.fn(),
   notifyLovers: jest.fn(),
   scheduleNightStep: jest.fn(),
@@ -452,6 +454,478 @@ describe('socketHandlers room entry and state events', () => {
     expect(broadcastRoom).toHaveBeenCalledWith(room, io);
   });
 
+  test('leaveRoom advances night step when active seer leaves', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'seer',
+      phaseTransition: null,
+      players: {
+        host: { id: 'host', name: 'Host', socketId: 'socket-host', connected: true, isHost: true },
+        p1: {
+          id: 'p1',
+          name: 'Seer',
+          role: 'seer',
+          socketId: 'socket-1',
+          connected: true,
+          alive: true,
+        },
+      },
+      mayorId: null,
+      awaitingHunterShot: null,
+      awaitingMayorSelection: null,
+      wolfTarget: null,
+      healedTarget: null,
+      poisonTarget: null,
+      guardedTarget: null,
+      lovers: null,
+      hunterShotQueue: [],
+      mayorSelectionQueue: [],
+      wolfVotes: {},
+      voteState: { votes: {}, revoteFromTie: null },
+      seerActed: false,
+      winner: null,
+      logs: [],
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    setSocketIndex('socket-1', room.code, 'p1');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, jest.fn());
+
+    expect(room.seerActed).toBe(true);
+    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'witch', expect.any(Function), io);
+  });
+
+  test('leaveRoom clears hunter prompt timer and processes pending queues', () => {
+    const timer = setTimeout(() => undefined, 60000);
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'resolve',
+      phaseTransition: null,
+      players: {
+        host: { id: 'host', name: 'Host', socketId: 'socket-host', connected: true, isHost: true },
+        p1: {
+          id: 'p1',
+          name: 'Hunter',
+          role: 'hunter',
+          socketId: 'socket-1',
+          connected: true,
+          alive: false,
+        },
+      },
+      mayorId: null,
+      awaitingHunterShot: 'p1',
+      hunterShotTimer: timer,
+      hunterShotEndsAt: Date.now() + 1000,
+      awaitingMayorSelection: null,
+      wolfTarget: null,
+      healedTarget: null,
+      poisonTarget: null,
+      guardedTarget: null,
+      lovers: null,
+      hunterShotQueue: [],
+      mayorSelectionQueue: [],
+      wolfVotes: {},
+      voteState: { votes: {}, revoteFromTie: null },
+      winner: null,
+      logs: [],
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    (startNextHunterShot as jest.Mock).mockReturnValue(false);
+    (startNextMayorSelection as jest.Mock).mockReturnValue(false);
+    setSocketIndex('socket-1', room.code, 'p1');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, jest.fn());
+
+    expect(room.awaitingHunterShot).toBeNull();
+    expect(room.hunterShotTimer).toBeNull();
+    expect(room.hunterShotEndsAt).toBeNull();
+    expect(startNextHunterShot).toHaveBeenCalledWith(room, expect.any(Function), io);
+    expect(startNextMayorSelection).toHaveBeenCalledWith(room, expect.any(Function), io);
+    clearTimeout(timer);
+  });
+
+  test('leaveRoom returns early in lobby phase', () => {
+    jest.clearAllMocks();
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'lobby',
+      players: {
+        host: { id: 'host', name: 'Host', socketId: 'socket-host', connected: true, isHost: true },
+        p1: {
+          id: 'p1',
+          name: 'Alice',
+          role: 'villager',
+          socketId: 'socket-1',
+          connected: true,
+          alive: true,
+        },
+      },
+      voteState: { votes: {}, revoteFromTie: null },
+      wolfVotes: {},
+      hunterShotQueue: [],
+      mayorSelectionQueue: [],
+      logs: [],
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    setSocketIndex('socket-1', room.code, 'p1');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+    const cb = jest.fn();
+
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, cb);
+
+    expect(cb).toHaveBeenCalledWith({ ok: true });
+    expect(broadcastRoom).toHaveBeenCalledWith(room, io);
+    expect(checkWinners).not.toHaveBeenCalled();
+  });
+
+  test('leaveRoom returns early when room becomes empty', () => {
+    jest.clearAllMocks();
+    const room = {
+      code: 'ABCD',
+      hostId: 'p1',
+      phase: 'day',
+      phaseTransition: null,
+      players: {
+        p1: {
+          id: 'p1',
+          name: 'Solo',
+          role: 'villager',
+          socketId: 'socket-1',
+          connected: true,
+          alive: true,
+          isHost: true,
+        },
+      },
+      voteState: { votes: {}, revoteFromTie: null },
+      wolfVotes: {},
+      hunterShotQueue: [],
+      mayorSelectionQueue: [],
+      logs: [],
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    setSocketIndex('socket-1', room.code, 'p1');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+    const cb = jest.fn();
+
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, cb);
+
+    expect(Object.keys(room.players)).toEqual([]);
+    expect(cb).toHaveBeenCalledWith({ ok: true });
+    expect(broadcastRoom).toHaveBeenCalledWith(room, io);
+    expect(checkWinners).not.toHaveBeenCalled();
+  });
+
+  test('leaveRoom stops when winner is detected after removal', () => {
+    jest.clearAllMocks();
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'day',
+      phaseTransition: null,
+      players: {
+        host: { id: 'host', name: 'Host', socketId: 'socket-host', connected: true, isHost: true },
+        p1: {
+          id: 'p1',
+          name: 'Alice',
+          role: 'villager',
+          socketId: 'socket-1',
+          connected: true,
+          alive: true,
+        },
+      },
+      voteState: { votes: {}, revoteFromTie: null },
+      wolfVotes: {},
+      hunterShotQueue: [],
+      mayorSelectionQueue: [],
+      winner: null,
+      logs: [],
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    (checkWinners as jest.Mock).mockImplementationOnce((target: Room) => {
+      target.winner = { team: 'village', reason: 'All Werewolves are dead.' };
+    });
+    setSocketIndex('socket-1', room.code, 'p1');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+    const cb = jest.fn();
+
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, cb);
+
+    expect(checkWinners).toHaveBeenCalledWith(room);
+    expect(tryResolveDayVote).not.toHaveBeenCalled();
+    expect(cb).toHaveBeenCalledWith({ ok: true });
+  });
+
+  test('leaveRoom continues mayor phase vote resolution', () => {
+    jest.clearAllMocks();
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'mayor',
+      players: {
+        host: { id: 'host', name: 'Host', socketId: 'socket-host', connected: true, isHost: true },
+        p1: {
+          id: 'p1',
+          name: 'Alice',
+          role: 'villager',
+          socketId: 'socket-1',
+          connected: true,
+          alive: true,
+        },
+      },
+      voteState: { votes: {}, revoteFromTie: null },
+      wolfVotes: {},
+      hunterShotQueue: [],
+      mayorSelectionQueue: [],
+      winner: null,
+      logs: [],
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    setSocketIndex('socket-1', room.code, 'p1');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, jest.fn());
+
+    expect(tryResolveMayorVote).toHaveBeenCalledWith(room, expect.any(Function));
+  });
+
+  test('leaveRoom advances wolves step when a werewolf leaves', () => {
+    jest.clearAllMocks();
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'wolves',
+      players: {
+        host: { id: 'host', name: 'Host', socketId: 'socket-host', connected: true, isHost: true },
+        p1: {
+          id: 'p1',
+          name: 'Wolf',
+          role: 'werewolf',
+          socketId: 'socket-1',
+          connected: true,
+          alive: true,
+        },
+      },
+      voteState: { votes: {}, revoteFromTie: null },
+      wolfVotes: {},
+      hunterShotQueue: [],
+      mayorSelectionQueue: [],
+      winner: null,
+      logs: [],
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    setSocketIndex('socket-1', room.code, 'p1');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, jest.fn());
+
+    expect(tryFinalizeWolfVote).toHaveBeenCalledWith(room, expect.any(Function), io, {
+      allowNoKill: true,
+    });
+  });
+
+  test('leaveRoom advances from witch and armor roles correctly', () => {
+    jest.clearAllMocks();
+    const witchRoom = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'witch',
+      players: {
+        host: { id: 'host', name: 'Host', socketId: 'socket-host', connected: true, isHost: true },
+        p1: {
+          id: 'p1',
+          name: 'Witch',
+          role: 'witch',
+          socketId: 'socket-1',
+          connected: true,
+          alive: true,
+        },
+      },
+      voteState: { votes: {}, revoteFromTie: null },
+      wolfVotes: {},
+      hunterShotQueue: [],
+      mayorSelectionQueue: [],
+      winner: null,
+      logs: [],
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValueOnce(witchRoom);
+    setSocketIndex('socket-1', witchRoom.code, 'p1');
+    const first = makeSocket();
+    setupSocketHandlers(io, first.socket as any);
+    first.handlers.leaveRoom({ roomCode: witchRoom.code, playerId: 'p1' }, jest.fn());
+    expect(scheduleNightStep).toHaveBeenCalledWith(witchRoom, 'guard', expect.any(Function), io);
+
+    const armorRoom = {
+      code: 'EFGH',
+      hostId: 'host',
+      phase: 'armor',
+      phaseStep: null,
+      players: {
+        host: { id: 'host', name: 'Host', socketId: 'socket-host', connected: true, isHost: true },
+        p2: {
+          id: 'p2',
+          name: 'Armor',
+          role: 'armor',
+          socketId: 'socket-1',
+          connected: true,
+          alive: true,
+        },
+      },
+      voteState: { votes: {}, revoteFromTie: null },
+      wolfVotes: {},
+      hunterShotQueue: [],
+      mayorSelectionQueue: [],
+      winner: null,
+      logs: [],
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValueOnce(armorRoom);
+    setSocketIndex('socket-1', armorRoom.code, 'p2');
+    const second = makeSocket();
+    setupSocketHandlers(io, second.socket as any);
+    second.handlers.leaveRoom({ roomCode: armorRoom.code, playerId: 'p2' }, jest.fn());
+    expect(schedulePhaseTransition).toHaveBeenCalledWith(
+      armorRoom,
+      'postArmor',
+      expect.any(Function)
+    );
+  });
+
+  test('leaveRoom advances from guard step when guard leaves', () => {
+    jest.clearAllMocks();
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'guard',
+      players: {
+        host: { id: 'host', name: 'Host', socketId: 'socket-host', connected: true, isHost: true },
+        p1: {
+          id: 'p1',
+          name: 'Guard',
+          role: 'guard',
+          socketId: 'socket-1',
+          connected: true,
+          alive: true,
+        },
+      },
+      voteState: { votes: {}, revoteFromTie: null },
+      wolfVotes: {},
+      hunterShotQueue: [],
+      mayorSelectionQueue: [],
+      guardActed: false,
+      winner: null,
+      logs: [],
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    setSocketIndex('socket-1', room.code, 'p1');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, jest.fn());
+
+    expect(room.guardActed).toBe(true);
+    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'harlot', expect.any(Function), io);
+  });
+
+  test('leaveRoom advances from harlot step when harlot leaves', () => {
+    jest.clearAllMocks();
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'harlot',
+      players: {
+        host: { id: 'host', name: 'Host', socketId: 'socket-host', connected: true, isHost: true },
+        p1: {
+          id: 'p1',
+          name: 'Harlot',
+          role: 'harlot',
+          socketId: 'socket-1',
+          connected: true,
+          alive: true,
+        },
+      },
+      voteState: { votes: {}, revoteFromTie: null },
+      wolfVotes: {},
+      hunterShotQueue: [],
+      mayorSelectionQueue: [],
+      harlotActed: false,
+      winner: null,
+      logs: [],
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    setSocketIndex('socket-1', room.code, 'p1');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, jest.fn());
+
+    expect(room.harlotActed).toBe(true);
+    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'resolve', expect.any(Function), io);
+  });
+
+  test('leaveRoom clears mayor selection timer and processes remaining queues', () => {
+    jest.clearAllMocks();
+    const timer = setTimeout(() => undefined, 60000);
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'day',
+      phaseStep: null,
+      phaseTransition: null,
+      players: {
+        host: { id: 'host', name: 'Host', socketId: 'socket-host', connected: true, isHost: true },
+        p1: {
+          id: 'p1',
+          name: 'Mayor',
+          role: 'villager',
+          socketId: 'socket-1',
+          connected: true,
+          alive: false,
+        },
+      },
+      mayorId: null,
+      awaitingHunterShot: null,
+      awaitingMayorSelection: 'p1',
+      mayorSelectionTimer: timer,
+      hunterShotQueue: [],
+      mayorSelectionQueue: [],
+      voteState: { votes: {}, revoteFromTie: null },
+      wolfVotes: {},
+      winner: null,
+      logs: [],
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    (startNextMayorSelection as jest.Mock).mockReturnValue(false);
+    (startNextHunterShot as jest.Mock).mockReturnValue(false);
+    setSocketIndex('socket-1', room.code, 'p1');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, jest.fn());
+
+    expect(room.awaitingMayorSelection).toBeNull();
+    expect(room.mayorSelectionTimer).toBeNull();
+    expect(startNextMayorSelection).toHaveBeenCalledWith(room, expect.any(Function), io);
+    expect(startNextHunterShot).toHaveBeenCalledWith(room, expect.any(Function), io);
+    clearTimeout(timer);
+  });
+
   test('requestState sends sanitized state to requesting player', () => {
     const player = { id: 'p1' };
     const room = {
@@ -671,6 +1145,118 @@ describe('socketHandlers hostSkipStep', () => {
     handlers.hostSkipStep({ roomCode: 'ABCD', playerId: 'host' });
 
     expect(advanceFromReveal).toHaveBeenCalledWith(room, expect.any(Function));
+  });
+
+  test('host skips phase transition post mayor', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'mayor',
+      phaseStep: null,
+      phaseTransition: 'postMayor',
+      nextNightStep: null,
+      players: {
+        host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' },
+      },
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.hostSkipStep({ roomCode: 'ABCD', playerId: 'host' });
+
+    expect(advanceFromMayor).toHaveBeenCalledWith(room, expect.any(Function));
+  });
+
+  test('host skips phase transition post armor', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'armor',
+      phaseStep: null,
+      phaseTransition: 'postArmor',
+      nextNightStep: null,
+      players: {
+        host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' },
+      },
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.hostSkipStep({ roomCode: 'ABCD', playerId: 'host' });
+
+    expect(startNight).toHaveBeenCalledWith(room);
+    expect(broadcastRoom).toHaveBeenCalledWith(room, io);
+  });
+
+  test('host skip in mayor phase resolves vote early', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'mayor',
+      phaseStep: null,
+      phaseTransition: null,
+      players: {
+        host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' },
+      },
+      voteState: { votes: {}, revoteFromTie: null },
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.hostSkipStep({ roomCode: 'ABCD', playerId: 'host' });
+
+    expect(tryResolveMayorVote).toHaveBeenCalledWith(room, expect.any(Function), {
+      allowEarly: true,
+    });
+  });
+
+  test('host skip in armor phase schedules post-armor transition', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'armor',
+      phaseStep: null,
+      phaseTransition: null,
+      players: {
+        host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' },
+      },
+      logs: [],
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.hostSkipStep({ roomCode: 'ABCD', playerId: 'host' });
+
+    expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'postArmor', expect.any(Function));
+    expect(room.logs.some((entry) => entry.text.includes('Armor selection skipped'))).toBe(true);
+  });
+
+  test('host skips wolves step with no living wolves and advances to seer', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'wolves',
+      phaseTransition: null,
+      players: {
+        host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' },
+      },
+      wolfTarget: 'someone',
+      wolfVotes: {},
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.hostSkipStep({ roomCode: 'ABCD', playerId: 'host' });
+
+    expect(room.wolfTarget).toBeNull();
+    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'seer', expect.any(Function), io);
+    expect(tryFinalizeWolfVote).not.toHaveBeenCalled();
   });
 
   test('host skips awaiting hunter shot and advances the phase', () => {

@@ -337,7 +337,7 @@ function createVueWrapper() {
       :session-id="props.sessionId"
       :join-token="props.joinToken"
       :ws-namespace="props.wsNamespace"
-      :socket-url="props.apiBaseUrl || ''"
+      :socket-url="props.socketUrl || props.apiBaseUrl || ''"
       :api-base-url="props.apiBaseUrl || ''"
     />
   </div>
@@ -353,6 +353,7 @@ interface Props {
   wsNamespace: string;
   joinToken: string;
   apiBaseUrl?: string;
+  socketUrl?: string;
   playerName?: string;
 }
 

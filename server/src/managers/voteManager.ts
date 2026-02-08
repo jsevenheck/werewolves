@@ -141,6 +141,10 @@ function resolveDayKill(
     resolveDeaths(room, 'day', broadcastRoom, io);
     // After resolving deaths (including potential lover heartbreak),
     // set joker as winner. The game ends regardless of other deaths.
+    room.awaitingHunterShot = null;
+    room.hunterShotQueue = [];
+    room.awaitingMayorSelection = null;
+    room.mayorSelectionQueue = [];
     room.winner = { team: 'joker', reason: 'Joker was voted out and laughs last!' };
     room.phase = 'ended';
     room.phaseStep = null;

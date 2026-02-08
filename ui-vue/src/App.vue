@@ -110,12 +110,15 @@ const {
   toggle: toggleNarrator,
   resetNarrator,
   bindGestureUnlock,
+  cleanupNarrator,
 } = useNarrator(effectiveAssetsBasePath);
 
 const HUB_JOIN_TIMEOUT_MS = 10000;
+const HUB_RETRY_DELAY_MS = 3000;
 let hubRetryTimer: number | undefined;
 let hubJoinTimeoutTimer: number | undefined;
 const hubJoinError = ref<string | null>(null);
+let hubFlowInProgress = false;
 
 const phase = computed(() => store.room?.phase || null);
 const hasRoom = computed(() => !!store.room);
@@ -191,52 +194,61 @@ function skipStep() {
   socket.emit('hostSkipStep', { roomCode: store.room.code, playerId: store.playerId });
 }
 
-function attemptResume(saved: StoredSession, onFailure?: () => void) {
-  if (!saved.resumeToken) {
-    notify('Saved session expired. Please rejoin the room.');
-    store.clearSession();
-    onFailure?.();
-    return;
-  }
-  socket.emit('resumePlayer', saved, (res) => {
-    if (res && 'error' in res && res.error) {
-      notify(res.error);
+function attemptResume(saved: StoredSession): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (!saved.resumeToken) {
+      notify('Saved session expired. Please rejoin the room.');
       store.clearSession();
-      onFailure?.();
-    } else {
+      resolve(false);
+      return;
+    }
+    socket.emit('resumePlayer', saved, (res) => {
+      if (res && 'error' in res && res.error) {
+        notify(res.error);
+        store.clearSession();
+        resolve(false);
+        return;
+      }
       store.setPlayer(saved.playerId, saved.name, saved.resumeToken);
       store.roomCode = saved.roomCode;
       socket.emit('requestState', { roomCode: saved.roomCode, playerId: saved.playerId });
-    }
+      resolve(true);
+    });
   });
 }
 
 // Hub auto-join: emit autoJoinRoom so the server creates/locates the room
 // keyed by sessionId.  Falls back to attemptResume on reconnects.
-function hubAutoJoin() {
-  socket.emit(
-    'autoJoinRoom',
-    {
-      sessionId: effectiveSessionId,
-      playerId: effectivePlayerId,
-      name: effectivePlayerName || effectivePlayerId,
-    },
-    (res) => {
-      if (!res || 'error' in res) {
-        const message = res?.error ?? 'Failed to join room';
-        hubJoinError.value = message;
-        notify(message);
-        return;
+function hubAutoJoin(): Promise<boolean> {
+  return new Promise((resolve) => {
+    socket.emit(
+      'autoJoinRoom',
+      {
+        sessionId: effectiveSessionId,
+        playerId: effectivePlayerId,
+        name: effectivePlayerName || effectivePlayerId,
+      },
+      (res) => {
+        if (!res || 'error' in res) {
+          const message = res?.error ?? 'Failed to join room';
+          hubJoinError.value = message;
+          notify(message);
+          resolve(false);
+          return;
+        }
+        if (res.roomCode && res.playerId && res.resumeToken) {
+          hubJoinError.value = null;
+          store.setPlayer(res.playerId, effectivePlayerName || effectivePlayerId, res.resumeToken);
+          store.roomCode = res.roomCode;
+          socket.emit('requestState', { roomCode: res.roomCode, playerId: res.playerId });
+          startHubJoinTimeout();
+          resolve(true);
+          return;
+        }
+        resolve(false);
       }
-      if (res.roomCode && res.playerId && res.resumeToken) {
-        hubJoinError.value = null;
-        store.setPlayer(res.playerId, effectivePlayerName || effectivePlayerId, res.resumeToken);
-        store.roomCode = res.roomCode;
-        socket.emit('requestState', { roomCode: res.roomCode, playerId: res.playerId });
-        startHubJoinTimeout();
-      }
-    }
-  );
+    );
+  });
 }
 
 function clearHubTimers() {
@@ -261,30 +273,36 @@ function startHubJoinTimeout() {
   }, HUB_JOIN_TIMEOUT_MS);
 }
 
-function runHubConnectFlow() {
+async function runHubConnectFlow() {
+  if (hubFlowInProgress) return;
+  hubFlowInProgress = true;
   hubJoinError.value = null;
 
-  if (store.playerId && store.roomCode && store.resumeToken) {
-    attemptResume(
-      {
+  try {
+    if (store.playerId && store.roomCode && store.resumeToken) {
+      startHubJoinTimeout();
+      const resumed = await attemptResume({
         roomCode: store.roomCode,
         playerId: store.playerId,
         name: store.playerName || '',
         resumeToken: store.resumeToken,
-      },
-      () => hubAutoJoin()
-    );
-    startHubJoinTimeout();
-    return;
-  }
+      });
+      if (!resumed) {
+        await hubAutoJoin();
+      }
+      return;
+    }
 
-  hubAutoJoin();
+    await hubAutoJoin();
+  } finally {
+    hubFlowInProgress = false;
+  }
 }
 
 function retryHubJoin() {
   hubJoinError.value = null;
   if (socket.connected) {
-    runHubConnectFlow();
+    void runHubConnectFlow();
     return;
   }
   startHubJoinTimeout();
@@ -311,6 +329,27 @@ function onWolfVoteRejected(payload: { reason: string }) {
   }
 }
 
+function onConnectHub() {
+  void runHubConnectFlow();
+}
+
+function onConnectErrorHub() {
+  if (!store.room) {
+    hubJoinError.value = 'Connection failed. Please retry.';
+  }
+}
+
+function onConnectStandalone() {
+  if (store.playerId && store.roomCode && store.resumeToken) {
+    void attemptResume({
+      roomCode: store.roomCode,
+      playerId: store.playerId,
+      name: store.playerName || '',
+      resumeToken: store.resumeToken,
+    });
+  }
+}
+
 onMounted(() => {
   // Bind gesture-based narrator unlock
   bindGestureUnlock();
@@ -320,41 +359,25 @@ onMounted(() => {
 
     // Hub mode: auto-join on first connect, resume on reconnect
     if (socket.connected) {
-      runHubConnectFlow();
+      void runHubConnectFlow();
     }
-    socket.on('connect', () => {
-      runHubConnectFlow();
-    });
+    socket.on('connect', onConnectHub);
+    socket.on('connect_error', onConnectErrorHub);
 
-    socket.on('connect_error', () => {
-      if (!store.room) {
-        hubJoinError.value = 'Connection failed. Please retry.';
-      }
-    });
-
-    // Retry hubAutoJoin if no room after 3 seconds (guards against race conditions)
+    // Retry hubAutoJoin if no room after a delay (guards against race conditions)
     hubRetryTimer = window.setTimeout(() => {
       if (!store.room && socket.connected) {
-        hubAutoJoin();
+        void runHubConnectFlow();
       }
-    }, 3000);
+    }, HUB_RETRY_DELAY_MS);
   } else {
     // Standalone mode: restore saved session or wait for Landing interaction
     const saved = store.loadSession();
     if (saved?.resumeToken) {
-      attemptResume(saved);
+      void attemptResume(saved);
     }
 
-    socket.on('connect', () => {
-      if (store.playerId && store.roomCode && store.resumeToken) {
-        attemptResume({
-          roomCode: store.roomCode,
-          playerId: store.playerId,
-          name: store.playerName || '',
-          resumeToken: store.resumeToken,
-        });
-      }
-    });
+    socket.on('connect', onConnectStandalone);
   }
 
   socket.on('roomUpdate', onRoomUpdate);
@@ -365,6 +388,10 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   clearHubTimers();
+  cleanupNarrator();
+  socket.off('connect', onConnectHub);
+  socket.off('connect', onConnectStandalone);
+  socket.off('connect_error', onConnectErrorHub);
   socket.off('roomUpdate', onRoomUpdate);
   socket.off('hunterPrompt', onHunterPrompt);
   socket.off('mayorPrompt', onMayorPrompt);

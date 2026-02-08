@@ -1,8 +1,9 @@
 import type { Room, VoteState, Player } from '../../../core/src/types';
-import { ROLE_INFO } from '../config/constants';
+import { ROLE_INFO, MAX_PLAYER_NAME_LENGTH } from '../config/constants';
 
-function sanitizeName(name: string) {
-  return (name || '').trim().slice(0, 20);
+function sanitizeName(name: unknown): string {
+  if (typeof name !== 'string') return '';
+  return name.trim().slice(0, MAX_PLAYER_NAME_LENGTH);
 }
 
 function shuffle<T>(arr: T[]) {

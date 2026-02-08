@@ -15,6 +15,8 @@ const { room, playerId } = storeToRefs(store);
 
 import { ROLE_DETAILS } from '../utils/roleDetails';
 
+const READY_ACK_TIMEOUT_MS = 10000;
+
 const players = computed(() => room.value?.players ?? []);
 const self = computed(() => players.value.find((p) => p.id === playerId.value) || null);
 const selfRole = computed(() => self.value?.role || null);
@@ -44,7 +46,7 @@ function markReady() {
       notify('Failed to mark you as ready. Please try again.');
     }
     readyButtonTimeout = null;
-  }, 10000);
+  }, READY_ACK_TIMEOUT_MS);
 
   props.socket.emit('markReady', { roomCode: room.value.code, playerId: playerId.value }, (res) => {
     if (readyButtonTimeout) {

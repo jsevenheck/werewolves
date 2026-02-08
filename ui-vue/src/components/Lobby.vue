@@ -18,6 +18,8 @@ interface Props {
   socket: TypedSocket;
 }
 
+const ROLE_CONFIG_DEBOUNCE_MS = 400;
+
 const props = defineProps<Props>();
 const store = useGameStore();
 const { room, playerId } = storeToRefs(store);
@@ -92,7 +94,7 @@ function onRoleInput(role: string, value: number) {
   debounceTimer = window.setTimeout(() => {
     emitConfig();
     debounceTimer = null;
-  }, 400);
+  }, ROLE_CONFIG_DEBOUNCE_MS);
 }
 
 function onPassiveRoleChange(role: string, checked: boolean) {

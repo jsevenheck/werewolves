@@ -186,8 +186,23 @@ describe('voteManager', () => {
 
   test('resolveDayKill ends the game when Joker is voted out', () => {
     const room = makeRoom({
-      joker: buildPlayer({ id: 'joker', alive: true, role: 'joker', name: 'Joker', team: 'joker' }),
+      joker: buildPlayer({
+        id: 'joker',
+        alive: true,
+        role: 'joker',
+        name: 'Joker',
+        team: 'joker',
+      }),
+      hunter: buildPlayer({
+        id: 'hunter',
+        alive: true,
+        role: 'hunter',
+        name: 'Hunter',
+        team: 'village',
+      }),
     });
+    room.mayorId = 'joker';
+    room.lovers = { aId: 'joker', bId: 'hunter' };
     const broadcastRoom = jest.fn();
 
     resolveDayKill(room, 'joker', broadcastRoom, undefined as never);
@@ -202,6 +217,12 @@ describe('voteManager', () => {
     expect(room.phaseTransition).toBeNull();
     expect(room.phaseTimer).toBeNull();
     expect(room.transitionTimer).toBeNull();
+    expect(room.awaitingHunterShot).toBeNull();
+    expect(room.hunterShotQueue).toEqual([]);
+    expect(room.hunterShotTimer).toBeNull();
+    expect(room.hunterShotEndsAt).toBeNull();
+    expect(room.awaitingMayorSelection).toBeNull();
+    expect(room.mayorSelectionQueue).toEqual([]);
     // broadcastRoom is called twice: once from resolveDeaths (for death processing)
     // and once after setting joker as winner
     expect(broadcastRoom).toHaveBeenCalledTimes(2);

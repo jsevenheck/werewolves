@@ -11,7 +11,7 @@ Manual and automated testing expectations for the Werewolves game.
 - **Mayor succession timeout**: When mayor dies but doesn't select a successor within 60 seconds, verify a random alive player is automatically selected as the new mayor and the game continues.
 - **Mayor tie-breaking in day votes**: During a day vote tie, if the mayor voted for one of the tied candidates, verify the mayor's vote breaks the tie. If the mayor didn't vote for a tied candidate, verify a revote is triggered.
 - **Event log visibility**: While alive, verify logs and night report show victim + role but do not reveal the killer. After death, confirm full log details are visible.
-- **Joker voted out**: Configure a Joker, run a day vote that eliminates them, and verify the game ends instantly with Joker win before Lovers or Hunter effects continue.
+- **Joker voted out**: Configure a Joker, run a day vote that eliminates them, and verify Joker wins that day. If lover-heartbreak deaths happen in the same chain, confirm they are resolved/logged first and no hunter/mayor pending prompts remain after game end.
 - **Hunter dies via Lovers link**: Make Hunter a Lover partner, kill the other Lover (any method), and ensure Hunter still receives the last-shot overlay even though death came from heartbreak.
 - **Werewolf & day vote ties**: Force wolf vote tie to see random target selection, and run a day vote tie to trigger revote UI; verify second tie resolves randomly among tied players.
 - **Role reveal readiness**: During role reveal, each player must click Ready; host can only continue once all connected players are ready.
@@ -35,6 +35,8 @@ Manual and automated testing expectations for the Werewolves game.
 - **Lobby validation**: Attempt to start with fewer than 5 players; ensure the backend rejects the start and displays an error alert. Also test too many roles vs player count.
 - **Disconnect / reconnect**: Join from a browser, disconnect (close tab), reopen and resume via stored session to confirm state restores (including role, death state, and pending prompts like Hunter shot).
 - **Embedded auto-join retry**: In embedded mode (`standalone=false` with `sessionId`), simulate a failed/slow connection and confirm the UI shows an error + `Retry` button, then successfully joins after retry.
+- **Player leaves mid-game**: Have a player leave (not just disconnect) during various phases: (a) during wolf vote — ensure remaining wolves' votes still resolve, (b) during day vote — ensure remaining votes still resolve, (c) when the departed player is the active night-action role (Seer/Witch/Guard/Harlot) — ensure the night step advances, (d) when the departed player had pending hunter shot or mayor succession — ensure those prompts clear and the game continues.
+- **Stale votes after leave**: Have a player leave who was the target of wolf or day votes; confirm those votes are cleaned up and don't cause resolution errors.
 - **Host handoff / reclaim**: Disconnect the host, confirm another connected player becomes Host and can use host actions; reconnect the original host and verify the Host label returns to them.
 - **Endgame reveal**: When a team wins, ensure all roles reveal in the player list and that win condition matches expectations (wolves parity, all wolves dead, or Joker instant win).
 - **Narrator audio toggle**: On mobile Safari/Chrome, tap "Narrator: Off" to enable sound, confirm audio unlock succeeds, and verify announcements only fire on phase/step/transition changes.
