@@ -9,7 +9,7 @@ function tryResolveDayVote(
   broadcastRoom: (room: Room) => void,
   io: Namespace<ClientToServerEvents, ServerToClientEvents>,
   options: { allowEarly?: boolean } = {}
-) {
+): boolean {
   const allowEarly = !!options.allowEarly;
   const alivePlayers = Object.values(room.players).filter((p) => p.alive);
   const connectedAlive = alivePlayers.filter((p) => p.connected);
@@ -26,7 +26,7 @@ function tryResolveDayVote(
       });
     }
     const everyoneVoted = alivePlayers.every((p) => room.voteState.votes[p.id] !== undefined);
-    if (!everyoneVoted) return;
+    if (!everyoneVoted) return false;
   }
 
   const tallies: Record<string, number> = {};
@@ -54,11 +54,11 @@ function tryResolveDayVote(
     room.lastDayMessage = 'No one was eliminated.';
     room.dayVoteResolved = true;
     broadcastRoom(room);
-    return;
+    return true;
   }
   entries.sort((a, b) => b[1] - a[1]);
   const top = entries[0];
-  if (!top) return;
+  if (!top) return true;
   const participantCount = allowEarly ? effectiveVotes.length : alivePlayers.length;
   // If a strict majority (> 50%) of alive players abstain (vote null),
   // the vote is considered skipped. The case where everyone abstains is
@@ -73,7 +73,7 @@ function tryResolveDayVote(
     room.lastDayMessage = 'No one was eliminated.';
     room.dayVoteResolved = true;
     broadcastRoom(room);
-    return;
+    return true;
   }
   const tied = entries.filter(([, count]) => count === top[1]).map(([id]) => id);
   if (tied.length > 1) {
@@ -86,7 +86,7 @@ function tryResolveDayVote(
         `Vote tied. Mayor's vote decided the outcome.`
       );
       resolveDayKill(room, mayorVote, broadcastRoom, io);
-      return;
+      return true;
     }
 
     if (!room.voteState.revoteFromTie) {
@@ -94,7 +94,7 @@ function tryResolveDayVote(
       room.voteState.votes = {};
       addLog(room, 'Vote tied. Revote among highlighted players.');
       broadcastRoom(room);
-      return;
+      return true;
     }
     // On revote, also check if mayor can break the tie
     if (mayorAlive && mayorVote && tied.includes(mayorVote)) {
@@ -104,10 +104,10 @@ function tryResolveDayVote(
         `Revote tied. Mayor's vote decided the outcome.`
       );
       resolveDayKill(room, mayorVote, broadcastRoom, io);
-      return;
+      return true;
     }
     const randomPick = tied[Math.floor(Math.random() * tied.length)];
-    if (!randomPick) return;
+    if (!randomPick) return true;
     const randomPlayer = room.players[randomPick];
     const selectionMessage = randomPlayer
       ? `Vote tied again. Randomly selected ${randomPlayer.name}.`
@@ -117,6 +117,7 @@ function tryResolveDayVote(
   } else {
     resolveDayKill(room, top[0], broadcastRoom, io);
   }
+  return true;
 }
 
 function resolveDayKill(
@@ -135,6 +136,11 @@ function resolveDayKill(
     `${target.name} was voted out. Role: ${roleLabel}.`
   );
   if (target.role === 'joker') {
+    // Process joker's death properly so lover heartbreak triggers
+    queueDeath(room, targetId, 'executed by vote');
+    resolveDeaths(room, 'day', broadcastRoom, io);
+    // After resolving deaths (including potential lover heartbreak),
+    // set joker as winner. The game ends regardless of other deaths.
     room.winner = { team: 'joker', reason: 'Joker was voted out and laughs last!' };
     room.phase = 'ended';
     room.phaseStep = null;

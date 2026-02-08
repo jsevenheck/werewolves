@@ -214,13 +214,38 @@ function skipStep() {
   props.socket.emit('hostSkipStep', { roomCode: room.value.code, playerId: playerId.value });
 }
 
-// Reset witch action flag when witch phase starts
+// Reset form state when each night step begins
+watch(
+  () => isWolf.value,
+  (active) => {
+    if (active) wolfTarget.value = '';
+  }
+);
+watch(
+  () => isSeer.value,
+  (active) => {
+    if (active) seerTarget.value = '';
+  }
+);
 watch(
   () => isWitch.value,
-  (newIsWitch) => {
-    if (newIsWitch) {
+  (active) => {
+    if (active) {
+      poisonTarget.value = '';
       witchActionTaken.value = false;
     }
+  }
+);
+watch(
+  () => isGuard.value,
+  (active) => {
+    if (active) guardTarget.value = '';
+  }
+);
+watch(
+  () => isHarlot.value,
+  (active) => {
+    if (active) harlotTarget.value = '';
   }
 );
 </script>

@@ -134,7 +134,17 @@ function schedulePhaseTransition(
     }
     if (kind === 'dayToNight') {
       startNight(room);
+      room.phaseStep = 'transition';
+      room.nextNightStep = 'wolves';
       broadcastRoom(room);
+      room.transitionTimer = setTimeout(() => {
+        room.transitionTimer = null;
+        if (room.phase !== 'night' || room.phaseStep !== 'transition') return;
+        room.phaseStep = 'wolves';
+        room.nextNightStep = null;
+        broadcastRoom(room);
+      }, NIGHT_DELAY_MS);
+      return;
     }
   }, delayMs);
 }

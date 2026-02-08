@@ -2,18 +2,7 @@
 import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../../stores/game';
-
-const ROLE_DETAILS: Record<string, { name: string }> = {
-  werewolf: { name: 'Werewolf' },
-  seer: { name: 'Seer' },
-  hunter: { name: 'Hunter' },
-  witch: { name: 'Witch' },
-  armor: { name: 'Armor' },
-  joker: { name: 'Joker' },
-  guard: { name: 'Guard' },
-  harlot: { name: 'Harlot' },
-  villager: { name: 'Villager' },
-};
+import { ROLE_DETAILS } from '../../utils/roleDetails';
 
 const store = useGameStore();
 const { room } = storeToRefs(store);

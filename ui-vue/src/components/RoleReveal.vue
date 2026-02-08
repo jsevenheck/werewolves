@@ -13,17 +13,7 @@ const props = defineProps<Props>();
 const store = useGameStore();
 const { room, playerId } = storeToRefs(store);
 
-const ROLE_DETAILS: Record<string, { name: string }> = {
-  werewolf: { name: 'Werewolf' },
-  seer: { name: 'Seer' },
-  hunter: { name: 'Hunter' },
-  witch: { name: 'Witch' },
-  armor: { name: 'Armor' },
-  joker: { name: 'Joker' },
-  guard: { name: 'Guard' },
-  harlot: { name: 'Harlot' },
-  villager: { name: 'Villager' },
-};
+import { ROLE_DETAILS } from '../utils/roleDetails';
 
 const players = computed(() => room.value?.players ?? []);
 const self = computed(() => players.value.find((p) => p.id === playerId.value) || null);

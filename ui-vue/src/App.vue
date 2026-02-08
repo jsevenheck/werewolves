@@ -128,18 +128,7 @@ const mayorName = computed(() => {
   return store.room.players.find((player) => player.id === store.room?.mayorId)?.name ?? null;
 });
 
-// Transition display data
-const ROLE_DETAILS: Record<string, { name: string }> = {
-  werewolf: { name: 'Werewolf' },
-  seer: { name: 'Seer' },
-  hunter: { name: 'Hunter' },
-  witch: { name: 'Witch' },
-  armor: { name: 'Armor' },
-  joker: { name: 'Joker' },
-  guard: { name: 'Guard' },
-  harlot: { name: 'Harlot' },
-  villager: { name: 'Villager' },
-};
+import { ROLE_DETAILS } from './utils/roleDetails';
 
 const transitionMessages: Record<string, string> = {
   postReveal: 'The village falls asleep.',
@@ -302,6 +291,26 @@ function retryHubJoin() {
   socket.connect();
 }
 
+function onRoomUpdate(room: import('@shared/types').RoomView) {
+  store.updateRoom(room);
+  hubJoinError.value = null;
+  clearHubTimers();
+}
+
+function onHunterPrompt() {
+  store.hunterPrompt = true;
+}
+
+function onMayorPrompt() {
+  store.mayorPrompt = true;
+}
+
+function onWolfVoteRejected(payload: { reason: string }) {
+  if (payload.reason === 'already_voted') {
+    notify('You already voted.');
+  }
+}
+
 onMounted(() => {
   // Bind gesture-based narrator unlock
   bindGestureUnlock();
@@ -348,33 +357,18 @@ onMounted(() => {
     });
   }
 
-  // Room update handler
-  socket.on('roomUpdate', (room) => {
-    store.updateRoom(room);
-    hubJoinError.value = null;
-    clearHubTimers();
-  });
-
-  // Hunter prompt
-  socket.on('hunterPrompt', () => {
-    store.hunterPrompt = true;
-  });
-
-  // Mayor prompt
-  socket.on('mayorPrompt', () => {
-    store.mayorPrompt = true;
-  });
-
-  // Wolf vote rejected
-  socket.on('wolfVoteRejected', (payload) => {
-    if (payload.reason === 'already_voted') {
-      notify('You already voted.');
-    }
-  });
+  socket.on('roomUpdate', onRoomUpdate);
+  socket.on('hunterPrompt', onHunterPrompt);
+  socket.on('mayorPrompt', onMayorPrompt);
+  socket.on('wolfVoteRejected', onWolfVoteRejected);
 });
 
 onBeforeUnmount(() => {
   clearHubTimers();
+  socket.off('roomUpdate', onRoomUpdate);
+  socket.off('hunterPrompt', onHunterPrompt);
+  socket.off('mayorPrompt', onMayorPrompt);
+  socket.off('wolfVoteRejected', onWolfVoteRejected);
 });
 </script>
 

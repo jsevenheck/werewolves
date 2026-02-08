@@ -6,21 +6,7 @@ import { notify } from '../utils/helpers';
 import { MIN_PLAYERS } from '@shared/constants';
 import type { TypedSocket } from '../composables/useSocket';
 
-const ROLE_DETAILS: Record<string, { name: string }> = {
-  werewolf: { name: 'Werewolf' },
-  seer: { name: 'Seer' },
-  hunter: { name: 'Hunter' },
-  witch: { name: 'Witch' },
-  armor: { name: 'Armor' },
-  joker: { name: 'Joker' },
-  guard: { name: 'Guard' },
-  harlot: { name: 'Harlot' },
-  villager: { name: 'Villager' },
-};
-
-const PASSIVE_ROLE_DETAILS: Record<string, { name: string }> = {
-  mayor: { name: 'Mayor' },
-};
+import { ROLE_DETAILS, PASSIVE_ROLE_DETAILS } from '../utils/roleDetails';
 
 const SINGLETON_ROLES = new Set(['seer', 'witch', 'armor', 'guard', 'harlot']);
 
@@ -154,21 +140,23 @@ function startGame() {
       <div class="passive-roles">
         <h3>Passive Roles</h3>
         <div class="passive-role-list">
-          <label
+          <div
             v-for="[role, enabled] in Object.entries(passiveRoleConfig)"
             :key="role"
             class="toggle"
           >
             <span>{{ PASSIVE_ROLE_DETAILS[role]?.name || role }}</span>
-            <input
-              type="checkbox"
-              class="passive-role-input"
-              :data-passive-role="role"
-              :checked="enabled"
-              @change="onPassiveRoleChange(role, ($event.target as HTMLInputElement).checked)"
-            />
-            <span class="toggle-track" aria-hidden="true"></span>
-          </label>
+            <label class="toggle-control">
+              <input
+                type="checkbox"
+                class="passive-role-input"
+                :data-passive-role="role"
+                :checked="enabled"
+                @change="onPassiveRoleChange(role, ($event.target as HTMLInputElement).checked)"
+              />
+              <span class="toggle-track" aria-hidden="true"></span>
+            </label>
+          </div>
         </div>
       </div>
     </form>

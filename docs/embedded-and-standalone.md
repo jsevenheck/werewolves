@@ -58,6 +58,8 @@ The host UI passes these props into the game component:
 - `wsNamespace` (string, `/g/<gameId>`)
 - `apiBaseUrl` (string, optional REST base URL)
 - Optional `playerId` from `localStorage.getItem('game-hub:player-id')` – used directly as the in-game player ID
+- Optional `playerName` (string) for in-game display
+- Optional `socketUrl` (string) when Socket.IO is served from a different origin/base path
 
 Once `standalone=false` and `sessionId` are present the component skips the Landing
 page and emits `autoJoinRoom` automatically on connect.
@@ -198,7 +200,8 @@ The transform script creates:
 3. The transform rewrites `@shared/*` and `core/src/*` imports to `@game-hub/werewolves-shared/*`.
    - Supports subpath imports: `@game-hub/werewolves-shared/events`, `/types`, `/constants`
 4. Update `web/src/Werewolves.vue` to mount `GameComponent` and pass Game Hub props
-   (`sessionId`, `joinToken`, `wsNamespace`, `apiBaseUrl`) plus optional `playerId` from localStorage.
+   (`sessionId`, `joinToken`, `wsNamespace`, `apiBaseUrl`) plus optional
+   `playerId` (from localStorage), `playerName`, and `socketUrl`.
 5. `sessionId` → room mapping is handled automatically: the server's `autoJoinRoom`
    handler creates or reuses a room keyed by `sessionId`, and accepts the hub-supplied
    `playerId` directly – no manual mapping step required.

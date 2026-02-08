@@ -126,7 +126,9 @@ loop:
         if harlot alive:
           wait for harlot to select a player to visit
           harlot cannot visit themselves
-          if harlot visits the wolf target (and target is not protected), harlot also dies
+          harlot death: if wolves successfully kill the player the harlot visited
+            (i.e. the kill was not blocked by heal or guard), the harlot also dies
+          note: visiting a werewolf directly does NOT cause harlot death
         advance step='resolve'
       delays:
         - night step transitions: ~3s
@@ -140,8 +142,10 @@ loop:
       host may skip current step if a player is offline or unresponsive
       if step='resolve':
         apply wolf target unless healed or guarded -> queue death
-        if harlot visited wolf target (and target dies), queue harlot death
+        if wolf kill succeeds and harlot visited the wolf target, queue harlot death
         apply poison death (if any) unless guarded -> queue death
+        NOTE: Guard protection intentionally blocks BOTH wolf kills AND poison.
+              This is by design — the guard's protection is absolute for that night.
         process queued deaths with `resolveDeaths()`
         increment day count, update phase='day', reset votes
     day:

@@ -163,9 +163,7 @@ function setupSocketHandlers(
       // marking this player as disconnected.
       if (existingPlayer.socketId && existingPlayer.socketId !== socket.id) {
         const previousSocketId = existingPlayer.socketId;
-        const previousSocket = (
-          io.sockets as unknown as { sockets: Map<string, typeof socket> }
-        ).sockets.get(previousSocketId);
+        const previousSocket = io.sockets.get(previousSocketId);
         if (previousSocket) {
           detachSocketFromRoom(io, previousSocketId);
           previousSocket.disconnect(true);
@@ -216,12 +214,10 @@ function setupSocketHandlers(
     }
     if (player.socketId && player.socketId !== socket.id) {
       const previousSocketId = player.socketId;
-      const existingSocket = (
-        io.sockets as unknown as { sockets: Map<string, typeof socket> }
-      ).sockets.get(previousSocketId);
-      if (existingSocket) {
+      const previousSocket = io.sockets.get(previousSocketId);
+      if (previousSocket) {
         detachSocketFromRoom(io, previousSocketId);
-        existingSocket.disconnect(true);
+        previousSocket.disconnect(true);
       }
     }
     player.socketId = socket.id;
@@ -356,8 +352,9 @@ function setupSocketHandlers(
     if (!targetId) return;
     if (!room.players[targetId]?.alive) return;
     room.voteState.votes[playerId] = targetId;
-    tryResolveMayorVote(room, (r) => broadcastRoom(r, io));
-    broadcastRoom(room, io);
+    if (!tryResolveMayorVote(room, (r) => broadcastRoom(r, io))) {
+      broadcastRoom(room, io);
+    }
   });
 
   socket.on('submitArmor', ({ roomCode, playerId, targets }) => {
@@ -402,8 +399,9 @@ function setupSocketHandlers(
         `${player.name} changed their wolf vote${votedPlayer ? ` to ${votedPlayer.name}` : ''}.`
       );
     }
-    tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io), io);
-    broadcastRoom(room, io);
+    if (!tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io), io)) {
+      broadcastRoom(room, io);
+    }
   });
 
   socket.on('submitSeerInspect', ({ roomCode, playerId, targetId }, cb) => {
@@ -676,8 +674,9 @@ function setupSocketHandlers(
     }
     if (targetId && !room.players[targetId]?.alive) return;
     room.voteState.votes[playerId] = targetId;
-    tryResolveDayVote(room, (r) => broadcastRoom(r, io), io);
-    broadcastRoom(room, io);
+    if (!tryResolveDayVote(room, (r) => broadcastRoom(r, io), io)) {
+      broadcastRoom(room, io);
+    }
   });
 
   socket.on('hostFinalizeDayVote', ({ roomCode, playerId }) => {
@@ -705,8 +704,7 @@ function setupSocketHandlers(
       broadcastRoom(room, io);
       return;
     }
-    startNight(room);
-    broadcastRoom(room, io);
+    holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
   });
 
   socket.on('hostFinalizeMayorVote', ({ roomCode, playerId }) => {
@@ -812,19 +810,23 @@ function setupSocketHandlers(
     if (!room) return cb?.({ error: 'Room not found' });
     const player = getPlayerForSocket(room, playerId, socket.id);
     if (!player) return cb?.({ error: 'Player not found' });
+
+    const wasAlive = player.alive;
+    const playerRole = player.role;
+    const playerPhaseStep = room.phaseStep;
+
     // Remove player completely from the room
     addLog(room, `${player.name} left the game.`);
     delete room.players[playerId];
     deleteSocketIndex(socket.id);
+
     // Clean up any references to this player
     if (room.mayorId === playerId) room.mayorId = null;
-    if (room.awaitingHunterShot === playerId) room.awaitingHunterShot = null;
-    if (room.awaitingMayorSelection === playerId) room.awaitingMayorSelection = null;
     if (room.wolfTarget === playerId) room.wolfTarget = null;
     if (room.healedTarget === playerId) room.healedTarget = null;
     if (room.poisonTarget === playerId) room.poisonTarget = null;
     if (room.guardedTarget === playerId) room.guardedTarget = null;
-    if (player.role === 'guard') {
+    if (playerRole === 'guard') {
       room.guardedTarget = null;
       room.lastGuardedTarget = null;
     }
@@ -836,6 +838,94 @@ function setupSocketHandlers(
     delete room.wolfVotes[playerId];
     delete room.voteState.votes[playerId];
     updateHostIfNeeded(room);
+
+    // --- Game flow continuation after player removal ---
+    // If the game hasn't started yet or already ended, just broadcast
+    if (room.phase === 'lobby' || room.phase === 'ended') {
+      broadcastRoom(room, io);
+      cb?.({ ok: true });
+      return;
+    }
+
+    // If no players remain, nothing to resolve
+    if (!Object.keys(room.players).length) {
+      broadcastRoom(room, io);
+      cb?.({ ok: true });
+      return;
+    }
+
+    // Clear timers for awaiting actions that belonged to this player
+    if (room.awaitingHunterShot === playerId) {
+      room.awaitingHunterShot = null;
+      if (room.hunterShotTimer) {
+        clearTimeout(room.hunterShotTimer);
+        room.hunterShotTimer = null;
+      }
+      room.hunterShotEndsAt = null;
+      // Process remaining hunter/mayor queues
+      if (!startNextHunterShot(room, (r) => broadcastRoom(r, io), io)) {
+        if (!startNextMayorSelection(room, (r) => broadcastRoom(r, io), io)) {
+          checkWinners(room);
+        }
+      }
+    }
+    if (room.awaitingMayorSelection === playerId) {
+      room.awaitingMayorSelection = null;
+      if (room.mayorSelectionTimer) {
+        clearTimeout(room.mayorSelectionTimer);
+        room.mayorSelectionTimer = null;
+      }
+      if (!startNextMayorSelection(room, (r) => broadcastRoom(r, io), io)) {
+        if (!startNextHunterShot(room, (r) => broadcastRoom(r, io), io)) {
+          checkWinners(room);
+        }
+      }
+    }
+
+    // Check win conditions after removing the player
+    if (!room.winner) {
+      checkWinners(room);
+    }
+    if (room.winner) {
+      broadcastRoom(room, io);
+      cb?.({ ok: true });
+      return;
+    }
+
+    // Continue game flow based on current phase if the departed player was alive
+    if (wasAlive) {
+      if (room.phase === 'day' && !room.phaseTransition && !room.awaitingHunterShot) {
+        tryResolveDayVote(room, (r) => broadcastRoom(r, io), io);
+      }
+
+      if (room.phase === 'mayor') {
+        tryResolveMayorVote(room, (r) => broadcastRoom(r, io));
+      }
+
+      if (room.phase === 'night') {
+        // If the departing player was the active night role, advance the step
+        if (playerPhaseStep === 'wolves' && playerRole === 'werewolf') {
+          tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io), io, { allowNoKill: true });
+        } else if (playerPhaseStep === 'seer' && playerRole === 'seer') {
+          room.seerActed = true;
+          scheduleNightStep(room, 'witch', (r) => broadcastRoom(r, io), io);
+        } else if (playerPhaseStep === 'witch' && playerRole === 'witch') {
+          scheduleNightStep(room, 'guard', (r) => broadcastRoom(r, io), io);
+        } else if (playerPhaseStep === 'guard' && playerRole === 'guard') {
+          room.guardActed = true;
+          scheduleNightStep(room, 'harlot', (r) => broadcastRoom(r, io), io);
+        } else if (playerPhaseStep === 'harlot' && playerRole === 'harlot') {
+          room.harlotActed = true;
+          scheduleNightStep(room, 'resolve', (r) => broadcastRoom(r, io), io);
+        }
+      }
+
+      if (room.phase === 'armor' && playerRole === 'armor') {
+        addLog(room, 'Armor left the game. Skipping armor phase.');
+        schedulePhaseTransition(room, 'postArmor', (r) => broadcastRoom(r, io));
+      }
+    }
+
     broadcastRoom(room, io);
     cb?.({ ok: true });
   });

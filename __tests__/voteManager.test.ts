@@ -202,7 +202,9 @@ describe('voteManager', () => {
     expect(room.phaseTransition).toBeNull();
     expect(room.phaseTimer).toBeNull();
     expect(room.transitionTimer).toBeNull();
-    expect(broadcastRoom).toHaveBeenCalledTimes(1);
+    // broadcastRoom is called twice: once from resolveDeaths (for death processing)
+    // and once after setting joker as winner
+    expect(broadcastRoom).toHaveBeenCalledTimes(2);
   });
 
   describe('mayor tie-breaking', () => {
