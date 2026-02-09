@@ -333,9 +333,11 @@ function createVueWrapper() {
     <GameComponent
       :standalone="false"
       :player-id="playerId"
+      :player-name="props.playerName || ''"
       :session-id="props.sessionId"
       :join-token="props.joinToken"
       :ws-namespace="props.wsNamespace"
+      :socket-url="props.socketUrl || props.apiBaseUrl || ''"
       :api-base-url="props.apiBaseUrl || ''"
     />
   </div>
@@ -351,6 +353,8 @@ interface Props {
   wsNamespace: string;
   joinToken: string;
   apiBaseUrl?: string;
+  socketUrl?: string;
+  playerName?: string;
 }
 
 const props = defineProps<Props>();
@@ -385,9 +389,9 @@ This directory contains the Werewolves game structured for Game Hub integration.
 This export is a TEMPLATE that still needs integration work:
 
 ### Web Component (web/src/Werewolves.vue)
-- [ ] Pass Game Hub props from \`party:gameStarted\` (\`sessionId\`, \`joinToken\`, \`wsNamespace\`, \`apiBaseUrl\`).
+- [ ] Pass Game Hub props from \`party:gameStarted\` (\`sessionId\`, \`joinToken\`, \`wsNamespace\`, \`apiBaseUrl\`) and optional \`playerName\` / \`socketUrl\`.
 - [ ] Read \`game-hub:player-id\` from localStorage (if available) and pass it to the game component.
-- [ ] Decide how to map platform \`sessionId\` to the game's room-code flow (auto-create/join or a mapping table).
+- [ ] Verify the platform-provided \`sessionId\` is passed through so \`autoJoinRoom\` can auto-create/reuse the mapped room.
 - [ ] Hide or replace the room-code landing UI if you want a seamless hub experience.
 - [ ] Verify the wrapper mounts the game component and handles initialization errors.
 
@@ -463,7 +467,7 @@ Original standalone deployment is available at the source repository.
 Before submitting a PR to Game Hub:
 
 - [ ] Web wrapper passes \`sessionId\`, \`joinToken\`, and \`wsNamespace\` into GameComponent
-- [ ] SessionId-to-room mapping implemented (or alternate flow agreed)
+- [ ] Optional \`playerName\` / \`socketUrl\` props are forwarded if used by the host platform
 - [ ] Server registers \`registerWerewolf(io)\` under \`/g/werewolves\`
 - [ ] Type checking passes for all sub-packages
 - [ ] Manual testing in Game Hub environment successful
@@ -472,7 +476,7 @@ Before submitting a PR to Game Hub:
 
 - The transform script creates this structure automatically on CI
 - Manual adaptation is required before the game is fully functional in Game Hub
-- The game uses room codes internally; the platform session is not automatically mapped
+- The game uses room codes internally and automatically maps platform \`sessionId\` to room code via \`autoJoinRoom\`
 `;
 
   fs.writeFileSync(path.join(EXPORT_DIR, 'README.md'), readmeContent);

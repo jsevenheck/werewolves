@@ -126,7 +126,9 @@ loop:
         if harlot alive:
           wait for harlot to select a player to visit
           harlot cannot visit themselves
-          if harlot visits the wolf target (and target is not protected), harlot also dies
+          harlot death: if wolves successfully kill the player the harlot visited
+            (i.e. the kill was not blocked by heal or guard), the harlot also dies
+          note: visiting a werewolf directly does NOT cause harlot death
         advance step='resolve'
       delays:
         - night step transitions: ~3s
@@ -140,8 +142,10 @@ loop:
       host may skip current step if a player is offline or unresponsive
       if step='resolve':
         apply wolf target unless healed or guarded -> queue death
-        if harlot visited wolf target (and target dies), queue harlot death
+        if wolf kill succeeds and harlot visited the wolf target, queue harlot death
         apply poison death (if any) unless guarded -> queue death
+        NOTE: Guard protection intentionally blocks BOTH wolf kills AND poison.
+              This is by design — the guard's protection is absolute for that night.
         process queued deaths with `resolveDeaths()`
         increment day count, update phase='day', reset votes
     day:
@@ -160,7 +164,10 @@ loop:
         if mayor voted for a tied candidate: mayor breaks tie
         else choose random among tied players
       once winner target established:
-        if role(target)=='joker': endGame('joker', 'Joker voted out')
+        if role(target)=='joker':
+          queue joker death and resolveDeaths() first (so lover heartbreak is processed)
+          then set winner='joker' and end game
+          clear pending hunter/mayor prompts and timers
         else:
           kill target, resolveDeaths()
           after all actions complete (hunter shots, mayor successions):
@@ -207,6 +214,22 @@ MayorSuccession(newMayorId):
 onPlayerDisconnect(playerId):
   mark connected=false; keep state for reconnection
   if player was host -> assign acting host to another connected player (if any)
+
+onPlayerLeave(playerId):
+  remove player from the room entirely (not just disconnect)
+  if room is in lobby phase -> simply remove and broadcast
+  if room is mid-game:
+    - clean up stale votes targeting the departed player (day votes)
+    - remove departed player's own wolf/day vote entries
+    - remove player from revoteFromTie list if present
+    - if night phase and all remaining wolves have voted -> finalize wolf vote
+    - if night phase and active step belongs to departed player (seer/witch/guard/harlot) -> advance to next night step
+    - if day phase and all remaining alive players have voted -> resolve day vote
+    - if departed player was awaiting hunter shot -> clear timer/prompt and process next queued hunter or resume flow
+    - if departed player was awaiting mayor succession -> clear timer/prompt and continue mayor/hunter queue flow
+      (random mayor auto-selection only happens on mayor-selection timeout)
+    - check win conditions after all cleanup
+  if room becomes empty -> stop resolution and broadcast (room lifecycle cleanup handles eventual deletion)
 
 onPlayerResume(roomCode, playerId, resumeToken):
   if resumeToken missing or mismatched -> reject

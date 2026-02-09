@@ -109,9 +109,9 @@ describe('getPlayerName', () => {
     expect(getPlayerName(room, 'p1')).toBe('Alice');
   });
 
-  test('escapes player names with HTML', () => {
+  test('returns raw player name (Vue handles escaping)', () => {
     const room = baseRoom();
-    expect(getPlayerName(room, 'p2')).toBe('&lt;script&gt;Bob&lt;/script&gt;');
+    expect(getPlayerName(room, 'p2')).toBe('<script>Bob</script>');
   });
 
   test('returns Unknown for non-existent player', () => {

@@ -103,13 +103,19 @@ export const configureRoles = async (host: Page, config: RoleConfig) => {
           input.dispatchEvent(new Event('input', { bubbles: true }));
         });
         if (passive) {
-          const passiveInputs = form.querySelectorAll<HTMLInputElement>('.passive-role-input');
-          passiveInputs.forEach((input) => {
-            const role = input.dataset.passiveRole as keyof typeof passive | undefined;
-            if (!role || passive[role] === undefined) return;
-            input.checked = Boolean(passive[role]);
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-            input.dispatchEvent(new Event('input', { bubbles: true }));
+          const toggles = form.querySelectorAll<HTMLElement>('.toggle-control[role="switch"]');
+          toggles.forEach((toggle) => {
+            const row = toggle.closest('.toggle');
+            if (!row) return;
+            const label = row.querySelector('span')?.textContent?.trim().toLowerCase();
+            const matchedRole = Object.keys(passive).find((r) => r === label) as
+              | keyof typeof passive
+              | undefined;
+            if (!matchedRole || passive[matchedRole] === undefined) return;
+            const current = toggle.getAttribute('aria-checked') === 'true';
+            if (current !== Boolean(passive[matchedRole])) {
+              toggle.click();
+            }
           });
         }
         form.dispatchEvent(new Event('change', { bubbles: true }));
@@ -129,11 +135,18 @@ export const configureRoles = async (host: Page, config: RoleConfig) => {
           const passiveOk =
             !passive ||
             Object.entries(passive).every(([role, value]) => {
-              const input = document.querySelector<HTMLInputElement>(
-                `.passive-role-input[data-passive-role="${role}"]`
+              const toggles = document.querySelectorAll<HTMLElement>(
+                '.toggle-control[role="switch"]'
               );
-              if (!input) return false;
-              return input.checked === Boolean(value);
+              for (const toggle of Array.from(toggles)) {
+                const row = toggle.closest('.toggle');
+                if (!row) continue;
+                const label = row.querySelector('span')?.textContent?.trim().toLowerCase();
+                if (label === role) {
+                  return (toggle.getAttribute('aria-checked') === 'true') === Boolean(value);
+                }
+              }
+              return false;
             });
           const summaryText = summary?.textContent || '';
           const minPlayersText = minText?.textContent || '';

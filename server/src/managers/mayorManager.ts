@@ -1,12 +1,10 @@
 import type { Namespace } from 'socket.io';
 import { addLog, createVoteState } from '../utils/helpers';
+import { MAYOR_SELECTION_TIMEOUT_MS } from '../config/constants';
 import { schedulePhaseTransition } from './phaseManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { Room } from '../../../core/src/types';
 import { checkWinners } from './deathManager';
-
-const IS_E2E = process.env.E2E_TESTS === '1';
-const MAYOR_SELECTION_TIMEOUT_MS = IS_E2E ? 30 * 1000 : 60 * 1000;
 
 function shiftNextValidMayorSelector(room: Room) {
   while (room.mayorSelectionQueue.length) {

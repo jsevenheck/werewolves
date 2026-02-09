@@ -75,8 +75,31 @@ app.get('/{*splat}', (req, res, next) => {
   }
 });
 
+server.on('error', (err: NodeJS.ErrnoException) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`[standalone-server] Port ${PORT} is already in use.`);
+  } else {
+    console.error(`[standalone-server] Server error:`, err);
+  }
+  process.exit(1);
+});
+
 server.listen(PORT, () => {
   console.log(`[standalone-server] Werewolves server listening on port ${PORT}`);
   console.log(`[standalone-server] Game namespace: /g/werewolves`);
   console.log(`[standalone-server] Serving static files from: ${staticDir}`);
 });
+
+function shutdown(signal: string) {
+  console.log(`[standalone-server] ${signal} received, shutting down...`);
+  io.close(() => {
+    server.close(() => {
+      console.log('[standalone-server] Shutdown complete.');
+      process.exit(0);
+    });
+  });
+  // Force exit after timeout
+  setTimeout(() => process.exit(1), 10_000).unref();
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

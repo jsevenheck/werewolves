@@ -20,7 +20,7 @@ werewolves/
 |   `-- src/
 |       |-- types.ts          # Shared types (Role, Phase, Player, Room, etc.)
 |       |-- events.ts         # Socket.IO event contracts
-|       `-- constants.ts      # Shared timing constants
+|       `-- constants.ts      # Shared constants (timing, limits, thresholds)
 |-- server/                   # Server-side game logic
 |   `-- src/
 |       |-- index.ts          # definition/register/handler + registerWerewolf

@@ -13,17 +13,9 @@ const props = defineProps<Props>();
 const store = useGameStore();
 const { room, playerId } = storeToRefs(store);
 
-const ROLE_DETAILS: Record<string, { name: string }> = {
-  werewolf: { name: 'Werewolf' },
-  seer: { name: 'Seer' },
-  hunter: { name: 'Hunter' },
-  witch: { name: 'Witch' },
-  armor: { name: 'Armor' },
-  joker: { name: 'Joker' },
-  guard: { name: 'Guard' },
-  harlot: { name: 'Harlot' },
-  villager: { name: 'Villager' },
-};
+import { ROLE_DETAILS } from '../utils/roleDetails';
+
+const READY_ACK_TIMEOUT_MS = 10000;
 
 const players = computed(() => room.value?.players ?? []);
 const self = computed(() => players.value.find((p) => p.id === playerId.value) || null);
@@ -54,7 +46,7 @@ function markReady() {
       notify('Failed to mark you as ready. Please try again.');
     }
     readyButtonTimeout = null;
-  }, 10000);
+  }, READY_ACK_TIMEOUT_MS);
 
   props.socket.emit('markReady', { roomCode: room.value.code, playerId: playerId.value }, (res) => {
     if (readyButtonTimeout) {

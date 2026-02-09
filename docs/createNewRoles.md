@@ -7,8 +7,8 @@ Roles can be **active** (with night/day actions like Seer, Witch) or **passive**
 
 - Add the role to shared types in `core/src/types.ts` (Role union, RoleConfig, optional Team/NightStep/Phase).
 - Add server role metadata and defaults in `server/src/config/constants.ts` (ROLE_INFO, DEFAULT_ROLE_CONFIG).
-- Update client role labels/details in Vue components (e.g., `ui-vue/src/components/RoleReveal.vue`,
-  `ui-vue/src/components/Lobby.vue`, `ui-vue/src/components/overlays/RoleCard.vue`).
+- Update client role labels/details in `ui-vue/src/utils/roleDetails.ts`
+  (consumed by role-related Vue components).
 - Update server flow (managers + handlers) for actions, win/lose, and validation.
 - Update client UI + interaction for the role's actions.
 - Ensure role-specific data is only broadcast to allowed players in `server/src/managers/broadcastManager.ts`.
@@ -69,9 +69,8 @@ villager variant with no active abilities.
    - Add to `Team` only if you need a new faction.
 2. Config:
    - `server/src/config/constants.ts`: add to `ROLE_INFO` and `DEFAULT_ROLE_CONFIG`.
-   - Update role details in UI components that display role labels/descriptions
-     (e.g., `ui-vue/src/components/RoleReveal.vue`, `ui-vue/src/components/overlays/RoleCard.vue`,
-     `ui-vue/src/components/panels/Header.vue`).
+   - Update role details in `ui-vue/src/utils/roleDetails.ts`.
+     That module is shared by role labels/descriptions across role-related components.
 3. Assignment and display:
    - Role assignment uses `ROLE_INFO` and `RoleConfig` in `server/src/managers/roleManager.ts`.
    - Role labels use `ROLE_INFO` via `getPlayerRoleLabel` in `server/src/utils/helpers.ts`.
@@ -119,8 +118,8 @@ Goal: add a village role with no active ability.
 2. `server/src/config/constants.ts`
    - Add `elder` to `ROLE_INFO` with team `village` and a description.
    - Add `elder` to `DEFAULT_ROLE_CONFIG` with a default count (often 0).
-3. `ui-vue/src/components/overlays/RoleCard.vue`
-   - Add `elder` to the role details used for name/description/color.
+3. `ui-vue/src/utils/roleDetails.ts`
+   - Add `elder` to `ROLE_DETAILS` with name/description/color.
 4. Tests
    - Update role list and default config expectations in `__tests__/roleManager.test.ts` and any other role-specific tests.
 
@@ -188,6 +187,7 @@ If the role affects win conditions or death resolution:
 - Socket events: `core/src/events.ts`, `server/src/handlers/socketHandlers.ts`
 - Broadcast visibility: `server/src/managers/broadcastManager.ts`
 - UI screens: `ui-vue/src/components/Lobby.vue`, `ui-vue/src/components/NightPhase.vue`, `ui-vue/src/components/DayPhase.vue`
+- Role metadata: `ui-vue/src/utils/roleDetails.ts`
 - Role overlays/panels: `ui-vue/src/components/overlays/RoleCard.vue`, `ui-vue/src/components/panels/Header.vue`
 - Client state: `ui-vue/src/stores/game.ts`
 - Audio: `ui-vue/public/audio/README.md`

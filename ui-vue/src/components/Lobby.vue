@@ -6,21 +6,7 @@ import { notify } from '../utils/helpers';
 import { MIN_PLAYERS } from '@shared/constants';
 import type { TypedSocket } from '../composables/useSocket';
 
-const ROLE_DETAILS: Record<string, { name: string }> = {
-  werewolf: { name: 'Werewolf' },
-  seer: { name: 'Seer' },
-  hunter: { name: 'Hunter' },
-  witch: { name: 'Witch' },
-  armor: { name: 'Armor' },
-  joker: { name: 'Joker' },
-  guard: { name: 'Guard' },
-  harlot: { name: 'Harlot' },
-  villager: { name: 'Villager' },
-};
-
-const PASSIVE_ROLE_DETAILS: Record<string, { name: string }> = {
-  mayor: { name: 'Mayor' },
-};
+import { ROLE_DETAILS, PASSIVE_ROLE_DETAILS } from '../utils/roleDetails';
 
 const SINGLETON_ROLES = new Set(['seer', 'witch', 'armor', 'guard', 'harlot']);
 
@@ -31,6 +17,8 @@ const isSingletonRole = (role: string): boolean => {
 interface Props {
   socket: TypedSocket;
 }
+
+const ROLE_CONFIG_DEBOUNCE_MS = 400;
 
 const props = defineProps<Props>();
 const store = useGameStore();
@@ -106,7 +94,7 @@ function onRoleInput(role: string, value: number) {
   debounceTimer = window.setTimeout(() => {
     emitConfig();
     debounceTimer = null;
-  }, 400);
+  }, ROLE_CONFIG_DEBOUNCE_MS);
 }
 
 function onPassiveRoleChange(role: string, checked: boolean) {
@@ -154,21 +142,24 @@ function startGame() {
       <div class="passive-roles">
         <h3>Passive Roles</h3>
         <div class="passive-role-list">
-          <label
+          <div
             v-for="[role, enabled] in Object.entries(passiveRoleConfig)"
             :key="role"
             class="toggle"
           >
             <span>{{ PASSIVE_ROLE_DETAILS[role]?.name || role }}</span>
-            <input
-              type="checkbox"
-              class="passive-role-input"
-              :data-passive-role="role"
-              :checked="enabled"
-              @change="onPassiveRoleChange(role, ($event.target as HTMLInputElement).checked)"
-            />
-            <span class="toggle-track" aria-hidden="true"></span>
-          </label>
+            <span
+              class="toggle-control"
+              role="switch"
+              :aria-checked="enabled"
+              tabindex="0"
+              @click="onPassiveRoleChange(role, !enabled)"
+              @keydown.enter.prevent="onPassiveRoleChange(role, !enabled)"
+              @keydown.space.prevent="onPassiveRoleChange(role, !enabled)"
+            >
+              <span class="toggle-track" aria-hidden="true"></span>
+            </span>
+          </div>
         </div>
       </div>
     </form>

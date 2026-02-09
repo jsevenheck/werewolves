@@ -1,5 +1,6 @@
 import type { Namespace } from 'socket.io';
 import { updateRoomActivity } from '../models/room';
+import { MAX_VISIBLE_LOGS } from '../config/constants';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { Room, RoomView, Player } from '../../../core/src/types';
 
@@ -31,7 +32,7 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     ...(room.phase === 'roleReveal' ? { ready: player.ready } : {}),
   }));
   const viewerAlive = viewer ? viewer.alive : false;
-  const logs = room.logs.slice(-8).map((log) => ({
+  const logs = room.logs.slice(-MAX_VISIBLE_LOGS).map((log) => ({
     ts: log.ts,
     text: viewerAlive && log.publicText ? log.publicText : log.text,
   }));

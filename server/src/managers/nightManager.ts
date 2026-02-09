@@ -10,14 +10,14 @@ function tryFinalizeWolfVote(
   broadcastRoom: (room: Room) => void,
   io: Namespace<ClientToServerEvents, ServerToClientEvents>,
   options: { allowNoKill?: boolean } = {}
-) {
+): boolean {
   const wolves = Object.values(room.players).filter((p) => p.role === 'werewolf' && p.alive);
   if (!wolves.length) {
     scheduleNightStep(room, 'seer', broadcastRoom, io);
-    return;
+    return true;
   }
   const pending = wolves.some((wolf) => room.wolfVotes[wolf.id] === undefined);
-  if (pending) return;
+  if (pending) return false;
   const tally: Record<string, number> = {};
   Object.values(room.wolfVotes).forEach((targetId) => {
     if (!targetId) return;
@@ -41,7 +41,7 @@ function tryFinalizeWolfVote(
   if (!chosen && options.allowNoKill) {
     room.wolfTarget = null;
     scheduleNightStep(room, 'seer', broadcastRoom, io);
-    return;
+    return true;
   }
   if (!chosen && wolves.length) {
     const aliveNonWolves = Object.values(room.players).filter(
@@ -54,6 +54,7 @@ function tryFinalizeWolfVote(
   }
   room.wolfTarget = chosen;
   scheduleNightStep(room, 'seer', broadcastRoom, io);
+  return true;
 }
 
 function advanceNightStep(
@@ -184,7 +185,9 @@ function resolveNight(
     }
   }
 
-  // Poison - blocked by guard protection
+  // Poison - intentionally blocked by guard protection.
+  // Design decision: the guard's protection is absolute for that night,
+  // blocking both wolf kills AND witch poison.
   if (room.poisonTarget && room.guardedTarget !== room.poisonTarget) {
     queueDeath(room, room.poisonTarget, 'poisoned by Witch');
   }

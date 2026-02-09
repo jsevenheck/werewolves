@@ -19,8 +19,7 @@ function pushNotification(text: string) {
 }
 
 function getPlayerName(room: RoomView, id: string) {
-  const name = room.players.find((p) => p.id === id)?.name || 'Unknown';
-  return escapeHtml(name);
+  return room.players.find((p) => p.id === id)?.name || 'Unknown';
 }
 
 function formatPhase(room: RoomView) {

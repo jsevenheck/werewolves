@@ -21,6 +21,7 @@ export function useNarrator(basePath = '/audio') {
   let unlockToken = 0;
   let lastUnlockAttemptAt = 0;
   let gestureBound = false;
+  let gestureHandler: (() => void) | null = null;
 
   function clearNarratorPreference() {
     try {
@@ -116,9 +117,18 @@ export function useNarrator(basePath = '/audio') {
   function bindGestureUnlock() {
     if (gestureBound) return;
     gestureBound = true;
-    document.addEventListener('pointerdown', () => {
+    gestureHandler = () => {
       void attemptUnlock(false);
-    });
+    };
+    document.addEventListener('pointerdown', gestureHandler);
+  }
+
+  function cleanupNarrator() {
+    if (gestureHandler) {
+      document.removeEventListener('pointerdown', gestureHandler);
+      gestureHandler = null;
+      gestureBound = false;
+    }
   }
 
   return {
@@ -128,5 +138,6 @@ export function useNarrator(basePath = '/audio') {
     toggle,
     resetNarrator,
     bindGestureUnlock,
+    cleanupNarrator,
   };
 }

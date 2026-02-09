@@ -1,12 +1,10 @@
 import type { Namespace } from 'socket.io';
 import { addLog, clearRoomTimers, getPlayerRoleLabel } from '../utils/helpers';
+import { HUNTER_SHOT_TIMEOUT_MS } from '../config/constants';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { NightDeathAnnouncement, Room } from '../../../core/src/types';
 import { startNextMayorSelection } from './mayorManager';
 import { schedulePhaseTransition } from './phaseManager';
-
-const IS_E2E = process.env.E2E_TESTS === '1';
-const HUNTER_SHOT_TIMEOUT_MS = IS_E2E ? 30 * 1000 : 60 * 1000;
 
 function queueDeath(room: Room, playerId: string, reason: string) {
   room.pendingDeaths.push({ playerId, reason });
