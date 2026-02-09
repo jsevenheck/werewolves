@@ -148,16 +148,17 @@ function startGame() {
             class="toggle"
           >
             <span>{{ PASSIVE_ROLE_DETAILS[role]?.name || role }}</span>
-            <label class="toggle-control">
-              <input
-                type="checkbox"
-                class="passive-role-input"
-                :data-passive-role="role"
-                :checked="enabled"
-                @change="onPassiveRoleChange(role, ($event.target as HTMLInputElement).checked)"
-              />
+            <span
+              class="toggle-control"
+              role="switch"
+              :aria-checked="enabled"
+              tabindex="0"
+              @click="onPassiveRoleChange(role, !enabled)"
+              @keydown.enter.prevent="onPassiveRoleChange(role, !enabled)"
+              @keydown.space.prevent="onPassiveRoleChange(role, !enabled)"
+            >
               <span class="toggle-track" aria-hidden="true"></span>
-            </label>
+            </span>
           </div>
         </div>
       </div>

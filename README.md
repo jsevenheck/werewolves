@@ -141,6 +141,7 @@ Mobile browsers require a user gesture before audio can play. If a player enable
 
 The Dockerfile uses a multi-stage build to compile TypeScript and bundle the client, then creates a production image with only runtime dependencies.
 It is intended for the standalone build only; Game Hub uses its own build/container in the game-hub repository.
+BuildKit cache mounts are enabled for pnpm so repeated builds are significantly faster.
 
 ```bash
 docker build -t werewolves .
@@ -148,6 +149,11 @@ docker run --rm -p 3001:3001 werewolves
 ```
 
 Note: The Docker image defaults to port 3001 (see `ENV PORT=3001`). Override with `-e PORT=<port>` if needed.
+
+Troubleshooting:
+
+- If you previously saw `Cannot find module .../ui-vue/node_modules/vue-tsc/bin/vue-tsc.js`, the root cause was that `ui-vue` is not a pnpm workspace package in this repo.
+- The Dockerfile now installs `ui-vue` dependencies explicitly in the builder stage and sets `CI=true` so pnpm can run non-interactively in Docker.
 
 ## Project Docs
 

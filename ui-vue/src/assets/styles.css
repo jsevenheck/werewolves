@@ -166,16 +166,10 @@
 }
 
 .werewolves-root .toggle-control {
+  position: relative;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-}
-
-.werewolves-root .toggle input {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
 }
 
 .werewolves-root .toggle-track {
@@ -203,17 +197,17 @@
   transition: transform 0.2s ease;
 }
 
-.werewolves-root .toggle input:focus + .toggle-track {
+.werewolves-root .toggle-control:focus-visible .toggle-track {
   outline: 2px solid #f97316;
   outline-offset: 2px;
 }
 
-.werewolves-root .toggle input:checked + .toggle-track {
+.werewolves-root .toggle-control[aria-checked='true'] .toggle-track {
   background: rgba(249, 115, 22, 0.9);
   border-color: rgba(249, 115, 22, 0.9);
 }
 
-.werewolves-root .toggle input:checked + .toggle-track::after {
+.werewolves-root .toggle-control[aria-checked='true'] .toggle-track::after {
   transform: translateX(20px);
 }
 
