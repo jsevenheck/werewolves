@@ -202,6 +202,7 @@ The transform script creates:
 1. Run `node scripts/transform-for-gamehub.js` (CI does this after tests).
 2. Copy `game-export/werewolves` into the Game Hub repo at `games/werewolves/`.
 3. The transform rewrites `@shared/*` and `core/src/*` imports to `@game-hub/werewolves-shared/*`.
+   - Supports both regular imports (`from '@shared/types'`) and TypeScript inline imports (`import('@shared/types')`)
    - Supports subpath imports: `@game-hub/werewolves-shared/events`, `/types`, `/constants`
 4. Update `web/src/Werewolves.vue` to mount `GameComponent` and pass Game Hub props
    (`sessionId`, `joinToken`, `wsNamespace`, `apiBaseUrl`) plus optional

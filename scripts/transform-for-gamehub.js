@@ -64,6 +64,8 @@ function rewriteImports(rootDir) {
   const replacements = [
     ["from '@shared/", "from '@game-hub/werewolves-shared/"],
     ['from "@shared/', 'from "@game-hub/werewolves-shared/'],
+    ["import('@shared/", "import('@game-hub/werewolves-shared/"],
+    ['import("@shared/', 'import("@game-hub/werewolves-shared/'],
     ["from '../../core/src/", "from '@game-hub/werewolves-shared/"],
     ['from "../../core/src/', 'from "@game-hub/werewolves-shared/'],
     ["from '../../../core/src/", "from '@game-hub/werewolves-shared/"],

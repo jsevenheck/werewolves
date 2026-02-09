@@ -179,6 +179,7 @@ Helper functions in `ui-vue/src/utils/`.
 When exported to game-hub via `scripts/transform-for-gamehub.js`:
 
 - `@shared/*` imports → `@game-hub/werewolves-shared/*` (with subpath support: `/events`, `/types`, `/constants`)
+  - Supports both regular imports (`from '@shared/types'`) and TypeScript inline imports (`import('@shared/types')`)
 - Relative imports remain unchanged
 - `@/` alias is NOT used in source files (only in vite.config.ts for local dev)
 
