@@ -3,5 +3,13 @@
   "compilerOptions": {
     "types": ["node", "jest"]
   },
-  "include": ["__tests__/**/*.ts", "jest.setup.ts", "core/src/**/*.ts", "server/src/**/*.ts"]
+  "include": [
+    "__tests__/**/*.ts",
+    "jest.setup.ts",
+    "core/src/**/*.ts",
+    "server/src/**/*.ts",
+    "ui-vue/src/**/*.ts",
+    "ui-vue/src/**/*.vue",
+    "global.d.ts"
+  ]
 }

@@ -357,10 +357,16 @@ interface Props {
   apiBaseUrl?: string;
   socketUrl?: string;
   playerName?: string;
+  // Optional: Custom narrator audio path. If not provided, bundled audio is used.
+  assetsBasePath?: string;
 }
 
 const props = defineProps<Props>();
 const playerId = localStorage.getItem('game-hub:player-id') ?? '';
+
+// Note: assetsBasePath is NOT passed to GameComponent by default.
+// Narrator will use bundled audio files, which work in all environments.
+// To use custom audio, uncomment and pass :assets-base-path="props.assetsBasePath"
 </script>
 
 <style scoped>
@@ -396,6 +402,7 @@ This export is a TEMPLATE that still needs integration work:
 - [ ] Verify the platform-provided \`sessionId\` is passed through so \`autoJoinRoom\` can auto-create/reuse the mapped room.
 - [ ] Hide or replace the room-code landing UI if you want a seamless hub experience.
 - [ ] Verify the wrapper mounts the game component and handles initialization errors.
+- [ ] **Narrator audio**: Built-in narrator audio is now bundled with the web component. No need to copy \`public/audio\` files or pass \`assetsBasePath\` prop. To use custom narrator audio, pass \`assetsBasePath\` pointing to your custom audio directory.
 
 ### Server Handler (server/src/index.ts)
 - [ ] The server package exports \`definition\`, \`register(io, namespace)\`, and \`handler\`.
@@ -441,6 +448,22 @@ werewolves/
 - **Players:** 5-20
 - **Description:** A moderator-free implementation of the classic Mafia/Werewolf party game
 
+## Narrator Audio
+
+**Built-in audio is now bundled with the web component** - no host setup required!
+
+- The narrator feature uses audio files bundled directly into the web component
+- Game Hub does NOT need to serve \`/audio/...\` static files
+- Works in production builds without any host-side audio file copying
+- Custom audio overrides are still supported via optional \`assetsBasePath\` prop
+
+To use custom narrator audio (optional):
+1. Host your custom audio files at a public URL or path
+2. Pass \`assetsBasePath\` prop to the Werewolves component pointing to your audio directory
+3. Follow the structure: \`<assetsBasePath>/custom/<clip>_1.mp3\`, etc.
+
+If \`assetsBasePath\` is not provided, bundled audio is used automatically.
+
 ## Development
 
 Each sub-package can be type-checked independently:
@@ -473,6 +496,7 @@ Before submitting a PR to Game Hub:
 - [ ] Server registers \`registerWerewolf(io)\` under \`/g/werewolves\`
 - [ ] Type checking passes for all sub-packages
 - [ ] Manual testing in Game Hub environment successful
+- [ ] **Narrator audio works in production build** (bundled audio, no host-served files needed)
 
 ## Notes
 
@@ -503,7 +527,9 @@ function transform() {
   console.log('Copied ui-vue/src -> web/src');
 
   copyDir(SOURCE_DIRS.webPublic, TARGET_DIRS.webPublic);
-  console.log('Copied ui-vue/public -> web/public (includes audio files)');
+  console.log(
+    'Copied ui-vue/public -> web/public (bundled audio in src/assets/audio is used by default)'
+  );
 
   copyDir(SOURCE_DIRS.server, TARGET_DIRS.server);
   console.log('Copied server/src -> server/src');

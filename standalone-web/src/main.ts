@@ -37,8 +37,8 @@ const app = createApp({
       // Hub integration props (can be passed via URL for testing)
       sessionId,
       joinToken,
-      // Assets path
-      assetsBasePath: '/audio',
+      // Assets path - omitted to use bundled audio by default
+      // To use custom audio, set: assetsBasePath: '/audio'
     });
   },
 });
