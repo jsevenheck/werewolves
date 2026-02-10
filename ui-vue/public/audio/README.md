@@ -6,7 +6,8 @@
 - Documentation reference (standard file names and descriptions)
 - Backwards compatibility
 
-For custom audio overrides in standalone or embedded mode, pass the `assetsBasePath` prop pointing to your custom audio directory.
+For custom audio overrides, use `assetsBasePath` to point to your custom audio directory.
+The standalone wrapper and generated Game Hub wrapper both default this to `/audio`.
 
 ---
 
@@ -57,7 +58,7 @@ The narrator will randomly select one custom variant each time the clip is playe
 
 ## Custom Audio Override
 
-**For standalone mode:** You can override any AI-generated audio file with your own recordings by placing them in the `custom/` subdirectory.
+**For standalone mode:** You can override any AI-generated audio file with your own recordings by placing them in the `custom/` subdirectory (the wrapper already uses `/audio` by default).
 
 **For embedded mode (Game Hub):** Pass the `assetsBasePath` prop pointing to your custom audio directory. The narrator will look for custom audio at `${assetsBasePath}/custom/` and fall back to bundled audio.
 
@@ -70,7 +71,7 @@ The narrator will randomly select one custom variant each time the clip is playe
 
 **Priority:**
 
-- With `assetsBasePath`: `${assetsBasePath}/custom/{key}_N.mp3` → `${assetsBasePath}/{key}.mp3` → bundled audio
+- With `assetsBasePath`: `${assetsBasePath}/custom/{key}_N.mp3` → `${assetsBasePath}/{key}.mp3` → bundled audio → silent
 - Without `assetsBasePath`: bundled audio (no discovery of variants)
 
 **Examples:**
@@ -181,6 +182,6 @@ Game over announcement. Max length: no fixed limit.
 
 - Requires passing `assetsBasePath` prop to GameComponent
 - Supports variants via `custom/` subdirectory
-- Fallback chain ensures audio always plays (custom → bundled → silent)
+- Fallback chain ensures audio always plays (custom → default override → bundled → silent)
 
 During development, the narrator falls back to an embedded silent clip when a file is missing and bundled audio is unavailable.

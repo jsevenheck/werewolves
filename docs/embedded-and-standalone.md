@@ -151,9 +151,10 @@ Party creation/join and lobby live on `/platform`; the game only connects to `/g
 
 **Fallback chain:**
 
-1. Custom audio from `assetsBasePath` (if provided)
-2. Bundled audio (always available)
-3. Silent audio data URL (last resort)
+1. Custom variants from `${assetsBasePath}/custom/${key}_N.mp3` (if provided)
+2. Default override from `${assetsBasePath}/${key}.mp3`
+3. Bundled audio (always available)
+4. Silent audio data URL (last resort)
 
 This approach ensures narrator audio works in Game Hub production builds without manual setup.
 
@@ -173,8 +174,9 @@ A thin wrapper that:
 6. Handles server listen errors (e.g. `EADDRINUSE`)
 7. Graceful shutdown on `SIGTERM`/`SIGINT` (closes Socket.IO → HTTP, 10s force-exit timeout)
 
-**Audio:** Standalone mode uses bundled audio by default (no setup required). Custom
-audio can optionally be served from `/audio` and accessed via the `assetsBasePath` prop.
+**Audio:** `standalone-web/src/main.ts` sets `assetsBasePath: '/audio'` by default.
+Runtime order is `/audio/custom/*` -> `/audio/*` -> bundled audio -> silent.
+If `/audio` files are missing, bundled audio is still used automatically.
 
 ### standalone-web
 
@@ -231,6 +233,7 @@ The transform script creates:
 4. Update `web/src/Werewolves.vue` to mount `GameComponent` and pass Game Hub props
    (`sessionId`, `joinToken`, `wsNamespace`, `apiBaseUrl`) plus optional
    `playerId` (from localStorage), `playerName`, and `socketUrl`.
+   - Generated wrapper default: `assetsBasePath = '/audio'` (runtime custom overrides with bundled fallback).
 5. `sessionId` → room mapping is handled automatically: the server's `autoJoinRoom`
    handler creates or reuses a room keyed by `sessionId`, and accepts the hub-supplied
    `playerId` directly – no manual mapping step required.

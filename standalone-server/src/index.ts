@@ -14,6 +14,7 @@ import path from 'path';
 import fs from 'fs';
 import { Server } from 'socket.io';
 import * as werewolfServer from '../../server/src/index';
+import { resolveStandaloneStaticDir } from './staticDir';
 
 const PORT = process.env.PORT ?? 3001;
 
@@ -47,18 +48,11 @@ if (fs.existsSync(sharedAudioDir)) {
 }
 
 // Serve built client assets (production) or fall back to ui-vue dir (dev).
-const builtClientDir = path.join(process.cwd(), 'dist', 'client');
-const devClientDir = path.join(process.cwd(), 'ui-vue');
-const standaloneWebDist = path.join(process.cwd(), 'standalone-web', 'dist');
-
-let staticDir: string;
-if (fs.existsSync(builtClientDir)) {
-  staticDir = builtClientDir;
-} else if (fs.existsSync(standaloneWebDist)) {
-  staticDir = standaloneWebDist;
-} else {
-  staticDir = devClientDir;
-}
+const { preferStandaloneWebDist, staticDir } = resolveStandaloneStaticDir({
+  rootDir: process.cwd(),
+  lifecycleEvent: process.env.npm_lifecycle_event ?? '',
+  existsSync: fs.existsSync,
+});
 
 app.use(express.static(staticDir));
 app.get('/health', (_, res) => res.json({ ok: true }));
@@ -87,6 +81,9 @@ server.on('error', (err: NodeJS.ErrnoException) => {
 server.listen(PORT, () => {
   console.log(`[standalone-server] Werewolves server listening on port ${PORT}`);
   console.log(`[standalone-server] Game namespace: /g/werewolves`);
+  if (preferStandaloneWebDist) {
+    console.log('[standalone-server] Mode: standalone-web preferred');
+  }
   console.log(`[standalone-server] Serving static files from: ${staticDir}`);
 });
 
