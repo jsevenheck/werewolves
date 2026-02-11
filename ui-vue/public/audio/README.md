@@ -1,5 +1,16 @@
 # Narrator audio files
 
+**Note:** As of the bundled audio update, built-in narrator clips are bundled with the web component (`ui-vue/src/assets/audio/`) and work out-of-the-box in all environments (standalone and embedded). This `public/audio/` folder is kept for:
+
+- Standalone mode convenience (allows customization by replacing files in public/audio)
+- Documentation reference (standard file names and descriptions)
+- Backwards compatibility
+
+For custom audio overrides, use `assetsBasePath` to point to your custom audio directory.
+The standalone wrapper and generated Game Hub wrapper both default this to `/audio`.
+
+---
+
 Place MP3 narrator clips in this folder using the exact filenames expected by the narrator. Each file is triggered by the game phase, phase transition, or night step as described below:
 
 ## Audio Variants
@@ -47,16 +58,21 @@ The narrator will randomly select one custom variant each time the clip is playe
 
 ## Custom Audio Override
 
-You can override any AI-generated audio file with your own recordings by placing them in the `custom/` subdirectory.
+**For standalone mode:** You can override any AI-generated audio file with your own recordings by placing them in the `custom/` subdirectory (the wrapper already uses `/audio` by default).
+
+**For embedded mode (Game Hub):** Pass the `assetsBasePath` prop pointing to your custom audio directory. The narrator will look for custom audio at `${assetsBasePath}/custom/` and fall back to bundled audio.
 
 **How it works:**
 
-1. The `custom/` folder already exists inside this `audio/` directory
+1. The `custom/` folder already exists inside this `audio/` directory (for standalone)
 2. Place your custom recordings with numbered suffixes (e.g., `custom/night_wolves_1.mp3`)
 3. The narrator will automatically discover and randomly select from your custom variants
-4. If no custom variants exist, it falls back to the AI-generated file in the main `audio/` folder
+4. If no custom variants exist, it falls back to bundled audio (or standard files from `assetsBasePath` if provided)
 
-**Priority:** `audio/custom/{key}_N.mp3` → `audio/{key}.mp3`
+**Priority:**
+
+- With `assetsBasePath`: `${assetsBasePath}/custom/{key}_N.mp3` → `${assetsBasePath}/{key}.mp3` → bundled audio → silent
+- Without `assetsBasePath`: bundled audio (no discovery of variants)
 
 **Examples:**
 
@@ -153,4 +169,19 @@ Game over announcement. Max length: no fixed limit.
 
 ---
 
-During development, the narrator falls back to an embedded silent clip when a file is missing.
+## Technical Details
+
+**Bundled Audio (New):**
+
+- Built-in narrator audio files are imported and bundled with the web component at build time
+- Located in `ui-vue/src/assets/audio/` (source files, automatically bundled by Vite)
+- Works in all environments without host-served static files
+- No variants supported for bundled audio (only base clips)
+
+**Custom Audio (Optional):**
+
+- Requires passing `assetsBasePath` prop to GameComponent
+- Supports variants via `custom/` subdirectory
+- Fallback chain ensures audio always plays (custom → default override → bundled → silent)
+
+During development, the narrator falls back to an embedded silent clip when a file is missing and bundled audio is unavailable.

@@ -37,7 +37,7 @@ const app = createApp({
       // Hub integration props (can be passed via URL for testing)
       sessionId,
       joinToken,
-      // Assets path
+      // Runtime custom audio overrides from /audio (with bundled fallback)
       assetsBasePath: '/audio',
     });
   },

@@ -45,7 +45,6 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   socketUrl: '',
   socketPath: '/socket.io',
-  assetsBasePath: '/audio',
   playerId: '',
   playerName: '',
   sessionId: '',
@@ -61,9 +60,12 @@ const effectiveSocketUrl = effectiveWsNamespace
   ? (props.socketUrl || injectedConfig.socketUrl || '') + effectiveWsNamespace
   : props.socketUrl || injectedConfig.socketUrl || '';
 const effectiveSocketPath = props.socketPath || injectedConfig.socketPath || '/socket.io';
-const effectiveAssetsBasePath = normalizeAssetsBasePath(
-  props.assetsBasePath || injectedConfig.assetsBasePath || '/audio'
-);
+// Only use assetsBasePath if explicitly provided (for custom audio overrides).
+// If not provided, narrator will use bundled audio instead of relying on host-served files.
+const rawAssetsBasePath = props.assetsBasePath || injectedConfig.assetsBasePath;
+const effectiveAssetsBasePath = rawAssetsBasePath
+  ? normalizeAssetsBasePath(rawAssetsBasePath)
+  : undefined;
 // Vue Boolean-casts a missing `standalone` prop to false, so the injected
 // config must be checked first (it is undefined when no provide is present).
 const effectiveStandalone = injectedConfig.standalone ?? props.standalone ?? !effectiveWsNamespace;
@@ -72,9 +74,9 @@ const effectivePlayerName = props.playerName || injectedConfig.playerName || '';
 const effectiveSessionId = props.sessionId || injectedConfig.sessionId || '';
 const effectiveJoinToken = props.joinToken || injectedConfig.joinToken || '';
 
-function normalizeAssetsBasePath(path: string) {
+function normalizeAssetsBasePath(path: string): string {
   const trimmed = path.trim();
-  if (!trimmed) return '/audio';
+  if (!trimmed) return '';
   const normalized = trimmed.replace(/\/+$/, '');
   if (
     normalized.startsWith('/') ||

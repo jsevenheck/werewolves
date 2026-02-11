@@ -16,7 +16,9 @@ export interface WerewolvesGameConfig {
   socketPath?: string;
 
   /**
-   * Base path for audio assets (default: '/audio').
+   * Optional base path for custom audio overrides.
+   * When omitted, uses bundled audio (recommended for embedded mode).
+   * When provided, narrator tries custom audio first, then falls back to bundled.
    */
   assetsBasePath?: string;
 

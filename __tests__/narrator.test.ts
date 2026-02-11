@@ -2,6 +2,7 @@ import { MockHowl } from './mocks/howler';
 
 import { computeNarrationKey, createNarrator } from '../ui-vue/src/utils/narrator';
 import type { RoomView } from '../core/src/types';
+import * as audioManifest from '../ui-vue/src/assets/audio/manifest';
 
 type RoomOverrides = Partial<RoomView>;
 
@@ -328,13 +329,22 @@ describe('narrator audio variants', () => {
   });
 
   test('uses base filename when no variants configured', async () => {
-    // Mock fetch to return 404 for all variants
-    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+    // Mock fetch to succeed for base file but fail for custom variants
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('/custom/')) {
+        return Promise.resolve({ ok: false });
+      }
+      // Base files from assetsBasePath succeed
+      return Promise.resolve({
+        ok: true,
+        headers: { get: () => 'audio/mpeg' },
+      });
+    });
 
     const narrator = createNarrator({
       initialEnabled: true,
       initialUnlocked: true,
-      basePath: '/audio',
+      assetsBasePath: '/audio',
       storage: null,
     });
     const room = buildRoom({ phase: 'lobby' });
@@ -368,7 +378,7 @@ describe('narrator audio variants', () => {
       const narrator = createNarrator({
         initialEnabled: true,
         initialUnlocked: true,
-        basePath: '/audio',
+        assetsBasePath: '/audio',
         storage: null,
       });
 
@@ -385,12 +395,22 @@ describe('narrator audio variants', () => {
   });
 
   test('caches variants separately', async () => {
-    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+    // Mock fetch to succeed for base files but fail for custom variants
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('/custom/')) {
+        return Promise.resolve({ ok: false });
+      }
+      // Base files from assetsBasePath succeed
+      return Promise.resolve({
+        ok: true,
+        headers: { get: () => 'audio/mpeg' },
+      });
+    });
 
     const narrator = createNarrator({
       initialEnabled: true,
       initialUnlocked: true,
-      basePath: '/audio',
+      assetsBasePath: '/audio',
       storage: null,
     });
 
@@ -406,6 +426,167 @@ describe('narrator audio variants', () => {
     expect(MockHowl.instances).toHaveLength(2);
     expect(MockHowl.instances[0].options.src).toBe('/audio/day.mp3');
     expect(MockHowl.instances[1].options.src).toBe('/audio/night_wolves.mp3');
+  });
+});
+
+describe('narrator bundled audio', () => {
+  beforeEach(() => {
+    MockHowl.reset();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test('uses bundled audio when no assetsBasePath provided', async () => {
+    // Mock bundled audio manifest
+    const mockBundledUrl = 'blob:http://localhost/bundled-day.mp3';
+    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledUrl);
+    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: true,
+      storage: null,
+      // No assetsBasePath - should use bundled audio
+    });
+
+    const room = buildRoom({ phase: 'day' });
+    narrator.handleRoomUpdate(null, room);
+    await flushPromises();
+
+    const [howl] = MockHowl.instances;
+    expect(howl.options.src).toBe(mockBundledUrl);
+    expect(audioManifest.getBundledAudioUrl).toHaveBeenCalledWith('day');
+  });
+
+  test('unlock uses bundled lobby audio when no assetsBasePath', async () => {
+    const mockBundledLobbyUrl = 'blob:http://localhost/bundled-lobby.mp3';
+    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledLobbyUrl);
+
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: false,
+      storage: null,
+    });
+
+    const unlockPromise = narrator.unlock();
+    const [unlockHowl] = MockHowl.instances;
+
+    // Verify it's using bundled lobby audio
+    expect(unlockHowl.options.src).toBe(mockBundledLobbyUrl);
+
+    unlockHowl.trigger('play');
+    await expect(unlockPromise).resolves.toBe(true);
+  });
+
+  test('unlock falls back to bundled when custom lobby fails', async () => {
+    const mockBundledLobbyUrl = 'blob:http://localhost/bundled-lobby.mp3';
+    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledLobbyUrl);
+
+    // Mock fetch to fail for custom audio
+    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: false,
+      assetsBasePath: '/custom-audio',
+      storage: null,
+    });
+
+    const unlockPromise = narrator.unlock();
+    await flushPromises();
+
+    // First attempt should be custom lobby
+    const [customHowl] = MockHowl.instances;
+    expect(customHowl.options.src).toBe('/custom-audio/lobby.mp3');
+
+    // Trigger error to force fallback
+    customHowl.trigger('loaderror');
+    await flushPromises();
+
+    // Should fall back to bundled lobby
+    const [, bundledHowl] = MockHowl.instances;
+    expect(bundledHowl.options.src).toBe(mockBundledLobbyUrl);
+
+    bundledHowl.trigger('play');
+    await expect(unlockPromise).resolves.toBe(true);
+  });
+
+  test('prefers custom audio from assetsBasePath over bundled', async () => {
+    const mockBundledUrl = 'blob:http://localhost/bundled-day.mp3';
+    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledUrl);
+
+    // Mock fetch to return success for custom audio
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('/custom-audio/day.mp3')) {
+        return Promise.resolve({
+          ok: true,
+          headers: { get: () => 'audio/mpeg' },
+        });
+      }
+      return Promise.resolve({ ok: false });
+    });
+
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: true,
+      assetsBasePath: '/custom-audio',
+      storage: null,
+    });
+
+    const room = buildRoom({ phase: 'day' });
+    narrator.handleRoomUpdate(null, room);
+    await flushPromises();
+
+    const [howl] = MockHowl.instances;
+    // Should use custom audio from assetsBasePath, not bundled
+    expect(howl.options.src).toBe('/custom-audio/day.mp3');
+    expect(audioManifest.getBundledAudioUrl).not.toHaveBeenCalled();
+  });
+
+  test('falls back to bundled audio when assetsBasePath files are unavailable', async () => {
+    const mockBundledUrl = 'blob:http://localhost/bundled-night.mp3';
+    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledUrl);
+
+    // Mock fetch to fail for all custom audio (404 or network error)
+    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: true,
+      assetsBasePath: '/custom-audio',
+      storage: null,
+    });
+
+    const room = buildRoom({ phase: 'night' });
+    narrator.handleRoomUpdate(null, room);
+    await flushPromises();
+
+    const [howl] = MockHowl.instances;
+    // Should fall back to bundled audio when assetsBasePath files don't exist
+    expect(howl.options.src).toBe(mockBundledUrl);
+    expect(audioManifest.getBundledAudioUrl).toHaveBeenCalledWith('night');
+  });
+
+  test('variants are not discovered when no assetsBasePath', async () => {
+    const mockBundledUrl = 'blob:http://localhost/bundled-day.mp3';
+    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledUrl);
+    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: true,
+      storage: null,
+    });
+
+    const room = buildRoom({ phase: 'day' });
+    narrator.handleRoomUpdate(null, room);
+    await flushPromises();
+
+    // Should not attempt variant discovery (no HEAD requests for variants)
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(audioManifest.getBundledAudioUrl).toHaveBeenCalledWith('day');
   });
 });
 
@@ -436,7 +617,7 @@ describe('narrator custom audio override', () => {
     const narrator = createNarrator({
       initialEnabled: true,
       initialUnlocked: true,
-      basePath: '/audio',
+      assetsBasePath: '/audio',
       storage: null,
     });
 
@@ -449,18 +630,22 @@ describe('narrator custom audio override', () => {
   });
 
   test('falls back to default audio when custom not available', async () => {
-    // Mock fetch to return 404 for custom, would succeed for default
+    // Mock fetch to return 404 for custom, succeed for default
     global.fetch = jest.fn().mockImplementation((url: string) => {
       if (url.includes('/custom/')) {
         return Promise.resolve({ ok: false });
       }
-      return Promise.resolve({ ok: false });
+      // Default files from assetsBasePath succeed
+      return Promise.resolve({
+        ok: true,
+        headers: { get: () => 'audio/mpeg' },
+      });
     });
 
     const narrator = createNarrator({
       initialEnabled: true,
       initialUnlocked: true,
-      basePath: '/audio',
+      assetsBasePath: '/audio',
       storage: null,
     });
 
@@ -500,7 +685,7 @@ describe('narrator custom audio override', () => {
       const narrator = createNarrator({
         initialEnabled: true,
         initialUnlocked: true,
-        basePath: '/audio',
+        assetsBasePath: '/audio',
         storage: null,
       });
 
@@ -521,19 +706,23 @@ describe('narrator custom audio override', () => {
   });
 
   test('uses standard file when no custom variants exist', async () => {
-    // Mock: no custom variants exist
+    // Mock: no custom variants exist, but default files exist
     global.fetch = jest.fn().mockImplementation((url: string) => {
       // All custom variant checks fail
-      if (url.includes('/custom/') && url.includes('night_')) {
+      if (url.includes('/custom/')) {
         return Promise.resolve({ ok: false });
       }
-      return Promise.resolve({ ok: false });
+      // Default files from assetsBasePath succeed
+      return Promise.resolve({
+        ok: true,
+        headers: { get: () => 'audio/mpeg' },
+      });
     });
 
     const narrator = createNarrator({
       initialEnabled: true,
       initialUnlocked: true,
-      basePath: '/audio',
+      assetsBasePath: '/audio',
       storage: null,
     });
 

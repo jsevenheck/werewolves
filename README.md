@@ -87,7 +87,8 @@ This compiles the standalone server to `dist/standalone-server/` and builds the 
 
 - The client build output goes to `dist/client/` (from Vite `outDir`).
 - The server serves built assets via `express.static` pointing at the built client directory.
-- As a result, `/audio/*` is available in production once the client is built and audio files exist in the build output.
+- Built-in narrator clips are bundled into `dist/client/assets/*.mp3` (hashed asset URLs).
+- Optional runtime custom overrides can be served from `/audio` (for example `public/audio/custom/*.mp3`).
 
 ## Tests
 
@@ -130,12 +131,20 @@ pnpm run test:e2e
 
 Mobile browsers require a user gesture before audio can play. If a player enables the narrator and sees "Tap to enable audio," they must tap once to unlock playback (browser autoplay policy requirement).
 
-- Canonical location: `ui-vue/public/audio/`
-- Runtime URL expectation: `/audio/<name>.mp3`
-- Vite serves files in `ui-vue/public/` at `/` during development and copies them into the build output as-is (so `ui-vue/public/audio/*.mp3` becomes `dist/client/audio/*.mp3`).
-- In standalone mode the server also mounts `ui-vue/public/audio/` at `/audio`, so the standalone web build does not need its own audio copies.
-- MP3 files are stored in git (AI-generated). Custom recordings can be placed in `ui-vue/public/audio/custom/` (not tracked by git) and will override the defaults.
-- See `ui-vue/public/audio/README.md` for per-file meanings, audio variants, and custom audio override instructions.
+**Bundled Audio (Default):**
+
+- Built-in narrator audio is bundled with the web component at build time (stored in `ui-vue/src/assets/audio/`)
+- Vite automatically imports and bundles the MP3 files as assets
+- Works out-of-the-box in all environments (standalone and embedded) without requiring host-served static files
+- No configuration needed - audio just works
+
+**Custom Audio (Optional):**
+
+- To use custom narrator audio, pass the `assetsBasePath` prop to GameComponent
+- Custom audio files should be placed in a `custom/` subdirectory (e.g., `/audio/custom/day_1.mp3`)
+- Fallback chain: custom audio (`${assetsBasePath}/custom/*`) → default override (`${assetsBasePath}/*`) → bundled audio → silent
+- Supports audio variants for variety (e.g., `custom/day_1.mp3`, `custom/day_2.mp3`)
+- See `ui-vue/public/audio/README.md` for detailed instructions, file naming conventions, and per-file descriptions
 
 ## Docker
 
@@ -175,7 +184,8 @@ Troubleshooting:
 - Configuration options (direct `GameComponent` props or `app.provide` config):
   - `socketUrl` (default: same origin)
   - `socketPath` (default: `/socket.io`)
-  - `assetsBasePath` (default: `/audio`)
+  - `assetsBasePath` (optional; when omitted, uses bundled audio)
+- The standalone wrapper (`standalone-web/src/main.ts`) currently sets `assetsBasePath: '/audio'` by default for runtime custom overrides, with bundled fallback when files are missing.
 - `standalone` (default: `true`, controls Landing vs auto-join flow and standalone styling)
 - Game Hub passes these props to the Vue component after `party:gameStarted`:
   - `gameId` (used to choose `/g/<gameId>` namespace)

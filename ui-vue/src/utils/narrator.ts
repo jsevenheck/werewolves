@@ -1,10 +1,19 @@
 import { Howl } from 'howler';
 import type { RoomView } from '@shared/types';
+import { getBundledAudioUrl } from '../assets/audio/manifest';
 
 type NarrationKey = string | null;
 
 type NarratorOptions = {
-  basePath?: string;
+  /**
+   * Optional base path for custom audio overrides.
+   * If provided, narrator will first try to load custom audio from:
+   * - ${assetsBasePath}/custom/${key}.mp3 (with variants)
+   * - ${assetsBasePath}/${key}.mp3 (fallback)
+   *
+   * If not provided or if custom audio fails to load, narrator will use bundled audio.
+   */
+  assetsBasePath?: string;
   storage?: Storage | null;
   initialEnabled?: boolean;
   initialUnlocked?: boolean;
@@ -42,7 +51,7 @@ class Narrator {
   private disableToken = 0;
   private lastPlayAttemptAt = 0;
   private lastUserMessageAt = 0;
-  private readonly basePath: string;
+  private readonly assetsBasePath: string | undefined;
   private readonly storage: Storage | null;
   private readonly playClip: (key: string) => void;
   private readonly notify: (message: string) => void;
@@ -71,7 +80,7 @@ class Narrator {
   private readonly discoveredVariants = new Map<string, string[]>();
 
   constructor(options: NarratorOptions = {}) {
-    this.basePath = options.basePath ?? '/audio';
+    this.assetsBasePath = options.assetsBasePath;
     this.storage = options.storage ?? (typeof localStorage === 'undefined' ? null : localStorage);
     this.enabled = options.initialEnabled ?? false;
     this.unlocked = options.initialUnlocked ?? false;
@@ -126,7 +135,8 @@ class Narrator {
   async unlock(): Promise<boolean> {
     if (this.unlocked) return true;
     return new Promise((resolve) => {
-      let attemptedFallback = false;
+      let attemptedBundled = false;
+      let attemptedSilent = false;
       let unlockHowl: Howl;
       const createUnlockHowl = (src: string) =>
         new Howl({
@@ -135,31 +145,63 @@ class Narrator {
           preload: 'metadata',
           volume: 0,
         });
-      unlockHowl = createUnlockHowl(`${this.basePath}/lobby.mp3`);
-      const tryFallback = (playAfterSwap: boolean) => {
-        if (!FALLBACK_AUDIO_URL) {
-          cleanup(unlockHowl);
-          unlockHowl.unload();
-          resolve(false);
-          return;
+
+      // Fallback chain: custom lobby → bundled lobby → silent
+      const getInitialSrc = () => {
+        if (this.assetsBasePath) {
+          return `${this.assetsBasePath}/lobby.mp3`;
         }
-        if (attemptedFallback) return;
-        attemptedFallback = true;
-        const fallbackHowl = createUnlockHowl(FALLBACK_AUDIO_URL);
-        unlockHowl.unload();
-        unlockHowl = fallbackHowl;
-        attachListeners(unlockHowl);
-        if (playAfterSwap) {
-          void this.safePlay(unlockHowl, null);
-          return;
-        }
-        unlockHowl.load();
+        return getBundledAudioUrl('lobby') || FALLBACK_AUDIO_URL;
       };
+
+      unlockHowl = createUnlockHowl(getInitialSrc());
+
+      const tryNextFallback = (playAfterSwap: boolean) => {
+        // If we haven't tried bundled yet and it's available, try that
+        if (!attemptedBundled && this.assetsBasePath) {
+          const bundledUrl = getBundledAudioUrl('lobby');
+          if (bundledUrl) {
+            attemptedBundled = true;
+            const bundledHowl = createUnlockHowl(bundledUrl);
+            unlockHowl.unload();
+            unlockHowl = bundledHowl;
+            attachListeners(unlockHowl);
+            if (playAfterSwap) {
+              void this.safePlay(unlockHowl, null);
+              return;
+            }
+            unlockHowl.load();
+            return;
+          }
+        }
+
+        // Last resort: silent fallback
+        if (!attemptedSilent && FALLBACK_AUDIO_URL) {
+          attemptedSilent = true;
+          const silentHowl = createUnlockHowl(FALLBACK_AUDIO_URL);
+          unlockHowl.unload();
+          unlockHowl = silentHowl;
+          attachListeners(unlockHowl);
+          if (playAfterSwap) {
+            void this.safePlay(unlockHowl, null);
+            return;
+          }
+          silentHowl.load();
+          return;
+        }
+
+        // All fallbacks exhausted
+        cleanup(unlockHowl);
+        unlockHowl.unload();
+        resolve(false);
+      };
+
       const cleanup = (howl: Howl) => {
         howl.off('play');
         howl.off('playerror');
         howl.off('loaderror');
       };
+
       const attachListeners = (howl: Howl) => {
         howl.once('play', () => {
           this.unlocked = true;
@@ -170,23 +212,24 @@ class Narrator {
         });
         howl.once('loaderror', () => {
           cleanup(howl);
-          if (attemptedFallback) {
+          if (attemptedSilent) {
             howl.unload();
             resolve(false);
             return;
           }
-          tryFallback(true);
+          tryNextFallback(true);
         });
         howl.once('playerror', () => {
           cleanup(howl);
-          if (!attemptedFallback) {
-            tryFallback(true);
+          if (attemptedSilent) {
+            howl.unload();
+            resolve(false);
             return;
           }
-          howl.unload();
-          resolve(false);
+          tryNextFallback(true);
         });
       };
+
       attachListeners(unlockHowl);
       void this.safePlay(unlockHowl, null);
     });
@@ -224,31 +267,53 @@ class Narrator {
     }
   }
 
-  private async resolveAudioPath(audioKey: string): Promise<string> {
-    const customPath = `${this.basePath}/custom/${audioKey}.mp3`;
-
-    try {
-      const response = await fetch(customPath, { method: 'HEAD' });
-      const contentType = response.headers.get('content-type') || '';
-      // Only accept if response is OK AND content-type indicates audio (not HTML fallback)
-      if (response.ok && contentType.includes('audio')) {
-        return customPath;
+  private async resolveAudioPath(audioKey: string): Promise<string | undefined> {
+    // If assetsBasePath is provided, try custom audio overrides first
+    if (this.assetsBasePath) {
+      // 1. Try custom path with variant support
+      const customPath = `${this.assetsBasePath}/custom/${audioKey}.mp3`;
+      try {
+        const response = await fetch(customPath, { method: 'HEAD' });
+        const contentType = response.headers.get('content-type') || '';
+        // Only accept if response is OK AND content-type indicates audio (not HTML fallback)
+        if (response.ok && contentType.includes('audio')) {
+          return customPath;
+        }
+      } catch {
+        // Custom file doesn't exist, continue to next fallback
       }
-    } catch {
-      // Custom file doesn't exist, fall back to default
+
+      // 2. Try default file path from assetsBasePath
+      const defaultPath = `${this.assetsBasePath}/${audioKey}.mp3`;
+      try {
+        const response = await fetch(defaultPath, { method: 'HEAD' });
+        const contentType = response.headers.get('content-type') || '';
+        if (response.ok && contentType.includes('audio')) {
+          return defaultPath;
+        }
+      } catch {
+        // Default file from assetsBasePath doesn't exist, fall through to bundled
+      }
     }
 
-    return `${this.basePath}/${audioKey}.mp3`;
+    // 3. Use bundled audio as fallback (works in all contexts without host-served files)
+    return getBundledAudioUrl(audioKey);
   }
 
   private async discoverVariants(key: string, maxVariants = 10): Promise<string[]> {
     const variants: string[] = [];
 
+    // Only discover variants if assetsBasePath is provided (for custom audio overrides)
+    // Bundled audio does not support variants - only the base key
+    if (!this.assetsBasePath) {
+      return variants;
+    }
+
     for (let i = 1; i <= maxVariants; i++) {
       const variantKey = `${key}_${i}`;
 
       // Check custom folder only - standard files are used as fallback when no custom variants exist
-      const customUrl = `${this.basePath}/custom/${variantKey}.mp3`;
+      const customUrl = `${this.assetsBasePath}/custom/${variantKey}.mp3`;
       try {
         const response = await fetch(customUrl, { method: 'HEAD' });
         const contentType = response.headers.get('content-type') || '';
@@ -336,7 +401,8 @@ class Narrator {
           preload: 'metadata',
           volume: DEFAULT_VOLUME,
         });
-      let activeHowl = createHowl(audioPath);
+      // Use resolved audio path, or fallback to silent audio if nothing available
+      let activeHowl = createHowl(audioPath || FALLBACK_AUDIO_URL);
 
       const cleanup = (howl: Howl) => {
         howl.off('load');

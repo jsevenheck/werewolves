@@ -22,7 +22,8 @@
     "e2e/**/*.ts",
     "jest.setup.ts",
     "vite.config.ts",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    "global.d.ts"
   ],
   "exclude": ["node_modules", "dist", "build", "coverage"]
 }

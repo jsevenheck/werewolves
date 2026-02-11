@@ -8,11 +8,11 @@ import type { RoomView } from '@shared/types';
 
 const NARRATOR_UNLOCK_COOLDOWN_MS = 1500;
 
-export function useNarrator(basePath = '/audio') {
+export function useNarrator(assetsBasePath?: string) {
   const store = useGameStore();
   const { room, roomCode } = storeToRefs(store);
 
-  const narrator: Narrator = createNarrator({ notify, basePath });
+  const narrator: Narrator = createNarrator({ notify, assetsBasePath });
   const storageKey = 'werewolves_narrator_enabled';
 
   const enabled = ref(false);
