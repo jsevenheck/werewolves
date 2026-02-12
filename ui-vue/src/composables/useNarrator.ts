@@ -6,7 +6,7 @@ import type { Narrator } from '../utils/narrator';
 import { notify } from '../utils/helpers';
 import type { RoomView } from '@shared/types';
 
-const NARRATOR_UNLOCK_COOLDOWN_MS = 1500;
+const NARRATOR_UNLOCK_COOLDOWN_MS = 250;
 
 export function useNarrator(assetsBasePath?: string) {
   const store = useGameStore();
@@ -71,7 +71,6 @@ export function useNarrator(assetsBasePath?: string) {
       if (currentToken !== unlockToken) return;
       if (!result) {
         notify('Tap again to enable audio.');
-        narrator.setEnabled(false);
         enabled.value = narrator.isEnabled();
         unlocked.value = narrator.isUnlocked();
         return;

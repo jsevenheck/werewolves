@@ -9,5 +9,14 @@ declare module 'howler' {
     load(): this;
   }
 
-  export { Howl };
+  const Howler: {
+    ctx?: {
+      state?: string;
+      resume?: () => Promise<void>;
+    };
+    mute?: (muted: boolean) => void;
+    volume?: (value: number) => void;
+  };
+
+  export { Howl, Howler };
 }

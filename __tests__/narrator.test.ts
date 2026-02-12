@@ -1,4 +1,4 @@
-import { MockHowl } from './mocks/howler';
+import { MockHowl, MockHowler } from './mocks/howler';
 
 import { computeNarrationKey, createNarrator } from '../ui-vue/src/utils/narrator';
 import type { RoomView } from '../core/src/types';
@@ -244,6 +244,25 @@ describe('narrator playback', () => {
 
     expect(playClip).toHaveBeenCalledTimes(2);
   });
+
+  test('resumes audio context before playback', async () => {
+    MockHowler.ctx.state = 'suspended';
+    jest
+      .spyOn(audioManifest, 'getBundledAudioUrl')
+      .mockReturnValue('blob:http://localhost/day.mp3');
+    const narrator = createNarrator({ initialEnabled: true, initialUnlocked: true, storage: null });
+    const room = buildRoom({ phase: 'day' });
+
+    narrator.handleRoomUpdate(null, room);
+    await flushPromises();
+    const [howl] = MockHowl.instances;
+    howl.trigger('load');
+    await flushPromises();
+
+    expect(MockHowler.ctx.resume).toHaveBeenCalledTimes(1);
+    expect(MockHowler.mute).toHaveBeenCalledWith(false);
+    expect(MockHowler.volume).toHaveBeenCalledWith(1);
+  });
 });
 
 describe('narrator persistence', () => {
@@ -290,31 +309,20 @@ describe('narrator unlock', () => {
     MockHowl.reset();
   });
 
-  test('unlock resolves true on play', async () => {
+  test('unlock resolves true when audio context is already running', async () => {
+    MockHowler.ctx.state = 'running';
     const narrator = createNarrator({ initialEnabled: true, initialUnlocked: false });
-    const unlockPromise = narrator.unlock();
-    const [unlockHowl] = MockHowl.instances;
-
-    unlockHowl.trigger('play');
-    await expect(unlockPromise).resolves.toBe(true);
-    expect(unlockHowl.stop).toHaveBeenCalled();
-    expect(unlockHowl.off).toHaveBeenCalledWith('play');
-    expect(unlockHowl.off).toHaveBeenCalledWith('playerror');
-    expect(unlockHowl.off).toHaveBeenCalledWith('loaderror');
+    await expect(narrator.unlock()).resolves.toBe(true);
   });
 
-  test('unlock resolves false on playerror', async () => {
+  test('unlock resumes suspended audio context', async () => {
+    MockHowler.ctx.state = 'suspended';
+    MockHowler.ctx.resume.mockImplementation(async () => {
+      MockHowler.ctx.state = 'running';
+    });
     const narrator = createNarrator({ initialEnabled: true, initialUnlocked: false });
-    const unlockPromise = narrator.unlock();
-    const [initialHowl] = MockHowl.instances;
-
-    initialHowl.trigger('playerror');
-    const fallbackHowl = MockHowl.instances[1];
-    fallbackHowl.trigger('playerror');
-    await expect(unlockPromise).resolves.toBe(false);
-    expect(initialHowl.off).toHaveBeenCalledWith('play');
-    expect(initialHowl.off).toHaveBeenCalledWith('playerror');
-    expect(initialHowl.off).toHaveBeenCalledWith('loaderror');
+    await expect(narrator.unlock()).resolves.toBe(true);
+    expect(MockHowler.ctx.resume).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -460,32 +468,20 @@ describe('narrator bundled audio', () => {
     expect(audioManifest.getBundledAudioUrl).toHaveBeenCalledWith('day');
   });
 
-  test('unlock uses bundled lobby audio when no assetsBasePath', async () => {
-    const mockBundledLobbyUrl = 'blob:http://localhost/bundled-lobby.mp3';
-    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledLobbyUrl);
-
+  test('unlock resolves immediately when context is already running', async () => {
+    MockHowler.ctx.state = 'running';
     const narrator = createNarrator({
       initialEnabled: true,
       initialUnlocked: false,
       storage: null,
     });
-
-    const unlockPromise = narrator.unlock();
-    const [unlockHowl] = MockHowl.instances;
-
-    // Verify it's using bundled lobby audio
-    expect(unlockHowl.options.src).toBe(mockBundledLobbyUrl);
-
-    unlockHowl.trigger('play');
-    await expect(unlockPromise).resolves.toBe(true);
+    await expect(narrator.unlock()).resolves.toBe(true);
   });
 
-  test('unlock falls back to bundled when custom lobby fails', async () => {
+  test('unlock falls back to bundled lobby when silent clip fails', async () => {
+    MockHowler.ctx.state = 'suspended';
     const mockBundledLobbyUrl = 'blob:http://localhost/bundled-lobby.mp3';
     jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledLobbyUrl);
-
-    // Mock fetch to fail for custom audio
-    global.fetch = jest.fn().mockResolvedValue({ ok: false });
 
     const narrator = createNarrator({
       initialEnabled: true,
@@ -497,15 +493,14 @@ describe('narrator bundled audio', () => {
     const unlockPromise = narrator.unlock();
     await flushPromises();
 
-    // First attempt should be custom lobby
-    const [customHowl] = MockHowl.instances;
-    expect(customHowl.options.src).toBe('/custom-audio/lobby.mp3');
+    const [silentHowl] = MockHowl.instances;
+    expect(String(silentHowl.options.src)).toBe(
+      'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA='
+    );
 
-    // Trigger error to force fallback
-    customHowl.trigger('loaderror');
+    silentHowl.trigger('loaderror');
     await flushPromises();
 
-    // Should fall back to bundled lobby
     const [, bundledHowl] = MockHowl.instances;
     expect(bundledHowl.options.src).toBe(mockBundledLobbyUrl);
 

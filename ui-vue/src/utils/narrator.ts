@@ -1,4 +1,4 @@
-import { Howl } from 'howler';
+import { Howl, Howler } from 'howler';
 import type { RoomView } from '@shared/types';
 import { getBundledAudioUrl } from '../assets/audio/manifest';
 
@@ -134,31 +134,53 @@ class Narrator {
 
   async unlock(): Promise<boolean> {
     if (this.unlocked) return true;
+
+    const globalHowler = Howler as
+      | {
+          ctx?: { state?: string; resume?: () => Promise<void> };
+          mute?: (muted: boolean) => void;
+          volume?: (volume: number) => void;
+        }
+      | undefined;
+
+    try {
+      globalHowler?.mute?.(false);
+      globalHowler?.volume?.(DEFAULT_VOLUME);
+      const audioContext = globalHowler?.ctx;
+      if (
+        audioContext?.resume &&
+        (audioContext.state === 'suspended' || audioContext.state === 'interrupted')
+      ) {
+        await audioContext.resume();
+      }
+      if (audioContext?.state === 'running') {
+        this.unlocked = true;
+        return true;
+      }
+    } catch {
+      // Fall through to probe playback.
+    }
+
     return new Promise((resolve) => {
       let attemptedBundled = false;
-      let attemptedSilent = false;
       let unlockHowl: Howl;
       const createUnlockHowl = (src: string) =>
         new Howl({
           src,
-          html5: true,
-          preload: 'metadata',
+          preload: true,
           volume: 0,
         });
 
-      // Fallback chain: custom lobby → bundled lobby → silent
+      // Fallback chain: silent clip -> bundled lobby.
+      // Silent-first keeps unlock fully gesture-bound and avoids network timing issues.
       const getInitialSrc = () => {
-        if (this.assetsBasePath) {
-          return `${this.assetsBasePath}/lobby.mp3`;
-        }
-        return getBundledAudioUrl('lobby') || FALLBACK_AUDIO_URL;
+        return FALLBACK_AUDIO_URL;
       };
 
       unlockHowl = createUnlockHowl(getInitialSrc());
 
       const tryNextFallback = (playAfterSwap: boolean) => {
-        // If we haven't tried bundled yet and it's available, try that
-        if (!attemptedBundled && this.assetsBasePath) {
+        if (!attemptedBundled) {
           const bundledUrl = getBundledAudioUrl('lobby');
           if (bundledUrl) {
             attemptedBundled = true;
@@ -167,7 +189,7 @@ class Narrator {
             unlockHowl = bundledHowl;
             attachListeners(unlockHowl);
             if (playAfterSwap) {
-              void this.safePlay(unlockHowl, null);
+              this.playUnlockProbe(unlockHowl);
               return;
             }
             unlockHowl.load();
@@ -175,22 +197,6 @@ class Narrator {
           }
         }
 
-        // Last resort: silent fallback
-        if (!attemptedSilent && FALLBACK_AUDIO_URL) {
-          attemptedSilent = true;
-          const silentHowl = createUnlockHowl(FALLBACK_AUDIO_URL);
-          unlockHowl.unload();
-          unlockHowl = silentHowl;
-          attachListeners(unlockHowl);
-          if (playAfterSwap) {
-            void this.safePlay(unlockHowl, null);
-            return;
-          }
-          silentHowl.load();
-          return;
-        }
-
-        // All fallbacks exhausted
         cleanup(unlockHowl);
         unlockHowl.unload();
         resolve(false);
@@ -212,27 +218,29 @@ class Narrator {
         });
         howl.once('loaderror', () => {
           cleanup(howl);
-          if (attemptedSilent) {
-            howl.unload();
-            resolve(false);
-            return;
-          }
           tryNextFallback(true);
         });
         howl.once('playerror', () => {
           cleanup(howl);
-          if (attemptedSilent) {
-            howl.unload();
-            resolve(false);
-            return;
-          }
           tryNextFallback(true);
         });
       };
 
       attachListeners(unlockHowl);
-      void this.safePlay(unlockHowl, null);
+      this.playUnlockProbe(unlockHowl);
     });
+  }
+
+  private playUnlockProbe(howl: Howl) {
+    try {
+      const result = howl.play();
+      const maybePromise = result as unknown;
+      if (maybePromise && typeof (maybePromise as Promise<unknown>).catch === 'function') {
+        void (maybePromise as Promise<unknown>).catch(() => {});
+      }
+    } catch {
+      // playerror listener handles failures.
+    }
   }
 
   handleRoomUpdate(_prevRoom: RoomView | null, nextRoom: RoomView) {
@@ -380,6 +388,37 @@ class Narrator {
     await this.safePlay(howl, key);
   }
 
+  private async ensureAudioReady() {
+    const globalHowler = Howler as
+      | {
+          ctx?: { state?: string; resume?: () => Promise<void> };
+          mute?: (muted: boolean) => void;
+          volume?: (volume: number) => void;
+        }
+      | undefined;
+
+    try {
+      const audioContext = globalHowler?.ctx;
+      if (audioContext && audioContext.state !== 'running' && audioContext.resume) {
+        await audioContext.resume();
+      }
+    } catch {
+      // Ignore context resume failures and fall through to normal playback handling.
+    }
+
+    try {
+      globalHowler?.mute?.(false);
+    } catch {
+      // Ignore global mute failures; playback errors are handled downstream.
+    }
+
+    try {
+      globalHowler?.volume?.(DEFAULT_VOLUME);
+    } catch {
+      // Ignore global volume failures; per-clip volume is still applied.
+    }
+  }
+
   private async getHowl(key: string) {
     const audioKey = await this.selectVariant(key);
     const existing = this.howls.get(audioKey);
@@ -397,8 +436,7 @@ class Narrator {
       const createHowl = (src: string) =>
         new Howl({
           src,
-          html5: true,
-          preload: 'metadata',
+          preload: true,
           volume: DEFAULT_VOLUME,
         });
       // Use resolved audio path, or fallback to silent audio if nothing available
@@ -477,6 +515,7 @@ class Narrator {
 
   private async safePlay(howl: Howl, key: NarrationKey) {
     try {
+      await this.ensureAudioReady();
       const result = howl.play();
       const maybePromise = result as unknown;
       if (maybePromise && typeof (maybePromise as Promise<unknown>).catch === 'function') {
@@ -498,10 +537,7 @@ class Narrator {
       }
     }
     this.unlocked = false;
-    if (this.enabled) {
-      this.setEnabled(false);
-    }
-    this.informUser('Audio is blocked. Tap to enable narrator.');
+    this.informUser('Audio is blocked. Tap again to enable audio.');
   }
 
   private informUser(message: string) {

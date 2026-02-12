@@ -37,8 +37,8 @@ const app = createApp({
       // Hub integration props (can be passed via URL for testing)
       sessionId,
       joinToken,
-      // Runtime custom audio overrides from /audio (with bundled fallback)
-      assetsBasePath: '/audio',
+      // Use bundled narrator audio by default.
+      // For runtime custom overrides, pass `assetsBasePath: '/audio'`.
     });
   },
 });

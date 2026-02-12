@@ -33,4 +33,21 @@ class MockHowl {
   }
 }
 
-export { MockHowl };
+const MockHowler = {
+  ctx: {
+    state: 'running',
+    resume: jest.fn(async () => {}),
+  },
+  mute: jest.fn(),
+  volume: jest.fn(),
+};
+
+function resetMockHowler() {
+  MockHowler.ctx.state = 'running';
+  MockHowler.ctx.resume.mockReset();
+  MockHowler.ctx.resume.mockImplementation(async () => {});
+  MockHowler.mute.mockReset();
+  MockHowler.volume.mockReset();
+}
+
+export { MockHowl, MockHowler, resetMockHowler };
