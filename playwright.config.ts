@@ -9,7 +9,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: 'tsx standalone-server/src/index.ts',
+      command: 'pnpm exec tsx standalone-server/src/index.ts',
       port: 3001,
       reuseExistingServer: !process.env.CI,
       env: {
@@ -20,8 +20,6 @@ export default defineConfig({
       command: 'pnpm -C ui-vue dev',
       port: 5173,
       reuseExistingServer: !process.env.CI,
-      stdout: 'pipe',
-      stderr: 'pipe',
       env: {
         E2E_TESTS: '1',
       },

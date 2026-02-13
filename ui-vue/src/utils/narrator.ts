@@ -408,9 +408,9 @@ class Narrator {
           preload: 'metadata',
           volume: DEFAULT_VOLUME,
           onplay: () => console.log('[Werewolves Audio Debug] Playing:', src),
-          onloaderror: (_id, err) =>
+          onloaderror: (_id: number, err: unknown) =>
             console.error('[Werewolves Audio Debug] Load Error:', src, err),
-          onplayerror: (_id, err) =>
+          onplayerror: (_id: number, err: unknown) =>
             console.error('[Werewolves Audio Debug] Play Error:', src, err),
         });
       // Use resolved audio path, or fallback to silent audio if nothing available

@@ -70,7 +70,7 @@ const effectiveAssetsBasePath = rawAssetsBasePath
 console.log('[Werewolves Audio Debug] App Init', {
   propsAssetsBasePath: props.assetsBasePath,
   injectedAssetsBasePath: injectedConfig.assetsBasePath,
-  effectiveAssetsBasePath
+  effectiveAssetsBasePath,
 });
 
 // Vue Boolean-casts a missing `standalone` prop to false, so the injected
