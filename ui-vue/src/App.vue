@@ -66,6 +66,13 @@ const rawAssetsBasePath = props.assetsBasePath || injectedConfig.assetsBasePath;
 const effectiveAssetsBasePath = rawAssetsBasePath
   ? normalizeAssetsBasePath(rawAssetsBasePath)
   : undefined;
+
+console.log('[Werewolves Audio Debug] App Init', {
+  propsAssetsBasePath: props.assetsBasePath,
+  injectedAssetsBasePath: injectedConfig.assetsBasePath,
+  effectiveAssetsBasePath
+});
+
 // Vue Boolean-casts a missing `standalone` prop to false, so the injected
 // config must be checked first (it is undefined when no provide is present).
 const effectiveStandalone = injectedConfig.standalone ?? props.standalone ?? !effectiveWsNamespace;
@@ -223,6 +230,7 @@ function attemptResume(saved: StoredSession): Promise<boolean> {
 // keyed by sessionId.  Falls back to attemptResume on reconnects.
 function hubAutoJoin(): Promise<boolean> {
   return new Promise((resolve) => {
+    startHubJoinTimeout();
     socket.emit(
       'autoJoinRoom',
       {
@@ -357,8 +365,6 @@ onMounted(() => {
   bindGestureUnlock();
 
   if (!effectiveStandalone && effectiveSessionId) {
-    startHubJoinTimeout();
-
     // Hub mode: auto-join on first connect, resume on reconnect
     if (socket.connected) {
       void runHubConnectFlow();

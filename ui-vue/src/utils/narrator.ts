@@ -268,6 +268,10 @@ class Narrator {
   }
 
   private async resolveAudioPath(audioKey: string): Promise<string | undefined> {
+    console.log('[Werewolves Audio Debug] resolveAudioPath', {
+      audioKey,
+      assetsBasePath: this.assetsBasePath,
+    });
     // If assetsBasePath is provided, try custom audio overrides first
     if (this.assetsBasePath) {
       // 1. Try custom path with variant support
@@ -297,7 +301,9 @@ class Narrator {
     }
 
     // 3. Use bundled audio as fallback (works in all contexts without host-served files)
-    return getBundledAudioUrl(audioKey);
+    const bundled = getBundledAudioUrl(audioKey);
+    console.log('[Werewolves Audio Debug] Bundled fallback:', { audioKey, bundled });
+    return bundled;
   }
 
   private async discoverVariants(key: string, maxVariants = 10): Promise<string[]> {
@@ -381,6 +387,7 @@ class Narrator {
   }
 
   private async getHowl(key: string) {
+    console.log('[Werewolves Audio Debug] getHowl', key);
     const audioKey = await this.selectVariant(key);
     const existing = this.howls.get(audioKey);
     if (existing) return existing;
@@ -400,6 +407,11 @@ class Narrator {
           html5: true,
           preload: 'metadata',
           volume: DEFAULT_VOLUME,
+          onplay: () => console.log('[Werewolves Audio Debug] Playing:', src),
+          onloaderror: (_id, err) =>
+            console.error('[Werewolves Audio Debug] Load Error:', src, err),
+          onplayerror: (_id, err) =>
+            console.error('[Werewolves Audio Debug] Play Error:', src, err),
         });
       // Use resolved audio path, or fallback to silent audio if nothing available
       let activeHowl = createHowl(audioPath || FALLBACK_AUDIO_URL);
