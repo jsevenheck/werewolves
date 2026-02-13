@@ -341,7 +341,7 @@ function createVueWrapper() {
       :ws-namespace="props.wsNamespace"
       :socket-url="props.socketUrl || props.apiBaseUrl || ''"
       :api-base-url="props.apiBaseUrl || ''"
-      :assets-base-path="props.assetsBasePath || '/audio'"
+      :assets-base-path="props.assetsBasePath"
     />
   </div>
 </template>
@@ -365,9 +365,9 @@ interface Props {
 const props = defineProps<Props>();
 const playerId = localStorage.getItem('game-hub:player-id') ?? '';
 
-// assetsBasePath defaults to '/audio' for runtime custom audio overrides.
-// Fallback chain is: /audio/custom/* -> /audio/* -> bundled audio -> silent.
-// If '/audio' files are missing, bundled audio still works automatically.
+// assetsBasePath is optional.
+// Fallback chain is: assetsBasePath/custom/* -> assetsBasePath/* -> bundled audio -> silent.
+// If not provided, it defaults to bundled audio automatically.
 </script>
 
 <style scoped>
@@ -454,12 +454,12 @@ werewolves/
 **Built-in audio is now bundled with the web component** - no host setup required!
 
 - The narrator feature uses audio files bundled directly into the web component
-- Wrapper defaults \`assetsBasePath\` to \`/audio\` so host-provided custom audio can be dropped in at runtime
+- Wrapper does NOT default \`assetsBasePath\` to \`/audio\`, preventing conflicts
 - Works in production builds without any host-side audio file copying
-- If \`/audio\` does not exist or files are missing, narrator falls back to bundled audio automatically
+- Narrator falls back to bundled audio automatically
 
 To use custom narrator audio (optional):
-1. Host your custom audio files at \`/audio\` (or pass a custom \`assetsBasePath\`)
+1. Host your custom audio files and pass the path via \`assetsBasePath\` prop
 2. Follow the structure: \`<assetsBasePath>/custom/<clip>_1.mp3\`, etc.
 3. Optional default overrides can be added as \`<assetsBasePath>/<clip>.mp3\`
 

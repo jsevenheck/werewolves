@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+nodeimport { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 
@@ -28,7 +28,7 @@ export default defineConfig({
           pinia: 'Pinia',
           'socket.io-client': 'io',
         },
-        assetFileNames: 'werewolves-game.[ext]',
+        assetFileNames: 'assets/[name]-[hash][extname]',
       },
     },
   },
