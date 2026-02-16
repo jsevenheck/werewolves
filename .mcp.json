@@ -1,9 +1,5 @@
 {
   "mcpServers": {
-    "github": {
-      "type": "http",
-      "url": "https://api.githubcopilot.com/mcp/"
-    },
     "fetch": {
       "type": "stdio",
       "command": "uvx",
@@ -11,24 +7,15 @@
       "env": {}
     },
     "filesystem": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."],
-      "env": {}
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-filesystem", "${workspaceFolder}"]
     },
-    "ripgrep": {
-      "command": "npx",
-      "args": ["-y", "mcp-ripgrep@latest"],
-      "env": {}
-    },
+    "ripgrep": { "command": "cmd", "args": ["/c", "npx", "-y", "mcp-ripgrep@latest"] },
     "pnpm": {
       "command": "npx",
       "args": ["-y", "@jixo/mcp-pnpm"],
       "env": {}
     },
-    "playwright": {
-      "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"],
-      "env": {}
-    }
+    "playwright": { "command": "cmd", "args": ["/c", "npx", "-y", "@playwright/mcp@latest"] }
   }
 }
