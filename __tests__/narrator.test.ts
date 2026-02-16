@@ -569,6 +569,52 @@ describe('narrator bundled audio', () => {
     expect(audioManifest.getBundledAudioUrl).toHaveBeenCalledWith('night');
   });
 
+  test('falls back to base bundled audio when a cached variant disappears', async () => {
+    const mockBundledDayUrl = 'blob:http://localhost/bundled-day.mp3';
+    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockImplementation((key: string) => {
+      if (key === 'day') return mockBundledDayUrl;
+      return undefined;
+    });
+
+    let dayVariantExists = true;
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('/audio/custom/day_1.mp3')) {
+        return Promise.resolve({
+          ok: dayVariantExists,
+          headers: { get: () => (dayVariantExists ? 'audio/mpeg' : 'text/html') },
+        });
+      }
+      return Promise.resolve({
+        ok: false,
+        headers: { get: () => 'text/html' },
+      });
+    });
+
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: true,
+      assetsBasePath: '/audio',
+      storage: null,
+    });
+
+    const room = buildRoom({ phase: 'day' });
+    narrator.handleRoomUpdate(null, room);
+    await flushPromises();
+
+    const firstHowl = MockHowl.instances[0];
+    expect(firstHowl.options.src).toBe('/audio/custom/day_1.mp3');
+
+    // Simulate removing custom files while app is still running.
+    dayVariantExists = false;
+    narrator.setEnabled(false);
+    narrator.setEnabled(true);
+    await flushPromises();
+
+    const secondHowl = MockHowl.instances[1];
+    expect(secondHowl.options.src).toBe(mockBundledDayUrl);
+    expect(audioManifest.getBundledAudioUrl).toHaveBeenCalledWith('day');
+  });
+
   test('variants are not discovered when no assetsBasePath', async () => {
     const mockBundledUrl = 'blob:http://localhost/bundled-day.mp3';
     jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledUrl);

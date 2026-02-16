@@ -28,6 +28,10 @@ const FALLBACK_AUDIO_URL =
   'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=';
 const USER_MESSAGE_COOLDOWN_MS = 4000;
 
+function toBaseAudioKey(audioKey: string): string {
+  return audioKey.replace(/_\d+$/, '');
+}
+
 function computeNarrationKey(room: RoomView): NarrationKey {
   if (room.phaseTransition) {
     return room.phaseTransition;
@@ -272,6 +276,8 @@ class Narrator {
       audioKey,
       assetsBasePath: this.assetsBasePath,
     });
+    const baseAudioKey = toBaseAudioKey(audioKey);
+
     // If assetsBasePath is provided, try custom audio overrides first
     if (this.assetsBasePath) {
       // 1. Try custom path with variant support
@@ -287,23 +293,36 @@ class Narrator {
         // Custom file doesn't exist, continue to next fallback
       }
 
-      // 2. Try default file path from assetsBasePath
-      const defaultPath = `${this.assetsBasePath}/${audioKey}.mp3`;
-      try {
-        const response = await fetch(defaultPath, { method: 'HEAD' });
-        const contentType = response.headers.get('content-type') || '';
-        if (response.ok && contentType.includes('audio')) {
-          return defaultPath;
+      // 2. Try default file path(s) from assetsBasePath.
+      // For variant keys (e.g. day_1), also fall back to the base file (day.mp3).
+      const defaultCandidates = baseAudioKey === audioKey ? [audioKey] : [audioKey, baseAudioKey];
+      for (const key of defaultCandidates) {
+        const defaultPath = `${this.assetsBasePath}/${key}.mp3`;
+        try {
+          const response = await fetch(defaultPath, { method: 'HEAD' });
+          const contentType = response.headers.get('content-type') || '';
+          if (response.ok && contentType.includes('audio')) {
+            return defaultPath;
+          }
+        } catch {
+          // Default file from assetsBasePath doesn't exist, continue to next fallback
         }
-      } catch {
-        // Default file from assetsBasePath doesn't exist, fall through to bundled
       }
     }
 
-    // 3. Use bundled audio as fallback (works in all contexts without host-served files)
-    const bundled = getBundledAudioUrl(audioKey);
-    console.log('[Werewolves Audio Debug] Bundled fallback:', { audioKey, bundled });
-    return bundled;
+    // 3. Use bundled audio as fallback (works in all contexts without host-served files).
+    // For variant keys (e.g. day_1), also try the base key (day).
+    const bundledCandidates = baseAudioKey === audioKey ? [audioKey] : [audioKey, baseAudioKey];
+    for (const key of bundledCandidates) {
+      const bundled = getBundledAudioUrl(key);
+      if (bundled) {
+        console.log('[Werewolves Audio Debug] Bundled fallback:', { audioKey, key, bundled });
+        return bundled;
+      }
+    }
+
+    console.log('[Werewolves Audio Debug] Bundled fallback:', { audioKey, bundled: undefined });
+    return undefined;
   }
 
   private async discoverVariants(key: string, maxVariants = 10): Promise<string[]> {
