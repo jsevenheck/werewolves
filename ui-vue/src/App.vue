@@ -45,6 +45,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   socketUrl: '',
   socketPath: '/socket.io',
+  assetsBasePath: '',
   playerId: '',
   playerName: '',
   sessionId: '',
@@ -66,12 +67,6 @@ const effectiveAssetsBasePath = rawAssetsBasePath
   ? normalizeAssetsBasePath(rawAssetsBasePath)
   : undefined;
 
-console.log('[Werewolves Audio Debug] App Init', {
-  propsAssetsBasePath: props.assetsBasePath,
-  injectedAssetsBasePath: injectedConfig.assetsBasePath,
-  effectiveAssetsBasePath,
-});
-
 // Vue Boolean-casts a missing `standalone` prop to false, so the injected
 // config must be checked first (it is undefined when no provide is present).
 const effectiveStandalone = injectedConfig.standalone ?? props.standalone ?? !effectiveWsNamespace;
@@ -85,12 +80,9 @@ function resolveSocketNamespaceUrl(socketUrl: string, wsNamespace: string): stri
   const namespace = wsNamespace.startsWith('/') ? wsNamespace : `/${wsNamespace}`;
   if (!socketUrl) return namespace;
   if (/^https?:\/\//i.test(socketUrl)) {
-    try {
-      const parsedUrl = new URL(socketUrl);
-      return `${parsedUrl.origin}${namespace}`;
-    } catch {
-      return `${socketUrl.replace(/\/+$/, '')}${namespace}`;
-    }
+    const originMatch = socketUrl.match(/^https?:\/\/[^/]+/i);
+    const base = originMatch?.[0] ?? socketUrl.replace(/\/+$/, '');
+    return `${base}${namespace}`;
   }
   if (socketUrl.startsWith('/')) {
     return namespace;
