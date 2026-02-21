@@ -339,7 +339,8 @@ function createVueWrapper() {
       :session-id="props.sessionId"
       :join-token="props.joinToken"
       :ws-namespace="props.wsNamespace"
-      :socket-url="props.socketUrl || props.apiBaseUrl || ''"
+      :socket-url="props.socketUrl || ''"
+      :socket-path="props.socketPath || '/socket.io'"
       :api-base-url="props.apiBaseUrl || ''"
       :assets-base-path="props.assetsBasePath"
     />
@@ -357,6 +358,7 @@ interface Props {
   joinToken: string;
   apiBaseUrl?: string;
   socketUrl?: string;
+  socketPath?: string;
   playerName?: string;
   // Optional: Custom narrator audio path. If not provided, bundled audio is used.
   assetsBasePath?: string;
@@ -398,7 +400,7 @@ This directory contains the Werewolves game structured for Game Hub integration.
 This export is a TEMPLATE that still needs integration work:
 
 ### Web Component (web/src/Werewolves.vue)
-- [ ] Pass Game Hub props from \`party:gameStarted\` (\`sessionId\`, \`joinToken\`, \`wsNamespace\`, \`apiBaseUrl\`) and optional \`playerName\` / \`socketUrl\`.
+- [ ] Pass Game Hub props from \`party:gameStarted\` (\`sessionId\`, \`joinToken\`, \`wsNamespace\`, \`apiBaseUrl\`) and optional \`playerName\` / \`socketUrl\` / \`socketPath\`.
 - [ ] Read \`game-hub:player-id\` from localStorage (if available) and pass it to the game component.
 - [ ] Verify the platform-provided \`sessionId\` is passed through so \`autoJoinRoom\` can auto-create/reuse the mapped room.
 - [ ] Hide or replace the room-code landing UI if you want a seamless hub experience.
@@ -493,7 +495,7 @@ Original standalone deployment is available at the source repository.
 Before submitting a PR to Game Hub:
 
 - [ ] Web wrapper passes \`sessionId\`, \`joinToken\`, and \`wsNamespace\` into GameComponent
-- [ ] Optional \`playerName\` / \`socketUrl\` props are forwarded if used by the host platform
+- [ ] Optional \`playerName\` / \`socketUrl\` / \`socketPath\` props are forwarded if used by the host platform
 - [ ] Server registers \`registerWerewolf(io)\` under \`/g/werewolves\`
 - [ ] Type checking passes for all sub-packages
 - [ ] Manual testing in Game Hub environment successful

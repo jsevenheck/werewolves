@@ -124,77 +124,85 @@ function setupSocketHandlers(
   // Hub integration: automatically create or join a room keyed by platform sessionId.
   // The platform player ID is accepted as-is so that the hub can correlate game state
   // back to its own user records.
-  socket.on('autoJoinRoom', ({ sessionId, playerId: hubPlayerId, name }, cb) => {
-    if (!sessionId || typeof sessionId !== 'string') return cb?.({ error: 'sessionId required' });
-    detachSocketFromRoom(io, socket.id, 'left the room');
+  socket.on('autoJoinRoom', ({ sessionId, playerId: hubPlayerIdRaw, name }, cb) => {
+    try {
+      if (!sessionId || typeof sessionId !== 'string') return cb?.({ error: 'sessionId required' });
+      detachSocketFromRoom(io, socket.id, 'left the room');
 
-    const cleanName = sanitizeName(name) || 'Player';
-    const existingCode = getRoomCodeBySessionId(sessionId);
-    let room = existingCode ? getRoom(existingCode) : undefined;
+      const cleanName = sanitizeName(name) || 'Player';
+      const hubPlayerId =
+        typeof hubPlayerIdRaw === 'string' && hubPlayerIdRaw.trim().length > 0
+          ? hubPlayerIdRaw
+          : undefined;
+      const existingCode = getRoomCodeBySessionId(sessionId);
+      let room = existingCode ? getRoom(existingCode) : undefined;
 
-    if (!room) {
-      // First player for this session → create the room
-      const created = createRoom(cleanName, socket.id, (n, sid, isHost) => {
-        const player = createPlayer(n, sid, isHost);
-        // Override generated ID with the hub-supplied one when available
-        if (hubPlayerId) player.id = hubPlayerId;
-        return player;
-      });
-      room = created.room;
-      linkSessionToRoom(sessionId, room.code);
-      setSocketIndex(socket.id, room.code, created.player.id);
-      cb?.({
-        roomCode: room.code,
-        playerId: created.player.id,
-        resumeToken: created.player.resumeToken,
-      });
-      broadcastRoom(room, io);
-      return;
-    }
-
-    // Room already exists – check if this player is already present (reconnect).
-    // Reconnect detection relies on a stable hubPlayerId supplied by the platform.
-    // Without it existingPlayer is always undefined and the request falls through
-    // to the "new player" branch, which will create a duplicate slot.
-    const existingPlayer = hubPlayerId ? room.players[hubPlayerId] : undefined;
-    if (existingPlayer) {
-      // Detach the previous socket so its socketIndex entry is removed and the
-      // old connection is torn down – prevents a stale disconnect from later
-      // marking this player as disconnected.
-      if (existingPlayer.socketId && existingPlayer.socketId !== socket.id) {
-        const previousSocketId = existingPlayer.socketId;
-        const previousSocket = io.sockets.get(previousSocketId);
-        if (previousSocket) {
-          detachSocketFromRoom(io, previousSocketId);
-          previousSocket.disconnect(true);
-        } else {
-          deleteSocketIndex(previousSocketId);
-        }
+      if (!room) {
+        // First player for this session → create the room
+        const created = createRoom(cleanName, socket.id, (n, sid, isHost) => {
+          const player = createPlayer(n, sid, isHost);
+          // Override generated ID with the hub-supplied one when available
+          if (hubPlayerId) player.id = hubPlayerId;
+          return player;
+        });
+        room = created.room;
+        linkSessionToRoom(sessionId, room.code);
+        setSocketIndex(socket.id, room.code, created.player.id);
+        cb?.({
+          roomCode: room.code,
+          playerId: created.player.id,
+          resumeToken: created.player.resumeToken,
+        });
+        broadcastRoom(room, io);
+        return;
       }
-      // Reconnect: reuse the existing player slot
-      existingPlayer.socketId = socket.id;
-      existingPlayer.connected = true;
-      setSocketIndex(socket.id, room.code, existingPlayer.id);
-      cb?.({
-        roomCode: room.code,
-        playerId: existingPlayer.id,
-        resumeToken: existingPlayer.resumeToken,
-      });
-      broadcastRoom(room, io);
-      return;
-    }
 
-    // New player joining an existing room
-    if (room.phase !== 'lobby') return cb?.({ error: 'Game already started' });
-    const nameExists = Object.values(room.players).some((p) => p.name === cleanName);
-    if (nameExists) return cb?.({ error: 'Name already taken' });
-    const player = createPlayer(cleanName, socket.id, false);
-    if (hubPlayerId) player.id = hubPlayerId;
-    room.players[player.id] = player;
-    setSocketIndex(socket.id, room.code, player.id);
-    updateHostIfNeeded(room);
-    cb?.({ roomCode: room.code, playerId: player.id, resumeToken: player.resumeToken });
-    broadcastRoom(room, io);
+      // Room already exists – check if this player is already present (reconnect).
+      // Reconnect detection relies on a stable hubPlayerId supplied by the platform.
+      // Without it existingPlayer is always undefined and the request falls through
+      // to the "new player" branch, which will create a duplicate slot.
+      const existingPlayer = hubPlayerId ? room.players[hubPlayerId] : undefined;
+      if (existingPlayer) {
+        // Detach the previous socket so its socketIndex entry is removed and the
+        // old connection is torn down – prevents a stale disconnect from later
+        // marking this player as disconnected.
+        if (existingPlayer.socketId && existingPlayer.socketId !== socket.id) {
+          const previousSocketId = existingPlayer.socketId;
+          const previousSocket = io.sockets.get(previousSocketId);
+          if (previousSocket) {
+            detachSocketFromRoom(io, previousSocketId);
+            previousSocket.disconnect(true);
+          } else {
+            deleteSocketIndex(previousSocketId);
+          }
+        }
+        // Reconnect: reuse the existing player slot
+        existingPlayer.socketId = socket.id;
+        existingPlayer.connected = true;
+        setSocketIndex(socket.id, room.code, existingPlayer.id);
+        cb?.({
+          roomCode: room.code,
+          playerId: existingPlayer.id,
+          resumeToken: existingPlayer.resumeToken,
+        });
+        broadcastRoom(room, io);
+        return;
+      }
+
+      // New player joining an existing room
+      if (room.phase !== 'lobby') return cb?.({ error: 'Game already started' });
+      const nameExists = Object.values(room.players).some((p) => p.name === cleanName);
+      if (nameExists) return cb?.({ error: 'Name already taken' });
+      const player = createPlayer(cleanName, socket.id, false);
+      if (hubPlayerId) player.id = hubPlayerId;
+      room.players[player.id] = player;
+      setSocketIndex(socket.id, room.code, player.id);
+      updateHostIfNeeded(room);
+      cb?.({ roomCode: room.code, playerId: player.id, resumeToken: player.resumeToken });
+      broadcastRoom(room, io);
+    } catch {
+      cb?.({ error: 'Failed to join room' });
+    }
   });
 
   socket.on('resumePlayer', ({ roomCode, playerId, resumeToken }, cb) => {

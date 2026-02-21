@@ -56,9 +56,8 @@ const props = withDefaults(defineProps<Props>(), {
 // Check for injected config from host app (app.provide)
 const injectedConfig = inject<Partial<GameComponentProps>>('werewolvesConfig', {});
 const effectiveWsNamespace = props.wsNamespace || injectedConfig.wsNamespace || '';
-const effectiveSocketUrl = effectiveWsNamespace
-  ? (props.socketUrl || injectedConfig.socketUrl || '') + effectiveWsNamespace
-  : props.socketUrl || injectedConfig.socketUrl || '';
+const configuredSocketUrl = props.socketUrl || injectedConfig.socketUrl || '';
+const effectiveSocketUrl = resolveSocketNamespaceUrl(configuredSocketUrl, effectiveWsNamespace);
 const effectiveSocketPath = props.socketPath || injectedConfig.socketPath || '/socket.io';
 // Only use assetsBasePath if explicitly provided (for custom audio overrides).
 // If not provided, narrator will use bundled audio instead of relying on host-served files.
@@ -80,6 +79,24 @@ const effectivePlayerId = props.playerId || injectedConfig.playerId || '';
 const effectivePlayerName = props.playerName || injectedConfig.playerName || '';
 const effectiveSessionId = props.sessionId || injectedConfig.sessionId || '';
 const effectiveJoinToken = props.joinToken || injectedConfig.joinToken || '';
+
+function resolveSocketNamespaceUrl(socketUrl: string, wsNamespace: string): string {
+  if (!wsNamespace) return socketUrl;
+  const namespace = wsNamespace.startsWith('/') ? wsNamespace : `/${wsNamespace}`;
+  if (!socketUrl) return namespace;
+  if (/^https?:\/\//i.test(socketUrl)) {
+    try {
+      const parsedUrl = new URL(socketUrl);
+      return `${parsedUrl.origin}${namespace}`;
+    } catch {
+      return `${socketUrl.replace(/\/+$/, '')}${namespace}`;
+    }
+  }
+  if (socketUrl.startsWith('/')) {
+    return namespace;
+  }
+  return `${socketUrl.replace(/\/+$/, '')}${namespace}`;
+}
 
 function normalizeAssetsBasePath(path: string): string {
   const trimmed = path.trim();
@@ -283,7 +300,17 @@ function startHubJoinTimeout() {
   }, HUB_JOIN_TIMEOUT_MS);
 }
 
+function hasExpectedHubNamespace(): boolean {
+  const connectedNamespace = (socket as unknown as { nsp?: string }).nsp;
+  if (!effectiveWsNamespace || connectedNamespace === effectiveWsNamespace) {
+    return true;
+  }
+  hubJoinError.value = `Socket namespace mismatch: expected ${effectiveWsNamespace}, got ${connectedNamespace || 'unknown'}.`;
+  return false;
+}
+
 async function runHubConnectFlow() {
+  if (!hasExpectedHubNamespace()) return;
   if (hubFlowInProgress) return;
   hubFlowInProgress = true;
   hubJoinError.value = null;
@@ -340,6 +367,10 @@ function onWolfVoteRejected(payload: { reason: string }) {
 }
 
 function onConnectHub() {
+  if (!hasExpectedHubNamespace()) {
+    socket.disconnect();
+    return;
+  }
   void runHubConnectFlow();
 }
 

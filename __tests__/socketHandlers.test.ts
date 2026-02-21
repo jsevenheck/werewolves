@@ -288,6 +288,23 @@ describe('socketHandlers autoJoinRoom', () => {
       resumeToken: 'resume-created',
     });
   });
+
+  test('returns error callback when auto join throws unexpectedly', () => {
+    (getRoomCodeBySessionId as jest.Mock).mockReturnValue(undefined);
+    (createRoom as jest.Mock).mockImplementation(() => {
+      throw new Error('boom');
+    });
+
+    const { io } = makeIo();
+    const { handlers, socket } = makeSocket();
+    socket.id = 'socket-new';
+    setupSocketHandlers(io, socket as any);
+    const cb = jest.fn();
+
+    handlers.autoJoinRoom({ sessionId: 'session-new', playerId: 'hub-7', name: 'Host' }, cb);
+
+    expect(cb).toHaveBeenCalledWith({ error: 'Failed to join room' });
+  });
 });
 
 describe('socketHandlers resumePlayer socket handoff', () => {
