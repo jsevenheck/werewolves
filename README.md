@@ -1,4 +1,4 @@
-# Werewolves (Moderator-Free Mafia)
+﻿# Werewolves (Moderator-Free Mafia)
 
 Run a multiplayer Werewolf/Mafia party game in the browser with no human moderator. Players join from their own devices and the app enforces all phases, actions, and win conditions.
 
@@ -63,15 +63,15 @@ pnpm run typecheck
 ```bash
 pnpm lint            # ESLint check (0 errors and 0 warnings required)
 pnpm lint:fix        # Auto-fix fixable issues
-pnpm format          # Prettier – rewrite all files in place
-pnpm format:check    # Prettier – dry-run, exit 1 on diffs
+pnpm format          # Prettier â€“ rewrite all files in place
+pnpm format:check    # Prettier â€“ dry-run, exit 1 on diffs
 ```
 
 ESLint 9 flat config lives in [`eslint.config.mjs`](eslint.config.mjs). Rules are split by environment:
 
-- **Server** (`server/`, `standalone-server/`, `scripts/`) – Node.js globals, `require()` allowed.
-- **Client** (`ui-vue/`, `standalone-web/`, `*.vue`) – Browser globals, Vue plugin rules.
-- **Tests** (`__tests__/`, `e2e/`) – relaxed `any` and `require` rules.
+- **Server** (`server/`, `standalone-server/`, `scripts/`) â€“ Node.js globals, `require()` allowed.
+- **Client** (`ui-vue/`, `standalone-web/`, `*.vue`) â€“ Browser globals, Vue plugin rules.
+- **Tests** (`__tests__/`, `e2e/`) â€“ relaxed `any` and `require` rules.
 
 Prettier config is in [`.prettierrc`](.prettierrc); enforced style: single quotes, 100-char width, LF line endings.
 
@@ -142,7 +142,7 @@ Mobile browsers require a user gesture before audio can play. If a player enable
 
 - To use custom narrator audio, pass the `assetsBasePath` prop to GameComponent
 - Custom audio files should be placed in a `custom/` subdirectory (e.g., `/audio/custom/day_1.mp3`)
-- Fallback chain: custom audio (`${assetsBasePath}/custom/*`) → default override (`${assetsBasePath}/*`) → bundled audio → silent
+- Fallback chain: custom audio (`${assetsBasePath}/custom/*`) â†’ default override (`${assetsBasePath}/*`) â†’ bundled audio â†’ silent
 - Supports audio variants for variety (e.g., `custom/day_1.mp3`, `custom/day_2.mp3`)
 - See `ui-vue/public/audio/README.md` for detailed instructions, file naming conventions, and per-file descriptions
 
@@ -194,47 +194,37 @@ Troubleshooting:
   - `wsNamespace` (e.g. `/g/werewolves`)
   - `apiBaseUrl` (optional REST base URL)
   - Optional `playerId` from `localStorage.getItem('game-hub:player-id')`
-  - Optional `playerName` – display name inside the game (falls back to `playerId`)
+  - Optional `playerName` â€“ display name inside the game (falls back to `playerId`)
 - Relative `assetsBasePath` values are resolved against Vite's base URL (`import.meta.env.BASE_URL`) for non-root deployments.
 
 ## Game Hub Integration
 
-This repository automatically integrates with [Game Hub](https://github.com/jsevenheck/game-hub) via CI/CD. On pushes to `main` or `pre-main-vue`, the workflow runs tests, transforms the game into Game Hub's structure, and opens a PR automatically.
+This repository integrates with [Game Hub](https://github.com/jsevenheck/game-hub) via
+`.github/workflows/sync-to-hub.yml`.
 Game Hub gameId is `werewolves` (namespace `/g/werewolves`).
+The hub now owns the transformer and auto-discovers games in `games/*`.
+This repo no longer contains a local transform script or committed transform output.
 
 ### How It Works
 
-1. Push to `main` or `pre-main-vue` triggers the workflow
-2. All tests run (typecheck, unit tests, E2E tests)
-3. If tests pass, `scripts/transform-for-gamehub.js` transforms the game
-4. A PR is created in the Game Hub repository with the transformed game
+1. Push to `main` runs CI (`.github/workflows/ci.yml`).
+2. `sync-to-hub` is triggered by `workflow_run` and only runs after CI succeeds (or via manual `workflow_dispatch`).
+3. The workflow triggers `receive-game-sync.yml` in `jsevenheck/game-hub`.
+4. The hub workflow checks out this repo, runs the hub transformer, and opens a PR automatically.
+5. No manual game registration in the hub repo is required (auto-discovery).
 
 ### Setup Requirements
 
-To enable the integration, add a GitHub Personal Access Token (PAT) as a repository secret:
+Add one repository secret in this repo:
 
-1. Create a PAT with `repo` and `workflow` permissions at [GitHub Settings -> Developer settings -> Personal access tokens](https://github.com/settings/tokens)
-2. Add it as a secret named `GAMEHUB_PAT` in this repository's Settings -> Secrets and variables -> Actions
-
-### Manual Transform
-
-To test the transform locally without pushing:
-
-```bash
-node scripts/transform-for-gamehub.js
-```
-
-This creates `game-export/werewolves/` with `web/`, `server/`, and `shared/` packages matching Game Hub's layout.
-
-**Note:** The transformed output is a template that requires manual adaptation for full Game Hub integration. See `game-export/werewolves/README.md` for the integration checklist.
+1. Name: `GAME_SYNC_TOKEN`
+2. Value: PAT or GitHub App token with `actions:write` permission on `jsevenheck/game-hub`.
 
 ### Hub Auto-Join Flow
 
-When the game runs inside Game Hub (`standalone = false`), the client emits an `autoJoinRoom` event on connect instead of showing the Landing page. The server uses a `sessionId → roomCode` mapping to locate or create the room transparently:
+When the game runs inside Game Hub (`standalone = false`), the client emits an `autoJoinRoom` event on connect instead of showing the Landing page. The server uses a `sessionId -> roomCode` mapping to locate or create the room transparently:
 
 1. Client connects and emits `autoJoinRoom({ sessionId, playerId, name })`.
-2. Server checks `sessionId` → if a room already exists for this session it is reused; otherwise a new room is created and the mapping is stored.
+2. Server checks `sessionId` -> if a room already exists for this session it is reused; otherwise a new room is created and the mapping is stored.
 3. The hub-supplied `playerId` is used directly, so Game Hub can correlate game state back to its own user records without a separate lookup.
 4. On reconnect the client resumes via the stored `resumeToken`; no second room is created.
-
-The `game-export/` directory (generated by the transform script) is git-ignored – it is a build artefact.

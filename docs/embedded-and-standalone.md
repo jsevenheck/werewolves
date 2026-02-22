@@ -1,4 +1,4 @@
-# Embedded and Standalone Modes
+﻿# Embedded and Standalone Modes
 
 This document explains how the Werewolves game can run in two modes.
 
@@ -34,18 +34,18 @@ export type { GameComponentProps, HubIntegrationProps } from './types/config';
 
 **GameComponent Props:**
 
-| Prop             | Type      | Required            | Description                                                                                        |
-| ---------------- | --------- | ------------------- | -------------------------------------------------------------------------------------------------- |
-| `playerId`       | `string`  | optional            | Stable platform player id – used directly as the in-game ID when present                           |
-| `playerName`     | `string`  | optional            | Display name shown in-game; falls back to `playerId` when omitted                                  |
-| `sessionId`      | `string`  | required (embedded) | Platform session ID – triggers `autoJoinRoom`; server maps it to an internal room code             |
-| `joinToken`      | `string`  | required (embedded) | Auth token for Socket.IO handshake (also accepted as `token`, stored but not enforced server-side) |
-| `wsNamespace`    | `string`  | required (embedded) | Namespace path, e.g. `/g/werewolves`                                                               |
-| `apiBaseUrl`     | `string`  | optional            | Base URL for REST calls                                                                            |
-| `socketUrl`      | `string`  | optional            | Socket.IO server URL (default: same origin)                                                        |
-| `socketPath`     | `string`  | optional            | Socket.IO path (default: `/socket.io`)                                                             |
-| `assetsBasePath` | `string`  | optional            | Custom audio path for overrides (default: uses bundled audio)                                      |
-| `standalone`     | `boolean` | optional            | `true` → Landing page (create/join UI); `false` + `sessionId` → `autoJoinRoom` fires automatically |
+| Prop             | Type      | Required            | Description                                                                                            |
+| ---------------- | --------- | ------------------- | ------------------------------------------------------------------------------------------------------ |
+| `playerId`       | `string`  | optional            | Stable platform player id â€“ used directly as the in-game ID when present                             |
+| `playerName`     | `string`  | optional            | Display name shown in-game; falls back to `playerId` when omitted                                      |
+| `sessionId`      | `string`  | required (embedded) | Platform session ID â€“ triggers `autoJoinRoom`; server maps it to an internal room code               |
+| `joinToken`      | `string`  | required (embedded) | Auth token for Socket.IO handshake (also accepted as `token`, stored but not enforced server-side)     |
+| `wsNamespace`    | `string`  | required (embedded) | Namespace path, e.g. `/g/werewolves`                                                                   |
+| `apiBaseUrl`     | `string`  | optional            | Base URL for REST calls                                                                                |
+| `socketUrl`      | `string`  | optional            | Socket.IO server URL (default: same origin)                                                            |
+| `socketPath`     | `string`  | optional            | Socket.IO path (default: `/socket.io`)                                                                 |
+| `assetsBasePath` | `string`  | optional            | Custom audio path for overrides (default: uses bundled audio)                                          |
+| `standalone`     | `boolean` | optional            | `true` â†’ Landing page (create/join UI); `false` + `sessionId` â†’ `autoJoinRoom` fires automatically |
 
 **Usage in Game Hub:**
 
@@ -57,7 +57,7 @@ The host UI passes these props into the game component:
 - `joinToken` (string, per-player auth token)
 - `wsNamespace` (string, `/g/<gameId>`)
 - `apiBaseUrl` (string, optional REST base URL)
-- Optional `playerId` from `localStorage.getItem('game-hub:player-id')` – used directly as the in-game player ID
+- Optional `playerId` from `localStorage.getItem('game-hub:player-id')` â€“ used directly as the in-game player ID
 - Optional `playerName` (string) for in-game display
 - Optional `socketUrl` (string) when Socket.IO is served from a different origin/base path
 
@@ -116,8 +116,8 @@ Party creation/join and lobby live on `/platform`; the game only connects to `/g
 1. Platform issues `joinToken` (per player) and `sessionId` (shared) on `party:gameStarted`.
 2. Client connects: `io(wsNamespace, { auth: { token, joinToken, sessionId, playerId } })`.
 3. Namespace middleware stores auth data on `socket.data`.
-4. Client emits `autoJoinRoom({ sessionId, playerId, name })` – the server either
-   creates a new room and persists a `sessionId → roomCode` mapping, or reuses
+4. Client emits `autoJoinRoom({ sessionId, playerId, name })` â€“ the server either
+   creates a new room and persists a `sessionId â†’ roomCode` mapping, or reuses
    the existing room if one was already linked to this `sessionId`.
 5. The hub-supplied `playerId` is stored directly as the player's in-game ID, so the
    platform can correlate game state back to its user records without an extra lookup.
@@ -172,7 +172,7 @@ A thin wrapper that:
 4. Serves static files (built client or dev fallback)
 5. Provides health endpoint (`/health`)
 6. Handles server listen errors (e.g. `EADDRINUSE`)
-7. Graceful shutdown on `SIGTERM`/`SIGINT` (closes Socket.IO → HTTP, 10s force-exit timeout)
+7. Graceful shutdown on `SIGTERM`/`SIGINT` (closes Socket.IO â†’ HTTP, 10s force-exit timeout)
 
 **Audio:** `standalone-web/src/main.ts` sets `assetsBasePath: '/audio'` by default.
 Runtime order is `/audio/custom/*` -> `/audio/*` -> bundled audio -> silent.
@@ -201,53 +201,32 @@ pnpm run dev:standalone-web
 
 ## Game Hub Integration
 
-Game Hub expects games under `games/<gameId>/{web,server,shared}`. This repo integrates
-via `scripts/transform-for-gamehub.js`, which generates `game-export/werewolves/` in
-that structure.
+Game Hub auto-discovers games under `games/*` and owns the transformer
+(`scripts/transform-game.mjs`) in the hub repository.
+This repo only needs to keep hub-compatible source entry points:
 
-### Transform Script Output
+- `server/src/index.ts` exports `definition`, `register(...)`, and `handler`.
+- `ui-vue/src/index.ts` exports `manifest` and `GameComponent`.
 
-The transform script creates:
+### Sync Flow
 
-- **web/**: Vue components + bundled assets
-  - `src/` - UI components with bundled audio (copied from `ui-vue/src/`)
-  - `package.json` - includes `pinia`, `howler`, and `@types/howler` dependencies
-  - Note: Narrator audio is bundled at build time (~2.3 MB total), not copied to public/
-- **server/**: Socket.IO handlers
-  - `src/` - Game logic (copied from `server/src/`)
-  - `tsconfig.build.json` - tsup-compatible config (`composite: false`)
-  - `tsup.config.ts` - builds to ESM
-- **shared/**: TypeScript types and constants
-  - `src/` - Shared contracts (copied from `core/src/`)
-  - `package.json` - includes subpath `exports` for `/events`, `/types`, `/constants`
-  - `tsconfig.build.json` - tsup-compatible config (`composite: false`)
-  - `tsup.config.ts` - builds multiple entry points for subpath imports
+1. Push to `main` runs CI.
+2. `.github/workflows/sync-to-hub.yml` runs after CI succeeds (or via manual dispatch).
+3. The workflow triggers `receive-game-sync.yml` in `jsevenheck/game-hub` with `game-id=werewolves`.
+4. The hub workflow checks out this repo, runs the hub transformer, and opens a PR.
 
-### Recommended flow
+### Setup Requirements
 
-1. Run `node scripts/transform-for-gamehub.js` (CI does this after tests).
-2. Copy `game-export/werewolves` into the Game Hub repo at `games/werewolves/`.
-3. The transform rewrites `@shared/*` and `core/src/*` imports to `@game-hub/werewolves-shared/*`.
-   - Supports both regular imports (`from '@shared/types'`) and TypeScript inline imports (`import('@shared/types')`)
-   - Supports subpath imports: `@game-hub/werewolves-shared/events`, `/types`, `/constants`
-4. Update `web/src/Werewolves.vue` to mount `GameComponent` and pass Game Hub props
-   (`sessionId`, `joinToken`, `wsNamespace`, `apiBaseUrl`) plus optional
-   `playerId` (from localStorage), `playerName`, and `socketUrl`.
-   - Generated wrapper default: `assetsBasePath = '/audio'` (runtime custom overrides with bundled fallback).
-5. `sessionId` → room mapping is handled automatically: the server's `autoJoinRoom`
-   handler creates or reuses a room keyed by `sessionId`, and accepts the hub-supplied
-   `playerId` directly – no manual mapping step required.
-6. Ensure the server package registers `register(io, namespace)` (or `registerWerewolf(io)`) under `/g/<gameId>`.
-7. Update `shared/src/*` imports to `@game-hub/contracts` if needed.
-8. Register the game in the server registry (`apps/platform-server/src/games/registry.ts`).
-9. Register the game in the web registry (`apps/platform-web/src/gameRegistry.ts`).
+Add repository secret `GAME_SYNC_TOKEN` in this repo with a token that has
+`actions:write` permission on `jsevenheck/game-hub`.
 
 ### Notes
 
-1. `register(io, '/g/werewolves')` attaches to the game namespace.
-2. `game-export/` is git-ignored; it is regenerated by the transform script on every CI run.
-3. Game Hub emits `party:gameStarted` with `{ gameId, sessionId, wsNamespace, joinToken }`.
-4. Narrator audio files are bundled with the web component at build time (~2.3 MB total).
+1. No local `scripts/transform-for-gamehub.js` and no committed `game-export/` output.
+2. No manual registration in Game Hub server/web registries is required (auto-discovery).
+3. `register(io, '/g/werewolves')` attaches to the game namespace.
+4. Game Hub emits `party:gameStarted` with `{ gameId, sessionId, wsNamespace, joinToken }`.
+5. Narrator audio files are bundled with the web component at build time (~2.3 MB total).
 
 ## Gotchas and Best Practices
 
@@ -307,7 +286,7 @@ Room "game-123" in `/g/werewolves` is separate from room "game-123" in `/g/other
 ### Note: SessionId vs room code
 
 Game logic still uses 4-letter room codes internally. In embedded mode the
-`autoJoinRoom` handler maintains a `sessionId → roomCode` map in memory so that
+`autoJoinRoom` handler maintains a `sessionId â†’ roomCode` map in memory so that
 every player in the same platform session lands in the same room without needing to
 know the code. The map is cleaned up automatically when the room is deleted.
 
@@ -315,7 +294,7 @@ know the code. The map is cleaned up automatically when the room is deleted.
 
 `autoJoinRoom` identifies returning players by looking up `playerId` in the room's
 player map. If the platform does **not** supply a `playerId`, the server has no way
-to match the incoming request to an existing player — it will always treat the
+to match the incoming request to an existing player â€” it will always treat the
 connection as a new player and create a duplicate slot (blocked only by the lobby
 phase and duplicate-name checks).
 
