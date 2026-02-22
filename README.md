@@ -213,6 +213,19 @@ This repo no longer contains a local transform script or committed transform out
 4. The hub workflow checks out this repo, runs the hub transformer, and opens a PR automatically.
 5. No manual game registration in the hub repo is required (auto-discovery).
 
+### hub.config.json
+
+Extra npm packages the hub transformer must add to the generated `server/package.json` are declared in [`hub.config.json`](hub.config.json) at the repo root:
+
+```json
+{
+  "serverDependencies": { "some-package": "^1.0.0" },
+  "serverDevDependencies": { "@types/some-package": "^1.0.0" }
+}
+```
+
+Whenever you add a new runtime dependency to `server/` that isn't already present in the hub's base `package.json`, add it here — otherwise the hub typecheck will fail with `Cannot find module`.
+
 ### Setup Requirements
 
 Add one repository secret in this repo:
