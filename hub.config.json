@@ -1,4 +1,7 @@
 {
+  "webDependencies": {
+    "howler": "2.2.4"
+  },
   "serverDependencies": {
     "nanoid": "^5.1.6"
   }
