@@ -480,11 +480,10 @@ describe('narrator bundled audio', () => {
     await expect(unlockPromise).resolves.toBe(true);
   });
 
-  test('unlock falls back to bundled when custom lobby fails', async () => {
+  test('unlock uses bundled audio directly (skips custom path), falls back to silent on error', async () => {
     const mockBundledLobbyUrl = 'blob:http://localhost/bundled-lobby.mp3';
     jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledLobbyUrl);
 
-    // Mock fetch to fail for custom audio
     global.fetch = jest.fn().mockResolvedValue({ ok: false });
 
     const narrator = createNarrator({
@@ -497,19 +496,19 @@ describe('narrator bundled audio', () => {
     const unlockPromise = narrator.unlock();
     await flushPromises();
 
-    // First attempt should be custom lobby
-    const [customHowl] = MockHowl.instances;
-    expect(customHowl.options.src).toBe('/custom-audio/lobby.mp3');
-
-    // Trigger error to force fallback
-    customHowl.trigger('loaderror');
-    await flushPromises();
-
-    // Should fall back to bundled lobby
-    const [, bundledHowl] = MockHowl.instances;
+    // First attempt should use bundled audio directly (not custom path) to stay
+    // within the user-gesture context and avoid async SPA-HTML loaderror retries.
+    const [bundledHowl] = MockHowl.instances;
     expect(bundledHowl.options.src).toBe(mockBundledLobbyUrl);
 
-    bundledHowl.trigger('play');
+    // Trigger error on bundled – next fallback is silent data URI
+    bundledHowl.trigger('loaderror');
+    await flushPromises();
+
+    const [, silentHowl] = MockHowl.instances;
+    expect(silentHowl.options.src).toMatch(/^data:audio/);
+
+    silentHowl.trigger('play');
     await expect(unlockPromise).resolves.toBe(true);
   });
 

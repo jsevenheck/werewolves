@@ -150,12 +150,24 @@ class Narrator {
           volume: 0,
         });
 
-      // Fallback chain: custom lobby → bundled lobby → silent
+      // Fallback chain: bundled lobby → silent (custom path skipped for unlock)
+      // Using the custom path (/audio/lobby.mp3) as the initial src causes a
+      // race condition: when no custom file exists the SPA returns HTML, which
+      // fires a loaderror asynchronously. The subsequent bundled retry then
+      // happens outside the user-gesture context and is blocked by autoplay
+      // policy on iOS/strict browsers. Starting with the bundled asset avoids
+      // the async detour entirely.
       const getInitialSrc = () => {
+        const bundled = getBundledAudioUrl('lobby');
+        if (bundled) {
+          // Mark as used so tryNextFallback skips straight to silent on error.
+          attemptedBundled = true;
+          return bundled;
+        }
         if (this.assetsBasePath) {
           return `${this.assetsBasePath}/lobby.mp3`;
         }
-        return getBundledAudioUrl('lobby') || FALLBACK_AUDIO_URL;
+        return FALLBACK_AUDIO_URL;
       };
 
       unlockHowl = createUnlockHowl(getInitialSrc());
@@ -345,9 +357,10 @@ class Narrator {
         // Only accept if response is OK AND content-type indicates audio (not HTML fallback)
         if (response.ok && contentType.includes('audio')) {
           variants.push(variantKey);
-        } else if (response.ok && !contentType.includes('audio')) {
-          // Server returned HTML fallback (SPA), file doesn't actually exist
-          break; // Stop searching, subsequent variants won't exist either
+        } else {
+          // Either 404 (file doesn't exist) or SPA HTML fallback – stop searching.
+          // Variants are numbered sequentially so there is no point checking further.
+          break;
         }
       } catch {
         // Network error or file doesn't exist, stop searching
