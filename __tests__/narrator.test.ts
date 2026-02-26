@@ -286,35 +286,44 @@ describe('narrator persistence', () => {
 });
 
 describe('narrator unlock', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockAudio: any;
+
   beforeEach(() => {
     MockHowl.reset();
+    mockAudio = { volume: 0, play: jest.fn().mockResolvedValue(undefined), pause: jest.fn() };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (global as any).Audio = jest.fn(() => mockAudio);
   });
 
-  test('unlock resolves true on play', async () => {
+  afterEach(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (global as any).Audio;
+  });
+
+  test('unlock resolves true when native audio plays successfully', async () => {
     const narrator = createNarrator({ initialEnabled: true, initialUnlocked: false });
     const unlockPromise = narrator.unlock();
-    const [unlockHowl] = MockHowl.instances;
 
-    unlockHowl.trigger('play');
     await expect(unlockPromise).resolves.toBe(true);
-    expect(unlockHowl.stop).toHaveBeenCalled();
-    expect(unlockHowl.off).toHaveBeenCalledWith('play');
-    expect(unlockHowl.off).toHaveBeenCalledWith('playerror');
-    expect(unlockHowl.off).toHaveBeenCalledWith('loaderror');
+    expect(mockAudio.play).toHaveBeenCalled();
+    expect(narrator.isUnlocked()).toBe(true);
   });
 
-  test('unlock resolves false on playerror', async () => {
+  test('unlock resolves false when autoplay is blocked', async () => {
+    mockAudio.play.mockRejectedValue(new Error('Autoplay blocked'));
     const narrator = createNarrator({ initialEnabled: true, initialUnlocked: false });
     const unlockPromise = narrator.unlock();
-    const [initialHowl] = MockHowl.instances;
 
-    initialHowl.trigger('playerror');
-    const fallbackHowl = MockHowl.instances[1];
-    fallbackHowl.trigger('playerror');
     await expect(unlockPromise).resolves.toBe(false);
-    expect(initialHowl.off).toHaveBeenCalledWith('play');
-    expect(initialHowl.off).toHaveBeenCalledWith('playerror');
-    expect(initialHowl.off).toHaveBeenCalledWith('loaderror');
+    expect(narrator.isUnlocked()).toBe(false);
+  });
+
+  test('unlock returns true immediately if already unlocked', async () => {
+    const narrator = createNarrator({ initialEnabled: true, initialUnlocked: true });
+    const result = await narrator.unlock();
+    expect(result).toBe(true);
+    expect(mockAudio.play).not.toHaveBeenCalled();
   });
 });
 
@@ -460,9 +469,11 @@ describe('narrator bundled audio', () => {
     expect(audioManifest.getBundledAudioUrl).toHaveBeenCalledWith('day');
   });
 
-  test('unlock uses bundled lobby audio when no assetsBasePath', async () => {
-    const mockBundledLobbyUrl = 'blob:http://localhost/bundled-lobby.mp3';
-    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledLobbyUrl);
+  test('unlock uses native Audio with silent data URL (not a Howl)', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mockAudio = { volume: 0, play: jest.fn().mockResolvedValue(undefined), pause: jest.fn() };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (global as any).Audio = jest.fn(() => mockAudio);
 
     const narrator = createNarrator({
       initialEnabled: true,
@@ -471,45 +482,14 @@ describe('narrator bundled audio', () => {
     });
 
     const unlockPromise = narrator.unlock();
-    const [unlockHowl] = MockHowl.instances;
-
-    // Verify it's using bundled lobby audio
-    expect(unlockHowl.options.src).toBe(mockBundledLobbyUrl);
-
-    unlockHowl.trigger('play');
     await expect(unlockPromise).resolves.toBe(true);
-  });
 
-  test('unlock uses bundled audio directly (skips custom path), falls back to silent on error', async () => {
-    const mockBundledLobbyUrl = 'blob:http://localhost/bundled-lobby.mp3';
-    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledLobbyUrl);
+    // Unlock must not create any Howl instances — it uses native Audio
+    expect(MockHowl.instances).toHaveLength(0);
+    expect(mockAudio.play).toHaveBeenCalled();
 
-    global.fetch = jest.fn().mockResolvedValue({ ok: false });
-
-    const narrator = createNarrator({
-      initialEnabled: true,
-      initialUnlocked: false,
-      assetsBasePath: '/custom-audio',
-      storage: null,
-    });
-
-    const unlockPromise = narrator.unlock();
-    await flushPromises();
-
-    // First attempt should use bundled audio directly (not custom path) to stay
-    // within the user-gesture context and avoid async SPA-HTML loaderror retries.
-    const [bundledHowl] = MockHowl.instances;
-    expect(bundledHowl.options.src).toBe(mockBundledLobbyUrl);
-
-    // Trigger error on bundled – next fallback is silent data URI
-    bundledHowl.trigger('loaderror');
-    await flushPromises();
-
-    const [, silentHowl] = MockHowl.instances;
-    expect(silentHowl.options.src).toMatch(/^data:audio/);
-
-    silentHowl.trigger('play');
-    await expect(unlockPromise).resolves.toBe(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (global as any).Audio;
   });
 
   test('prefers custom audio from assetsBasePath over bundled', async () => {

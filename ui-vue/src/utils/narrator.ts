@@ -138,115 +138,38 @@ class Narrator {
 
   async unlock(): Promise<boolean> {
     if (this.unlocked) return true;
-    return new Promise((resolve) => {
-      let attemptedBundled = false;
-      let attemptedSilent = false;
-      let unlockHowl: Howl;
-      const createUnlockHowl = (src: string) =>
-        new Howl({
-          src,
-          html5: true,
-          volume: 0,
-        });
+    // Use the native HTMLAudioElement directly rather than a Howl for the unlock
+    // gesture. Howler queues play() internally until audio has loaded, so the
+    // actual audio.play() call happens in an async callback outside the user-
+    // gesture window — Chrome's autoplay policy then blocks it. With a raw
+    // Audio element and a data: URL (no network I/O), play() can be called
+    // synchronously from the click handler while still within gesture context.
+    return new Promise<boolean>((resolve) => {
+      console.log('[Werewolves Audio Debug] unlock: starting native audio unlock');
+      const audio = new Audio(FALLBACK_AUDIO_URL);
+      audio.volume = 0;
 
-      // Fallback chain: bundled lobby → silent (custom path skipped for unlock)
-      // Using the custom path (/audio/lobby.mp3) as the initial src causes a
-      // race condition: when no custom file exists the SPA returns HTML, which
-      // fires a loaderror asynchronously. The subsequent bundled retry then
-      // happens outside the user-gesture context and is blocked by autoplay
-      // policy on iOS/strict browsers. Starting with the bundled asset avoids
-      // the async detour entirely.
-      const getInitialSrc = () => {
-        const bundled = getBundledAudioUrl('lobby');
-        if (bundled) {
-          // Mark as used so tryNextFallback skips straight to silent on error.
-          attemptedBundled = true;
-          return bundled;
-        }
-        if (this.assetsBasePath) {
-          return `${this.assetsBasePath}/lobby.mp3`;
-        }
-        return FALLBACK_AUDIO_URL;
-      };
+      // play() called synchronously — still within the user gesture context.
+      const playPromise = audio.play();
+      if (!playPromise) {
+        // Legacy browsers without Promise-based play().
+        console.log('[Werewolves Audio Debug] unlock: no play promise → assuming unlocked');
+        this.unlocked = true;
+        resolve(true);
+        return;
+      }
 
-      unlockHowl = createUnlockHowl(getInitialSrc());
-
-      const tryNextFallback = (playAfterSwap: boolean) => {
-        // If we haven't tried bundled yet and it's available, try that
-        if (!attemptedBundled && this.assetsBasePath) {
-          const bundledUrl = getBundledAudioUrl('lobby');
-          if (bundledUrl) {
-            attemptedBundled = true;
-            const bundledHowl = createUnlockHowl(bundledUrl);
-            unlockHowl.unload();
-            unlockHowl = bundledHowl;
-            attachListeners(unlockHowl);
-            if (playAfterSwap) {
-              void this.safePlay(unlockHowl, null);
-              return;
-            }
-            unlockHowl.load();
-            return;
-          }
-        }
-
-        // Last resort: silent fallback
-        if (!attemptedSilent && FALLBACK_AUDIO_URL) {
-          attemptedSilent = true;
-          const silentHowl = createUnlockHowl(FALLBACK_AUDIO_URL);
-          unlockHowl.unload();
-          unlockHowl = silentHowl;
-          attachListeners(unlockHowl);
-          if (playAfterSwap) {
-            void this.safePlay(unlockHowl, null);
-            return;
-          }
-          silentHowl.load();
-          return;
-        }
-
-        // All fallbacks exhausted
-        cleanup(unlockHowl);
-        unlockHowl.unload();
-        resolve(false);
-      };
-
-      const cleanup = (howl: Howl) => {
-        howl.off('play');
-        howl.off('playerror');
-        howl.off('loaderror');
-      };
-
-      const attachListeners = (howl: Howl) => {
-        howl.once('play', () => {
+      playPromise
+        .then(() => {
+          console.log('[Werewolves Audio Debug] unlock: play resolved → unlocked');
+          audio.pause();
           this.unlocked = true;
-          howl.stop();
-          cleanup(howl);
-          howl.unload();
           resolve(true);
+        })
+        .catch((err: unknown) => {
+          console.log('[Werewolves Audio Debug] unlock: play() rejected:', err);
+          resolve(false);
         });
-        howl.once('loaderror', () => {
-          cleanup(howl);
-          if (attemptedSilent) {
-            howl.unload();
-            resolve(false);
-            return;
-          }
-          tryNextFallback(true);
-        });
-        howl.once('playerror', () => {
-          cleanup(howl);
-          if (attemptedSilent) {
-            howl.unload();
-            resolve(false);
-            return;
-          }
-          tryNextFallback(true);
-        });
-      };
-
-      attachListeners(unlockHowl);
-      void this.safePlay(unlockHowl, null);
     });
   }
 
@@ -436,7 +359,12 @@ class Narrator {
       const createHowl = (src: string) =>
         new Howl({
           src,
-          html5: true,
+          // Web Audio API (html5: false, the default) loads via XHR and decodes
+          // in memory. This avoids the MEDIA_ERR_SRC_NOT_SUPPORTED (code 4) that
+          // the HTML5 <audio> element fires in some Chrome configurations even for
+          // valid, fully-served MP3 files. Howler's own AudioContext unlock fires
+          // on the document click event, so the context is running by the time
+          // play() is called here.
           volume: DEFAULT_VOLUME,
           onplay: () => console.log('[Werewolves Audio Debug] Playing:', src),
           onloaderror: (_id: number, err: unknown) =>
