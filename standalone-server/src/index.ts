@@ -50,7 +50,6 @@ if (fs.existsSync(sharedAudioDir)) {
 // Serve built client assets (production) or fall back to ui-vue dir (dev).
 const { preferStandaloneWebDist, staticDir } = resolveStandaloneStaticDir({
   rootDir: process.cwd(),
-  lifecycleEvent: process.env.npm_lifecycle_event ?? '',
   existsSync: fs.existsSync,
 });
 

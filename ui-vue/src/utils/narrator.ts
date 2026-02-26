@@ -146,7 +146,6 @@ class Narrator {
         new Howl({
           src,
           html5: true,
-          preload: 'metadata',
           volume: 0,
         });
 
@@ -297,8 +296,8 @@ class Narrator {
       try {
         const response = await fetch(customPath, { method: 'HEAD' });
         const contentType = response.headers.get('content-type') || '';
-        // Only accept if response is OK AND content-type indicates audio (not HTML fallback)
-        if (response.ok && contentType.includes('audio')) {
+        // Accept audio/* or application/octet-stream; reject HTML (SPA fallback)
+        if (response.ok && !contentType.startsWith('text/html')) {
           return customPath;
         }
       } catch {
@@ -313,7 +312,8 @@ class Narrator {
         try {
           const response = await fetch(defaultPath, { method: 'HEAD' });
           const contentType = response.headers.get('content-type') || '';
-          if (response.ok && contentType.includes('audio')) {
+          // Accept audio/* or application/octet-stream; reject HTML (SPA fallback)
+          if (response.ok && !contentType.startsWith('text/html')) {
             return defaultPath;
           }
         } catch {
@@ -437,7 +437,6 @@ class Narrator {
         new Howl({
           src,
           html5: true,
-          preload: 'metadata',
           volume: DEFAULT_VOLUME,
           onplay: () => console.log('[Werewolves Audio Debug] Playing:', src),
           onloaderror: (_id: number, err: unknown) =>
