@@ -1,1 +1,8 @@
 * text=auto eol=lf
+
+# Binary audio assets — never apply line-ending normalization
+*.mp3 binary
+*.wav binary
+*.ogg binary
+*.flac binary
+*.aac binary

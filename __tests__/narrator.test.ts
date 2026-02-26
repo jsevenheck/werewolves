@@ -286,35 +286,41 @@ describe('narrator persistence', () => {
 });
 
 describe('narrator unlock', () => {
+  let mockAudio: any;
+
   beforeEach(() => {
     MockHowl.reset();
+    mockAudio = { volume: 0, play: jest.fn().mockResolvedValue(undefined), pause: jest.fn() };
+    (global as any).Audio = jest.fn(() => mockAudio);
   });
 
-  test('unlock resolves true on play', async () => {
+  afterEach(() => {
+    delete (global as any).Audio;
+  });
+
+  test('unlock resolves true when native audio plays successfully', async () => {
     const narrator = createNarrator({ initialEnabled: true, initialUnlocked: false });
     const unlockPromise = narrator.unlock();
-    const [unlockHowl] = MockHowl.instances;
 
-    unlockHowl.trigger('play');
     await expect(unlockPromise).resolves.toBe(true);
-    expect(unlockHowl.stop).toHaveBeenCalled();
-    expect(unlockHowl.off).toHaveBeenCalledWith('play');
-    expect(unlockHowl.off).toHaveBeenCalledWith('playerror');
-    expect(unlockHowl.off).toHaveBeenCalledWith('loaderror');
+    expect(mockAudio.play).toHaveBeenCalled();
+    expect(narrator.isUnlocked()).toBe(true);
   });
 
-  test('unlock resolves false on playerror', async () => {
+  test('unlock resolves false when autoplay is blocked', async () => {
+    mockAudio.play.mockRejectedValue(new Error('Autoplay blocked'));
     const narrator = createNarrator({ initialEnabled: true, initialUnlocked: false });
     const unlockPromise = narrator.unlock();
-    const [initialHowl] = MockHowl.instances;
 
-    initialHowl.trigger('playerror');
-    const fallbackHowl = MockHowl.instances[1];
-    fallbackHowl.trigger('playerror');
     await expect(unlockPromise).resolves.toBe(false);
-    expect(initialHowl.off).toHaveBeenCalledWith('play');
-    expect(initialHowl.off).toHaveBeenCalledWith('playerror');
-    expect(initialHowl.off).toHaveBeenCalledWith('loaderror');
+    expect(narrator.isUnlocked()).toBe(false);
+  });
+
+  test('unlock returns true immediately if already unlocked', async () => {
+    const narrator = createNarrator({ initialEnabled: true, initialUnlocked: true });
+    const result = await narrator.unlock();
+    expect(result).toBe(true);
+    expect(mockAudio.play).not.toHaveBeenCalled();
   });
 });
 
@@ -460,9 +466,9 @@ describe('narrator bundled audio', () => {
     expect(audioManifest.getBundledAudioUrl).toHaveBeenCalledWith('day');
   });
 
-  test('unlock uses bundled lobby audio when no assetsBasePath', async () => {
-    const mockBundledLobbyUrl = 'blob:http://localhost/bundled-lobby.mp3';
-    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledLobbyUrl);
+  test('unlock uses native Audio with silent data URL (not a Howl)', async () => {
+    const mockAudio = { volume: 0, play: jest.fn().mockResolvedValue(undefined), pause: jest.fn() };
+    (global as any).Audio = jest.fn(() => mockAudio);
 
     const narrator = createNarrator({
       initialEnabled: true,
@@ -471,46 +477,13 @@ describe('narrator bundled audio', () => {
     });
 
     const unlockPromise = narrator.unlock();
-    const [unlockHowl] = MockHowl.instances;
-
-    // Verify it's using bundled lobby audio
-    expect(unlockHowl.options.src).toBe(mockBundledLobbyUrl);
-
-    unlockHowl.trigger('play');
     await expect(unlockPromise).resolves.toBe(true);
-  });
 
-  test('unlock falls back to bundled when custom lobby fails', async () => {
-    const mockBundledLobbyUrl = 'blob:http://localhost/bundled-lobby.mp3';
-    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledLobbyUrl);
+    // Unlock must not create any Howl instances — it uses native Audio
+    expect(MockHowl.instances).toHaveLength(0);
+    expect(mockAudio.play).toHaveBeenCalled();
 
-    // Mock fetch to fail for custom audio
-    global.fetch = jest.fn().mockResolvedValue({ ok: false });
-
-    const narrator = createNarrator({
-      initialEnabled: true,
-      initialUnlocked: false,
-      assetsBasePath: '/custom-audio',
-      storage: null,
-    });
-
-    const unlockPromise = narrator.unlock();
-    await flushPromises();
-
-    // First attempt should be custom lobby
-    const [customHowl] = MockHowl.instances;
-    expect(customHowl.options.src).toBe('/custom-audio/lobby.mp3');
-
-    // Trigger error to force fallback
-    customHowl.trigger('loaderror');
-    await flushPromises();
-
-    // Should fall back to bundled lobby
-    const [, bundledHowl] = MockHowl.instances;
-    expect(bundledHowl.options.src).toBe(mockBundledLobbyUrl);
-
-    bundledHowl.trigger('play');
-    await expect(unlockPromise).resolves.toBe(true);
+    delete (global as any).Audio;
   });
 
   test('prefers custom audio from assetsBasePath over bundled', async () => {

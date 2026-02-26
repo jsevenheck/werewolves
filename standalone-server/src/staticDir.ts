@@ -4,7 +4,6 @@ type ExistsSync = (targetPath: string) => boolean;
 
 type ResolveStaticDirOptions = {
   rootDir: string;
-  lifecycleEvent?: string;
   existsSync: ExistsSync;
 };
 
@@ -18,21 +17,21 @@ type ResolveStaticDirResult = {
 
 function resolveStandaloneStaticDir({
   rootDir,
-  lifecycleEvent = '',
   existsSync,
 }: ResolveStaticDirOptions): ResolveStaticDirResult {
   const builtClientDir = path.join(rootDir, 'dist', 'client');
   const devClientDir = path.join(rootDir, 'ui-vue');
   const standaloneWebDist = path.join(rootDir, 'standalone-web', 'dist');
-  const preferStandaloneWebDist = lifecycleEvent === 'start:standalone';
+  // standalone-web/dist always takes precedence: it contains the bundled audio
+  // assets and standalone-specific build. dist/client is the game-hub build and
+  // does not include those assets.
+  const preferStandaloneWebDist = existsSync(standaloneWebDist);
 
   let staticDir: string;
-  if (preferStandaloneWebDist && existsSync(standaloneWebDist)) {
+  if (preferStandaloneWebDist) {
     staticDir = standaloneWebDist;
   } else if (existsSync(builtClientDir)) {
     staticDir = builtClientDir;
-  } else if (existsSync(standaloneWebDist)) {
-    staticDir = standaloneWebDist;
   } else {
     staticDir = devClientDir;
   }

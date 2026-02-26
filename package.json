@@ -23,7 +23,7 @@
     "start": "node dist/standalone-server/standalone-server/src/index.js",
     "start:standalone": "node dist/standalone-server/standalone-server/src/index.js",
     "install:standalone": "pnpm -C standalone-server install && pnpm -C standalone-web install",
-    "install:all": "pnpm install && pnpm run install:standalone",
+    "install:all": "pnpm install && pnpm -C ui-vue install && pnpm run install:standalone",
     "typecheck": "tsc -p tsconfig.json && pnpm -C ui-vue typecheck",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
