@@ -286,18 +286,15 @@ describe('narrator persistence', () => {
 });
 
 describe('narrator unlock', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockAudio: any;
 
   beforeEach(() => {
     MockHowl.reset();
     mockAudio = { volume: 0, play: jest.fn().mockResolvedValue(undefined), pause: jest.fn() };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global as any).Audio = jest.fn(() => mockAudio);
   });
 
   afterEach(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (global as any).Audio;
   });
 
@@ -470,9 +467,7 @@ describe('narrator bundled audio', () => {
   });
 
   test('unlock uses native Audio with silent data URL (not a Howl)', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockAudio = { volume: 0, play: jest.fn().mockResolvedValue(undefined), pause: jest.fn() };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global as any).Audio = jest.fn(() => mockAudio);
 
     const narrator = createNarrator({
@@ -488,7 +483,6 @@ describe('narrator bundled audio', () => {
     expect(MockHowl.instances).toHaveLength(0);
     expect(mockAudio.play).toHaveBeenCalled();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (global as any).Audio;
   });
 

@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@types/howler": "^2.2.12",
-    "@vitejs/plugin-vue": "^5.2.4",
+    "@vitejs/plugin-vue": "^6.0.4",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vue-tsc": "^2.2.10"
