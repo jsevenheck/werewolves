@@ -813,6 +813,31 @@ function setupSocketHandlers(
     broadcastRoom(room, io);
   });
 
+  socket.on('kickPlayer', ({ roomCode, playerId, targetId }, cb) => {
+    const room = getRoom(roomCode);
+    if (!room) return cb?.({ error: 'Room not found' });
+    if (room.phase !== 'lobby') return cb?.({ error: 'Can only kick during lobby' });
+    if (!getPlayerForSocket(room, playerId, socket.id)) return cb?.({ error: 'Player not found' });
+    if (room.hostId !== playerId) return cb?.({ error: 'Only host can kick players' });
+    if (playerId === targetId) return cb?.({ error: 'Cannot kick yourself' });
+    const target = room.players[targetId];
+    if (!target) return cb?.({ error: 'Target not found' });
+
+    addLog(room, `${target.name} was kicked from the room.`);
+    // Disconnect the kicked player's socket
+    if (target.socketId) {
+      const targetSocket = io.sockets.get(target.socketId);
+      deleteSocketIndex(target.socketId);
+      if (targetSocket) {
+        targetSocket.disconnect(true);
+      }
+    }
+    delete room.players[targetId];
+    updateHostIfNeeded(room);
+    cb?.({ ok: true });
+    broadcastRoom(room, io);
+  });
+
   socket.on('leaveRoom', ({ roomCode, playerId }, cb) => {
     const room = getRoom(roomCode);
     if (!room) return cb?.({ error: 'Room not found' });

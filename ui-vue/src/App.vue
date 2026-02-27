@@ -514,7 +514,7 @@ onBeforeUnmount(() => {
         </button>
       </section>
 
-      <PlayersPanel />
+      <PlayersPanel :socket="socket" />
       <LogsPanel />
 
       <!-- Overlays -->

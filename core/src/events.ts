@@ -76,6 +76,10 @@ export interface ClientToServerEvents {
     targetId?: string | null;
   }) => void;
   hunterShoot: (payload: { roomCode: string; playerId: string; targetId: string }) => void;
+  kickPlayer: (
+    payload: { roomCode: string; playerId: string; targetId: string },
+    cb?: (response: OkResponse | ErrorResponse) => void
+  ) => void;
   leaveRoom: (
     payload: { roomCode: string; playerId: string },
     cb?: (response: OkResponse | ErrorResponse) => void

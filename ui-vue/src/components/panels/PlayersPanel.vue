@@ -3,11 +3,33 @@ import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../../stores/game';
 import { ROLE_DETAILS } from '../../utils/roleDetails';
+import { notify } from '../../utils/helpers';
+import type { TypedSocket } from '../../composables/useSocket';
 
+interface Props {
+  socket?: TypedSocket;
+}
+
+const props = defineProps<Props>();
 const store = useGameStore();
 const { room } = storeToRefs(store);
 
 const players = computed(() => room.value?.players || []);
+const isHost = computed(() => room.value?.hostId === store.playerId);
+const canKick = computed(() => isHost.value && room.value?.phase === 'lobby');
+
+function kickPlayer(targetId: string) {
+  if (!props.socket || !store.playerId || !room.value) return;
+  props.socket.emit(
+    'kickPlayer',
+    { roomCode: room.value.code, playerId: store.playerId, targetId },
+    (res) => {
+      if (res && 'error' in res && res.error) {
+        notify(res.error);
+      }
+    }
+  );
+}
 </script>
 
 <template>
@@ -20,7 +42,22 @@ const players = computed(() => room.value?.players || []);
         class="player-card"
         :class="{ dead: !player.alive }"
       >
-        <strong>{{ player.name }}</strong>
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <strong>{{ player.name }}</strong>
+          <button
+            v-if="canKick && player.id !== store.playerId"
+            type="button"
+            style="
+              font-size: 0.75rem;
+              padding: 0.15rem 0.5rem;
+              border-color: #f87171;
+              color: #f87171;
+            "
+            @click="kickPlayer(player.id)"
+          >
+            Kick
+          </button>
+        </div>
         <div
           style="
             margin-top: 0.35rem;
