@@ -11,6 +11,7 @@ interface GameState {
   resumeToken: string;
   hunterPrompt: boolean;
   mayorPrompt: boolean;
+  roleRevealPrompt: boolean;
   roleVisible: boolean;
   storedSession: StoredSession | null;
   pendingVote: string | null | undefined;
@@ -29,6 +30,7 @@ export const useGameStore = defineStore('game', {
     resumeToken: '',
     hunterPrompt: false,
     mayorPrompt: false,
+    roleRevealPrompt: false,
     roleVisible: false,
     storedSession: (() => {
       try {
@@ -89,6 +91,7 @@ export const useGameStore = defineStore('game', {
       this.resumeToken = '';
       this.hunterPrompt = false;
       this.mayorPrompt = false;
+      this.roleRevealPrompt = false;
       this.pendingVote = undefined;
       this.pendingMayorVote = undefined;
       this.pendingWolfVote = undefined;
@@ -104,6 +107,12 @@ export const useGameStore = defineStore('game', {
     },
 
     updateRoom(room: RoomView) {
+      // Detect transition into roleReveal phase to trigger the popup
+      const wasNotRoleReveal = this.room?.phase !== 'roleReveal';
+      if (wasNotRoleReveal && room.phase === 'roleReveal') {
+        this.roleRevealPrompt = true;
+      }
+
       this.room = room;
       this.roomCode = room.code;
       if (!this.playerId && room.self) {
@@ -126,6 +135,7 @@ export const useGameStore = defineStore('game', {
       }
       if (room.phase === 'lobby') {
         this.roleVisible = false;
+        this.roleRevealPrompt = false;
       }
       // Sync overlay prompts from room state
       this.hunterPrompt = !!room.awaitingHunterShot;

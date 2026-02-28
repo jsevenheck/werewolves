@@ -215,6 +215,13 @@ onPlayerDisconnect(playerId):
   mark connected=false; keep state for reconnection
   if player was host -> assign acting host to another connected player (if any)
 
+onPlayerKick(hostId, targetId):
+  only allowed during lobby phase
+  only the acting host may kick; host cannot kick themselves
+  target player's socket is disconnected immediately
+  target is removed from the room entirely (same cleanup as onPlayerLeave in lobby)
+  remaining players receive a broadcast with the updated room state
+
 onPlayerLeave(playerId):
   remove player from the room entirely (not just disconnect)
   if room is in lobby phase -> simply remove and broadcast

@@ -14,6 +14,8 @@ Manual and automated testing expectations for the Werewolves game.
 - **Joker voted out**: Configure a Joker, run a day vote that eliminates them, and verify Joker wins that day. If lover-heartbreak deaths happen in the same chain, confirm they are resolved/logged first and no hunter/mayor pending prompts remain after game end.
 - **Hunter dies via Lovers link**: Make Hunter a Lover partner, kill the other Lover (any method), and ensure Hunter still receives the last-shot overlay even though death came from heartbreak.
 - **Werewolf & day vote ties**: Force wolf vote tie to see random target selection, and run a day vote tie to trigger revote UI; verify second tie resolves randomly among tied players.
+- **Host kick player**: In the lobby, the host sees a "Kick" button next to each other player. Confirm kicked player is removed from the room and the remaining players list updates. Verify the host cannot kick themselves and the button is absent outside the lobby phase.
+- **Role reveal overlay**: When the game starts and the `roleReveal` phase begins, each player should immediately see a full-screen overlay showing their role name (in role colour) and description. Dismissing the overlay via "Verstanden!" (or tapping the backdrop) closes it; the underlying Role Reveal panel with the Ready button remains accessible.
 - **Role reveal readiness**: During role reveal, each player must click Ready; host can only continue once all connected players are ready.
 - **Host skip armor step**: With an unresponsive or disconnected Armor, host uses Skip armor step and the game continues into night.
 - **Host skip night step**: With an unresponsive or disconnected Witch/Seer/Wolf, host uses Skip current action and the game continues normally.

@@ -24,6 +24,7 @@ import DayPhase from './components/DayPhase.vue';
 import GameOver from './components/GameOver.vue';
 import HunterOverlay from './components/overlays/HunterOverlay.vue';
 import MayorSelectionOverlay from './components/overlays/MayorSelectionOverlay.vue';
+import RoleRevealOverlay from './components/overlays/RoleRevealOverlay.vue';
 import HeaderPanel from './components/panels/Header.vue';
 import PlayersPanel from './components/panels/PlayersPanel.vue';
 import LogsPanel from './components/panels/LogsPanel.vue';
@@ -142,6 +143,9 @@ const phase = computed(() => store.room?.phase || null);
 const hasRoom = computed(() => !!store.room);
 const hunterPrompt = computed(() => store.hunterPrompt && store.room?.awaitingHunterShot);
 const mayorPrompt = computed(() => store.mayorPrompt && store.room?.awaitingMayorSelection);
+const roleRevealPrompt = computed(
+  () => store.roleRevealPrompt && store.room?.phase === 'roleReveal'
+);
 const phaseTransition = computed(() => store.room?.phaseTransition || null);
 const winner = computed(() => store.room?.winner || null);
 const mayorName = computed(() => {
@@ -519,6 +523,7 @@ onBeforeUnmount(() => {
 
       <!-- Overlays -->
       <Teleport to="body">
+        <RoleRevealOverlay v-if="roleRevealPrompt" />
         <HunterOverlay v-if="hunterPrompt" :socket="socket" />
         <MayorSelectionOverlay v-if="mayorPrompt" :socket="socket" />
       </Teleport>
