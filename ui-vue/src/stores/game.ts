@@ -21,7 +21,7 @@ interface GameState {
   readyButtonTimeoutId: number | null;
 }
 
-export const useGameStore = defineStore('game', {
+export const useGameStore = defineStore('werewolves-game', {
   state: (): GameState => ({
     room: null,
     roomCode: '',
