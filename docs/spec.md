@@ -55,6 +55,7 @@ Werewolves is a social deduction game where:
 - `healedTarget`: player healed by Witch (usually wolf target), or null.
 - `poisonTarget`: player poisoned by Witch, or null.
 - `seerActed`: boolean, true once the Seer has inspected this night.
+- `seerAwaitingDismiss`: boolean, true after seer submits inspect and before they dismiss the result overlay; phase does not advance to witch while this is true.
 - `voteState`: `{votes: map playerId -> targetId|null|undefined, revoteFromTie: array|null}`.
 - `pendingDeaths`: queue of `{playerId, reason}` awaiting resolution.
 - `logs`: array of structured entries for UI recap (`{ts, text, publicText}`).
@@ -108,6 +109,11 @@ loop:
       if step='seer':
         if seer alive:
           wait for inspect -> respond privately with result
+          seer sees a full-screen result overlay (name + alignment); seerAwaitingDismiss=true
+          phase does NOT advance until seer dismisses via seerContinue event ("Got it!" button)
+          if seer disconnects while awaiting dismiss -> auto-advance after grace period
+          if host skips step -> seerAwaitingDismiss reset, advance immediately
+          if seer leaves -> seerAwaitingDismiss reset, advance immediately
         advance step='witch'
       if step='witch':
         if witch alive:
@@ -212,8 +218,18 @@ MayorSuccession(newMayorId):
     randomly select an alive player as new mayor and resume game flow
 
 onPlayerDisconnect(playerId):
-  mark connected=false; keep state for reconnection
+  5-second grace period before marking connected=false (absorbs brief mobile interruptions)
+  socket index is removed immediately; player state and broadcast are delayed
+  if the player reconnects within 5 seconds the pending timer is cancelled — no disconnect is recorded
+  after grace period: mark connected=false; keep state for reconnection
   if player was host -> assign acting host to another connected player (if any)
+
+onCloseSession(hostId):
+  only the acting host may close the session
+  cancel all pending reconnect grace timers for players in the room
+  emit `roomClosed` to all connected clients so they can reset and clear their session
+  disconnect all player sockets
+  delete the room (including sessionId → roomCode mapping) so fresh joins are possible
 
 onPlayerKick(hostId, targetId):
   only allowed during lobby phase

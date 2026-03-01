@@ -23,13 +23,13 @@ function dismiss() {
 <template>
   <div class="role-reveal-overlay" @click.self="dismiss">
     <div class="panel role-reveal-panel">
-      <p class="role-reveal-greeting">Du bist...</p>
+      <p class="role-reveal-greeting">You are...</p>
       <h2 class="role-reveal-name" :style="{ color: info?.color ?? '#f8fafc' }">
         {{ info?.name ?? selfRole ?? '?' }}
       </h2>
       <p class="role-reveal-description">{{ info?.description }}</p>
-      <p v-if="self" class="role-reveal-player-name">Spieler: {{ self.name }}</p>
-      <button type="button" class="role-reveal-btn" @click="dismiss">Verstanden!</button>
+      <p v-if="self" class="role-reveal-player-name">Player: {{ self.name }}</p>
+      <button type="button" class="role-reveal-btn" @click="dismiss">Got it!</button>
     </div>
   </div>
 </template>
@@ -95,12 +95,12 @@ function dismiss() {
   padding: 0.65rem 1.5rem;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, #f97316, #ea580c);
   color: #fff;
   width: 100%;
 }
 
 .role-reveal-btn:hover {
-  background: linear-gradient(135deg, #818cf8, #6366f1);
+  background: linear-gradient(135deg, #fb923c, #f97316);
 }
 </style>

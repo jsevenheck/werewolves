@@ -105,7 +105,12 @@ const makeIo = () => {
 describe('socketHandlers host handoff', () => {
   const io = { sockets: { sockets: new Map() } } as unknown as any;
 
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
   afterEach(() => {
+    jest.useRealTimers();
     deleteSocketIndex('socket-owner');
     deleteSocketIndex('socket-owner-2');
   });
@@ -139,6 +144,7 @@ describe('socketHandlers host handoff', () => {
     setupSocketHandlers(io, socket as any);
 
     handlers.disconnect();
+    jest.runAllTimers();
 
     expect(room.hostId).toBe('peer');
 
@@ -513,6 +519,7 @@ describe('socketHandlers room entry and state events', () => {
     handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, jest.fn());
 
     expect(room.seerActed).toBe(true);
+    expect(room.seerAwaitingDismiss).toBe(false);
     expect(scheduleNightStep).toHaveBeenCalledWith(room, 'witch', expect.any(Function), io);
   });
 
@@ -1404,8 +1411,13 @@ describe('socketHandlers disconnect vote resolution', () => {
   const io = { sockets: { sockets: new Map() } } as unknown as any;
 
   beforeEach(() => {
+    jest.useFakeTimers();
     jest.clearAllMocks();
     deleteSocketIndex('socket-1');
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   test('does not resolve day vote during a phase transition', () => {
@@ -1428,6 +1440,7 @@ describe('socketHandlers disconnect vote resolution', () => {
     setupSocketHandlers(io, socket as any);
 
     handlers.disconnect();
+    jest.runAllTimers();
 
     expect(tryResolveDayVote).not.toHaveBeenCalled();
   });
@@ -1452,6 +1465,7 @@ describe('socketHandlers disconnect vote resolution', () => {
     setupSocketHandlers(io, socket as any);
 
     handlers.disconnect();
+    jest.runAllTimers();
 
     expect(tryResolveDayVote).not.toHaveBeenCalled();
   });
@@ -1476,6 +1490,7 @@ describe('socketHandlers disconnect vote resolution', () => {
     setupSocketHandlers(io, socket as any);
 
     handlers.disconnect();
+    jest.runAllTimers();
 
     expect(tryResolveDayVote).toHaveBeenCalledWith(room, expect.any(Function), io);
   });
@@ -1500,6 +1515,7 @@ describe('socketHandlers disconnect vote resolution', () => {
     setupSocketHandlers(io, socket as any);
 
     handlers.disconnect();
+    jest.runAllTimers();
 
     expect(tryResolveMayorVote).toHaveBeenCalledWith(room, expect.any(Function));
   });
@@ -1744,6 +1760,59 @@ describe('socketHandlers mechanics guards', () => {
 
     expect(room.players.seer.seerResult).toBeNull();
     expect(advanceNightStep).not.toHaveBeenCalled();
+  });
+
+  test('valid seer inspect sets result and awaits dismiss without advancing', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'seer',
+      players: {
+        seer: {
+          id: 'seer',
+          role: 'seer',
+          alive: true,
+          socketId: 'socket-1',
+          seerResult: null,
+        },
+        wolf: { id: 'wolf', name: 'Wolf', role: 'werewolf', alive: true },
+      },
+      seerActed: false,
+      seerAwaitingDismiss: false,
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.submitSeerInspect({ roomCode: 'ABCD', playerId: 'seer', targetId: 'wolf' });
+
+    expect(room.players.seer.seerResult).toEqual({ name: 'Wolf', result: 'Werewolf' });
+    expect(room.seerActed).toBe(true);
+    expect(room.seerAwaitingDismiss).toBe(true);
+    expect(advanceNightStep).not.toHaveBeenCalled();
+  });
+
+  test('seerContinue clears flag and advances night step', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'seer',
+      players: {
+        seer: { id: 'seer', role: 'seer', alive: true, socketId: 'socket-1', seerResult: null },
+      },
+      seerActed: true,
+      seerAwaitingDismiss: true,
+    } as unknown as Room;
+    (getRoom as jest.Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.seerContinue({ roomCode: 'ABCD', playerId: 'seer' });
+
+    expect(room.seerAwaitingDismiss).toBe(false);
+    expect(advanceNightStep).toHaveBeenCalledWith(room, expect.any(Function), io);
   });
 
   test('day votes are locked after submission', () => {

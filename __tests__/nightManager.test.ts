@@ -48,6 +48,7 @@ const makeRoom = (): Room => ({
   healedTarget: null,
   poisonTarget: null,
   seerActed: false,
+  seerAwaitingDismiss: false,
   guardedTarget: null,
   lastGuardedTarget: null,
   guardActed: false,

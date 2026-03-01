@@ -12,17 +12,17 @@ interface Props {
 
 const props = defineProps<Props>();
 const store = useGameStore();
-const { room } = storeToRefs(store);
+const { room, playerId } = storeToRefs(store);
 
 const players = computed(() => room.value?.players || []);
-const isHost = computed(() => room.value?.hostId === store.playerId);
+const isHost = computed(() => room.value?.hostId === playerId.value);
 const canKick = computed(() => isHost.value && room.value?.phase === 'lobby');
 
 function kickPlayer(targetId: string) {
-  if (!props.socket || !store.playerId || !room.value) return;
+  if (!props.socket || !playerId.value || !room.value) return;
   props.socket.emit(
     'kickPlayer',
-    { roomCode: room.value.code, playerId: store.playerId, targetId },
+    { roomCode: room.value.code, playerId: playerId.value, targetId },
     (res) => {
       if (res && 'error' in res && res.error) {
         notify(res.error);
@@ -45,12 +45,13 @@ function kickPlayer(targetId: string) {
         <div style="display: flex; justify-content: space-between; align-items: center">
           <strong>{{ player.name }}</strong>
           <button
-            v-if="canKick && player.id !== store.playerId"
+            v-if="canKick && player.id !== playerId"
             type="button"
             style="
               font-size: 0.75rem;
               padding: 0.15rem 0.5rem;
-              border-color: #f87171;
+              background: transparent;
+              border: 1px solid #f87171;
               color: #f87171;
             "
             @click="kickPlayer(player.id)"

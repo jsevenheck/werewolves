@@ -64,7 +64,7 @@ function advanceNightStep(
 ) {
   if (room.phaseStep === 'seer') {
     const seerAlive = Object.values(room.players).some((p) => p.role === 'seer' && p.alive);
-    if (!seerAlive || room.seerActed) {
+    if (!seerAlive || (room.seerActed && !room.seerAwaitingDismiss)) {
       room.seerActed = false;
       scheduleNightStep(room, 'witch', broadcastRoom, io);
       return;

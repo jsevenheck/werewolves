@@ -53,6 +53,7 @@ export interface ClientToServerEvents {
     payload: { roomCode: string; playerId: string; targetId: string },
     cb?: (response: { ok?: true; name?: string; result?: string } | ErrorResponse) => void
   ) => void;
+  seerContinue: (payload: { roomCode: string; playerId: string }) => void;
   submitWitchDecision: (payload: {
     roomCode: string;
     playerId: string;
@@ -85,6 +86,10 @@ export interface ClientToServerEvents {
     cb?: (response: OkResponse | ErrorResponse) => void
   ) => void;
   restartGame: (payload: { roomCode: string; playerId: string }) => void;
+  closeSession: (
+    payload: { roomCode: string; playerId: string },
+    cb?: (response: OkResponse | ErrorResponse) => void
+  ) => void;
   requestState: (payload: { roomCode: string; playerId: string }) => void;
 }
 
@@ -93,6 +98,7 @@ export interface ServerToClientEvents {
   hunterPrompt: (payload: { roomCode: string }) => void;
   mayorPrompt: (payload: { roomCode: string }) => void;
   wolfVoteRejected: (payload: { reason: 'already_voted' }) => void;
+  roomClosed: () => void;
 }
 
 export interface InterServerEvents {

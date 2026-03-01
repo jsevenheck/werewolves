@@ -362,6 +362,12 @@ function onWolfVoteRejected(payload: { reason: string }) {
   }
 }
 
+function onRoomClosed() {
+  notify('The host has closed this session.');
+  store.resetState();
+  store.clearSession();
+}
+
 function onConnectHub() {
   if (!hasExpectedHubNamespace()) {
     socket.disconnect();
@@ -419,6 +425,7 @@ onMounted(() => {
   socket.on('hunterPrompt', onHunterPrompt);
   socket.on('mayorPrompt', onMayorPrompt);
   socket.on('wolfVoteRejected', onWolfVoteRejected);
+  socket.on('roomClosed', onRoomClosed);
 });
 
 onBeforeUnmount(() => {
@@ -431,6 +438,7 @@ onBeforeUnmount(() => {
   socket.off('hunterPrompt', onHunterPrompt);
   socket.off('mayorPrompt', onMayorPrompt);
   socket.off('wolfVoteRejected', onWolfVoteRejected);
+  socket.off('roomClosed', onRoomClosed);
 });
 </script>
 
@@ -519,7 +527,7 @@ onBeforeUnmount(() => {
       </section>
 
       <PlayersPanel :socket="socket" />
-      <LogsPanel />
+      <LogsPanel :socket="socket" />
 
       <!-- Overlays -->
       <Teleport to="body">

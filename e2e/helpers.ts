@@ -312,6 +312,12 @@ const trySubmitNightActions = async (
       state.wolf = false;
     }
 
+    const seerResultOverlay = page.locator('.seer-result-overlay');
+    if ((await seerResultOverlay.count()) && (await seerResultOverlay.isVisible())) {
+      await page.locator('.seer-result-btn').click();
+      acted = true;
+    }
+
     const seerForm = page.locator('#seer-form');
     if ((await seerForm.count()) && (await seerForm.isVisible())) {
       if (!state.seer) {

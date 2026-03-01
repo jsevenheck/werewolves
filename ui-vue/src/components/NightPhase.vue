@@ -5,6 +5,7 @@ import { useGameStore } from '../stores/game';
 import { getPlayerName, notify } from '../utils/helpers';
 import { NIGHT_DELAY_MS } from '@shared/constants';
 import type { TypedSocket } from '../composables/useSocket';
+import SeerResultOverlay from './overlays/SeerResultOverlay.vue';
 
 interface Props {
   socket: TypedSocket;
@@ -16,6 +17,7 @@ const { room, playerId, pendingWolfVote } = storeToRefs(store);
 
 const wolfTarget = ref('');
 const seerTarget = ref('');
+const pendingSeerResult = ref<{ name: string; result: string } | null>(null);
 const poisonTarget = ref('');
 const guardTarget = ref('');
 const harlotTarget = ref('');
@@ -140,6 +142,8 @@ function submitSeerInspect() {
     (res) => {
       if (res && 'error' in res && res.error) {
         notify(`Error: ${res.error}`);
+      } else if (res && 'ok' in res && res.name && res.result) {
+        pendingSeerResult.value = { name: res.name, result: res.result };
       }
     }
   );
@@ -407,4 +411,11 @@ watch(
       <button id="skip-step" type="button" @click="skipStep">Skip current action</button>
     </div>
   </section>
+
+  <SeerResultOverlay
+    v-if="pendingSeerResult"
+    :socket="props.socket"
+    :result="pendingSeerResult"
+    @dismiss="pendingSeerResult = null"
+  />
 </template>
