@@ -14,7 +14,7 @@ test('escapes player names and log messages', async ({ browser }) => {
     await contexts[1].close();
 
     const logs = host.locator('.logs');
-    await expect(logs).toContainText(`${maliciousName} disconnected.`);
+    await expect(logs).toContainText(`${maliciousName} disconnected.`, { timeout: 10000 });
     await expect(logs.locator('img')).toHaveCount(0);
   } finally {
     await closeContexts(contexts);

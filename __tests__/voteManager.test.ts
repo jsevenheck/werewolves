@@ -36,6 +36,7 @@ const makeRoom = (players: Record<string, Player>): Room => ({
   healedTarget: null,
   poisonTarget: null,
   seerActed: false,
+  seerAwaitingDismiss: false,
   guardedTarget: null,
   lastGuardedTarget: null,
   guardActed: false,

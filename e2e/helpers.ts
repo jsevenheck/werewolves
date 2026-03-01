@@ -197,6 +197,11 @@ export const startGameAndReady = async (pages: Page[]) => {
     pages.map((page) => page.waitForSelector('h2:has-text("Your Role")', { timeout: 30000 }))
   );
   for (const page of pages) {
+    // Dismiss the role-reveal overlay if it is blocking interactions
+    const overlay = page.locator('.role-reveal-overlay');
+    if (await overlay.count()) {
+      await page.locator('.role-reveal-btn').click();
+    }
     const readyBtn = page.locator('#ready-btn');
     if (await readyBtn.count()) {
       await readyBtn.click();
@@ -305,6 +310,12 @@ const trySubmitNightActions = async (
       }
     } else {
       state.wolf = false;
+    }
+
+    const seerResultOverlay = page.locator('.seer-result-overlay');
+    if ((await seerResultOverlay.count()) && (await seerResultOverlay.isVisible())) {
+      await page.locator('.seer-result-btn').click();
+      acted = true;
     }
 
     const seerForm = page.locator('#seer-form');

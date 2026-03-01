@@ -35,6 +35,9 @@ test('seer can inspect and see the result', async ({ browser }) => {
     await seer.locator('#seer-form select[name="target"]').selectOption({ label: names[0] });
     await seer.locator('#seer-form button[type="submit"]').click();
 
+    await seer.locator('.seer-result-overlay').waitFor({ state: 'visible', timeout: 10000 });
+    await seer.locator('.seer-result-btn').click();
+
     await seer.locator('#seer-form').waitFor({ state: 'detached', timeout: 10000 });
     const toggleRole = seer.locator('#toggle-role');
     await toggleRole.waitFor({ state: 'visible', timeout: 10000 });

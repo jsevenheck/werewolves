@@ -24,6 +24,7 @@ const makeRoom = (): Room => ({
   healedTarget: null,
   poisonTarget: null,
   seerActed: true,
+  seerAwaitingDismiss: false,
   pendingDeaths: [],
   lastNightDeaths: [],
   lastDayDeaths: [],

@@ -132,6 +132,7 @@ export interface Room {
   healedTarget: string | null;
   poisonTarget: string | null;
   seerActed: boolean;
+  seerAwaitingDismiss: boolean;
   guardedTarget: string | null;
   lastGuardedTarget: string | null;
   guardActed: boolean;

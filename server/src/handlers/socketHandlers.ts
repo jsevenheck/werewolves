@@ -1,6 +1,12 @@
 import type { Namespace, Socket } from 'socket.io';
 import { sanitizeName, createVoteState, addLog, clearRoomTimers } from '../utils/helpers';
-import { createRoom, getRoom, getRoomCodeBySessionId, linkSessionToRoom } from '../models/room';
+import {
+  createRoom,
+  getRoom,
+  deleteRoom,
+  getRoomCodeBySessionId,
+  linkSessionToRoom,
+} from '../models/room';
 import { createPlayer, setSocketIndex, getSocketIndex, deleteSocketIndex } from '../models/player';
 import { broadcastRoom, sendStateToPlayer } from '../managers/broadcastManager';
 import {
@@ -34,6 +40,23 @@ import {
 import { startNextMayorSelection, tryResolveMayorVote } from '../managers/mayorManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { Room } from '../../../core/src/types';
+
+/**
+ * Grace period before a disconnected player is marked offline.
+ * Phones lock their screen and the OS immediately closes the WebSocket,
+ * but the client reconnects within seconds. With this buffer the "Disconnected"
+ * badge never flashes for brief interruptions.
+ */
+const RECONNECT_GRACE_MS = 5_000;
+const pendingDisconnects = new Map<string, ReturnType<typeof setTimeout>>();
+
+function cancelPendingDisconnect(playerId: string) {
+  const timer = pendingDisconnects.get(playerId);
+  if (timer) {
+    clearTimeout(timer);
+    pendingDisconnects.delete(playerId);
+  }
+}
 
 function getPlayerForSocket(room: Room, playerId: string, socketId: string) {
   const player = room.players[playerId];
@@ -163,6 +186,8 @@ function setupSocketHandlers(
       // to the "new player" branch, which will create a duplicate slot.
       const existingPlayer = hubPlayerId ? room.players[hubPlayerId] : undefined;
       if (existingPlayer) {
+        // Cancel any pending disconnect grace timer so the reconnect is seamless.
+        cancelPendingDisconnect(existingPlayer.id);
         // Detach the previous socket so its socketIndex entry is removed and the
         // old connection is torn down – prevents a stale disconnect from later
         // marking this player as disconnected.
@@ -206,6 +231,8 @@ function setupSocketHandlers(
   });
 
   socket.on('resumePlayer', ({ roomCode, playerId, resumeToken }, cb) => {
+    // Cancel any pending disconnect grace timer for this player.
+    cancelPendingDisconnect(playerId);
     const existingRef = getSocketIndex(socket.id);
     if (existingRef && (existingRef.roomCode !== roomCode || existingRef.playerId !== playerId)) {
       detachSocketFromRoom(io, socket.id, 'left the room');
@@ -426,6 +453,17 @@ function setupSocketHandlers(
     player.seerResult = { name: target.name, result };
     cb?.({ ok: true, name: target.name, result });
     room.seerActed = true;
+    room.seerAwaitingDismiss = true;
+    broadcastRoom(room, io);
+  });
+
+  socket.on('seerContinue', ({ roomCode, playerId }) => {
+    const room = getRoom(roomCode);
+    if (!room || room.phase !== 'night' || room.phaseStep !== 'seer') return;
+    const player = getPlayerForSocket(room, playerId, socket.id);
+    if (!player || player.role !== 'seer' || !player.alive) return;
+    if (!room.seerAwaitingDismiss) return;
+    room.seerAwaitingDismiss = false;
     advanceNightStep(room, (r) => broadcastRoom(r, io), io);
   });
 
@@ -641,6 +679,7 @@ function setupSocketHandlers(
 
     if (room.phaseStep === 'seer') {
       room.seerActed = true;
+      room.seerAwaitingDismiss = false;
       scheduleNightStep(room, 'witch', (r: typeof room) => broadcastRoom(r, io), io);
       return;
     }
@@ -813,6 +852,31 @@ function setupSocketHandlers(
     broadcastRoom(room, io);
   });
 
+  socket.on('kickPlayer', ({ roomCode, playerId, targetId }, cb) => {
+    const room = getRoom(roomCode);
+    if (!room) return cb?.({ error: 'Room not found' });
+    if (room.phase !== 'lobby') return cb?.({ error: 'Can only kick during lobby' });
+    if (!getPlayerForSocket(room, playerId, socket.id)) return cb?.({ error: 'Player not found' });
+    if (room.hostId !== playerId) return cb?.({ error: 'Only host can kick players' });
+    if (playerId === targetId) return cb?.({ error: 'Cannot kick yourself' });
+    const target = room.players[targetId];
+    if (!target) return cb?.({ error: 'Target not found' });
+
+    addLog(room, `${target.name} was kicked from the room.`);
+    // Disconnect the kicked player's socket
+    if (target.socketId) {
+      const targetSocket = io.sockets.get(target.socketId);
+      deleteSocketIndex(target.socketId);
+      if (targetSocket) {
+        targetSocket.disconnect(true);
+      }
+    }
+    delete room.players[targetId];
+    updateHostIfNeeded(room);
+    cb?.({ ok: true });
+    broadcastRoom(room, io);
+  });
+
   socket.on('leaveRoom', ({ roomCode, playerId }, cb) => {
     const room = getRoom(roomCode);
     if (!room) return cb?.({ error: 'Room not found' });
@@ -929,6 +993,7 @@ function setupSocketHandlers(
           tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io), io, { allowNoKill: true });
         } else if (playerPhaseStep === 'seer' && playerRole === 'seer') {
           room.seerActed = true;
+          room.seerAwaitingDismiss = false;
           scheduleNightStep(room, 'witch', (r) => broadcastRoom(r, io), io);
         } else if (playerPhaseStep === 'witch' && playerRole === 'witch') {
           scheduleNightStep(room, 'guard', (r) => broadcastRoom(r, io), io);
@@ -951,6 +1016,34 @@ function setupSocketHandlers(
     cb?.({ ok: true });
   });
 
+  socket.on('closeSession', ({ roomCode, playerId }, cb) => {
+    const room = getRoom(roomCode);
+    if (!room) return cb?.({ error: 'Room not found' });
+    if (!getPlayerForSocket(room, playerId, socket.id)) return cb?.({ error: 'Player not found' });
+    if (room.hostId !== playerId) return cb?.({ error: 'Only host can close the session' });
+
+    // Cancel any pending disconnect grace timers for all players in the room.
+    for (const pid of Object.keys(room.players)) {
+      cancelPendingDisconnect(pid);
+    }
+
+    // Notify all connected players before tearing down.
+    for (const player of Object.values(room.players)) {
+      if (player.socketId) {
+        const playerSocket = io.sockets.get(player.socketId);
+        if (playerSocket) {
+          playerSocket.emit('roomClosed');
+          deleteSocketIndex(player.socketId);
+          playerSocket.disconnect(true);
+        }
+      }
+    }
+
+    // Remove the room (also clears the sessionId → roomCode mapping).
+    deleteRoom(roomCode);
+    cb?.({ ok: true });
+  });
+
   socket.on('requestState', ({ roomCode, playerId }) => {
     const room = getRoom(roomCode);
     if (!room) return;
@@ -960,7 +1053,49 @@ function setupSocketHandlers(
   });
 
   socket.on('disconnect', () => {
-    detachSocketFromRoom(io, socket.id, 'disconnected');
+    const ref = getSocketIndex(socket.id);
+    if (!ref) return;
+    // Remove the socket→player mapping immediately so no stale index persists.
+    // The player state and broadcast are delayed to absorb brief mobile interruptions.
+    deleteSocketIndex(socket.id);
+    const { playerId, roomCode } = ref;
+    const disconnectedSocketId = socket.id;
+    cancelPendingDisconnect(playerId);
+    const timer = setTimeout(() => {
+      pendingDisconnects.delete(playerId);
+      const room = getRoom(roomCode);
+      if (!room) return;
+      const player = room.players[playerId];
+      // If the player reconnected in the meantime their socketId was updated — skip.
+      if (!player || player.socketId !== disconnectedSocketId) return;
+      player.connected = false;
+      player.socketId = null;
+      addLog(room, `${player.name} disconnected.`);
+      updateHostIfNeeded(room);
+      if (
+        room.phase === 'day' &&
+        player.alive &&
+        !room.phaseTransition &&
+        !room.awaitingHunterShot
+      ) {
+        tryResolveDayVote(room, (r) => broadcastRoom(r, io), io);
+      }
+      if (room.phase === 'mayor' && player.alive) {
+        tryResolveMayorVote(room, (r) => broadcastRoom(r, io));
+      }
+      if (
+        room.phase === 'night' &&
+        room.phaseStep === 'seer' &&
+        room.seerAwaitingDismiss &&
+        player.role === 'seer'
+      ) {
+        room.seerAwaitingDismiss = false;
+        advanceNightStep(room, (r) => broadcastRoom(r, io), io);
+        return;
+      }
+      broadcastRoom(room, io);
+    }, RECONNECT_GRACE_MS);
+    pendingDisconnects.set(playerId, timer);
   });
 }
 
