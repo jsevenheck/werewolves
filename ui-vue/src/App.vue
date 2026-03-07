@@ -401,13 +401,21 @@ onMounted(() => {
     // Hub mode: auto-join on first connect, resume on reconnect
     if (socket.connected) {
       void runHubConnectFlow();
+    } else {
+      // The host app's platform socket may have created a shared Socket.IO
+      // manager with autoConnect disabled, so the game namespace must connect
+      // explicitly instead of relying on the client default.
+      socket.connect();
     }
     socket.on('connect', onConnectHub);
     socket.on('connect_error', onConnectErrorHub);
 
-    // Retry hubAutoJoin if no room after a delay (guards against race conditions)
+    // Retry hubAutoJoin if no room after a delay (guards against race conditions
+    // and the case where the first attempt's ack callback never fires, leaving
+    // hubFlowInProgress stuck as true).
     hubRetryTimer = window.setTimeout(() => {
       if (!store.room && socket.connected) {
+        hubFlowInProgress = false;
         void runHubConnectFlow();
       }
     }, HUB_RETRY_DELAY_MS);
