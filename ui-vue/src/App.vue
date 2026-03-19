@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, ref, inject } from 'vue';
+import { computed, onMounted, onBeforeUnmount, inject } from 'vue';
 import { useGameStore } from './stores/game';
 import { useSocket } from './composables/useSocket';
 import { useNarrator } from './composables/useNarrator';
 import { notify } from './utils/helpers';
-import type { GameComponentProps } from './types/config';
+import type { WerewolvesGameConfig } from './types/config';
 import type { StoredSession } from '@shared/types';
 import {
   NIGHT_TO_DAY_DELAY_MS,
@@ -29,67 +29,11 @@ import HeaderPanel from './components/panels/Header.vue';
 import PlayersPanel from './components/panels/PlayersPanel.vue';
 import LogsPanel from './components/panels/LogsPanel.vue';
 
-interface Props {
-  socketUrl?: string;
-  socketPath?: string;
-  assetsBasePath?: string;
-  standalone?: boolean;
-  // Hub integration props
-  playerId?: string;
-  playerName?: string;
-  sessionId?: string;
-  joinToken?: string;
-  wsNamespace?: string;
-  apiBaseUrl?: string;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  socketUrl: '',
-  socketPath: '/socket.io',
-  assetsBasePath: '',
-  playerId: '',
-  playerName: '',
-  sessionId: '',
-  joinToken: '',
-  wsNamespace: '',
-  apiBaseUrl: '',
-});
-
-// Check for injected config from host app (app.provide)
-const injectedConfig = inject<Partial<GameComponentProps>>('werewolvesConfig', {});
-const effectiveWsNamespace = props.wsNamespace || injectedConfig.wsNamespace || '';
-const configuredSocketUrl = props.socketUrl || injectedConfig.socketUrl || '';
-const effectiveSocketUrl = resolveSocketNamespaceUrl(configuredSocketUrl, effectiveWsNamespace);
-const effectiveSocketPath = props.socketPath || injectedConfig.socketPath || '/socket.io';
-// Only use assetsBasePath if explicitly provided (for custom audio overrides).
-// If not provided, narrator will use bundled audio instead of relying on host-served files.
-const rawAssetsBasePath = props.assetsBasePath || injectedConfig.assetsBasePath;
-const effectiveAssetsBasePath = rawAssetsBasePath
-  ? normalizeAssetsBasePath(rawAssetsBasePath)
-  : undefined;
-
-// Vue Boolean-casts a missing `standalone` prop to false, so the injected
-// config must be checked first (it is undefined when no provide is present).
-const effectiveStandalone = injectedConfig.standalone ?? props.standalone ?? !effectiveWsNamespace;
-const effectivePlayerId = props.playerId || injectedConfig.playerId || '';
-const effectivePlayerName = props.playerName || injectedConfig.playerName || '';
-const effectiveSessionId = props.sessionId || injectedConfig.sessionId || '';
-const effectiveJoinToken = props.joinToken || injectedConfig.joinToken || '';
-
-function resolveSocketNamespaceUrl(socketUrl: string, wsNamespace: string): string {
-  if (!wsNamespace) return socketUrl;
-  const namespace = wsNamespace.startsWith('/') ? wsNamespace : `/${wsNamespace}`;
-  if (!socketUrl) return namespace;
-  if (/^https?:\/\//i.test(socketUrl)) {
-    const originMatch = socketUrl.match(/^https?:\/\/[^/]+/i);
-    const base = originMatch?.[0] ?? socketUrl.replace(/\/+$/, '');
-    return `${base}${namespace}`;
-  }
-  if (socketUrl.startsWith('/')) {
-    return namespace;
-  }
-  return `${socketUrl.replace(/\/+$/, '')}${namespace}`;
-}
+// Injected config from app.provide('werewolvesConfig', { ... })
+const config = inject<Partial<WerewolvesGameConfig>>('werewolvesConfig', {});
+const wsNamespace = config.wsNamespace || '/g/werewolves';
+const socketUrl = config.socketUrl || wsNamespace;
+const socketPath = config.socketPath || '/socket.io';
 
 function normalizeAssetsBasePath(path: string): string {
   const trimmed = path.trim();
@@ -108,19 +52,15 @@ function normalizeAssetsBasePath(path: string): string {
   return `${base}/${relative}`;
 }
 
+const effectiveAssetsBasePath = config.assetsBasePath
+  ? normalizeAssetsBasePath(config.assetsBasePath)
+  : undefined;
+
 const store = useGameStore();
-const authPayload: Record<string, string> = {};
-if (effectiveJoinToken) {
-  authPayload.joinToken = effectiveJoinToken;
-  authPayload.token = effectiveJoinToken;
-}
-if (effectiveSessionId) authPayload.sessionId = effectiveSessionId;
-if (effectivePlayerId) authPayload.playerId = effectivePlayerId;
 
 const socket = useSocket({
-  url: effectiveSocketUrl,
-  path: effectiveSocketPath,
-  auth: Object.keys(authPayload).length ? authPayload : undefined,
+  url: socketUrl,
+  path: socketPath,
 });
 const {
   enabled: narratorEnabled,
@@ -131,13 +71,6 @@ const {
   bindGestureUnlock,
   cleanupNarrator,
 } = useNarrator(effectiveAssetsBasePath);
-
-const HUB_JOIN_TIMEOUT_MS = 10000;
-const HUB_RETRY_DELAY_MS = 3000;
-let hubRetryTimer: number | undefined;
-let hubJoinTimeoutTimer: number | undefined;
-const hubJoinError = ref<string | null>(null);
-let hubFlowInProgress = false;
 
 const phase = computed(() => store.room?.phase || null);
 const hasRoom = computed(() => !!store.room);
@@ -239,113 +172,8 @@ function attemptResume(saved: StoredSession): Promise<boolean> {
   });
 }
 
-// Hub auto-join: emit autoJoinRoom so the server creates/locates the room
-// keyed by sessionId.  Falls back to attemptResume on reconnects.
-function hubAutoJoin(): Promise<boolean> {
-  return new Promise((resolve) => {
-    startHubJoinTimeout();
-    socket.emit(
-      'autoJoinRoom',
-      {
-        sessionId: effectiveSessionId,
-        playerId: effectivePlayerId,
-        name: effectivePlayerName || effectivePlayerId,
-      },
-      (res) => {
-        if (!res || 'error' in res) {
-          const message = res?.error ?? 'Failed to join room';
-          hubJoinError.value = message;
-          notify(message);
-          resolve(false);
-          return;
-        }
-        if (res.roomCode && res.playerId && res.resumeToken) {
-          hubJoinError.value = null;
-          store.setPlayer(res.playerId, effectivePlayerName || effectivePlayerId, res.resumeToken);
-          store.roomCode = res.roomCode;
-          socket.emit('requestState', { roomCode: res.roomCode, playerId: res.playerId });
-          startHubJoinTimeout();
-          resolve(true);
-          return;
-        }
-        resolve(false);
-      }
-    );
-  });
-}
-
-function clearHubTimers() {
-  if (hubRetryTimer !== undefined) {
-    clearTimeout(hubRetryTimer);
-    hubRetryTimer = undefined;
-  }
-  if (hubJoinTimeoutTimer !== undefined) {
-    clearTimeout(hubJoinTimeoutTimer);
-    hubJoinTimeoutTimer = undefined;
-  }
-}
-
-function startHubJoinTimeout() {
-  if (hubJoinTimeoutTimer !== undefined) {
-    clearTimeout(hubJoinTimeoutTimer);
-  }
-  hubJoinTimeoutTimer = window.setTimeout(() => {
-    if (!store.room) {
-      hubJoinError.value = 'Could not load game state. Please retry.';
-    }
-  }, HUB_JOIN_TIMEOUT_MS);
-}
-
-function hasExpectedHubNamespace(): boolean {
-  const connectedNamespace = (socket as unknown as { nsp?: string }).nsp;
-  if (!effectiveWsNamespace || connectedNamespace === effectiveWsNamespace) {
-    return true;
-  }
-  hubJoinError.value = `Socket namespace mismatch: expected ${effectiveWsNamespace}, got ${connectedNamespace || 'unknown'}.`;
-  return false;
-}
-
-async function runHubConnectFlow() {
-  if (!hasExpectedHubNamespace()) return;
-  if (hubFlowInProgress) return;
-  hubFlowInProgress = true;
-  hubJoinError.value = null;
-
-  try {
-    if (store.playerId && store.roomCode && store.resumeToken) {
-      startHubJoinTimeout();
-      const resumed = await attemptResume({
-        roomCode: store.roomCode,
-        playerId: store.playerId,
-        name: store.playerName || '',
-        resumeToken: store.resumeToken,
-      });
-      if (!resumed) {
-        await hubAutoJoin();
-      }
-      return;
-    }
-
-    await hubAutoJoin();
-  } finally {
-    hubFlowInProgress = false;
-  }
-}
-
-function retryHubJoin() {
-  hubJoinError.value = null;
-  if (socket.connected) {
-    void runHubConnectFlow();
-    return;
-  }
-  startHubJoinTimeout();
-  socket.connect();
-}
-
 function onRoomUpdate(room: import('@shared/types').RoomView) {
   store.updateRoom(room);
-  hubJoinError.value = null;
-  clearHubTimers();
 }
 
 function onHunterPrompt() {
@@ -368,21 +196,7 @@ function onRoomClosed() {
   store.clearSession();
 }
 
-function onConnectHub() {
-  if (!hasExpectedHubNamespace()) {
-    socket.disconnect();
-    return;
-  }
-  void runHubConnectFlow();
-}
-
-function onConnectErrorHub() {
-  if (!store.room) {
-    hubJoinError.value = 'Connection failed. Please retry.';
-  }
-}
-
-function onConnectStandalone() {
+function onConnect() {
   if (store.playerId && store.roomCode && store.resumeToken) {
     void attemptResume({
       roomCode: store.roomCode,
@@ -397,38 +211,13 @@ onMounted(() => {
   // Bind gesture-based narrator unlock
   bindGestureUnlock();
 
-  if (!effectiveStandalone && effectiveSessionId) {
-    // Hub mode: auto-join on first connect, resume on reconnect
-    if (socket.connected) {
-      void runHubConnectFlow();
-    } else {
-      // The host app's platform socket may have created a shared Socket.IO
-      // manager with autoConnect disabled, so the game namespace must connect
-      // explicitly instead of relying on the client default.
-      socket.connect();
-    }
-    socket.on('connect', onConnectHub);
-    socket.on('connect_error', onConnectErrorHub);
-
-    // Retry hubAutoJoin if no room after a delay (guards against race conditions
-    // and the case where the first attempt's ack callback never fires, leaving
-    // hubFlowInProgress stuck as true).
-    hubRetryTimer = window.setTimeout(() => {
-      if (!store.room && socket.connected) {
-        hubFlowInProgress = false;
-        void runHubConnectFlow();
-      }
-    }, HUB_RETRY_DELAY_MS);
-  } else {
-    // Standalone mode: restore saved session or wait for Landing interaction
-    const saved = store.loadSession();
-    if (saved?.resumeToken) {
-      void attemptResume(saved);
-    }
-
-    socket.on('connect', onConnectStandalone);
+  // Restore saved session or wait for Landing interaction
+  const saved = store.loadSession();
+  if (saved?.resumeToken) {
+    void attemptResume(saved);
   }
 
+  socket.on('connect', onConnect);
   socket.on('roomUpdate', onRoomUpdate);
   socket.on('hunterPrompt', onHunterPrompt);
   socket.on('mayorPrompt', onMayorPrompt);
@@ -437,11 +226,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  clearHubTimers();
   cleanupNarrator();
-  socket.off('connect', onConnectHub);
-  socket.off('connect', onConnectStandalone);
-  socket.off('connect_error', onConnectErrorHub);
+  socket.off('connect', onConnect);
   socket.off('roomUpdate', onRoomUpdate);
   socket.off('hunterPrompt', onHunterPrompt);
   socket.off('mayorPrompt', onMayorPrompt);
@@ -451,20 +237,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="werewolves-root" :class="{ app: effectiveStandalone }">
-    <!-- Standalone: show Landing when no room is active -->
-    <Landing v-if="!hasRoom && effectiveStandalone" :socket="socket" />
-
-    <!-- Hub: waiting for autoJoinRoom response -->
-    <section v-else-if="!hasRoom" class="panel">
-      <template v-if="!hubJoinError">
-        <p>Connecting...</p>
-      </template>
-      <template v-else>
-        <p>{{ hubJoinError }}</p>
-        <button type="button" @click="retryHubJoin">Retry</button>
-      </template>
-    </section>
+  <div class="werewolves-root app">
+    <!-- Show Landing when no room is active -->
+    <Landing v-if="!hasRoom" :socket="socket" />
 
     <!-- In-game view -->
     <template v-else>

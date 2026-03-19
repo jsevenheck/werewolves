@@ -8,6 +8,6 @@ const app = createApp(App);
 app.use(createPinia());
 app.provide('werewolvesConfig', {
   wsNamespace: '/g/werewolves',
-  standalone: true,
+  assetsBasePath: '/audio',
 });
 app.mount('#app');

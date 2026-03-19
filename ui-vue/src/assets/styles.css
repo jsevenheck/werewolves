@@ -1,5 +1,4 @@
-/* Component styles scoped under .werewolves-root.
-   Safe to import in both standalone and embedded (library) mode. */
+/* Component styles scoped under .werewolves-root. */
 
 .werewolves-root {
   font-family: 'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif;

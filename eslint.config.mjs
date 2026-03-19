@@ -49,7 +49,7 @@ export default tseslint.config(
 
   // Server files - Node.js environment
   {
-    files: ['server/**/*.ts', 'standalone-server/**/*.ts', 'scripts/**/*.js'],
+    files: ['server/**/*.ts', 'scripts/**/*.js'],
     languageOptions: {
       globals: {
         console: 'readonly',
@@ -74,7 +74,7 @@ export default tseslint.config(
 
   // Vue files - Browser environment
   {
-    files: ['**/*.vue', 'ui-vue/**/*.ts', 'standalone-web/**/*.ts'],
+    files: ['**/*.vue', 'ui-vue/**/*.ts'],
     languageOptions: {
       globals: {
         window: 'readonly',

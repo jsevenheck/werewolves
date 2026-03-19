@@ -33,6 +33,7 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm install --prod --frozen-lockfile
 
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/ui-vue/public ./ui-vue/public
 
 ENV PORT=3001
 EXPOSE 3001

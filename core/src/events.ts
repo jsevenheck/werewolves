@@ -16,12 +16,6 @@ export interface ClientToServerEvents {
       response: { roomCode?: string; playerId?: string; resumeToken?: string } | ErrorResponse
     ) => void
   ) => void;
-  autoJoinRoom: (
-    payload: { sessionId: string; playerId: string; name: string },
-    cb?: (
-      response: { roomCode?: string; playerId?: string; resumeToken?: string } | ErrorResponse
-    ) => void
-  ) => void;
   resumePlayer: (
     payload: StoredSession,
     cb?: (response: OkResponse | ErrorResponse) => void

@@ -1,6 +1,5 @@
-/* Standalone-only global styles.
-   Only imported in main.ts (dev server).
-   NOT imported by the library entry (index.ts). */
+/* Global styles for the app.
+   Imported in main.ts. */
 
 :root {
   font-family: 'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif;

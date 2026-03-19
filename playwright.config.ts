@@ -9,7 +9,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: 'pnpm exec tsx standalone-server/src/index.ts',
+      command: 'pnpm exec tsx server/src/index.ts',
       port: 3001,
       reuseExistingServer: !process.env.CI,
       env: {

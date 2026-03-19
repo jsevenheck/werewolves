@@ -1,9 +1,4 @@
-import {
-  createRoom,
-  getRoom,
-  getRoomCodeBySessionId,
-  linkSessionToRoom,
-} from '../server/src/models/room';
+import { createRoom, getRoom } from '../server/src/models/room';
 import { broadcastRoom, sendStateToPlayer } from '../server/src/managers/broadcastManager';
 import {
   scheduleNightStep,
@@ -34,8 +29,6 @@ jest.mock('../server/src/models/room', () => ({
   createRoom: jest.fn(),
   getRoom: jest.fn(),
   getAllRooms: jest.fn(),
-  getRoomCodeBySessionId: jest.fn(),
-  linkSessionToRoom: jest.fn(),
 }));
 
 jest.mock('../server/src/managers/broadcastManager', () => ({
@@ -158,158 +151,6 @@ describe('socketHandlers host handoff', () => {
     );
 
     expect(room.hostId).toBe('owner');
-  });
-});
-
-describe('socketHandlers autoJoinRoom', () => {
-  afterEach(() => {
-    deleteSocketIndex('socket-old');
-    deleteSocketIndex('socket-stale');
-    deleteSocketIndex('socket-new');
-  });
-
-  test('reuses existing hub player and disconnects previous socket', () => {
-    const room = {
-      code: 'ABCD',
-      hostId: 'hub-1',
-      phase: 'lobby',
-      players: {
-        'hub-1': {
-          id: 'hub-1',
-          name: 'Hub One',
-          connected: true,
-          socketId: 'socket-old',
-          resumeToken: 'resume-1',
-          isHost: true,
-        },
-      },
-      voteState: { votes: {}, revoteFromTie: null },
-      logs: [],
-    } as unknown as Room;
-    (getRoomCodeBySessionId as jest.Mock).mockReturnValue(room.code);
-    (getRoom as jest.Mock).mockReturnValue(room);
-
-    const { io, sockets } = makeIo();
-    const previousSocket = { disconnect: jest.fn() };
-    sockets.set('socket-old', previousSocket);
-    setSocketIndex('socket-old', room.code, 'hub-1');
-
-    const { handlers, socket } = makeSocket();
-    socket.id = 'socket-new';
-    setupSocketHandlers(io, socket as any);
-    const cb = jest.fn();
-
-    handlers.autoJoinRoom({ sessionId: 'session-1', playerId: 'hub-1', name: 'Hub One' }, cb);
-
-    expect(previousSocket.disconnect).toHaveBeenCalledWith(true);
-    expect(room.players['hub-1'].socketId).toBe('socket-new');
-    expect(room.players['hub-1'].connected).toBe(true);
-    expect(cb).toHaveBeenCalledWith({
-      roomCode: room.code,
-      playerId: 'hub-1',
-      resumeToken: 'resume-1',
-    });
-  });
-
-  test('cleans stale socket index when previous socket is gone', () => {
-    const room = {
-      code: 'ABCD',
-      hostId: 'hub-1',
-      phase: 'lobby',
-      players: {
-        'hub-1': {
-          id: 'hub-1',
-          name: 'Hub One',
-          connected: true,
-          socketId: 'socket-stale',
-          resumeToken: 'resume-1',
-          isHost: true,
-        },
-      },
-      voteState: { votes: {}, revoteFromTie: null },
-      logs: [],
-    } as unknown as Room;
-    (getRoomCodeBySessionId as jest.Mock).mockReturnValue(room.code);
-    (getRoom as jest.Mock).mockReturnValue(room);
-
-    setSocketIndex('socket-stale', room.code, 'hub-1');
-    const { io } = makeIo();
-    const { handlers, socket } = makeSocket();
-    socket.id = 'socket-new';
-    setupSocketHandlers(io, socket as any);
-
-    handlers.autoJoinRoom(
-      { sessionId: 'session-1', playerId: 'hub-1', name: 'Hub One' },
-      jest.fn()
-    );
-
-    expect(getSocketIndex('socket-stale')).toBeUndefined();
-    expect(room.players['hub-1'].socketId).toBe('socket-new');
-  });
-
-  test('creates room and links session on first auto join', () => {
-    const createdRoom = {
-      code: 'WXYZ',
-      hostId: null,
-      phase: 'lobby',
-      players: {},
-      voteState: { votes: {}, revoteFromTie: null },
-      logs: [],
-    } as unknown as Room;
-    (getRoomCodeBySessionId as jest.Mock).mockReturnValue(undefined);
-    (createRoom as jest.Mock).mockImplementation(
-      (
-        hostName: string,
-        socketId: string,
-        createPlayerFn: (
-          name: string,
-          sid: string,
-          isHost: boolean
-        ) => {
-          id: string;
-          resumeToken: string;
-        }
-      ) => {
-        const player = createPlayerFn(hostName, socketId, true);
-        player.resumeToken = 'resume-created';
-        createdRoom.players[player.id] = player as never;
-        createdRoom.hostId = player.id;
-        return { room: createdRoom, player };
-      }
-    );
-
-    const { io } = makeIo();
-    const { handlers, socket } = makeSocket();
-    socket.id = 'socket-new';
-    setupSocketHandlers(io, socket as any);
-    const cb = jest.fn();
-
-    handlers.autoJoinRoom({ sessionId: 'session-new', playerId: 'hub-7', name: 'Host' }, cb);
-
-    expect(linkSessionToRoom).toHaveBeenCalledWith('session-new', 'WXYZ');
-    expect(createdRoom.players['hub-7']).toBeDefined();
-    expect(cb).toHaveBeenCalledWith({
-      roomCode: 'WXYZ',
-      playerId: 'hub-7',
-      resumeToken: 'resume-created',
-    });
-  });
-
-  test('returns error callback when auto join throws unexpectedly', () => {
-    (getRoomCodeBySessionId as jest.Mock).mockReturnValue(undefined);
-    (createRoom as jest.Mock).mockImplementation(() => {
-      throw new Error('boom');
-    });
-
-    const { io } = makeIo();
-    const { handlers, socket } = makeSocket();
-    socket.id = 'socket-new';
-    setupSocketHandlers(io, socket as any);
-    const cb = jest.fn();
-
-    handlers.autoJoinRoom({ sessionId: 'session-new', playerId: 'hub-7', name: 'Host' }, cb);
-
-    expect(cb).toHaveBeenCalledWith({ error: 'Failed to join room' });
   });
 });
 
