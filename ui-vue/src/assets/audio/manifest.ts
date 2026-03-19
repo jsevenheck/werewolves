@@ -2,8 +2,8 @@
  * Audio manifest for bundled narrator clips.
  *
  * This module imports all built-in narrator audio files so they can be bundled
- * with the web component. When the game is embedded in Game Hub, these bundled
- * URLs serve as fallbacks, eliminating the dependency on host-served `/audio/...` paths.
+ * with the app. These bundled URLs serve as fallbacks, eliminating the
+ * dependency on host-served `/audio/...` paths.
  *
  * Custom audio overrides (if provided via `assetsBasePath`) still take precedence.
  */
@@ -32,8 +32,8 @@ import roleRevealUrl from './roleReveal.mp3';
 /**
  * Map of narration keys to bundled audio URLs.
  *
- * These URLs are generated at build time by Vite and will work in any context
- * (standalone or embedded) without requiring the host to serve static files.
+ * These URLs are generated at build time by Vite and will work without
+ * requiring separately hosted static files.
  */
 export const BUNDLED_AUDIO: Record<string, string> = {
   armor: armorUrl,
