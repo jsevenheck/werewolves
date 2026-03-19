@@ -8,9 +8,8 @@ Role: Senior Lead Engineer
 Werewolves is a moderator-free social deduction game (like Mafia). It has:
 
 - A **Vue 3 + TypeScript** frontend (`ui-vue/`)
-- A **Node.js + Socket.IO** backend (`server/`)
+- A **Node.js + Express + Socket.IO** backend (`server/`)
 - Shared types/events in `core/`
-- Can run standalone or embedded in a game-hub platform
 
 ## Quick Start
 
@@ -32,8 +31,7 @@ Keep detailed guidance in docs/ and link to it from here.
 
 ## Repo Map
 
-- standalone-server/src/index.ts: standalone server entry point (Express + Socket.IO)
-- server/src/index.ts: embedded namespace plugin export (registerWerewolf)
+- server/src/index.ts: server entry point (Express + Socket.IO + static)
 - core/src/: shared types, events, constants (alias @shared/\*)
 - server/src/...
   - config/: server-only constants and role data
@@ -79,8 +77,8 @@ Config files at repo root:
 
 Environment splits in ESLint:
 
-- **Server** (`server/`, `standalone-server/`, `scripts/`) – Node globals, `require()` allowed
-- **Client** (`ui-vue/`, `standalone-web/`, `*.vue`) – Browser globals, Vue plugin
+- **Server** (`server/`, `scripts/`) – Node globals, `require()` allowed
+- **Client** (`ui-vue/`, `*.vue`) – Browser globals, Vue plugin
 - **Tests** (`__tests__/`, `e2e/`) – relaxed `any` / `require` rules
 
 ## Code Rules
