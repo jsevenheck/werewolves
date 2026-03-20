@@ -93,9 +93,6 @@ The client accepts optional configuration via `WerewolvesGameConfig`:
 
 ```typescript
 export interface WerewolvesGameConfig {
-  wsNamespace?: string; // Socket.IO namespace path
-  socketUrl?: string; // Base URL (default: same origin)
-  socketPath?: string; // Socket.IO path (default: '/socket.io')
   assetsBasePath?: string; // Custom audio path
 }
 ```

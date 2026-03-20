@@ -31,9 +31,6 @@ import LogsPanel from './components/panels/LogsPanel.vue';
 
 // Injected config from app.provide('werewolvesConfig', { ... })
 const config = inject<Partial<WerewolvesGameConfig>>('werewolvesConfig', {});
-const wsNamespace = config.wsNamespace || '/g/werewolves';
-const socketUrl = config.socketUrl || wsNamespace;
-const socketPath = config.socketPath || '/socket.io';
 
 function normalizeAssetsBasePath(path: string): string {
   const trimmed = path.trim();
@@ -59,8 +56,7 @@ const effectiveAssetsBasePath = config.assetsBasePath
 const store = useGameStore();
 
 const socket = useSocket({
-  url: socketUrl,
-  path: socketPath,
+  url: '/g/werewolves',
 });
 const {
   enabled: narratorEnabled,
