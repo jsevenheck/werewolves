@@ -26,9 +26,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: |
-          pnpm install
-          pnpm -C ui-vue install
+        run: pnpm install
 
       - name: Typecheck
         run: pnpm run typecheck

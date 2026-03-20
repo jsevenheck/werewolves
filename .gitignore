@@ -12,3 +12,6 @@ settings.local.json
 
 # Nested lockfile (root lockfile is the source of truth)
 ui-vue/pnpm-lock.yaml
+
+.playwright
+.playwright-cli
