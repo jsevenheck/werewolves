@@ -1,6 +1,5 @@
 {
   "mcpServers": {
-
     "ripgrep": { "command": "cmd", "args": ["/c", "npx", "-y", "mcp-ripgrep@latest"] },
     "pnpm": {
       "command": "npx",

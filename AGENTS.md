@@ -118,11 +118,11 @@ Project-scoped MCP servers are configured in `.mcp.json`:
 Reusable skill definitions live in `.skills/`. Read the relevant `SKILL.md`
 when a task matches a skill area.
 
-| Skill | Description |
-| --- | --- |
-| `.skills/playwright-cli/` | Browser automation (testing, screenshots, E2E exploration) |
-| `.skills/pnpm/` | Package manager workflows and best practices |
-| `.skills/ui-ux-pro-max/` | UI/UX design system: styles, palettes, font pairings, accessibility, Vue stack guidelines |
+| Skill                     | Description                                                                               |
+| ------------------------- | ----------------------------------------------------------------------------------------- |
+| `.skills/playwright-cli/` | Browser automation (testing, screenshots, E2E exploration)                                |
+| `.skills/pnpm/`           | Package manager workflows and best practices                                              |
+| `.skills/ui-ux-pro-max/`  | UI/UX design system: styles, palettes, font pairings, accessibility, Vue stack guidelines |
 
 ## When Unsure
 

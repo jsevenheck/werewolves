@@ -22,31 +22,11 @@ import type { ClientToServerEvents, ServerToClientEvents } from '../../core/src/
 export function registerNamespace(io: Server, namespace = '/g/werewolves') {
   const nsp = io.of(namespace);
 
-  nsp.use((socket, next) => {
-    const { joinToken, token, sessionId, playerId } = socket.handshake.auth as {
-      joinToken?: string;
-      token?: string;
-      sessionId?: string;
-      playerId?: string;
-    };
-    const normalizedToken = joinToken ?? token ?? null;
-
-    socket.data.sessionId = sessionId ?? null;
-    socket.data.joinToken = normalizedToken;
-    socket.data.playerId = playerId ?? null;
-
-    next();
-  });
-
   nsp.on('connection', (socket) => {
     setupSocketHandlers(
       nsp as unknown as Namespace<ClientToServerEvents, ServerToClientEvents>,
       socket as unknown as Socket<ClientToServerEvents, ServerToClientEvents>
     );
-
-    if (socket.data.sessionId) {
-      socket.join(socket.data.sessionId);
-    }
   });
 
   return nsp;
