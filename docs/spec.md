@@ -229,7 +229,7 @@ onCloseSession(hostId):
   cancel all pending reconnect grace timers for players in the room
   emit `roomClosed` to all connected clients so they can reset and clear their session
   disconnect all player sockets
-  delete the room (including sessionId → roomCode mapping) so fresh joins are possible
+  delete the room so fresh joins are possible
 
 onPlayerKick(hostId, targetId):
   only allowed during lobby phase

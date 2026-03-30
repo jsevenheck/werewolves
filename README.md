@@ -15,7 +15,6 @@ Run a multiplayer Werewolf/Mafia party game in the browser with no human moderat
 - Automatic room cleanup (24h idle, 1h after game ends) to prevent memory leaks.
 - Full TypeScript codebase with type-safe Socket.IO events and shared types.
 - Vite-powered client development with hot module replacement.
-- **Automatic CI/CD integration with [Game Hub](https://github.com/jsevenheck/game-hub)** - tests pass -> PR created automatically
 
 ## Quick Start
 
@@ -69,8 +68,8 @@ pnpm format:check    # Prettier â€“ dry-run, exit 1 on diffs
 
 ESLint 9 flat config lives in [`eslint.config.mjs`](eslint.config.mjs). Rules are split by environment:
 
-- **Server** (`server/`, `standalone-server/`, `scripts/`) â€“ Node.js globals, `require()` allowed.
-- **Client** (`ui-vue/`, `standalone-web/`, `*.vue`) â€“ Browser globals, Vue plugin rules.
+- **Server** (`server/`, `scripts/`) â€“ Node.js globals, `require()` allowed.
+- **Client** (`ui-vue/`, `*.vue`) â€“ Browser globals, Vue plugin rules.
 - **Tests** (`__tests__/`, `e2e/`) â€“ relaxed `any` and `require` rules.
 
 Prettier config is in [`.prettierrc`](.prettierrc); enforced style: single quotes, 100-char width, LF line endings.
@@ -81,7 +80,7 @@ Prettier config is in [`.prettierrc`](.prettierrc); enforced style: single quote
 pnpm run build
 ```
 
-This compiles the standalone server to `dist/standalone-server/` and builds the Vite client to `dist/client/`.
+This compiles the server to `dist/server/` and builds the Vite client to `dist/client/`.
 
 ## Production build & static hosting
 
@@ -135,12 +134,12 @@ Mobile browsers require a user gesture before audio can play. If a player enable
 
 - Built-in narrator audio is bundled with the web component at build time (stored in `ui-vue/src/assets/audio/`)
 - Vite automatically imports and bundles the MP3 files as assets
-- Works out-of-the-box in all environments (standalone and embedded) without requiring host-served static files
+- Works out-of-the-box without requiring separately hosted static files
 - No configuration needed - audio just works
 
 **Custom Audio (Optional):**
 
-- To use custom narrator audio, pass the `assetsBasePath` prop to GameComponent
+- To use custom narrator audio, configure the `assetsBasePath` option
 - Custom audio files should be placed in a `custom/` subdirectory (e.g., `/audio/custom/day_1.mp3`)
 - Fallback chain: custom audio (`${assetsBasePath}/custom/*`) â†’ default override (`${assetsBasePath}/*`) â†’ bundled audio â†’ silent
 - Supports audio variants for variety (e.g., `custom/day_1.mp3`, `custom/day_2.mp3`)
@@ -149,7 +148,6 @@ Mobile browsers require a user gesture before audio can play. If a player enable
 ## Docker
 
 The Dockerfile uses a multi-stage build to compile TypeScript and bundle the client, then creates a production image with only runtime dependencies.
-It is intended for the standalone build only; Game Hub uses its own build/container in the game-hub repository.
 BuildKit cache mounts are enabled for pnpm so repeated builds are significantly faster.
 
 ```bash
@@ -171,73 +169,3 @@ Troubleshooting:
 - Manual tests: `docs/test-checklist.md`
 - Codebase structure: `docs/structure.md`
 - Adding roles: `docs/createNewRoles.md`
-- Embedded vs standalone: `docs/embedded-and-standalone.md`
-
-## Embedding / host integration notes
-
-- The Vue client lives in `ui-vue/` and can be built as a library with:
-  ```bash
-  pnpm -C ui-vue build:lib
-  ```
-  This outputs UMD/ESM bundles to `ui-vue/dist-lib/`.
-- The Socket.IO `path` must match between client and server unless a proxy rewrites it.
-- Configuration options (direct `GameComponent` props or `app.provide` config):
-  - `socketUrl` (default: same origin)
-  - `socketPath` (default: `/socket.io`)
-  - `assetsBasePath` (optional; when omitted, uses bundled audio)
-- The standalone wrapper (`standalone-web/src/main.ts`) currently sets `assetsBasePath: '/audio'` by default for runtime custom overrides, with bundled fallback when files are missing.
-- `standalone` (default: `true`, controls Landing vs auto-join flow and standalone styling)
-- Game Hub passes these props to the Vue component after `party:gameStarted`:
-  - `gameId` (used to choose `/g/<gameId>` namespace)
-  - `sessionId` (used by `autoJoinRoom`; server maps it to an internal room code automatically)
-  - `joinToken` (sent via Socket.IO handshake auth; also accepted as `token`)
-  - `wsNamespace` (e.g. `/g/werewolves`)
-  - `apiBaseUrl` (optional REST base URL)
-  - Optional `playerId` from `localStorage.getItem('game-hub:player-id')`
-  - Optional `playerName` â€“ display name inside the game (falls back to `playerId`)
-- Relative `assetsBasePath` values are resolved against Vite's base URL (`import.meta.env.BASE_URL`) for non-root deployments.
-
-## Game Hub Integration
-
-This repository integrates with [Game Hub](https://github.com/jsevenheck/game-hub) via
-`.github/workflows/sync-to-hub.yml`.
-Game Hub gameId is `werewolves` (namespace `/g/werewolves`).
-The hub now owns the transformer and auto-discovers games in `games/*`.
-This repo no longer contains a local transform script or committed transform output.
-
-### How It Works
-
-1. Push to `main` runs CI (`.github/workflows/ci.yml`).
-2. `sync-to-hub` is triggered by `workflow_run` and only runs after CI succeeds (or via manual `workflow_dispatch`).
-3. The workflow triggers `receive-game-sync.yml` in `jsevenheck/game-hub`.
-4. The hub workflow checks out this repo, runs the hub transformer, and opens a PR automatically.
-5. No manual game registration in the hub repo is required (auto-discovery).
-
-### hub.config.json
-
-Extra npm packages the hub transformer must add to the generated `server/package.json` are declared in [`hub.config.json`](hub.config.json) at the repo root:
-
-```json
-{
-  "serverDependencies": { "some-package": "^1.0.0" },
-  "serverDevDependencies": { "@types/some-package": "^1.0.0" }
-}
-```
-
-Whenever you add a new runtime dependency to `server/` that isn't already present in the hub's base `package.json`, add it here — otherwise the hub typecheck will fail with `Cannot find module`.
-
-### Setup Requirements
-
-Add one repository secret in this repo:
-
-1. Name: `GAME_SYNC_TOKEN`
-2. Value: PAT or GitHub App token with `actions:write` permission on `jsevenheck/game-hub`.
-
-### Hub Auto-Join Flow
-
-When the game runs inside Game Hub (`standalone = false`), the client emits an `autoJoinRoom` event on connect instead of showing the Landing page. The server uses a `sessionId -> roomCode` mapping to locate or create the room transparently:
-
-1. Client connects and emits `autoJoinRoom({ sessionId, playerId, name })`.
-2. Server checks `sessionId` -> if a room already exists for this session it is reused; otherwise a new room is created and the mapping is stored.
-3. The hub-supplied `playerId` is used directly, so Game Hub can correlate game state back to its own user records without a separate lookup.
-4. On reconnect the client resumes via the stored `resumeToken`; no second room is created.

@@ -1,0 +1,6 @@
+packages:
+  - 'ui-vue'
+
+allowBuilds:
+  esbuild: false
+  unrs-resolver: false

@@ -1,21 +1,10 @@
 {
   "mcpServers": {
-    "fetch": {
-      "type": "stdio",
-      "command": "uvx",
-      "args": ["mcp-server-fetch"],
-      "env": {}
-    },
-    "filesystem": {
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-filesystem", "${workspaceFolder}"]
-    },
     "ripgrep": { "command": "cmd", "args": ["/c", "npx", "-y", "mcp-ripgrep@latest"] },
     "pnpm": {
       "command": "npx",
       "args": ["-y", "@jixo/mcp-pnpm"],
       "env": {}
-    },
-    "playwright": { "command": "cmd", "args": ["/c", "npx", "-y", "@playwright/mcp@latest"] }
+    }
   }
 }

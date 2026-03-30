@@ -39,7 +39,6 @@ Manual and automated testing expectations for the Werewolves game.
 - **Voting UI**: Ensure vote submit is disabled until a selection is made; choose Abstain explicitly; test majority abstain -> no elimination.
 - **Lobby validation**: Attempt to start with fewer than 5 players; ensure the backend rejects the start and displays an error alert. Also test too many roles vs player count.
 - **Disconnect / reconnect**: Join from a browser, disconnect (close tab), reopen and resume via stored session to confirm state restores (including role, death state, and pending prompts like Hunter shot).
-- **Embedded auto-join retry**: In embedded mode (`standalone=false` with `sessionId`), simulate a failed/slow connection and confirm the UI shows an error + `Retry` button, then successfully joins after retry.
 - **Player leaves mid-game**: Have a player leave (not just disconnect) during various phases: (a) during wolf vote — ensure remaining wolves' votes still resolve, (b) during day vote — ensure remaining votes still resolve, (c) when the departed player is the active night-action role (Seer/Witch/Guard/Harlot) — ensure the night step advances, (d) when the departed player had pending hunter shot or mayor succession — ensure those prompts clear and the game continues.
 - **Stale votes after leave**: Have a player leave who was the target of wolf or day votes; confirm those votes are cleaned up and don't cause resolution errors.
 - **Host handoff / reclaim**: Disconnect the host, confirm another connected player becomes Host and can use host actions; reconnect the original host and verify the Host label returns to them.
@@ -49,7 +48,7 @@ Manual and automated testing expectations for the Werewolves game.
 
 ## Narrator Audio Assets
 
-Place MP3 narrator clips in `ui-vue/public/audio/` with filenames matching the expected ones (for example, `night_wolves.mp3` or `dayToNight.mp3`) so the narrator continues to map phase changes correctly. The code falls back to an embedded silent clip when files are missing, so adding the real audio files is required for audible narration.
+Place MP3 narrator clips in `ui-vue/public/audio/` with filenames matching the expected ones (for example, `night_wolves.mp3` or `dayToNight.mp3`) so the narrator continues to map phase changes correctly. The code falls back to a bundled silent clip when files are missing, so adding the real audio files is required for audible narration.
 
 **Audio Variants** (optional): The narrator supports multiple audio variants per clip for variety in `ui-vue/public/audio/custom/`. Name files as `custom/{key}_1.mp3`, `custom/{key}_2.mp3`, etc. The system auto-detects custom variants (up to 10) and randomly selects one each time. See `ui-vue/public/audio/README.md` for details.
 

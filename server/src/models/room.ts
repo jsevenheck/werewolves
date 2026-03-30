@@ -9,10 +9,6 @@ import type { Player, Room } from '../../../core/src/types';
 
 const rooms = new Map<string, Room>();
 
-// Maps a platform sessionId → internal room code so that autoJoinRoom
-// can locate (or create) the correct room without exposing the 4-char code.
-const sessionToRoom = new Map<string, string>();
-
 // Cleanup configuration
 const ROOM_IDLE_TIMEOUT_MS = 24 * 60 * 60 * 1000; // 24 hours
 const ROOM_ENDED_CLEANUP_MS = 60 * 60 * 1000; // 1 hour after game ends
@@ -94,29 +90,9 @@ function deleteRoom(code: string) {
   if (room) {
     clearRoomTimers(room);
     rooms.delete(code);
-    // Clean up any sessionId → roomCode mapping that pointed here
-    for (const [sessionId, mappedCode] of sessionToRoom.entries()) {
-      if (mappedCode === code) sessionToRoom.delete(sessionId);
-    }
     return true;
   }
   return false;
-}
-
-/**
- * Resolve a platform sessionId to an existing room code.
- * Returns undefined when no room has been linked to this sessionId yet.
- */
-function getRoomCodeBySessionId(sessionId: string): string | undefined {
-  return sessionToRoom.get(sessionId);
-}
-
-/**
- * Persist the sessionId → roomCode mapping so that subsequent autoJoinRoom
- * calls find the same room.
- */
-function linkSessionToRoom(sessionId: string, roomCode: string): void {
-  sessionToRoom.set(sessionId, roomCode);
 }
 
 function updateRoomActivity(room: Room) {
@@ -153,13 +129,4 @@ function cleanupIdleRooms() {
 // Start periodic cleanup (unref to prevent test hanging)
 setInterval(cleanupIdleRooms, CLEANUP_INTERVAL_MS).unref();
 
-export {
-  createRoom,
-  getRoom,
-  getAllRooms,
-  deleteRoom,
-  updateRoomActivity,
-  cleanupIdleRooms,
-  getRoomCodeBySessionId,
-  linkSessionToRoom,
-};
+export { createRoom, getRoom, getAllRooms, deleteRoom, updateRoomActivity, cleanupIdleRooms };

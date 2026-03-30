@@ -1,0 +1,19 @@
+/* Global styles for the app.
+   Imported in main.ts. */
+
+:root {
+  font-family: 'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif;
+  color: #101828;
+  background: #030712;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #1f2937, #030712);
+  color: #f8fafc;
+}

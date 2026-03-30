@@ -44,8 +44,7 @@
 ## Production Build & Static Hosting
 
 - The Vite client build outputs to `dist/client/`.
-- The server serves built assets via `express.static`. In standalone mode it also mounts
-  `ui-vue/public/audio/` at `/audio`, so audio works without copying files into `standalone-web`.
+- The server serves built assets via `express.static`.
 
 ## E2E Tests
 

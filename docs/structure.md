@@ -1,105 +1,55 @@
-﻿# Werewolves Codebase Structure
+# Werewolves Codebase Structure
 
-This document describes the codebase structure, designed to support both
-standalone operation and embedding into the Game Hub platform.
+This document describes the codebase structure for the Werewolves standalone application.
 
 ## Quick Summary
 
 - **core/**: Shared types, events, constants (used by both client and server)
-- **server/**: Node.js + Socket.IO backend with managers for game logic
+- **server/**: Node.js + Express + Socket.IO backend with managers for game logic
 - **ui-vue/**: Vue 3 frontend with Pinia stores and phase components
-- **standalone-\*/**: Thin wrappers for running without Game Hub
-- \***\*tests**/\*\*: Jest unit tests
+- **\_\_tests\_\_/**: Jest unit tests
 - **e2e/**: Playwright E2E tests
 
 ## Project Structure
 
 ```
 werewolves/
-|-- core/                     # Pure game logic (no Vue, Pinia, Socket.IO, DOM)
-|   `-- src/
-|       |-- types.ts          # Shared types (Role, Phase, Player, Room, etc.)
-|       |-- events.ts         # Socket.IO event contracts
-|       `-- constants.ts      # Shared constants (timing, limits, thresholds)
-|-- server/                   # Server-side game logic
-|   `-- src/
-|       |-- index.ts          # definition/register/handler + registerWerewolf
-|       |-- config/           # Server-only constants and role data
-|       |-- handlers/         # Socket.IO event handlers
-|       |-- managers/         # Business logic (role, phase, vote, death, etc.)
-|       |-- models/           # Room and Player models
-|       `-- utils/            # Server helpers
-|-- ui-vue/                   # Vue 3 game UI
-|   `-- src/
-|       |-- index.ts          # Hub exports: manifest, GameComponent
-|       |-- main.ts           # Local dev entry (with Pinia)
-|       |-- App.vue           # Root component with phase switching
-|       |-- components/       # Phase screens, panels, overlays
-|       |-- composables/      # Socket, narrator hooks
-|       |-- stores/           # Pinia stores
-|       |-- types/            # Client-only types
-|       `-- utils/            # Client helpers
-|-- standalone-server/        # Thin wrapper for standalone server
-|   `-- src/
-|       `-- index.ts          # HTTP + Socket.IO + registerWerewolf()
-|-- standalone-web/           # Thin wrapper for standalone web client
-|   |-- index.html
-|   |-- vite.config.ts
-|   `-- src/
-|       `-- main.ts           # Vue app + Pinia + GameComponent
-|-- docs/                     # Documentation
-|-- __tests__/                # Jest unit tests
-`-- e2e/                      # Playwright E2E tests
+├── core/                     # Shared types, events, constants
+│   └── src/
+│       ├── types.ts          # Shared types (Role, Phase, Player, Room, etc.)
+│       ├── events.ts         # Socket.IO event contracts
+│       └── constants.ts      # Shared constants (timing, limits, thresholds)
+├── server/                   # Node.js + Express + Socket.IO backend
+│   └── src/
+│       ├── index.ts          # Server entry point (Express + Socket.IO + static)
+│       ├── config/           # Server-only constants and role data
+│       ├── handlers/         # Socket.IO event handlers
+│       ├── managers/         # Business logic (role, phase, vote, death, etc.)
+│       ├── models/           # Room and Player models
+│       └── utils/            # Server helpers
+├── ui-vue/                   # Vue 3 frontend (Vite)
+│   ├── index.html
+│   └── src/
+│       ├── main.ts           # App entry (Pinia + config)
+│       ├── App.vue           # Root component with phase switching
+│       ├── components/       # Phase screens, panels, overlays
+│       ├── composables/      # Socket, narrator hooks
+│       ├── stores/           # Pinia stores
+│       ├── types/            # Client types (config.ts)
+│       ├── utils/            # Client helpers
+│       └── assets/           # CSS, audio
+├── __tests__/                # Jest unit tests
+├── e2e/                      # Playwright E2E tests
+└── docs/                     # Documentation
 ```
-
-## Embedded vs Standalone
-
-| Aspect           | Embedded (Game Hub)                                                                       | Standalone                        |
-| ---------------- | ----------------------------------------------------------------------------------------- | --------------------------------- |
-| Vue app          | Created by hub                                                                            | Created by standalone-web         |
-| Pinia            | Installed by hub                                                                          | Installed by standalone-web       |
-| Socket.IO server | Hub calls `register()` or `registerWerewolf()`                                            | standalone-server creates + calls |
-| Room creation    | `autoJoinRoom` â€“ server maps `sessionId` â†’ room code automatically                    | Room codes via Landing UI         |
-| Player ID        | Hub-supplied `playerId` used directly (no server-generated ID)                            | Server generates 12-char ID       |
-| Auth             | `joinToken` or `token` stored from handshake (not enforced) + `resumeToken` for reconnect | `resumeToken` for reconnect       |
-
-See [embedded-and-standalone.md](./embedded-and-standalone.md) for full details.
 
 ## Server-Side Architecture
 
-### Entry Points
+### Entry Point
 
-- `server/src/index.ts`: Exports `definition`, `register()`, `handler`, `registerWerewolf()`
-- `standalone-server/src/index.ts`: Standalone wrapper
-
-### Namespace Plugin Pattern
-
-The server exports a definition plus a register helper that attaches handlers to a Socket.IO namespace:
-
-```typescript
-// server/src/index.ts
-export function register(io: Server, namespace = '/g/werewolves') {
-  const nsp = io.of(namespace);
-
-  nsp.use((socket, next) => {
-    const { joinToken, token, sessionId, playerId } = socket.handshake.auth as {
-      joinToken?: string;
-      token?: string;
-      sessionId?: string;
-      playerId?: string;
-    };
-    socket.data.sessionId = sessionId ?? null;
-    socket.data.joinToken = joinToken ?? token ?? null;
-    socket.data.playerId = playerId ?? null;
-    next();
-  });
-  nsp.on('connection', (socket) => {
-    setupSocketHandlers(nsp, socket);
-  });
-
-  return nsp;
-}
-```
+`server/src/index.ts` is the server entry point. It creates an Express app with
+Socket.IO, sets up event handlers on a namespace, and serves the built client
+assets via `express.static`.
 
 ### Config Layer
 
@@ -108,7 +58,7 @@ export function register(io: Server, namespace = '/g/werewolves') {
 
 ### Models Layer
 
-- `server/src/models/room.ts`: Room creation, storage, retrieval, and the `sessionId â†’ roomCode` map used by `autoJoinRoom`
+- `server/src/models/room.ts`: Room creation, storage, and retrieval
 - `server/src/models/player.ts`: Player creation and socket-player mapping
 
 ### Managers Layer
@@ -133,11 +83,19 @@ Business logic separated by concern:
 
 ## Client-Side Architecture
 
-### Entry Points
+### Entry Point
 
-- `ui-vue/src/index.ts`: Hub exports (manifest, GameComponent)
-- `ui-vue/src/main.ts`: Local dev entry with Pinia
-- `standalone-web/src/main.ts`: Standalone wrapper
+`ui-vue/src/main.ts` creates the Vue app with Pinia and mounts the root component.
+
+### Configuration
+
+The client accepts optional configuration via `WerewolvesGameConfig`:
+
+```typescript
+export interface WerewolvesGameConfig {
+  assetsBasePath?: string; // Custom audio path
+}
+```
 
 ### Components
 
@@ -172,43 +130,39 @@ Helper functions in `ui-vue/src/utils/`.
 - **Internal imports**: Use relative paths (NOT `@/` alias)
   - Example: `import { useGameStore } from './stores/game';`
   - Example: `import Landing from './components/Landing.vue';`
-  - **Important**: `@/` alias exists in `vite.config.ts` for local dev convenience, but source files use relative imports for game-hub compatibility (consumed as raw source files)
-
-### Game Hub Compatibility
-
-This repo keeps source files compatible with the hub transformer and auto-discovery model:
-
-- `@shared/*` imports resolve to `core/src/*` in this repo.
-- Relative imports remain unchanged.
-- `@/` alias is NOT used in source files (only in `vite.config.ts` for local dev convenience).
-- Hub entry points are `server/src/index.ts` and `ui-vue/src/index.ts`.
 
 ## Module Dependencies
 
 ### Server Dependencies
 
 ```
-register(io)
-  `-- setupSocketHandlers(nsp, socket)
-       |-- models/ (room, player)
-       |-- managers/ (role, phase, night, vote, death, broadcast)
-       `-- utils/ (helpers)
+server/src/index.ts
+  └── setupSocketHandlers(nsp, socket)
+       ├── models/ (room, player)
+       ├── managers/ (role, phase, night, vote, death, broadcast)
+       └── utils/ (helpers)
 ```
 
 ### Client Dependencies
 
 ```
-GameComponent (App.vue)
-  |-- stores/ (game)
-  |-- composables/ (socket, narrator)
-  |-- components/ (phases, panels, overlays)
-  `-- utils/helpers.ts, narrator.ts
+App.vue
+  ├── stores/ (game)
+  ├── composables/ (socket, narrator)
+  ├── components/ (phases, panels, overlays)
+  └── utils/helpers.ts, narrator.ts
 ```
 
 **Narrator**: The `utils/narrator.ts` module handles audio playback with support
 for multiple audio variants per clip. Variants are discovered only in
 `/audio/custom/` (e.g., `custom/day_1.mp3`, `custom/day_2.mp3`) via HEAD requests
 and one is randomly selected per playback.
+
+## Build Output
+
+- **Server**: `dist/server/src/index.js` (compiled TypeScript)
+- **Client**: `dist/client/` (Vite build output)
+- **Start**: `node dist/server/src/index.js` (or `pnpm start`)
 
 ## Benefits of This Structure
 
@@ -224,13 +178,13 @@ and one is randomly selected per playback.
 ### Quality gates (run before every commit)
 
 ```bash
-pnpm lint            # ESLint â€“ must be 0 errors
-pnpm format:check    # Prettier â€“ no diffs allowed
+pnpm lint            # ESLint – must be 0 errors
+pnpm format:check    # Prettier – no diffs allowed
 pnpm typecheck       # tsc + vue-tsc
 pnpm test            # Jest unit tests
 ```
 
-CI runs these in the same order; `.github/workflows/sync-to-hub.yml` only runs after CI succeeds (or manual dispatch).
+CI runs these in the same order.
 
 ### Adding New Features
 
@@ -273,9 +227,6 @@ import { functionName } from './path/to/module';
 
 ## Workspace Layout Notes
 
-- The main folders are `core/`, `server/`, `ui-vue/`, plus standalone wrappers.
+- The main folders are `core/`, `server/`, and `ui-vue/`.
 - In development, Vite runs on port 5173 and proxies `/socket.io` to port 3001.
-- Standalone-web and standalone-server reuse embedded modules as thin wrappers.
-- Sync to Game Hub is triggered by `.github/workflows/sync-to-hub.yml` after CI succeeds on `main`.
-- The hub repository runs the transformer and opens the PR; this repo does not keep generated `game-export/` output.
-- See [embedded-and-standalone.md](./embedded-and-standalone.md) for integration details.
+- In production, the server serves the built client from `dist/client/`.

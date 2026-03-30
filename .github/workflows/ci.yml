@@ -17,7 +17,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.28.2
+          version: 10.32.1
 
       - name: Use Node.js
         uses: actions/setup-node@v4
@@ -26,11 +26,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: |
-          pnpm install
-          pnpm -C ui-vue install
-          pnpm -C standalone-server install
-          pnpm -C standalone-web install
+        run: pnpm install
 
       - name: Typecheck
         run: pnpm run typecheck
@@ -38,16 +34,8 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
-      - name: Typecheck standalone wrappers
-        run: |
-          cd standalone-server && npx tsc --noEmit
-          cd ../standalone-web && pnpm exec vue-tsc --noEmit
-
       - name: Build
         run: pnpm run build
-
-      - name: Build standalone-web
-        run: pnpm -C standalone-web build
 
       - name: Unit tests
         run: pnpm test

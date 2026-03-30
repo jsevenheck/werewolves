@@ -1,80 +1,121 @@
-import type { Server } from 'socket.io';
+/**
+ * Standalone server entry point.
+ *
+ * Boots Express + Socket.IO on a dedicated HTTP server and attaches
+ * the Werewolves game namespace at `/g/werewolves`.
+ *
+ * Usage:  tsx server/src/index.ts
+ */
+import express from 'express';
+import http from 'http';
+import path from 'path';
+import fs from 'fs';
+import { Server } from 'socket.io';
+import type { Namespace, Socket } from 'socket.io';
 import { setupSocketHandlers } from './handlers/socketHandlers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../core/src/events';
-import type { Role } from '../../core/src/types';
 
-export interface GameDefinition {
-  id: string;
-  name: string;
-  minPlayers: number;
-  maxPlayers: number;
-  roles?: Role[];
-}
+// ---------------------------------------------------------------------------
+// Namespace setup (exported for tests)
+// ---------------------------------------------------------------------------
 
-export const definition: GameDefinition = {
-  id: 'werewolves',
-  name: 'Werewolves',
-  minPlayers: 5,
-  maxPlayers: 20,
-  roles: ['werewolf', 'seer', 'hunter', 'witch', 'armor', 'joker', 'guard', 'harlot', 'villager'],
-};
-
-/**
- * Register the Werewolves game as a Socket.IO namespace plugin.
- *
- * When embedded in the game-hub platform, the hub server calls this function
- * once at startup.  It attaches all game event handlers to the
- * `/g/werewolves` namespace so they share the same underlying HTTP server /
- * Socket.IO instance as every other game.
- *
- * Clients connect with:
- *   io("/g/werewolves", { auth: { token, joinToken, sessionId, playerId } })
- */
-export function registerWerewolf(io: Server, namespace = '/g/werewolves') {
+export function registerNamespace(io: Server, namespace = '/g/werewolves') {
   const nsp = io.of(namespace);
-
-  // Namespace-level middleware: validate auth data from the handshake.
-  nsp.use((socket, next) => {
-    const { joinToken, token, sessionId, playerId } = socket.handshake.auth as {
-      joinToken?: string;
-      token?: string;
-      sessionId?: string;
-      playerId?: string;
-    };
-    const normalizedToken = joinToken ?? token ?? null;
-
-    // Store auth data on socket.data so handlers can access it.
-    socket.data.sessionId = sessionId ?? null;
-    socket.data.joinToken = normalizedToken;
-    socket.data.playerId = playerId ?? null;
-
-    // Accept all connections for now; room-level auth is enforced
-    // inside the event handlers (resumePlayer verifies the token).
-    next();
-  });
 
   nsp.on('connection', (socket) => {
     setupSocketHandlers(
-      nsp as unknown as import('socket.io').Namespace<ClientToServerEvents, ServerToClientEvents>,
-      socket as unknown as import('socket.io').Socket<ClientToServerEvents, ServerToClientEvents>
+      nsp as unknown as Namespace<ClientToServerEvents, ServerToClientEvents>,
+      socket as unknown as Socket<ClientToServerEvents, ServerToClientEvents>
     );
-
-    // Auto-join a Socket.IO room matching the sessionId so broadcasts
-    // can be scoped per game session in the future.
-    if (socket.data.sessionId) {
-      socket.join(socket.data.sessionId);
-    }
   });
 
   return nsp;
 }
 
-export function register(io: Server, namespace = '/g/werewolves') {
-  return registerWerewolf(io, namespace);
+// ---------------------------------------------------------------------------
+// Static file resolution
+// ---------------------------------------------------------------------------
+
+function resolveStaticDir(rootDir: string): { staticDir: string } {
+  const builtClientDir = path.join(rootDir, 'dist', 'client');
+  if (fs.existsSync(builtClientDir)) {
+    return { staticDir: builtClientDir };
+  }
+  return { staticDir: path.join(rootDir, 'ui-vue') };
 }
 
-export const handler = { definition, register };
+// ---------------------------------------------------------------------------
+// Server bootstrap
+// ---------------------------------------------------------------------------
 
-// Re-export types & helpers that the hub or tests may need.
+const PORT = process.env.PORT ?? 3001;
+
+const app = express();
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: { origin: '*' },
+});
+
+registerNamespace(io);
+
+// Serve audio assets from the ui-vue public directory.
+const sharedAudioDir = path.join(process.cwd(), 'ui-vue', 'public', 'audio');
+if (fs.existsSync(sharedAudioDir)) {
+  app.use('/audio', express.static(sharedAudioDir));
+}
+
+const { staticDir } = resolveStaticDir(process.cwd());
+
+app.use(express.static(staticDir));
+app.get('/health', (_, res) => res.json({ ok: true }));
+
+// SPA fallback (Express 5 requires named wildcard)
+app.get('/{*splat}', (req, res, next) => {
+  if (req.path.startsWith('/socket.io')) return next();
+  const indexPath = path.join(staticDir, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('Not Found');
+  }
+});
+
+server.on('error', (err: NodeJS.ErrnoException) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`[server] Port ${PORT} is already in use.`);
+  } else {
+    console.error(`[server] Server error:`, err);
+  }
+  process.exit(1);
+});
+
+server.listen(PORT, () => {
+  console.log(`[server] Werewolves server listening on port ${PORT}`);
+  console.log(`[server] Game namespace: /g/werewolves`);
+  console.log(`[server] Serving static files from: ${staticDir}`);
+});
+
+// ---------------------------------------------------------------------------
+// Graceful shutdown
+// ---------------------------------------------------------------------------
+
+function shutdown(signal: string) {
+  console.log(`[server] ${signal} received, shutting down...`);
+  io.close(() => {
+    server.close(() => {
+      console.log('[server] Shutdown complete.');
+      process.exit(0);
+    });
+  });
+  setTimeout(() => process.exit(1), 10_000).unref();
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
+// ---------------------------------------------------------------------------
+// Re-exports for tests
+// ---------------------------------------------------------------------------
+
 export { setupSocketHandlers } from './handlers/socketHandlers';
 export type { ClientToServerEvents, ServerToClientEvents } from '../../core/src/events';

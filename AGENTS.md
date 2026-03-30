@@ -8,9 +8,8 @@ Role: Senior Lead Engineer
 Werewolves is a moderator-free social deduction game (like Mafia). It has:
 
 - A **Vue 3 + TypeScript** frontend (`ui-vue/`)
-- A **Node.js + Socket.IO** backend (`server/`)
+- A **Node.js + Express + Socket.IO** backend (`server/`)
 - Shared types/events in `core/`
-- Can run standalone or embedded in a game-hub platform
 
 ## Quick Start
 
@@ -32,8 +31,7 @@ Keep detailed guidance in docs/ and link to it from here.
 
 ## Repo Map
 
-- standalone-server/src/index.ts: standalone server entry point (Express + Socket.IO)
-- server/src/index.ts: embedded namespace plugin export (registerWerewolf)
+- server/src/index.ts: server entry point (Express + Socket.IO + static)
 - core/src/: shared types, events, constants (alias @shared/\*)
 - server/src/...
   - config/: server-only constants and role data
@@ -79,8 +77,8 @@ Config files at repo root:
 
 Environment splits in ESLint:
 
-- **Server** (`server/`, `standalone-server/`, `scripts/`) – Node globals, `require()` allowed
-- **Client** (`ui-vue/`, `standalone-web/`, `*.vue`) – Browser globals, Vue plugin
+- **Server** (`server/`, `scripts/`) – Node globals, `require()` allowed
+- **Client** (`ui-vue/`, `*.vue`) – Browser globals, Vue plugin
 - **Tests** (`__tests__/`, `e2e/`) – relaxed `any` / `require` rules
 
 ## Code Rules
@@ -108,20 +106,23 @@ Environment splits in ESLint:
 
 ## MCP Tool Support
 
-Both Claude Code and Codex have project-scoped MCP servers configured:
+Project-scoped MCP servers are configured in `.mcp.json`:
 
-| Server     | What it provides                       | Config                             |
-| ---------- | -------------------------------------- | ---------------------------------- |
-| github     | GitHub API (issues, PRs, repos)        | `.mcp.json` / `.codex/config.toml` |
-| fetch      | Web content fetching (HTML → Markdown) | `.mcp.json` / `.codex/config.toml` |
-| filesystem | File system read/write access          | `.mcp.json` / `.codex/config.toml` |
-| ripgrep    | Fast code search                       | `.mcp.json` / `.codex/config.toml` |
-| pnpm       | Package manager integration            | `.mcp.json` / `.codex/config.toml` |
-| playwright | Browser automation for E2E             | `.mcp.json` / `.codex/config.toml` |
+| Server  | What it provides            |
+| ------- | --------------------------- |
+| ripgrep | Fast code search            |
+| pnpm    | Package manager integration |
 
-- **Claude Code**: configured via `.mcp.json` (JSON, stdio/http transports)
-- **Codex**: configured via `.codex/config.toml` (TOML, includes startup/tool timeouts)
-- The GitHub MCP server in Codex requires a `GITHUB_MCP_PAT` env var for authentication.
+## Skills
+
+Reusable skill definitions live in `.skills/`. Read the relevant `SKILL.md`
+when a task matches a skill area.
+
+| Skill                     | Description                                                                               |
+| ------------------------- | ----------------------------------------------------------------------------------------- |
+| `.skills/playwright-cli/` | Browser automation (testing, screenshots, E2E exploration)                                |
+| `.skills/pnpm/`           | Package manager workflows and best practices                                              |
+| `.skills/ui-ux-pro-max/`  | UI/UX design system: styles, palettes, font pairings, accessibility, Vue stack guidelines |
 
 ## When Unsure
 
