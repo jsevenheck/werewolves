@@ -1,9 +1,10 @@
 import { tryResolveDayVote, resolveDayKill } from '../server/src/managers/voteManager';
+import * as voteManagerModule from '../server/src/managers/voteManager';
 import type { Player, Room, RoleConfig } from '../core/src/types';
 
-jest.mock('../server/src/managers/phaseManager', () => ({
-  schedulePhaseTransition: jest.fn(),
-  holdDayToNightTransition: jest.fn(),
+vi.mock('../server/src/managers/phaseManager', () => ({
+  schedulePhaseTransition: vi.fn(),
+  holdDayToNightTransition: vi.fn(),
 }));
 
 const makeRoom = (players: Record<string, Player>): Room => ({
@@ -87,7 +88,7 @@ describe('voteManager', () => {
     };
     const room = makeRoom(players);
     room.voteState.votes = { a: 'b', b: 'c', c: 'b', d: 'c' };
-    const broadcastRoom = jest.fn();
+    const broadcastRoom = vi.fn();
 
     tryResolveDayVote(room, broadcastRoom, undefined as never);
 
@@ -109,11 +110,9 @@ describe('voteManager', () => {
     const room = makeRoom(players);
     room.voteState.revoteFromTie = ['b', 'c'];
     room.voteState.votes = { a: 'b', b: 'c', c: 'b', d: 'c' };
-    const broadcastRoom = jest.fn();
-    const resolveSpy = jest
-      .spyOn(require('../server/src/managers/voteManager'), 'resolveDayKill')
-      .mockImplementation(() => {});
-    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
+    const broadcastRoom = vi.fn();
+    const resolveSpy = vi.spyOn(voteManagerModule, 'resolveDayKill').mockImplementation(() => {});
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
 
     try {
       tryResolveDayVote(room, broadcastRoom, undefined as never);
@@ -138,7 +137,7 @@ describe('voteManager', () => {
     };
     const room = makeRoom(players);
     room.voteState.votes = { a: null, b: null, c: null, d: 'e', e: 'e' };
-    const broadcastRoom = jest.fn();
+    const broadcastRoom = vi.fn();
 
     tryResolveDayVote(room, broadcastRoom, undefined as never);
 
@@ -156,7 +155,7 @@ describe('voteManager', () => {
     };
     const room = makeRoom(players);
     room.voteState.votes = { a: null, b: null };
-    const broadcastRoom = jest.fn();
+    const broadcastRoom = vi.fn();
 
     tryResolveDayVote(room, broadcastRoom, undefined as never);
 
@@ -175,7 +174,7 @@ describe('voteManager', () => {
     };
     const room = makeRoom(players);
     room.voteState.votes = { a: 'b' };
-    const broadcastRoom = jest.fn();
+    const broadcastRoom = vi.fn();
 
     tryResolveDayVote(room, broadcastRoom, undefined as never, { allowEarly: true });
 
@@ -204,7 +203,7 @@ describe('voteManager', () => {
     });
     room.mayorId = 'joker';
     room.lovers = { aId: 'joker', bId: 'hunter' };
-    const broadcastRoom = jest.fn();
+    const broadcastRoom = vi.fn();
 
     resolveDayKill(room, 'joker', broadcastRoom, undefined as never);
 
@@ -240,7 +239,7 @@ describe('voteManager', () => {
       const room = makeRoom(players);
       room.mayorId = 'a';
       room.voteState.votes = { a: 'b', b: 'c', c: 'b', d: 'c' }; // 2-2 tie, mayor voted for b
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       tryResolveDayVote(room, broadcastRoom, undefined as never);
 
@@ -260,7 +259,7 @@ describe('voteManager', () => {
       room.mayorId = 'a';
       room.voteState.revoteFromTie = ['b', 'c'];
       room.voteState.votes = { a: 'b', b: 'c', c: 'b', d: 'c' }; // 2-2 tie after revote
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       tryResolveDayVote(room, broadcastRoom, undefined as never);
 
@@ -281,7 +280,7 @@ describe('voteManager', () => {
       const room = makeRoom(players);
       room.mayorId = 'a';
       room.voteState.votes = { a: 'e', b: 'c', c: 'b', d: 'c', e: 'b' }; // 2-2 tie between b and c, mayor voted for e
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       tryResolveDayVote(room, broadcastRoom, undefined as never);
 
@@ -302,7 +301,7 @@ describe('voteManager', () => {
       const room = makeRoom(players);
       room.mayorId = 'a';
       room.voteState.votes = { a: null, b: 'c', c: 'b', d: 'c', e: 'b' }; // 2-2 tie, mayor abstained
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       tryResolveDayVote(room, broadcastRoom, undefined as never);
 
@@ -320,7 +319,7 @@ describe('voteManager', () => {
       room.mayorId = 'a'; // Mayor is dead
       room.voteState.revoteFromTie = ['b', 'c'];
       room.voteState.votes = { b: 'c', c: 'b', d: 'c' }; // Still tied
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       tryResolveDayVote(room, broadcastRoom, undefined as never);
 

@@ -1,7 +1,7 @@
 import type { RoomView } from '../core/src/types';
 
 // Mock the window.alert for notify function
-const alertMock = jest.fn();
+const alertMock = vi.fn();
 Object.defineProperty(global, 'window', {
   value: { alert: alertMock },
   writable: true,

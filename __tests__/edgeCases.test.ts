@@ -18,9 +18,9 @@ const makePlayer = (id: string, overrides: Partial<Player> = {}): Player => ({
   seerResult: overrides.seerResult ?? null,
 });
 
-jest.mock('../server/src/managers/phaseManager', () => ({
-  schedulePhaseTransition: jest.fn(),
-  holdDayToNightTransition: jest.fn(),
+vi.mock('../server/src/managers/phaseManager', () => ({
+  schedulePhaseTransition: vi.fn(),
+  holdDayToNightTransition: vi.fn(),
 }));
 
 describe('Edge Cases', () => {
@@ -64,7 +64,7 @@ describe('Edge Cases', () => {
         phaseTimer: null,
         hunterShotQueue: [],
       } as unknown as Room;
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       queueDeath(room, 'a', 'executed by vote');
       resolveDeaths(room, 'day', broadcastRoom);
@@ -76,7 +76,7 @@ describe('Edge Cases', () => {
     });
 
     test('hunter gets shot when dying as lover', () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       const room = {
         players: {
           hunter: makePlayer('hunter', {
@@ -102,9 +102,9 @@ describe('Edge Cases', () => {
         phaseTimer: null,
         hunterShotQueue: [],
       } as unknown as Room;
-      const emit = jest.fn();
+      const emit = vi.fn();
       const io = { sockets: new Map([['socket-h', { emit }]]) };
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       queueDeath(room, 'lover', 'eaten by Werewolves');
       resolveDeaths(room, 'night', broadcastRoom, io as unknown as never);
@@ -117,7 +117,7 @@ describe('Edge Cases', () => {
         clearTimeout(room.hunterShotTimer);
         room.hunterShotTimer = null;
       }
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     test('both lovers dead - no repeated death processing', () => {
@@ -141,7 +141,7 @@ describe('Edge Cases', () => {
         phaseTimer: null,
         hunterShotQueue: [],
       } as unknown as Room;
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       queueDeath(room, 'b', 'executed by vote');
       resolveDeaths(room, 'day', broadcastRoom);
@@ -167,7 +167,7 @@ describe('Edge Cases', () => {
         mayorSelectionQueue: [],
         awaitingMayorSelection: null,
       } as unknown as Room;
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       tryResolveDayVote(room, broadcastRoom, undefined as never);
 
@@ -197,7 +197,7 @@ describe('Edge Cases', () => {
         phaseTimer: null,
         hunterShotQueue: [],
       } as unknown as Room;
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       tryResolveDayVote(room, broadcastRoom, undefined as never);
 
@@ -220,7 +220,7 @@ describe('Edge Cases', () => {
         mayorSelectionQueue: [],
         awaitingMayorSelection: null,
       } as unknown as Room;
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       tryResolveDayVote(room, broadcastRoom, undefined as never);
 
@@ -254,9 +254,9 @@ describe('Edge Cases', () => {
         phaseTimer: null,
         hunterShotQueue: [],
       } as unknown as Room;
-      const emit = jest.fn();
+      const emit = vi.fn();
       const io = { sockets: new Map([['socket-h', { emit }]]) };
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       queueDeath(room, 'hunter', 'executed by vote');
       resolveDeaths(room, 'day', broadcastRoom, io as unknown as never);
@@ -291,7 +291,7 @@ describe('Edge Cases', () => {
         hunterShotQueue: [],
       } as unknown as Room;
       const io = { sockets: new Map() };
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       queueDeath(room, 'hunter', 'executed by vote');
       resolveDeaths(room, 'day', broadcastRoom, io as unknown as never);

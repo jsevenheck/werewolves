@@ -947,7 +947,6 @@ function setupSocketHandlers(
       }
     }
 
-    // Remove the room (also clears the sessionId → roomCode mapping).
     deleteRoom(roomCode);
     cb?.({ ok: true });
   });

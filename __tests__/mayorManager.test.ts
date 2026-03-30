@@ -2,13 +2,14 @@ import { startNextMayorSelection, tryResolveMayorVote } from '../server/src/mana
 import { createVoteState } from '../server/src/utils/helpers';
 import { schedulePhaseTransition } from '../server/src/managers/phaseManager';
 import type { Room } from '../core/src/types';
+import type { MockedFunction } from 'vitest';
 
-jest.mock('../server/src/managers/phaseManager', () => ({
-  schedulePhaseTransition: jest.fn(),
+vi.mock('../server/src/managers/phaseManager', () => ({
+  schedulePhaseTransition: vi.fn(),
 }));
 
 describe('mayorManager', () => {
-  const mockSchedulePhaseTransition = schedulePhaseTransition as jest.MockedFunction<
+  const mockSchedulePhaseTransition = schedulePhaseTransition as MockedFunction<
     typeof schedulePhaseTransition
   >;
 
@@ -24,7 +25,7 @@ describe('mayorManager', () => {
           p2: { id: 'p2', name: 'Player 2', alive: true, socketId: 'socket2' },
         },
       } as unknown as Room;
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       const result = startNextMayorSelection(room, broadcastRoom);
 
@@ -43,7 +44,7 @@ describe('mayorManager', () => {
           p2: { id: 'p2', name: 'Player 2', alive: false, socketId: 'socket2' },
         },
       } as unknown as Room;
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       const result = startNextMayorSelection(room, broadcastRoom);
 
@@ -62,9 +63,9 @@ describe('mayorManager', () => {
         },
         logs: [],
       } as unknown as Room;
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
       const io = {
-        sockets: new Map([['socket1', { emit: jest.fn() }]]),
+        sockets: new Map([['socket1', { emit: vi.fn() }]]),
       };
 
       const result = startNextMayorSelection(room, broadcastRoom, io as any);
@@ -86,9 +87,9 @@ describe('mayorManager', () => {
         },
         logs: [],
       } as unknown as Room;
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
       const io = {
-        sockets: new Map([['socket3', { emit: jest.fn() }]]),
+        sockets: new Map([['socket3', { emit: vi.fn() }]]),
       };
 
       const result = startNextMayorSelection(room, broadcastRoom, io as any);
@@ -106,7 +107,7 @@ describe('mayorManager', () => {
         mayorSelectionTimer: null,
         players: {},
       } as unknown as Room;
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       const result = startNextMayorSelection(room, broadcastRoom);
 
@@ -132,7 +133,7 @@ describe('mayorManager', () => {
         logs: [],
       } as unknown as Room;
       room.voteState.votes = { p1: 'p2', p2: 'p2', p3: 'p1' };
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       const resolved = tryResolveMayorVote(room, broadcastRoom);
 
@@ -155,7 +156,7 @@ describe('mayorManager', () => {
         logs: [],
       } as unknown as Room;
       room.voteState.votes = { p1: 'p2', p2: 'p1', p3: 'p1', p4: 'p2' };
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       const resolved = tryResolveMayorVote(room, broadcastRoom);
 
@@ -183,8 +184,8 @@ describe('mayorManager', () => {
       } as unknown as Room;
       room.voteState.revoteFromTie = ['p1', 'p2'];
       room.voteState.votes = { p1: 'p1', p2: 'p2', p3: 'p1', p4: 'p2' };
-      const broadcastRoom = jest.fn();
-      const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
+      const broadcastRoom = vi.fn();
+      const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
 
       try {
         const resolved = tryResolveMayorVote(room, broadcastRoom);
@@ -210,7 +211,7 @@ describe('mayorManager', () => {
         logs: [],
       } as unknown as Room;
       room.voteState.votes = { p1: 'p3', p2: 'p3' };
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       const resolved = tryResolveMayorVote(room, broadcastRoom, { allowEarly: true });
 
@@ -232,7 +233,7 @@ describe('mayorManager', () => {
         logs: [],
       } as unknown as Room;
       room.voteState.votes = { p1: 'p2', p2: 'p2' };
-      const broadcastRoom = jest.fn();
+      const broadcastRoom = vi.fn();
 
       const resolved = tryResolveMayorVote(room, broadcastRoom);
 

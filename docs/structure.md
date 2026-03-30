@@ -7,7 +7,7 @@ This document describes the codebase structure for the Werewolves standalone app
 - **core/**: Shared types, events, constants (used by both client and server)
 - **server/**: Node.js + Express + Socket.IO backend with managers for game logic
 - **ui-vue/**: Vue 3 frontend with Pinia stores and phase components
-- **\_\_tests\_\_/**: Jest unit tests
+- **\_\_tests\_\_/**: Vitest unit tests
 - **e2e/**: Playwright E2E tests
 
 ## Project Structure
@@ -38,7 +38,7 @@ werewolves/
 │       ├── types/            # Client types (config.ts)
 │       ├── utils/            # Client helpers
 │       └── assets/           # CSS, audio
-├── __tests__/                # Jest unit tests
+├── __tests__/                # Vitest unit tests
 ├── e2e/                      # Playwright E2E tests
 └── docs/                     # Documentation
 ```
@@ -181,7 +181,7 @@ and one is randomly selected per playback.
 pnpm lint            # ESLint – must be 0 errors
 pnpm format:check    # Prettier – no diffs allowed
 pnpm typecheck       # tsc + vue-tsc
-pnpm test            # Jest unit tests
+pnpm test            # Vitest unit tests
 ```
 
 CI runs these in the same order.

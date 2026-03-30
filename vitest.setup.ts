@@ -1,11 +1,11 @@
 import { MockHowl } from './__tests__/mocks/howler';
 
 afterEach(() => {
-  jest.useRealTimers();
+  vi.useRealTimers();
 });
 
-jest.mock('nanoid', () => ({
+vi.mock('nanoid', () => ({
   customAlphabet: () => () => 'mock-id',
 }));
 
-jest.mock('howler', () => ({ Howl: MockHowl }), { virtual: true });
+vi.mock('howler', () => ({ Howl: MockHowl }));

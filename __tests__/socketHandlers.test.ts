@@ -24,60 +24,63 @@ import { startNextMayorSelection, tryResolveMayorVote } from '../server/src/mana
 import { setupSocketHandlers } from '../server/src/handlers/socketHandlers';
 import { setSocketIndex, getSocketIndex, deleteSocketIndex } from '../server/src/models/player';
 import type { Room } from '../core/src/types';
+import type { Mock } from 'vitest';
 
-jest.mock('../server/src/models/room', () => ({
-  createRoom: jest.fn(),
-  getRoom: jest.fn(),
-  getAllRooms: jest.fn(),
+vi.mock('../server/src/models/room', () => ({
+  createRoom: vi.fn(),
+  getRoom: vi.fn(),
+  getAllRooms: vi.fn(),
 }));
 
-jest.mock('../server/src/managers/broadcastManager', () => ({
-  broadcastRoom: jest.fn(),
-  sendStateToPlayer: jest.fn(),
+vi.mock('../server/src/managers/broadcastManager', () => ({
+  broadcastRoom: vi.fn(),
+  sendStateToPlayer: vi.fn(),
 }));
 
-jest.mock('../server/src/managers/phaseManager', () => ({
-  schedulePhaseTransition: jest.fn(),
-  holdDayToNightTransition: jest.fn(),
-  advanceFromReveal: jest.fn(),
-  advanceFromMayor: jest.fn(),
-  startNight: jest.fn(),
-  notifyLovers: jest.fn(),
-  scheduleNightStep: jest.fn(),
+vi.mock('../server/src/managers/phaseManager', () => ({
+  schedulePhaseTransition: vi.fn(),
+  holdDayToNightTransition: vi.fn(),
+  advanceFromReveal: vi.fn(),
+  advanceFromMayor: vi.fn(),
+  startNight: vi.fn(),
+  notifyLovers: vi.fn(),
+  scheduleNightStep: vi.fn(),
 }));
 
-jest.mock('../server/src/managers/nightManager', () => ({
-  tryFinalizeWolfVote: jest.fn(),
-  advanceNightStep: jest.fn(),
-  handleWitchDecision: jest.fn(),
+vi.mock('../server/src/managers/nightManager', () => ({
+  tryFinalizeWolfVote: vi.fn(),
+  advanceNightStep: vi.fn(),
+  handleWitchDecision: vi.fn(),
 }));
 
-jest.mock('../server/src/managers/voteManager', () => {
-  const actual = jest.requireActual('../server/src/managers/voteManager');
+vi.mock('../server/src/managers/voteManager', async () => {
+  const actual = await vi.importActual<typeof import('../server/src/managers/voteManager')>(
+    '../server/src/managers/voteManager'
+  );
   return {
     ...actual,
-    tryResolveDayVote: jest.fn(actual.tryResolveDayVote),
+    tryResolveDayVote: vi.fn(actual.tryResolveDayVote),
   };
 });
 
-jest.mock('../server/src/managers/deathManager', () => ({
-  queueDeath: jest.fn(),
-  resolveDeaths: jest.fn(),
-  startNextHunterShot: jest.fn(),
-  checkWinners: jest.fn(),
+vi.mock('../server/src/managers/deathManager', () => ({
+  queueDeath: vi.fn(),
+  resolveDeaths: vi.fn(),
+  startNextHunterShot: vi.fn(),
+  checkWinners: vi.fn(),
 }));
 
-jest.mock('../server/src/managers/mayorManager', () => ({
-  startNextMayorSelection: jest.fn(),
-  startMayorSelection: jest.fn(),
-  tryResolveMayorVote: jest.fn(),
+vi.mock('../server/src/managers/mayorManager', () => ({
+  startNextMayorSelection: vi.fn(),
+  startMayorSelection: vi.fn(),
+  tryResolveMayorVote: vi.fn(),
 }));
 
 const makeSocket = () => {
   const handlers: Record<string, (...args: any[]) => void> = {};
   const socket = {
     id: 'socket-1',
-    emit: jest.fn(),
+    emit: vi.fn(),
     on: (event: string, handler: (...args: any[]) => void) => {
       handlers[event] = handler;
     },
@@ -86,7 +89,7 @@ const makeSocket = () => {
 };
 
 const makeIo = () => {
-  const sockets = new Map<string, { disconnect: jest.Mock }>();
+  const sockets = new Map<string, { disconnect: Mock }>();
   const io = {
     sockets: {
       get: (id: string) => sockets.get(id),
@@ -99,11 +102,11 @@ describe('socketHandlers host handoff', () => {
   const io = { sockets: { sockets: new Map() } } as unknown as any;
 
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
     deleteSocketIndex('socket-owner');
     deleteSocketIndex('socket-owner-2');
   });
@@ -129,7 +132,7 @@ describe('socketHandlers host handoff', () => {
       voteState: { votes: {}, revoteFromTie: null },
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
 
     const { handlers, socket } = makeSocket();
     socket.id = 'socket-owner';
@@ -137,7 +140,7 @@ describe('socketHandlers host handoff', () => {
     setupSocketHandlers(io, socket as any);
 
     handlers.disconnect();
-    jest.runAllTimers();
+    vi.runAllTimers();
 
     expect(room.hostId).toBe('peer');
 
@@ -147,7 +150,7 @@ describe('socketHandlers host handoff', () => {
 
     handlers2.resumePlayer(
       { roomCode: 'ABCD', playerId: 'owner', resumeToken: 'token-owner', name: 'Owner' },
-      jest.fn()
+      vi.fn()
     );
 
     expect(room.hostId).toBe('owner');
@@ -178,17 +181,17 @@ describe('socketHandlers resumePlayer socket handoff', () => {
       voteState: { votes: {}, revoteFromTie: null },
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
 
     const { io, sockets } = makeIo();
-    const previousSocket = { disconnect: jest.fn() };
+    const previousSocket = { disconnect: vi.fn() };
     sockets.set('socket-old', previousSocket);
     setSocketIndex('socket-old', room.code, 'p1');
 
     const { handlers, socket } = makeSocket();
     socket.id = 'socket-new';
     setupSocketHandlers(io, socket as any);
-    const cb = jest.fn();
+    const cb = vi.fn();
 
     handlers.resumePlayer({ roomCode: room.code, playerId: 'p1', resumeToken: 'resume-token' }, cb);
 
@@ -215,10 +218,10 @@ describe('socketHandlers room entry and state events', () => {
       logs: [],
     } as unknown as Room;
     const player = { id: 'host-1', resumeToken: 'resume-host' };
-    (createRoom as jest.Mock).mockReturnValue({ room, player });
+    (createRoom as Mock).mockReturnValue({ room, player });
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
-    const cb = jest.fn();
+    const cb = vi.fn();
 
     handlers.createRoom({ name: 'Host' }, cb);
 
@@ -242,11 +245,11 @@ describe('socketHandlers room entry and state events', () => {
       voteState: { votes: {}, revoteFromTie: null },
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     socket.id = 'socket-joiner';
     setupSocketHandlers(io, socket as any);
-    const cb = jest.fn();
+    const cb = vi.fn();
 
     handlers.joinRoom({ name: 'Alice', code: 'abcd' }, cb);
 
@@ -292,11 +295,11 @@ describe('socketHandlers room entry and state events', () => {
       voteState: { votes: { p1: 'host' }, revoteFromTie: null },
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     setSocketIndex('socket-1', room.code, 'p1');
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
-    const cb = jest.fn();
+    const cb = vi.fn();
 
     handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, cb);
 
@@ -352,12 +355,12 @@ describe('socketHandlers room entry and state events', () => {
       winner: null,
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     setSocketIndex('socket-1', room.code, 'p1');
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
-    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, jest.fn());
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, vi.fn());
 
     expect(room.seerActed).toBe(true);
     expect(room.seerAwaitingDismiss).toBe(false);
@@ -400,14 +403,14 @@ describe('socketHandlers room entry and state events', () => {
       winner: null,
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
-    (startNextHunterShot as jest.Mock).mockReturnValue(false);
-    (startNextMayorSelection as jest.Mock).mockReturnValue(false);
+    (getRoom as Mock).mockReturnValue(room);
+    (startNextHunterShot as Mock).mockReturnValue(false);
+    (startNextMayorSelection as Mock).mockReturnValue(false);
     setSocketIndex('socket-1', room.code, 'p1');
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
-    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, jest.fn());
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, vi.fn());
 
     expect(room.awaitingHunterShot).toBeNull();
     expect(room.hunterShotTimer).toBeNull();
@@ -418,7 +421,7 @@ describe('socketHandlers room entry and state events', () => {
   });
 
   test('leaveRoom returns early in lobby phase', () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     const room = {
       code: 'ABCD',
       hostId: 'host',
@@ -440,11 +443,11 @@ describe('socketHandlers room entry and state events', () => {
       mayorSelectionQueue: [],
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     setSocketIndex('socket-1', room.code, 'p1');
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
-    const cb = jest.fn();
+    const cb = vi.fn();
 
     handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, cb);
 
@@ -454,7 +457,7 @@ describe('socketHandlers room entry and state events', () => {
   });
 
   test('leaveRoom returns early when room becomes empty', () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     const room = {
       code: 'ABCD',
       hostId: 'p1',
@@ -477,11 +480,11 @@ describe('socketHandlers room entry and state events', () => {
       mayorSelectionQueue: [],
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     setSocketIndex('socket-1', room.code, 'p1');
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
-    const cb = jest.fn();
+    const cb = vi.fn();
 
     handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, cb);
 
@@ -492,7 +495,7 @@ describe('socketHandlers room entry and state events', () => {
   });
 
   test('leaveRoom stops when winner is detected after removal', () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     const room = {
       code: 'ABCD',
       hostId: 'host',
@@ -516,14 +519,14 @@ describe('socketHandlers room entry and state events', () => {
       winner: null,
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
-    (checkWinners as jest.Mock).mockImplementationOnce((target: Room) => {
+    (getRoom as Mock).mockReturnValue(room);
+    (checkWinners as Mock).mockImplementationOnce((target: Room) => {
       target.winner = { team: 'village', reason: 'All Werewolves are dead.' };
     });
     setSocketIndex('socket-1', room.code, 'p1');
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
-    const cb = jest.fn();
+    const cb = vi.fn();
 
     handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, cb);
 
@@ -533,7 +536,7 @@ describe('socketHandlers room entry and state events', () => {
   });
 
   test('leaveRoom continues mayor phase vote resolution', () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     const room = {
       code: 'ABCD',
       hostId: 'host',
@@ -556,18 +559,18 @@ describe('socketHandlers room entry and state events', () => {
       winner: null,
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     setSocketIndex('socket-1', room.code, 'p1');
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
-    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, jest.fn());
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, vi.fn());
 
     expect(tryResolveMayorVote).toHaveBeenCalledWith(room, expect.any(Function));
   });
 
   test('leaveRoom advances wolves step when a werewolf leaves', () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     const room = {
       code: 'ABCD',
       hostId: 'host',
@@ -591,12 +594,12 @@ describe('socketHandlers room entry and state events', () => {
       winner: null,
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     setSocketIndex('socket-1', room.code, 'p1');
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
-    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, jest.fn());
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, vi.fn());
 
     expect(tryFinalizeWolfVote).toHaveBeenCalledWith(room, expect.any(Function), io, {
       allowNoKill: true,
@@ -604,7 +607,7 @@ describe('socketHandlers room entry and state events', () => {
   });
 
   test('leaveRoom advances from witch and armor roles correctly', () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     const witchRoom = {
       code: 'ABCD',
       hostId: 'host',
@@ -628,11 +631,11 @@ describe('socketHandlers room entry and state events', () => {
       winner: null,
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValueOnce(witchRoom);
+    (getRoom as Mock).mockReturnValueOnce(witchRoom);
     setSocketIndex('socket-1', witchRoom.code, 'p1');
     const first = makeSocket();
     setupSocketHandlers(io, first.socket as any);
-    first.handlers.leaveRoom({ roomCode: witchRoom.code, playerId: 'p1' }, jest.fn());
+    first.handlers.leaveRoom({ roomCode: witchRoom.code, playerId: 'p1' }, vi.fn());
     expect(scheduleNightStep).toHaveBeenCalledWith(witchRoom, 'guard', expect.any(Function), io);
 
     const armorRoom = {
@@ -658,11 +661,11 @@ describe('socketHandlers room entry and state events', () => {
       winner: null,
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValueOnce(armorRoom);
+    (getRoom as Mock).mockReturnValueOnce(armorRoom);
     setSocketIndex('socket-1', armorRoom.code, 'p2');
     const second = makeSocket();
     setupSocketHandlers(io, second.socket as any);
-    second.handlers.leaveRoom({ roomCode: armorRoom.code, playerId: 'p2' }, jest.fn());
+    second.handlers.leaveRoom({ roomCode: armorRoom.code, playerId: 'p2' }, vi.fn());
     expect(schedulePhaseTransition).toHaveBeenCalledWith(
       armorRoom,
       'postArmor',
@@ -671,7 +674,7 @@ describe('socketHandlers room entry and state events', () => {
   });
 
   test('leaveRoom advances from guard step when guard leaves', () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     const room = {
       code: 'ABCD',
       hostId: 'host',
@@ -696,19 +699,19 @@ describe('socketHandlers room entry and state events', () => {
       winner: null,
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     setSocketIndex('socket-1', room.code, 'p1');
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
-    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, jest.fn());
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, vi.fn());
 
     expect(room.guardActed).toBe(true);
     expect(scheduleNightStep).toHaveBeenCalledWith(room, 'harlot', expect.any(Function), io);
   });
 
   test('leaveRoom advances from harlot step when harlot leaves', () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     const room = {
       code: 'ABCD',
       hostId: 'host',
@@ -733,19 +736,19 @@ describe('socketHandlers room entry and state events', () => {
       winner: null,
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     setSocketIndex('socket-1', room.code, 'p1');
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
-    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, jest.fn());
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, vi.fn());
 
     expect(room.harlotActed).toBe(true);
     expect(scheduleNightStep).toHaveBeenCalledWith(room, 'resolve', expect.any(Function), io);
   });
 
   test('leaveRoom clears mayor selection timer and processes remaining queues', () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     const timer = setTimeout(() => undefined, 60000);
     const room = {
       code: 'ABCD',
@@ -775,14 +778,14 @@ describe('socketHandlers room entry and state events', () => {
       winner: null,
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
-    (startNextMayorSelection as jest.Mock).mockReturnValue(false);
-    (startNextHunterShot as jest.Mock).mockReturnValue(false);
+    (getRoom as Mock).mockReturnValue(room);
+    (startNextMayorSelection as Mock).mockReturnValue(false);
+    (startNextHunterShot as Mock).mockReturnValue(false);
     setSocketIndex('socket-1', room.code, 'p1');
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
-    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, jest.fn());
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, vi.fn());
 
     expect(room.awaitingMayorSelection).toBeNull();
     expect(room.mayorSelectionTimer).toBeNull();
@@ -797,7 +800,7 @@ describe('socketHandlers room entry and state events', () => {
       code: 'ABCD',
       players: { p1: player },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -811,7 +814,7 @@ describe('socketHandlers hostSkipStep', () => {
   const io = { sockets: { sockets: new Map() } } as unknown as any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('host skips wolves step even when wolves are alive', () => {
@@ -829,7 +832,7 @@ describe('socketHandlers hostSkipStep', () => {
       },
       wolfVotes: { w1: null, w2: null },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -855,7 +858,7 @@ describe('socketHandlers hostSkipStep', () => {
         v1: { id: 'v1', role: 'villager', alive: true },
       },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -878,7 +881,7 @@ describe('socketHandlers hostSkipStep', () => {
         v1: { id: 'v1', role: 'villager', alive: true },
       },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -906,7 +909,7 @@ describe('socketHandlers hostSkipStep', () => {
         host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' },
       },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -931,7 +934,7 @@ describe('socketHandlers hostSkipStep', () => {
       wolfVotes: { w1: 'v1' },
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -955,7 +958,7 @@ describe('socketHandlers hostSkipStep', () => {
       voteState: { votes: { a: 'b' }, revoteFromTie: ['b'] },
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -981,7 +984,7 @@ describe('socketHandlers hostSkipStep', () => {
         host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' },
       },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1003,7 +1006,7 @@ describe('socketHandlers hostSkipStep', () => {
         host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' },
       },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1024,7 +1027,7 @@ describe('socketHandlers hostSkipStep', () => {
         host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' },
       },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1045,7 +1048,7 @@ describe('socketHandlers hostSkipStep', () => {
         host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' },
       },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1067,7 +1070,7 @@ describe('socketHandlers hostSkipStep', () => {
       },
       voteState: { votes: {}, revoteFromTie: null },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1090,7 +1093,7 @@ describe('socketHandlers hostSkipStep', () => {
       },
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1113,7 +1116,7 @@ describe('socketHandlers hostSkipStep', () => {
       wolfTarget: 'someone',
       wolfVotes: {},
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1139,8 +1142,8 @@ describe('socketHandlers hostSkipStep', () => {
       },
       winner: null,
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
-    (startNextHunterShot as jest.Mock).mockReturnValue(false);
+    (getRoom as Mock).mockReturnValue(room);
+    (startNextHunterShot as Mock).mockReturnValue(false);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1168,8 +1171,8 @@ describe('socketHandlers hostSkipStep', () => {
       },
       winner: null,
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
-    (startNextHunterShot as jest.Mock).mockReturnValueOnce(true);
+    (getRoom as Mock).mockReturnValue(room);
+    (startNextHunterShot as Mock).mockReturnValueOnce(true);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1200,9 +1203,9 @@ describe('socketHandlers hostSkipStep', () => {
       },
       winner: null,
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
-    (startNextMayorSelection as jest.Mock).mockReturnValue(false);
-    (startNextHunterShot as jest.Mock).mockReturnValue(false);
+    (getRoom as Mock).mockReturnValue(room);
+    (startNextMayorSelection as Mock).mockReturnValue(false);
+    (startNextHunterShot as Mock).mockReturnValue(false);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1232,8 +1235,8 @@ describe('socketHandlers hostSkipStep', () => {
       },
       winner: null,
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
-    (startNextMayorSelection as jest.Mock).mockReturnValueOnce(true);
+    (getRoom as Mock).mockReturnValue(room);
+    (startNextMayorSelection as Mock).mockReturnValueOnce(true);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1252,13 +1255,13 @@ describe('socketHandlers disconnect vote resolution', () => {
   const io = { sockets: { sockets: new Map() } } as unknown as any;
 
   beforeEach(() => {
-    jest.useFakeTimers();
-    jest.clearAllMocks();
+    vi.useFakeTimers();
+    vi.clearAllMocks();
     deleteSocketIndex('socket-1');
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test('does not resolve day vote during a phase transition', () => {
@@ -1275,13 +1278,13 @@ describe('socketHandlers disconnect vote resolution', () => {
       voteState: { votes: {}, revoteFromTie: null },
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     setSocketIndex('socket-1', room.code, 'host');
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
     handlers.disconnect();
-    jest.runAllTimers();
+    vi.runAllTimers();
 
     expect(tryResolveDayVote).not.toHaveBeenCalled();
   });
@@ -1300,13 +1303,13 @@ describe('socketHandlers disconnect vote resolution', () => {
       voteState: { votes: {}, revoteFromTie: null },
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     setSocketIndex('socket-1', room.code, 'host');
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
     handlers.disconnect();
-    jest.runAllTimers();
+    vi.runAllTimers();
 
     expect(tryResolveDayVote).not.toHaveBeenCalled();
   });
@@ -1325,13 +1328,13 @@ describe('socketHandlers disconnect vote resolution', () => {
       voteState: { votes: {}, revoteFromTie: null },
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     setSocketIndex('socket-1', room.code, 'host');
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
     handlers.disconnect();
-    jest.runAllTimers();
+    vi.runAllTimers();
 
     expect(tryResolveDayVote).toHaveBeenCalledWith(room, expect.any(Function), io);
   });
@@ -1350,13 +1353,13 @@ describe('socketHandlers disconnect vote resolution', () => {
       voteState: { votes: {}, revoteFromTie: null },
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     setSocketIndex('socket-1', room.code, 'host');
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
     handlers.disconnect();
-    jest.runAllTimers();
+    vi.runAllTimers();
 
     expect(tryResolveMayorVote).toHaveBeenCalledWith(room, expect.any(Function));
   });
@@ -1366,7 +1369,7 @@ describe('socketHandlers hostProceedToNight', () => {
   const io = { sockets: { sockets: new Map() } } as unknown as any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('holds day-to-night transition when vote is resolved and no winner exists', () => {
@@ -1380,8 +1383,8 @@ describe('socketHandlers hostProceedToNight', () => {
       },
       winner: null,
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
-    (checkWinners as jest.Mock).mockImplementation(() => {
+    (getRoom as Mock).mockReturnValue(room);
+    (checkWinners as Mock).mockImplementation(() => {
       room.winner = null;
     });
     const { handlers, socket } = makeSocket();
@@ -1405,7 +1408,7 @@ describe('socketHandlers hostProceedToNight', () => {
       },
       winner: { team: 'wolves', reason: 'Werewolves already won.' },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1427,8 +1430,8 @@ describe('socketHandlers hostProceedToNight', () => {
       },
       winner: null,
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
-    (checkWinners as jest.Mock).mockImplementation(() => {
+    (getRoom as Mock).mockReturnValue(room);
+    (checkWinners as Mock).mockImplementation(() => {
       room.winner = { team: 'wolves', reason: 'Werewolves reached parity.' };
     });
     const { handlers, socket } = makeSocket();
@@ -1446,7 +1449,7 @@ describe('socketHandlers hostFinalizeMayorVote', () => {
   const io = { sockets: { sockets: new Map() } } as unknown as any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('allows host to finalize mayor vote early', () => {
@@ -1460,7 +1463,7 @@ describe('socketHandlers hostFinalizeMayorVote', () => {
       voteState: { votes: {}, revoteFromTie: null },
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1476,7 +1479,7 @@ describe('socketHandlers security checks', () => {
   const io = { sockets: { sockets: new Map() } } as unknown as any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('updateRoleConfig ignores host actions from other sockets', () => {
@@ -1490,7 +1493,7 @@ describe('socketHandlers security checks', () => {
         host: { id: 'host', socketId: 'socket-host' },
       },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1515,10 +1518,10 @@ describe('socketHandlers security checks', () => {
         },
       },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
-    const cb = jest.fn();
+    const cb = vi.fn();
 
     handlers.resumePlayer(
       { roomCode: 'ABCD', playerId: 'p1', resumeToken: 'bad-token', name: 'Player' },
@@ -1542,7 +1545,7 @@ describe('socketHandlers security checks', () => {
       },
       wolfVotes: { w1: '' },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1558,7 +1561,7 @@ describe('socketHandlers mechanics guards', () => {
   const io = { sockets: { sockets: new Map() } } as unknown as any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('seer cannot inspect themselves', () => {
@@ -1572,7 +1575,7 @@ describe('socketHandlers mechanics guards', () => {
         v1: { id: 'v1', role: 'villager', alive: true },
       },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1593,7 +1596,7 @@ describe('socketHandlers mechanics guards', () => {
         dead: { id: 'dead', role: 'villager', alive: false },
       },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1622,7 +1625,7 @@ describe('socketHandlers mechanics guards', () => {
       seerActed: false,
       seerAwaitingDismiss: false,
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1646,7 +1649,7 @@ describe('socketHandlers mechanics guards', () => {
       seerActed: true,
       seerAwaitingDismiss: true,
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1668,7 +1671,7 @@ describe('socketHandlers mechanics guards', () => {
       },
       voteState: { votes: { p1: 'p2' }, revoteFromTie: null },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1692,7 +1695,7 @@ describe('socketHandlers mechanics guards', () => {
       winner: null,
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1719,7 +1722,7 @@ describe('socketHandlers mechanics guards', () => {
       },
       voteState: { votes: {}, revoteFromTie: ['p2'] },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1744,7 +1747,7 @@ describe('socketHandlers mechanics guards', () => {
       },
       voteState: { votes: {}, revoteFromTie: null },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1760,7 +1763,7 @@ describe('socketHandlers restartGame', () => {
   const io = { sockets: { sockets: new Map() } } as unknown as any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('restart only works for the host when the game ended', () => {
@@ -1815,7 +1818,7 @@ describe('socketHandlers restartGame', () => {
       hunterShotTimer: 3,
       hunterShotQueue: ['hunter'],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1871,7 +1874,7 @@ describe('socketHandlers restartGame', () => {
       },
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1894,7 +1897,7 @@ describe('socketHandlers restartGame', () => {
       },
       logs: [],
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     setupSocketHandlers(io, socket as any);
 
@@ -1909,7 +1912,7 @@ describe('socketHandlers hunterShoot', () => {
   const io = { sockets: { sockets: new Map() } } as unknown as any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('hunter can shoot after death when awaitingHunterShot is set', () => {
@@ -1923,7 +1926,7 @@ describe('socketHandlers hunterShoot', () => {
         v1: { id: 'v1', role: 'villager', alive: true },
       },
     } as unknown as Room;
-    (getRoom as jest.Mock).mockReturnValue(room);
+    (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
     socket.id = 'socket1';
     setupSocketHandlers(io, socket as any);
