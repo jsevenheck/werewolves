@@ -1,7 +1,8 @@
 import { queueDeath, resolveDeaths, checkWinners } from '../server/src/managers/deathManager';
 import type { Player, Room, RoleConfig } from '../core/src/types';
+import type { Mock } from 'vitest';
 
-type IoStub = { sockets: Map<string, { emit: jest.Mock }> };
+type IoStub = { sockets: Map<string, { emit: Mock }> };
 
 const makeRoom = (): Room => ({
   code: 'ABCD',
@@ -90,7 +91,7 @@ describe('deathManager', () => {
       }),
     };
     room.lovers = { aId: 'a', bId: 'b' };
-    const broadcastRoom = jest.fn();
+    const broadcastRoom = vi.fn();
 
     queueDeath(room, 'a', 'eaten by Werewolves');
     resolveDeaths(room, 'night', broadcastRoom);
@@ -122,9 +123,9 @@ describe('deathManager', () => {
         connected: true,
       }),
     };
-    const emit = jest.fn();
+    const emit = vi.fn();
     const io: IoStub = { sockets: new Map([['socket-h', { emit }]]) };
-    const broadcastRoom = jest.fn();
+    const broadcastRoom = vi.fn();
 
     queueDeath(room, 'hunter', 'executed by vote');
     resolveDeaths(room, 'day', broadcastRoom, io as unknown as never);

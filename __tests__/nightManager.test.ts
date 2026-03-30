@@ -8,14 +8,14 @@ import {
 import { NIGHT_RESOLVE_DELAY_MS } from '../server/src/config/constants';
 import type { Player, Room, RoleConfig } from '../core/src/types';
 
-jest.mock('../server/src/managers/phaseManager', () => ({
-  scheduleNightStep: jest.fn(),
-  schedulePhaseTransition: jest.fn(),
+vi.mock('../server/src/managers/phaseManager', () => ({
+  scheduleNightStep: vi.fn(),
+  schedulePhaseTransition: vi.fn(),
 }));
 
-jest.mock('../server/src/managers/deathManager', () => ({
-  queueDeath: jest.fn(),
-  resolveDeaths: jest.fn(),
+vi.mock('../server/src/managers/deathManager', () => ({
+  queueDeath: vi.fn(),
+  resolveDeaths: vi.fn(),
 }));
 
 const makeRoom = (): Room => ({
@@ -99,9 +99,9 @@ describe('nightManager', () => {
       v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true }),
     };
     room.wolfVotes = { w1: 'v1', w2: 'v2' };
-    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
 
-    tryFinalizeWolfVote(room, jest.fn(), undefined as never);
+    tryFinalizeWolfVote(room, vi.fn(), undefined as never);
 
     expect(room.wolfTarget).toBe('v1');
     expect(scheduleNightStep).toHaveBeenCalledWith(room, 'seer', expect.any(Function), undefined);
@@ -114,7 +114,7 @@ describe('nightManager', () => {
       v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
     };
 
-    tryFinalizeWolfVote(room, jest.fn(), undefined as never);
+    tryFinalizeWolfVote(room, vi.fn(), undefined as never);
 
     expect(scheduleNightStep).toHaveBeenCalledWith(room, 'seer', expect.any(Function), undefined);
   });
@@ -126,7 +126,7 @@ describe('nightManager', () => {
       v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
     };
 
-    handleWitchDecision(room, 'w1', 'heal', null, jest.fn(), undefined as never);
+    handleWitchDecision(room, 'w1', 'heal', null, vi.fn(), undefined as never);
 
     expect(room.witchState.healAvailable).toBe(false);
     expect(room.healedTarget).toBe('v1');
@@ -139,7 +139,7 @@ describe('nightManager', () => {
     room.players = {
       v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: false }),
     };
-    const broadcastRoom = jest.fn();
+    const broadcastRoom = vi.fn();
 
     handleWitchDecision(room, 'w1', 'heal', null, broadcastRoom, undefined as never);
 
@@ -156,7 +156,7 @@ describe('nightManager', () => {
       w1: buildPlayer({ id: 'w1', role: 'witch', team: 'village', alive: true }),
       v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
     };
-    const broadcastRoom = jest.fn();
+    const broadcastRoom = vi.fn();
 
     handleWitchDecision(room, 'w1', 'heal', null, broadcastRoom, undefined as never);
 
@@ -174,7 +174,7 @@ describe('nightManager', () => {
       w1: buildPlayer({ id: 'w1', role: 'witch', team: 'village', alive: true }),
       v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
     };
-    const broadcastRoom = jest.fn();
+    const broadcastRoom = vi.fn();
 
     handleWitchDecision(room, 'w1', 'poison', 'v1', broadcastRoom, undefined as never);
 
@@ -191,7 +191,7 @@ describe('nightManager', () => {
       v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true }),
     };
 
-    handleWitchDecision(room, 'w1', 'poison', 'v2', jest.fn(), undefined as never);
+    handleWitchDecision(room, 'w1', 'poison', 'v2', vi.fn(), undefined as never);
 
     expect(room.witchState.poisonAvailable).toBe(false);
     expect(room.poisonTarget).toBe('v2');
@@ -199,28 +199,28 @@ describe('nightManager', () => {
   });
 
   test('resolveNight queues deaths, resolves, and transitions', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     try {
       const room = makeRoom();
       room.phaseStep = 'resolve';
       room.wolfTarget = 'v1';
       room.poisonTarget = 'v2';
 
-      resolveNight(room, jest.fn(), undefined as never);
+      resolveNight(room, vi.fn(), undefined as never);
 
       expect(queueDeath).toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
       expect(queueDeath).toHaveBeenCalledWith(room, 'v2', 'poisoned by Witch');
       expect(resolveDeaths).toHaveBeenCalledWith(room, 'night', expect.any(Function), undefined);
       expect(room.healedTarget).toBeNull();
       expect(room.poisonTarget).toBeNull();
-      jest.advanceTimersByTime(NIGHT_RESOLVE_DELAY_MS);
+      vi.advanceTimersByTime(NIGHT_RESOLVE_DELAY_MS);
       expect(schedulePhaseTransition).toHaveBeenCalledWith(
         room,
         'nightToDay',
         expect.any(Function)
       );
     } finally {
-      jest.useRealTimers();
+      vi.useRealTimers();
     }
   });
 
@@ -234,7 +234,7 @@ describe('nightManager', () => {
         v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
       };
 
-      resolveNight(room, jest.fn(), undefined as never);
+      resolveNight(room, vi.fn(), undefined as never);
 
       expect(queueDeath).not.toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
     });
@@ -248,7 +248,7 @@ describe('nightManager', () => {
         v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
       };
 
-      resolveNight(room, jest.fn(), undefined as never);
+      resolveNight(room, vi.fn(), undefined as never);
 
       expect(queueDeath).not.toHaveBeenCalledWith(room, 'v1', 'poisoned by Witch');
     });
@@ -263,7 +263,7 @@ describe('nightManager', () => {
         v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true }),
       };
 
-      resolveNight(room, jest.fn(), undefined as never);
+      resolveNight(room, vi.fn(), undefined as never);
 
       expect(queueDeath).toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
     });
@@ -280,7 +280,7 @@ describe('nightManager', () => {
         h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true }),
       };
 
-      resolveNight(room, jest.fn(), undefined as never);
+      resolveNight(room, vi.fn(), undefined as never);
 
       expect(queueDeath).toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
       expect(queueDeath).toHaveBeenCalledWith(room, 'h1', 'caught visiting the victim');
@@ -297,7 +297,7 @@ describe('nightManager', () => {
         h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true }),
       };
 
-      resolveNight(room, jest.fn(), undefined as never);
+      resolveNight(room, vi.fn(), undefined as never);
 
       expect(queueDeath).toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
       expect(queueDeath).not.toHaveBeenCalledWith(room, 'h1', expect.any(String));
@@ -313,7 +313,7 @@ describe('nightManager', () => {
         h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true }),
       };
 
-      resolveNight(room, jest.fn(), undefined as never);
+      resolveNight(room, vi.fn(), undefined as never);
 
       expect(queueDeath).toHaveBeenCalledWith(room, 'h1', 'eaten by Werewolves');
       // Should not trigger "caught visiting" because harlot didn't visit the wolf victim
@@ -331,7 +331,7 @@ describe('nightManager', () => {
         h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true }),
       };
 
-      resolveNight(room, jest.fn(), undefined as never);
+      resolveNight(room, vi.fn(), undefined as never);
 
       // Wolf kill was prevented by guard
       expect(queueDeath).not.toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');
@@ -350,7 +350,7 @@ describe('nightManager', () => {
         h1: buildPlayer({ id: 'h1', role: 'harlot', team: 'village', alive: true }),
       };
 
-      resolveNight(room, jest.fn(), undefined as never);
+      resolveNight(room, vi.fn(), undefined as never);
 
       // Wolf kill was prevented by witch heal
       expect(queueDeath).not.toHaveBeenCalledWith(room, 'v1', 'eaten by Werewolves');

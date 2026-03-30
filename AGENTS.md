@@ -44,7 +44,7 @@ Keep detailed guidance in docs/ and link to it from here.
   - composables/: socket, narrator hooks
   - stores/: Pinia stores
   - utils/: helpers
-- **tests**/: Jest unit tests
+- **tests**/: Vitest unit tests
 - e2e/: Playwright specs
 
 ## Change Workflow
@@ -118,11 +118,17 @@ Project-scoped MCP servers are configured in `.mcp.json`:
 Reusable skill definitions live in `.skills/`. Read the relevant `SKILL.md`
 when a task matches a skill area.
 
-| Skill                     | Description                                                                               |
-| ------------------------- | ----------------------------------------------------------------------------------------- |
-| `.skills/playwright-cli/` | Browser automation (testing, screenshots, E2E exploration)                                |
-| `.skills/pnpm/`           | Package manager workflows and best practices                                              |
-| `.skills/ui-ux-pro-max/`  | UI/UX design system: styles, palettes, font pairings, accessibility, Vue stack guidelines |
+| Skill                         | Description                                                                               |
+| ----------------------------- | ----------------------------------------------------------------------------------------- |
+| `.skills/find-skills/`        | Skill discovery: find the right skill for a given task                                    |
+| `.skills/frontend-design/`    | Frontend design patterns and component architecture                                       |
+| `.skills/playwright-cli/`     | Browser automation (testing, screenshots, E2E exploration)                                |
+| `.skills/pnpm/`               | Package manager workflows and best practices                                              |
+| `.skills/ui-ux-pro-max/`      | UI/UX design system: styles, palettes, font pairings, accessibility, Vue stack guidelines |
+| `.skills/vite/`               | Vite build tool: config, plugins, SSR, environment API                                    |
+| `.skills/vitest/`             | Vitest testing: config, mocking, test API, utilities                                      |
+| `.skills/vue-best-practices/` | Vue 3 patterns: composables, reactivity, SFC, state management, performance               |
+| `.skills/websocket-engineer/` | WebSocket protocol, patterns, scaling, and security                                       |
 
 ## When Unsure
 

@@ -115,7 +115,7 @@ pnpm run test:e2e
 | `pnpm lint:fix`     | ESLint auto-fix                              |
 | `pnpm format`       | Prettier rewrite                             |
 | `pnpm format:check` | Prettier dry-run                             |
-| `pnpm test`         | Jest unit tests                              |
+| `pnpm test`         | Vitest unit tests                            |
 | `pnpm test:e2e`     | Playwright E2E (auto-starts server + client) |
 
 ## How to Play

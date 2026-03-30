@@ -99,7 +99,7 @@ describe('narrator dedupe', () => {
   });
 
   test('does not re-announce the same key', () => {
-    const playClip = jest.fn();
+    const playClip = vi.fn();
     const narrator = createNarrator({
       initialEnabled: true,
       initialUnlocked: true,
@@ -115,7 +115,7 @@ describe('narrator dedupe', () => {
   });
 
   test('announces when the key changes', () => {
-    const playClip = jest.fn();
+    const playClip = vi.fn();
     const narrator = createNarrator({
       initialEnabled: true,
       initialUnlocked: true,
@@ -137,11 +137,11 @@ describe('narrator playback', () => {
   beforeEach(() => {
     MockHowl.reset();
     // Mock fetch for variant discovery
-    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+    global.fetch = vi.fn().mockResolvedValue({ ok: false });
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test('does not play if disabled while clip is loading', async () => {
@@ -214,7 +214,7 @@ describe('narrator playback', () => {
   });
 
   test('does not play when locked', () => {
-    const playClip = jest.fn();
+    const playClip = vi.fn();
     const narrator = createNarrator({
       initialEnabled: true,
       initialUnlocked: false,
@@ -229,7 +229,7 @@ describe('narrator playback', () => {
   });
 
   test('re-announces after disable then enable', () => {
-    const playClip = jest.fn();
+    const playClip = vi.fn();
     const narrator = createNarrator({
       initialEnabled: true,
       initialUnlocked: true,
@@ -253,11 +253,11 @@ describe('narrator persistence', () => {
 
   test('initFromStorage loads enabled state', () => {
     const storage: Storage = {
-      getItem: jest.fn(() => 'true'),
-      setItem: jest.fn(),
-      clear: jest.fn(),
-      key: jest.fn(() => null),
-      removeItem: jest.fn(),
+      getItem: vi.fn(() => 'true'),
+      setItem: vi.fn(),
+      clear: vi.fn(),
+      key: vi.fn(() => null),
+      removeItem: vi.fn(),
       length: 0,
     };
     const narrator = createNarrator({ storage, initialEnabled: false });
@@ -270,11 +270,11 @@ describe('narrator persistence', () => {
 
   test('setEnabled updates storage', () => {
     const storage: Storage = {
-      getItem: jest.fn(),
-      setItem: jest.fn(),
-      clear: jest.fn(),
-      key: jest.fn(() => null),
-      removeItem: jest.fn(),
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+      clear: vi.fn(),
+      key: vi.fn(() => null),
+      removeItem: vi.fn(),
       length: 0,
     };
     const narrator = createNarrator({ storage, initialEnabled: false });
@@ -290,8 +290,10 @@ describe('narrator unlock', () => {
 
   beforeEach(() => {
     MockHowl.reset();
-    mockAudio = { volume: 0, play: jest.fn().mockResolvedValue(undefined), pause: jest.fn() };
-    (global as any).Audio = jest.fn(() => mockAudio);
+    mockAudio = { volume: 0, play: vi.fn().mockResolvedValue(undefined), pause: vi.fn() };
+    (global as any).Audio = vi.fn(function () {
+      return mockAudio;
+    });
   });
 
   afterEach(() => {
@@ -327,16 +329,16 @@ describe('narrator unlock', () => {
 describe('narrator audio variants', () => {
   beforeEach(() => {
     MockHowl.reset();
-    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+    global.fetch = vi.fn().mockResolvedValue({ ok: false });
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test('uses base filename when no variants configured', async () => {
     // Mock fetch to succeed for base file but fail for custom variants
-    global.fetch = jest.fn().mockImplementation((url: string) => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes('/custom/')) {
         return Promise.resolve({ ok: false });
       }
@@ -364,7 +366,7 @@ describe('narrator audio variants', () => {
 
   test('selects random variant when discovered', async () => {
     // Mock fetch to return success for 2 variants in custom folder only
-    global.fetch = jest.fn().mockImplementation((url: string) => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes('/custom/day_1.mp3') || url.includes('/custom/day_2.mp3')) {
         return Promise.resolve({
           ok: true,
@@ -378,7 +380,7 @@ describe('narrator audio variants', () => {
     });
 
     const originalRandom = Math.random;
-    Math.random = jest.fn(() => 0.5); // Will select second variant
+    Math.random = vi.fn(() => 0.5); // Will select second variant
 
     try {
       const narrator = createNarrator({
@@ -402,7 +404,7 @@ describe('narrator audio variants', () => {
 
   test('caches variants separately', async () => {
     // Mock fetch to succeed for base files but fail for custom variants
-    global.fetch = jest.fn().mockImplementation((url: string) => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes('/custom/')) {
         return Promise.resolve({ ok: false });
       }
@@ -441,14 +443,14 @@ describe('narrator bundled audio', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test('uses bundled audio when no assetsBasePath provided', async () => {
     // Mock bundled audio manifest
     const mockBundledUrl = 'blob:http://localhost/bundled-day.mp3';
-    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledUrl);
-    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+    vi.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledUrl);
+    global.fetch = vi.fn().mockResolvedValue({ ok: false });
 
     const narrator = createNarrator({
       initialEnabled: true,
@@ -467,8 +469,10 @@ describe('narrator bundled audio', () => {
   });
 
   test('unlock uses native Audio with silent data URL (not a Howl)', async () => {
-    const mockAudio = { volume: 0, play: jest.fn().mockResolvedValue(undefined), pause: jest.fn() };
-    (global as any).Audio = jest.fn(() => mockAudio);
+    const mockAudio = { volume: 0, play: vi.fn().mockResolvedValue(undefined), pause: vi.fn() };
+    (global as any).Audio = vi.fn(function () {
+      return mockAudio;
+    });
 
     const narrator = createNarrator({
       initialEnabled: true,
@@ -488,10 +492,10 @@ describe('narrator bundled audio', () => {
 
   test('prefers custom audio from assetsBasePath over bundled', async () => {
     const mockBundledUrl = 'blob:http://localhost/bundled-day.mp3';
-    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledUrl);
+    vi.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledUrl);
 
     // Mock fetch to return success for custom audio
-    global.fetch = jest.fn().mockImplementation((url: string) => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes('/custom-audio/day.mp3')) {
         return Promise.resolve({
           ok: true,
@@ -520,10 +524,10 @@ describe('narrator bundled audio', () => {
 
   test('falls back to bundled audio when assetsBasePath files are unavailable', async () => {
     const mockBundledUrl = 'blob:http://localhost/bundled-night.mp3';
-    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledUrl);
+    vi.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledUrl);
 
     // Mock fetch to fail for all custom audio (404 or network error)
-    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+    global.fetch = vi.fn().mockResolvedValue({ ok: false });
 
     const narrator = createNarrator({
       initialEnabled: true,
@@ -544,13 +548,13 @@ describe('narrator bundled audio', () => {
 
   test('falls back to base bundled audio when a cached variant disappears', async () => {
     const mockBundledDayUrl = 'blob:http://localhost/bundled-day.mp3';
-    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockImplementation((key: string) => {
+    vi.spyOn(audioManifest, 'getBundledAudioUrl').mockImplementation((key: string) => {
       if (key === 'day') return mockBundledDayUrl;
       return undefined;
     });
 
     let dayVariantExists = true;
-    global.fetch = jest.fn().mockImplementation((url: string) => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes('/audio/custom/day_1.mp3')) {
         return Promise.resolve({
           ok: dayVariantExists,
@@ -590,8 +594,8 @@ describe('narrator bundled audio', () => {
 
   test('variants are not discovered when no assetsBasePath', async () => {
     const mockBundledUrl = 'blob:http://localhost/bundled-day.mp3';
-    jest.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledUrl);
-    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+    vi.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(mockBundledUrl);
+    global.fetch = vi.fn().mockResolvedValue({ ok: false });
 
     const narrator = createNarrator({
       initialEnabled: true,
@@ -615,12 +619,12 @@ describe('narrator custom audio override', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test('uses custom audio when available', async () => {
     // Mock fetch to return success for custom file
-    global.fetch = jest.fn().mockImplementation((url: string) => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes('/custom/day.mp3')) {
         return Promise.resolve({
           ok: true,
@@ -650,7 +654,7 @@ describe('narrator custom audio override', () => {
 
   test('falls back to default audio when custom not available', async () => {
     // Mock fetch to return 404 for custom, succeed for default
-    global.fetch = jest.fn().mockImplementation((url: string) => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes('/custom/')) {
         return Promise.resolve({ ok: false });
       }
@@ -678,7 +682,7 @@ describe('narrator custom audio override', () => {
 
   test('only discovers custom variants, not default variants', async () => {
     // Mock: custom/day_1 exists, default day_2 exists (but should be ignored)
-    global.fetch = jest.fn().mockImplementation((url: string) => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes('/custom/day_1.mp3')) {
         return Promise.resolve({
           ok: true,
@@ -698,7 +702,7 @@ describe('narrator custom audio override', () => {
     });
 
     const originalRandom = Math.random;
-    Math.random = jest.fn(() => 0); // Select first variant
+    Math.random = vi.fn(() => 0); // Select first variant
 
     try {
       const narrator = createNarrator({
@@ -726,7 +730,7 @@ describe('narrator custom audio override', () => {
 
   test('uses standard file when no custom variants exist', async () => {
     // Mock: no custom variants exist, but default files exist
-    global.fetch = jest.fn().mockImplementation((url: string) => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
       // All custom variant checks fail
       if (url.includes('/custom/')) {
         return Promise.resolve({ ok: false });

@@ -16,7 +16,7 @@ describe('helpers', () => {
 
   test('shuffle returns a new array with the same elements', () => {
     const original = [1, 2, 3, 4];
-    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
     const result = shuffle(original);
     expect(result).toEqual([2, 3, 4, 1]);
     expect(result).not.toBe(original);

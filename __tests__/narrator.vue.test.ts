@@ -1,53 +1,54 @@
 import type { RoomView } from '../core/src/types';
 
-// Create mock Howl class
-const mockHowlInstances: any[] = [];
-const mockPlay = jest.fn(() => 1);
-const mockStop = jest.fn();
-const mockUnload = jest.fn();
-const mockOn = jest.fn();
-const mockOnce = jest.fn();
-const mockOff = jest.fn();
-const mockLoad = jest.fn();
+// Hoist mock state so it's available inside the vi.mock factory
+const { mockHowlInstances, mockPlay, mockStop, mockUnload, mockOn, mockOnce, mockOff, mockLoad } =
+  vi.hoisted(() => ({
+    mockHowlInstances: [] as any[],
+    mockPlay: vi.fn(() => 1),
+    mockStop: vi.fn(),
+    mockUnload: vi.fn(),
+    mockOn: vi.fn(),
+    mockOnce: vi.fn(),
+    mockOff: vi.fn(),
+    mockLoad: vi.fn(),
+  }));
 
-class MockHowl {
-  src: string;
-  constructor(options: any) {
-    this.src = options.src;
-    mockHowlInstances.push(this);
-  }
-  play = mockPlay;
-  stop = mockStop;
-  unload = mockUnload;
-  on = mockOn;
-  once = mockOnce;
-  off = mockOff;
-  load = mockLoad;
-}
-
-jest.mock('howler', () => ({
-  Howl: MockHowl,
+vi.mock('howler', () => ({
+  Howl: class MockHowl {
+    src: string;
+    constructor(options: any) {
+      this.src = options.src;
+      mockHowlInstances.push(this);
+    }
+    play = mockPlay;
+    stop = mockStop;
+    unload = mockUnload;
+    on = mockOn;
+    once = mockOnce;
+    off = mockOff;
+    load = mockLoad;
+  },
 }));
 
 // Mock localStorage
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
-    getItem: jest.fn((key: string) => store[key] || null),
-    setItem: jest.fn((key: string, value: string) => {
+    getItem: vi.fn((key: string) => store[key] || null),
+    setItem: vi.fn((key: string, value: string) => {
       store[key] = value;
     }),
-    removeItem: jest.fn((key: string) => {
+    removeItem: vi.fn((key: string) => {
       delete store[key];
     }),
-    clear: jest.fn(() => {
+    clear: vi.fn(() => {
       store = {};
     }),
   };
 })();
 
 Object.defineProperty(global, 'localStorage', { value: localStorageMock });
-Object.defineProperty(global, 'window', { value: { alert: jest.fn() }, writable: true });
+Object.defineProperty(global, 'window', { value: { alert: vi.fn() }, writable: true });
 
 import { createNarrator, computeNarrationKey } from '../ui-vue/src/utils/narrator';
 
@@ -120,7 +121,7 @@ describe('computeNarrationKey', () => {
 
 describe('Narrator', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockHowlInstances.length = 0;
     localStorageMock.clear();
   });
@@ -179,14 +180,14 @@ describe('Narrator', () => {
   });
 
   test('custom notify callback is called', () => {
-    const notifyMock = jest.fn();
+    const notifyMock = vi.fn();
     const _narrator = createNarrator({ notify: notifyMock });
     // Narrator calls notify internally for certain errors
     expect(notifyMock).not.toHaveBeenCalled();
   });
 
   test('announceLatest does nothing when disabled', () => {
-    const playClipMock = jest.fn();
+    const playClipMock = vi.fn();
     const narrator = createNarrator({ playClip: playClipMock });
     narrator.announceLatest();
     expect(playClipMock).not.toHaveBeenCalled();
@@ -245,26 +246,26 @@ describe('Narrator handleRoomUpdate', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockHowlInstances.length = 0;
   });
 
   test('does not play when disabled', () => {
-    const playClipMock = jest.fn();
+    const playClipMock = vi.fn();
     const narrator = createNarrator({ playClip: playClipMock });
     narrator.handleRoomUpdate(null, baseRoom());
     expect(playClipMock).not.toHaveBeenCalled();
   });
 
   test('queues pending when enabled but not unlocked', () => {
-    const playClipMock = jest.fn();
+    const playClipMock = vi.fn();
     const narrator = createNarrator({ playClip: playClipMock, initialEnabled: true });
     narrator.handleRoomUpdate(null, baseRoom());
     expect(playClipMock).not.toHaveBeenCalled();
   });
 
   test('plays clip when enabled and unlocked', () => {
-    const playClipMock = jest.fn();
+    const playClipMock = vi.fn();
     const narrator = createNarrator({
       playClip: playClipMock,
       initialEnabled: true,
@@ -275,7 +276,7 @@ describe('Narrator handleRoomUpdate', () => {
   });
 
   test('does not replay same key', () => {
-    const playClipMock = jest.fn();
+    const playClipMock = vi.fn();
     const narrator = createNarrator({
       playClip: playClipMock,
       initialEnabled: true,
@@ -288,7 +289,7 @@ describe('Narrator handleRoomUpdate', () => {
   });
 
   test('plays new key when phase changes', () => {
-    const playClipMock = jest.fn();
+    const playClipMock = vi.fn();
     const narrator = createNarrator({
       playClip: playClipMock,
       initialEnabled: true,

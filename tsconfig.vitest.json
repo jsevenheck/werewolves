@@ -1,11 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": ["node", "jest"]
+    "types": ["node", "vitest/globals"]
   },
   "include": [
     "__tests__/**/*.ts",
-    "jest.setup.ts",
+    "vitest.setup.ts",
     "core/src/**/*.ts",
     "server/src/**/*.ts",
     "ui-vue/src/**/*.ts",

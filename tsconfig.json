@@ -9,6 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "noEmit": true,
+    "types": ["node", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
       "@shared/*": ["core/src/*"]
@@ -19,7 +20,7 @@
     "server/src/**/*.ts",
     "__tests__/**/*.ts",
     "e2e/**/*.ts",
-    "jest.setup.ts",
+    "vitest.setup.ts",
     "vite.config.ts",
     "playwright.config.ts",
     "global.d.ts"

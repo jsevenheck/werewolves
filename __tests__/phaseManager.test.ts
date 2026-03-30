@@ -100,7 +100,7 @@ describe('phaseManager', () => {
   });
 
   test('scheduleNightStep transitions after the night delay', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const room = makeRoom();
     room.phase = 'night';
     room.phaseStep = 'wolves';
@@ -108,7 +108,7 @@ describe('phaseManager', () => {
     room.players = {
       s1: buildPlayer({ id: 's1', role: 'seer', alive: true }),
     };
-    const broadcastRoom = jest.fn();
+    const broadcastRoom = vi.fn();
 
     scheduleNightStep(room, 'seer', broadcastRoom, undefined as never);
 
@@ -116,16 +116,16 @@ describe('phaseManager', () => {
     expect(room.nextNightStep).toBe('seer');
     expect(broadcastRoom).toHaveBeenCalledTimes(1);
 
-    jest.advanceTimersByTime(3000);
+    vi.advanceTimersByTime(3000);
 
     expect(room.phaseStep).toBe('seer');
     expect(room.nextNightStep).toBeNull();
     expect(broadcastRoom).toHaveBeenCalledTimes(2);
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test('scheduleNightStep skips seer when none are alive', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const room = makeRoom();
     room.phase = 'night';
     room.phaseStep = 'wolves';
@@ -133,7 +133,7 @@ describe('phaseManager', () => {
     room.players = {
       w1: buildPlayer({ id: 'w1', role: 'witch', alive: true }),
     };
-    const broadcastRoom = jest.fn();
+    const broadcastRoom = vi.fn();
 
     scheduleNightStep(room, 'seer', broadcastRoom, undefined as never);
 
@@ -141,20 +141,20 @@ describe('phaseManager', () => {
     expect(room.nextNightStep).toBe('witch');
     expect(broadcastRoom).toHaveBeenCalledTimes(1);
 
-    jest.advanceTimersByTime(3000);
+    vi.advanceTimersByTime(3000);
 
     expect(room.phaseStep).toBe('witch');
     expect(room.nextNightStep).toBeNull();
     expect(broadcastRoom).toHaveBeenCalledTimes(2);
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test('schedulePhaseTransition moves night to day after delay', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const room = makeRoom();
     room.phase = 'night';
     room.phaseStep = 'wolves';
-    const broadcastRoom = jest.fn();
+    const broadcastRoom = vi.fn();
 
     schedulePhaseTransition(room, 'nightToDay', broadcastRoom);
 
@@ -162,7 +162,7 @@ describe('phaseManager', () => {
     expect(room.phaseStep).toBe('transition');
     expect(broadcastRoom).toHaveBeenCalledTimes(1);
 
-    jest.advanceTimersByTime(3000);
+    vi.advanceTimersByTime(3000);
 
     expect(room.phaseTransition).toBeNull();
     expect(room.phase).toBe('day');
@@ -180,7 +180,7 @@ describe('phaseManager', () => {
       armor: buildPlayer({ id: 'armor', role: 'armor', alive: true }),
       villager: buildPlayer({ id: 'villager', role: 'villager', alive: true }),
     };
-    const broadcastRoom = jest.fn();
+    const broadcastRoom = vi.fn();
 
     advanceFromReveal(room, broadcastRoom);
 
@@ -197,7 +197,7 @@ describe('phaseManager', () => {
       wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: true }),
       villager: buildPlayer({ id: 'villager', role: 'villager', alive: true }),
     };
-    const broadcastRoom = jest.fn();
+    const broadcastRoom = vi.fn();
 
     advanceFromReveal(room, broadcastRoom);
 

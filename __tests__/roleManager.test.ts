@@ -6,8 +6,8 @@ import {
 } from '../server/src/managers/roleManager';
 import type { Player, Room, RoleConfig } from '../core/src/types';
 
-jest.mock('../server/src/utils/helpers', () => ({
-  ...jest.requireActual('../server/src/utils/helpers'),
+vi.mock('../server/src/utils/helpers', () => ({
+  ...vi.importActual('../server/src/utils/helpers'),
   shuffle: (arr: unknown[]) => arr,
 }));
 
