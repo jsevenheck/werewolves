@@ -9,6 +9,7 @@ settings.local.json
 *.mp3
 !**/audio/*.mp3
 **/audio/custom/*.mp3
+.eslintcache 
 
 # Nested lockfile (root lockfile is the source of truth)
 ui-vue/pnpm-lock.yaml
