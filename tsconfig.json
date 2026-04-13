@@ -23,7 +23,8 @@
     "vitest.setup.ts",
     "vite.config.ts",
     "playwright.config.ts",
-    "global.d.ts"
+    "global.d.ts",
+    ".pi/extensions/*.ts"
   ],
   "exclude": ["node_modules", "dist", "build", "coverage"]
 }

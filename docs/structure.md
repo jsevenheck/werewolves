@@ -7,6 +7,8 @@ This document describes the codebase structure for the Werewolves standalone app
 - **core/**: Shared types, events, constants (used by both client and server)
 - **server/**: Node.js + Express + Socket.IO backend with managers for game logic
 - **ui-vue/**: Vue 3 frontend with Pinia stores and phase components
+- **.agents/**: Local agent skills and supporting references
+- **.claude/** / **.pi/** / **.github/**: AI assistant and editor-specific guidance/config
 - **\_\_tests\_\_/**: Vitest unit tests
 - **e2e/**: Playwright E2E tests
 
@@ -14,6 +16,11 @@ This document describes the codebase structure for the Werewolves standalone app
 
 ```
 werewolves/
+├── .agents/                  # Local skills for coding agents
+│   └── skills/
+├── .claude/                  # Claude local permissions/settings
+├── .github/                  # GitHub metadata, including Copilot instructions
+├── .pi/                      # PI agent extensions and policies
 ├── core/                     # Shared types, events, constants
 │   └── src/
 │       ├── types.ts          # Shared types (Role, Phase, Player, Room, etc.)
@@ -42,6 +49,14 @@ werewolves/
 ├── e2e/                      # Playwright E2E tests
 └── docs/                     # Documentation
 ```
+
+## Agent And Editor Tooling
+
+- `AGENTS.md` is the source of truth for coding-agent behavior in this repo.
+- `CLAUDE.md` and `.github/copilot-instructions.md` both defer to `AGENTS.md`.
+- `.agents/skills/` contains reusable local skills such as Vue, Pinia, Playwright, pnpm, and UI/UX guidance.
+- `.claude/settings.json` stores local Claude permissions.
+- `.pi/extensions/policy.ts` defines PI extension allow/deny behavior for tool access.
 
 ## Server-Side Architecture
 

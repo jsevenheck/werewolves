@@ -104,31 +104,34 @@ Environment splits in ESLint:
 - **Socket events** defined in `core/src/events.ts` (shared contract)
 - **Phase flow**: lobby → roleReveal → mayor? → armor? → night ↔ day → ended
 
-## MCP Tool Support
+## Agent Tooling
 
-Project-scoped MCP servers are configured in `.mcp.json`:
-
-| Server  | What it provides            |
-| ------- | --------------------------- |
-| ripgrep | Fast code search            |
-| pnpm    | Package manager integration |
+- `AGENTS.md`: source of truth for agent behavior in this repo
+- `CLAUDE.md`: points Claude-based agents back to `AGENTS.md`
+- `.github/copilot-instructions.md`: points GitHub Copilot back to `AGENTS.md`
+- `.claude/settings.json`: local Claude tool permission policy
+- `.pi/extensions/policy.ts`: PI agent extension policy
+- `.agents/skills/`: reusable local skill definitions and references
 
 ## Skills
 
-Reusable skill definitions live in `.skills/`. Read the relevant `SKILL.md`
+Reusable skill definitions live in `.agents/skills/`. Read the relevant `SKILL.md`
 when a task matches a skill area.
 
-| Skill                         | Description                                                                               |
-| ----------------------------- | ----------------------------------------------------------------------------------------- |
-| `.skills/find-skills/`        | Skill discovery: find the right skill for a given task                                    |
-| `.skills/frontend-design/`    | Frontend design patterns and component architecture                                       |
-| `.skills/playwright-cli/`     | Browser automation (testing, screenshots, E2E exploration)                                |
-| `.skills/pnpm/`               | Package manager workflows and best practices                                              |
-| `.skills/ui-ux-pro-max/`      | UI/UX design system: styles, palettes, font pairings, accessibility, Vue stack guidelines |
-| `.skills/vite/`               | Vite build tool: config, plugins, SSR, environment API                                    |
-| `.skills/vitest/`             | Vitest testing: config, mocking, test API, utilities                                      |
-| `.skills/vue-best-practices/` | Vue 3 patterns: composables, reactivity, SFC, state management, performance               |
-| `.skills/websocket-engineer/` | WebSocket protocol, patterns, scaling, and security                                       |
+| Skill                                       | Description                                                                               |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `.agents/skills/frontend-design/`           | Frontend design patterns and component architecture                                       |
+| `.agents/skills/pinia/`                     | Pinia official guidance for stores, actions, getters, and advanced store patterns         |
+| `.agents/skills/playwright-best-practices/` | Playwright architecture, reliability, CI, and advanced testing patterns                   |
+| `.agents/skills/playwright-cli/`            | Browser automation (testing, screenshots, E2E exploration)                                |
+| `.agents/skills/pnpm/`                      | Package manager workflows and best practices                                              |
+| `.agents/skills/tailwind-design-system/`    | Tailwind-based design systems, tokens, and scalable UI patterns                           |
+| `.agents/skills/ui-ux-pro-max/`             | UI/UX design system: styles, palettes, font pairings, accessibility, Vue stack guidelines |
+| `.agents/skills/vite/`                      | Vite build tool: config, plugins, SSR, environment API                                    |
+| `.agents/skills/vitest/`                    | Vitest testing: config, mocking, test API, utilities                                      |
+| `.agents/skills/vue-best-practices/`        | Vue 3 patterns: composables, reactivity, SFC, state management, performance               |
+| `.agents/skills/vue-pinia-best-practices/`  | Pinia usage patterns, reactivity gotchas, and state management best practices             |
+| `.agents/skills/websocket-engineer/`        | WebSocket protocol, patterns, scaling, and security                                       |
 
 ## When Unsure
 

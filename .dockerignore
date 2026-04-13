@@ -6,3 +6,6 @@ pnpm-debug.log
 dist
 test-results
 coverage
+.agents/
+.claude/
+.pi/

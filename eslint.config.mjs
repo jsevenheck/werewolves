@@ -26,6 +26,7 @@ export default tseslint.config(
       '**/*.config.mjs',
       '**/*.config.cjs',
       '**/*.cjs',
+      '.pi/extensions/*.ts',
     ],
   },
 

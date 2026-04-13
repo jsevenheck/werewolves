@@ -1,0 +1,8 @@
+{
+  "name": "pi-project-extensions",
+  "private": true,
+  "devDependencies": {
+    "@mariozechner/pi-coding-agent": "latest",
+    "@sinclair/typebox": "latest"
+  }
+}
