@@ -1,0 +1,8 @@
+services:
+  app:
+    build: .
+    ports:
+      - '80:3001'
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
