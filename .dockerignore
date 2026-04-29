@@ -40,7 +40,6 @@ eslint.config.mjs
 vitest.config.ts
 vitest.setup.ts
 playwright.config.ts
-tsconfig.json
 tsconfig.client.json
 tsconfig.playwright.json
 tsconfig.vitest.json
