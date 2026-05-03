@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- Node.js (>= 18, CI uses 22)
+- Node.js (>= 24)
 - pnpm (via Corepack or standalone install)
 
 ## Setup
