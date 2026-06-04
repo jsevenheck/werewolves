@@ -9,6 +9,9 @@ test-results/
 node_modules/
 pnpm-lock.yaml
 
+# Agent tooling (mirrors eslint ignore; not application code)
+.pi/
+
 # Generated files
 *.log
 .env

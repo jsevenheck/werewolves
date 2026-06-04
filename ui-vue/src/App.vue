@@ -180,12 +180,6 @@ function onMayorPrompt() {
   store.mayorPrompt = true;
 }
 
-function onWolfVoteRejected(payload: { reason: string }) {
-  if (payload.reason === 'already_voted') {
-    notify('You already voted.');
-  }
-}
-
 function onRoomClosed() {
   notify('The host has closed this session.');
   store.resetState();
@@ -217,7 +211,6 @@ onMounted(() => {
   socket.on('roomUpdate', onRoomUpdate);
   socket.on('hunterPrompt', onHunterPrompt);
   socket.on('mayorPrompt', onMayorPrompt);
-  socket.on('wolfVoteRejected', onWolfVoteRejected);
   socket.on('roomClosed', onRoomClosed);
 });
 
@@ -227,7 +220,6 @@ onBeforeUnmount(() => {
   socket.off('roomUpdate', onRoomUpdate);
   socket.off('hunterPrompt', onHunterPrompt);
   socket.off('mayorPrompt', onMayorPrompt);
-  socket.off('wolfVoteRejected', onWolfVoteRejected);
   socket.off('roomClosed', onRoomClosed);
 });
 </script>

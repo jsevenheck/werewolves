@@ -52,8 +52,7 @@ werewolves/
 
 ## Agent And Editor Tooling
 
-- `AGENTS.md` is the source of truth for coding-agent behavior in this repo.
-- `CLAUDE.md` and `.github/copilot-instructions.md` both defer to `AGENTS.md`.
+- `CLAUDE.md` is the source of truth for coding-agent behavior in this repo.
 - `.agents/skills/` contains reusable local skills such as Vue, Pinia, Playwright, pnpm, and UI/UX guidance.
 - `.claude/settings.json` stores local Claude permissions.
 - `.pi/extensions/policy.ts` defines PI extension allow/deny behavior for tool access.
@@ -199,7 +198,7 @@ pnpm typecheck       # tsc + vue-tsc
 pnpm test            # Vitest unit tests
 ```
 
-CI runs these in the same order.
+CI runs the same checks (typecheck, lint, format check, build, and tests).
 
 ### Adding New Features
 

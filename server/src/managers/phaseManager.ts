@@ -24,6 +24,7 @@ function startNight(room: Room) {
   // Don't pre-initialize wolf votes - leave them undefined until wolves actually vote
   room.wolfTarget = null;
   room.seerActed = false;
+  room.seerAwaitingDismiss = false;
   room.lastGuardedTarget = room.guardedTarget;
   room.guardedTarget = null;
   room.guardActed = false;

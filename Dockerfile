@@ -15,7 +15,9 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
 
 COPY . .
 
-# ui-vue is not part of a pnpm workspace in this repo, so install it explicitly.
+# The first install above only had the root package.json + lockfile; the workspace
+# manifest (pnpm-workspace.yaml + ui-vue/package.json) arrives with `COPY . .`, so
+# install the ui-vue workspace package's deps now.
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm config set store-dir /pnpm/store && \
     pnpm -C ui-vue install --prod=false --no-frozen-lockfile

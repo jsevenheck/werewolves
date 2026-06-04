@@ -91,7 +91,6 @@ export interface ServerToClientEvents {
   roomUpdate: (room: RoomView) => void;
   hunterPrompt: (payload: { roomCode: string }) => void;
   mayorPrompt: (payload: { roomCode: string }) => void;
-  wolfVoteRejected: (payload: { reason: 'already_voted' }) => void;
   roomClosed: () => void;
 }
 

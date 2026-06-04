@@ -145,7 +145,6 @@ class Narrator {
     // Audio element and a data: URL (no network I/O), play() can be called
     // synchronously from the click handler while still within gesture context.
     return new Promise<boolean>((resolve) => {
-      console.log('[Werewolves Audio Debug] unlock: starting native audio unlock');
       const audio = new Audio(FALLBACK_AUDIO_URL);
       audio.volume = 0;
 
@@ -153,7 +152,6 @@ class Narrator {
       const playPromise = audio.play();
       if (!playPromise) {
         // Legacy browsers without Promise-based play().
-        console.log('[Werewolves Audio Debug] unlock: no play promise → assuming unlocked');
         this.unlocked = true;
         resolve(true);
         return;
@@ -161,13 +159,11 @@ class Narrator {
 
       playPromise
         .then(() => {
-          console.log('[Werewolves Audio Debug] unlock: play resolved → unlocked');
           audio.pause();
           this.unlocked = true;
           resolve(true);
         })
-        .catch((err: unknown) => {
-          console.log('[Werewolves Audio Debug] unlock: play() rejected:', err);
+        .catch(() => {
           resolve(false);
         });
     });
@@ -206,10 +202,6 @@ class Narrator {
   }
 
   private async resolveAudioPath(audioKey: string): Promise<string | undefined> {
-    console.log('[Werewolves Audio Debug] resolveAudioPath', {
-      audioKey,
-      assetsBasePath: this.assetsBasePath,
-    });
     const baseAudioKey = toBaseAudioKey(audioKey);
 
     // If assetsBasePath is provided, try custom audio overrides first
@@ -251,12 +243,10 @@ class Narrator {
     for (const key of bundledCandidates) {
       const bundled = getBundledAudioUrl(key);
       if (bundled) {
-        console.log('[Werewolves Audio Debug] Bundled fallback:', { audioKey, key, bundled });
         return bundled;
       }
     }
 
-    console.log('[Werewolves Audio Debug] Bundled fallback:', { audioKey, bundled: undefined });
     return undefined;
   }
 
@@ -342,7 +332,6 @@ class Narrator {
   }
 
   private async getHowl(key: string) {
-    console.log('[Werewolves Audio Debug] getHowl', key);
     const audioKey = await this.selectVariant(key);
     const existing = this.howls.get(audioKey);
     if (existing) return existing;
@@ -366,11 +355,10 @@ class Narrator {
           // on the document click event, so the context is running by the time
           // play() is called here.
           volume: DEFAULT_VOLUME,
-          onplay: () => console.log('[Werewolves Audio Debug] Playing:', src),
           onloaderror: (_id: number, err: unknown) =>
-            console.error('[Werewolves Audio Debug] Load Error:', src, err),
+            console.error('[Werewolves Audio] Load Error:', src, err),
           onplayerror: (_id: number, err: unknown) =>
-            console.error('[Werewolves Audio Debug] Play Error:', src, err),
+            console.error('[Werewolves Audio] Play Error:', src, err),
         });
       // Use resolved audio path, or fallback to silent audio if nothing available
       let activeHowl = createHowl(audioPath || FALLBACK_AUDIO_URL);

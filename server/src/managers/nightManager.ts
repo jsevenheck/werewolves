@@ -130,6 +130,8 @@ function handleWitchDecision(
   // Apply poison action if valid
   if (action === 'poison') {
     if (!room.witchState.poisonAvailable) return;
+    // The witch may not poison herself.
+    if (targetId === playerId) return;
     const target = targetId ? room.players[targetId] : null;
     if (!target || !target.alive) return;
     room.witchState.poisonAvailable = false;

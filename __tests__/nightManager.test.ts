@@ -198,6 +198,19 @@ describe('nightManager', () => {
     expect(scheduleNightStep).toHaveBeenCalledWith(room, 'guard', expect.any(Function), undefined);
   });
 
+  test('handleWitchDecision rejects the witch poisoning herself', () => {
+    const room = makeRoom();
+    room.players = {
+      w1: buildPlayer({ id: 'w1', role: 'witch', team: 'village', alive: true }),
+      v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true }),
+    };
+
+    handleWitchDecision(room, 'w1', 'poison', 'w1', vi.fn(), undefined as never);
+
+    expect(room.witchState.poisonAvailable).toBe(true);
+    expect(room.poisonTarget).toBeNull();
+  });
+
   test('resolveNight queues deaths, resolves, and transitions', () => {
     vi.useFakeTimers();
     try {

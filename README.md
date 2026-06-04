@@ -62,15 +62,15 @@ pnpm run typecheck
 ```bash
 pnpm lint            # ESLint check (0 errors and 0 warnings required)
 pnpm lint:fix        # Auto-fix fixable issues
-pnpm format          # Prettier â€“ rewrite all files in place
-pnpm format:check    # Prettier â€“ dry-run, exit 1 on diffs
+pnpm format          # Prettier – rewrite all files in place
+pnpm format:check    # Prettier – dry-run, exit 1 on diffs
 ```
 
-ESLint 9 flat config lives in [`eslint.config.mjs`](eslint.config.mjs). Rules are split by environment:
+The ESLint flat config lives in [`eslint.config.mjs`](eslint.config.mjs). Rules are split by environment:
 
-- **Server** (`server/`, `scripts/`) â€“ Node.js globals, `require()` allowed.
-- **Client** (`ui-vue/`, `*.vue`) â€“ Browser globals, Vue plugin rules.
-- **Tests** (`__tests__/`, `e2e/`) â€“ relaxed `any` and `require` rules.
+- **Server** (`server/`, `scripts/`) – Node.js globals, `require()` allowed.
+- **Client** (`ui-vue/`, `*.vue`) – Browser globals, Vue plugin rules.
+- **Tests** (`__tests__/`, `e2e/`) – relaxed `any` and `require` rules.
 
 Prettier config is in [`.prettierrc`](.prettierrc); enforced style: single quotes, 100-char width, LF line endings.
 
@@ -141,7 +141,7 @@ Mobile browsers require a user gesture before audio can play. If a player enable
 
 - To use custom narrator audio, configure the `assetsBasePath` option
 - Custom audio files should be placed in a `custom/` subdirectory (e.g., `/audio/custom/day_1.mp3`)
-- Fallback chain: custom audio (`${assetsBasePath}/custom/*`) â†’ default override (`${assetsBasePath}/*`) â†’ bundled audio â†’ silent
+- Fallback chain: custom audio (`${assetsBasePath}/custom/*`) → default override (`${assetsBasePath}/*`) → bundled audio → silent
 - Supports audio variants for variety (e.g., `custom/day_1.mp3`, `custom/day_2.mp3`)
 - See `ui-vue/public/audio/README.md` for detailed instructions, file naming conventions, and per-file descriptions
 
@@ -159,8 +159,8 @@ Note: The Docker image defaults to port 3001 (see `ENV PORT=3001`). Override wit
 
 Troubleshooting:
 
-- If you previously saw `Cannot find module .../ui-vue/node_modules/vue-tsc/bin/vue-tsc.js`, the root cause was that `ui-vue` is not a pnpm workspace package in this repo.
-- The Dockerfile now installs `ui-vue` dependencies explicitly in the builder stage and sets `CI=true` so pnpm can run non-interactively in Docker.
+- `ui-vue` is a pnpm workspace package (see [`pnpm-workspace.yaml`](pnpm-workspace.yaml)), so a root `pnpm install` installs its dependencies too.
+- If you previously saw `Cannot find module .../ui-vue/node_modules/vue-tsc/bin/vue-tsc.js` in Docker, the Dockerfile installs workspace dependencies in the builder stage and sets `CI=true` so pnpm can run non-interactively.
 
 ## Project Docs
 

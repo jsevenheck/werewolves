@@ -728,6 +728,7 @@ function setupSocketHandlers(
     room.healedTarget = null;
     room.poisonTarget = null;
     room.seerActed = false;
+    room.seerAwaitingDismiss = false;
     room.guardedTarget = null;
     room.lastGuardedTarget = null;
     room.guardActed = false;
