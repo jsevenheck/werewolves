@@ -113,6 +113,15 @@ Environment splits in ESLint:
 - `.pi/extensions/policy.ts`: PI agent extension policy.
 - `.agents/skills/`: reusable local skill definitions and references.
 
+### Graphify
+
+Graphify is available for codebase architecture and relationship queries.
+
+- Use `graphify .` to build the project graph for the current repository.
+- Use `graphify update .` to re-extract changed code files and update the existing graph without requiring an LLM API key.
+- Use `graphify query "..."` for architecture, file relationship, or call-graph questions before broad grep/read searches.
+- If `graphify-out/graph.json` exists, prefer a targeted Graphify query for high-level codebase context.
+
 ## Skills
 
 Reusable skill definitions live in `.agents/skills/`. Read the relevant `SKILL.md`
