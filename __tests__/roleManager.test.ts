@@ -54,21 +54,30 @@ describe('roleManager', () => {
       minPlayers: 5,
       roleConfig: DEFAULT_ROLE_CONFIG,
     } as Room;
-    expect(validateCounts(tooFew)).toEqual({ error: 'Need at least 5 players' });
+    expect(validateCounts(tooFew)).toMatchObject({
+      error: 'Need at least 5 players',
+      message: { key: 'server.errors.needPlayers', params: { count: 5 } },
+    });
 
     const tooManyRoles = {
       players: makePlayers(5),
       minPlayers: 5,
       roleConfig: { ...DEFAULT_ROLE_CONFIG, werewolf: 3, seer: 2 },
     } as Room;
-    expect(validateCounts(tooManyRoles)).toEqual({ error: 'Role count exceeds players' });
+    expect(validateCounts(tooManyRoles)).toMatchObject({
+      error: 'Role count exceeds players',
+      message: { key: 'server.errors.roleCountExceedsPlayers' },
+    });
 
     const noWolves = {
       players: makePlayers(5),
       minPlayers: 5,
       roleConfig: { ...DEFAULT_ROLE_CONFIG, werewolf: 0 },
     } as Room;
-    expect(validateCounts(noWolves)).toEqual({ error: 'Need at least 1 Werewolf' });
+    expect(validateCounts(noWolves)).toMatchObject({
+      error: 'Need at least 1 Werewolf',
+      message: { key: 'server.errors.needWerewolf' },
+    });
   });
 
   test('assignRoles sets roles and teams', () => {

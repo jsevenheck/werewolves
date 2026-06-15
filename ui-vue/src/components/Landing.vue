@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../stores/game';
+import { useGameI18n } from '../composables/useGameI18n';
 import { pushNotification, notify } from '../utils/helpers';
 import type { TypedSocket } from '../composables/useSocket';
 import type { StoredSession } from '@shared/types';
@@ -13,6 +14,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const store = useGameStore();
+const { t, localizeError } = useGameI18n();
 
 const createName = ref('');
 const joinName = ref('');
@@ -33,13 +35,13 @@ function enterRoom(params: {
 
 function attemptResume(saved: StoredSession) {
   if (!saved.resumeToken) {
-    notify('Saved session expired. Please rejoin the room.');
+    notify(t('app.notifications.savedSessionExpired'));
     store.clearSession();
     return;
   }
   props.socket.emit('resumePlayer', saved, (res) => {
     if (res && 'error' in res && res.error) {
-      notify(res.error);
+      notify(localizeError(res));
       store.clearSession();
     } else {
       store.setPlayer(saved.playerId, saved.name, saved.resumeToken);
@@ -99,31 +101,31 @@ function resumeSession() {
 
 <template>
   <section class="panel">
-    <h1>Werewolves</h1>
-    <p>Host or join a moderator-free social deduction match.</p>
+    <h1>{{ t('landing.title') }}</h1>
+    <p>{{ t('landing.subtitle') }}</p>
     <form id="create-form" @submit.prevent="createRoom">
       <label>
-        <span>Your name</span>
+        <span>{{ t('landing.yourName') }}</span>
         <input
           v-model="createName"
           name="name"
           required
           :maxlength="MAX_PLAYER_NAME_LENGTH"
-          placeholder="e.g. Alex"
+          :placeholder="t('landing.namePlaceholder')"
         />
       </label>
-      <button type="submit">Create Lobby</button>
+      <button type="submit">{{ t('landing.createLobby') }}</button>
     </form>
   </section>
   <section class="panel">
-    <h2>Join a Lobby</h2>
+    <h2>{{ t('landing.joinTitle') }}</h2>
     <form id="join-form" @submit.prevent="joinRoom">
       <label>
-        <span>Your name</span>
+        <span>{{ t('landing.yourName') }}</span>
         <input v-model="joinName" name="name" required :maxlength="MAX_PLAYER_NAME_LENGTH" />
       </label>
       <label>
-        <span>Room code</span>
+        <span>{{ t('landing.roomCode') }}</span>
         <input
           v-model="joinCode"
           name="code"
@@ -133,14 +135,16 @@ function resumeSession() {
           style="text-transform: uppercase"
         />
       </label>
-      <button type="submit">Join Game</button>
+      <button type="submit">{{ t('landing.joinGame') }}</button>
     </form>
     <div
       v-if="savedSession?.resumeToken"
       style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem"
     >
       <button id="resume-btn" @click="resumeSession">
-        Resume {{ savedSession.roomCode }} as {{ savedSession.name }}
+        {{
+          t('landing.resumeSession', { roomCode: savedSession.roomCode, name: savedSession.name })
+        }}
       </button>
     </div>
   </section>

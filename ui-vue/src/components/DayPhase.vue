@@ -3,9 +3,8 @@ import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../stores/game';
 import { getPlayerName, notify } from '../utils/helpers';
+import { useGameI18n } from '../composables/useGameI18n';
 import type { TypedSocket } from '../composables/useSocket';
-
-import { ROLE_DETAILS } from '../utils/roleDetails';
 
 interface Props {
   socket: TypedSocket;
@@ -13,6 +12,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const store = useGameStore();
+const { t, localizeMessage, roleName } = useGameI18n();
 const { room, playerId, pendingVote } = storeToRefs(store);
 
 const selectedTarget = ref('');
@@ -22,7 +22,11 @@ const isHost = computed(() => room.value?.hostId === playerId.value);
 const lastNightDeaths = computed(() => room.value?.lastNightDeaths ?? []);
 const dayVoteResolved = computed(() => room.value?.dayVoteResolved ?? false);
 const lastDayDeaths = computed(() => room.value?.lastDayDeaths ?? []);
-const lastDayMessage = computed(() => room.value?.lastDayMessage ?? null);
+const lastDayMessage = computed(() =>
+  room.value
+    ? localizeMessage(room.value.lastDayMessageI18n, room.value.lastDayMessage ?? '')
+    : null
+);
 const awaitingActions = computed(() => {
   return !!room.value?.awaitingHunterShot || !!room.value?.awaitingMayorSelection;
 });
@@ -52,7 +56,7 @@ function onSelectChange() {
 
 function submitVote() {
   if (!room.value || !playerId.value) {
-    notify('Unable to submit vote: missing player state.');
+    notify(t('notifications.unableSubmitMissing'));
     return;
   }
   const normalized = selectedTarget.value === '__abstain__' ? null : selectedTarget.value || null;
@@ -77,35 +81,43 @@ function proceedToNight() {
 
 <template>
   <section v-if="room" class="panel">
-    <h2>Day {{ room.dayCount }}</h2>
+    <h2>{{ t('day.title', { count: room.dayCount }) }}</h2>
 
-    <h3>Night Report</h3>
+    <h3>{{ t('day.nightReport') }}</h3>
     <template v-if="lastNightDeaths.length">
       <ul>
         <li v-for="(entry, i) in lastNightDeaths" :key="i">
-          {{ entry.name }} ({{ ROLE_DETAILS[entry.role || 'villager']?.name || entry.role }})
+          {{ entry.name }} ({{ roleName(entry.role || 'villager') }})
         </li>
       </ul>
     </template>
-    <p v-else>No one died last night.</p>
+    <p v-else>{{ t('day.noNightDeaths') }}</p>
 
-    <h3>Vote to eliminate</h3>
+    <h3>{{ t('day.voteToEliminate') }}</h3>
     <template v-if="self?.alive">
       <template v-if="hasVoted">
-        <p v-if="yourVote === null" style="color: #4ade80">Vote submitted: Abstain.</p>
-        <p v-else style="color: #4ade80">
-          Vote submitted: {{ yourVote ? getPlayerName(room, yourVote) : '' }}.
+        <p v-if="yourVote === null" style="color: #4ade80">
+          {{ t('day.voteSubmittedAbstain') }}
         </p>
-        <small v-if="showVoteProgress">{{ submitted }} / {{ required }} votes submitted.</small>
+        <p v-else style="color: #4ade80">
+          {{
+            t('day.voteSubmittedPlayer', { name: yourVote ? getPlayerName(room, yourVote) : '' })
+          }}
+        </p>
+        <small v-if="showVoteProgress">{{
+          t('common.votesSubmitted', { submitted, required })
+        }}</small>
       </template>
       <template v-else>
         <form id="vote-form" class="actions" @submit.prevent="submitVote">
-          <p v-if="isRevote">Revote among tied players.</p>
+          <p v-if="isRevote">{{ t('day.revote') }}</p>
           <label>
-            <span>Choose someone to eliminate</span>
+            <span>{{ t('day.chooseEliminate') }}</span>
             <select v-model="selectedTarget" name="target" required @change="onSelectChange">
-              <option value="">Select a player</option>
-              <option value="__abstain__" :selected="pendingVote === null">Abstain</option>
+              <option value="">{{ t('common.selectPlayer') }}</option>
+              <option value="__abstain__" :selected="pendingVote === null">
+                {{ t('common.abstain') }}
+              </option>
               <option
                 v-for="player in filtered"
                 :key="player.id"
@@ -116,20 +128,25 @@ function proceedToNight() {
               </option>
             </select>
           </label>
-          <button id="vote-submit" type="submit" :disabled="!selectedTarget">Submit vote</button>
-          <small v-if="showVoteProgress">{{ submitted }} / {{ required }} votes submitted.</small>
+          <button id="vote-submit" type="submit" :disabled="!selectedTarget">
+            {{ t('common.submitVote') }}
+          </button>
+          <small v-if="showVoteProgress">{{
+            t('common.votesSubmitted', { submitted, required })
+          }}</small>
         </form>
       </template>
     </template>
-    <p v-else>You are dead and cannot vote.</p>
+    <p v-else>{{ t('day.deadCannotVote') }}</p>
 
     <!-- Vote resolved state - show result and wait for host to proceed -->
     <template v-if="dayVoteResolved">
       <div class="vote-result">
         <template v-if="lastDayDeaths.length">
           <p v-for="(death, i) in lastDayDeaths" :key="i">
-            {{ death.name }} ({{ ROLE_DETAILS[death.role || 'villager']?.name || death.role }}) was
-            eliminated.
+            {{
+              t('day.eliminated', { name: death.name, role: roleName(death.role || 'villager') })
+            }}
           </p>
         </template>
         <p v-else-if="lastDayMessage">{{ lastDayMessage }}</p>
@@ -138,7 +155,7 @@ function proceedToNight() {
 
     <div v-if="isHost" class="actions host-actions">
       <button v-if="!dayVoteResolved" id="end-vote-btn" type="button" @click="endVoting">
-        End Voting
+        {{ t('day.endVoting') }}
       </button>
       <button
         v-if="dayVoteResolved && !awaitingActions"
@@ -146,7 +163,7 @@ function proceedToNight() {
         type="button"
         @click="proceedToNight"
       >
-        Proceed to Night
+        {{ t('day.proceedToNight') }}
       </button>
     </div>
   </section>

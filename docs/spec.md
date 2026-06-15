@@ -58,10 +58,13 @@ Werewolves is a social deduction game where:
 - `seerAwaitingDismiss`: boolean, true after seer submits inspect and before they dismiss the result overlay; phase does not advance to witch while this is true.
 - `voteState`: `{votes: map playerId -> targetId|null|undefined, revoteFromTie: array|null}`.
 - `pendingDeaths`: queue of `{playerId, reason}` awaiting resolution.
-- `logs`: array of structured entries for UI recap (`{ts, text, publicText}`).
+- `logs`: array of structured entries for UI recap (`{ts, text, publicText, message?, publicMessage?}`).
+  `message`/`publicMessage` contain a stable localization key + params so the client can
+  translate the log; legacy `text`/`publicText` remains for backward compatibility.
 - `lastNightDeaths`: array of `{name, role}` announced in the day report.
 - `lastDayDeaths`: array of `{name, role}` announced after day vote.
 - `lastDayMessage`: string or null (used when no one is eliminated).
+- `lastDayMessageI18n`: optional localized message key + params for `lastDayMessage`.
 - `awaitingHunterShot`: playerId awaiting a hunter shot, or null.
 - `hunterShotEndsAt`: timestamp for hunter shot timeout UI, or null.
 - `hunterShotTimer`: timeout for hunter shot (60 seconds; auto-skips if no target selected).
@@ -71,7 +74,8 @@ Werewolves is a social deduction game where:
 - `transitionTimer`: timeout for night-step transitions.
 - `phaseTimer`: timeout for phase transitions (postReveal/postMayor/postArmor/nightToDay/dayToNight).
 - `dayVoteResolved`: boolean, true after day vote resolves and all pending actions are done.
-- `winner`: `{team: 'village' | 'wolves' | 'joker', reason}` when ended.
+- `winner`: `{team: 'village' | 'wolves' | 'joker', reason, reasonMessage?}` when ended.
+  `reasonMessage` is an optional localization key + params for the winner reason.
 - `createdAt`: timestamp when room was created.
 - `lastActivityAt`: timestamp of last room activity (updated on each broadcast; used for automatic cleanup).
 

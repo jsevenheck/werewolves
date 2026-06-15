@@ -1,6 +1,12 @@
-import type { RoleConfig, PassiveRoleConfig, RoomView, StoredSession } from './types';
+import type {
+  LocalizedMessage,
+  RoleConfig,
+  PassiveRoleConfig,
+  RoomView,
+  StoredSession,
+} from './types';
 
-export type ErrorResponse = { error: string };
+export type ErrorResponse = { error: string; message?: LocalizedMessage };
 export type OkResponse = { ok: true };
 
 export interface ClientToServerEvents {

@@ -3,8 +3,10 @@ import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../../stores/game';
 import { ROLE_DETAILS } from '../../utils/roleDetails';
+import { useGameI18n } from '../../composables/useGameI18n';
 
 const store = useGameStore();
+const { roleName, roleDescription, seerResultLabel, t } = useGameI18n();
 const { room, roleVisible } = storeToRefs(store);
 
 const self = computed(() => room.value?.self || null);
@@ -18,11 +20,16 @@ const seerResult = computed(() => room.value?.seerResult || null);
     class="role-card"
     :style="{ borderColor: detail?.color || '#f8fafc', color: detail?.color || '#f8fafc' }"
   >
-    <strong>{{ detail?.name || self.role }}</strong>
-    <p>{{ detail?.description || '' }}</p>
-    <p v-if="room?.loverName">Lover: {{ room.loverName }}</p>
+    <strong>{{ roleName(self.role) }}</strong>
+    <p>{{ roleDescription(self.role) }}</p>
+    <p v-if="room?.loverName">{{ t('common.lover', { name: room.loverName }) }}</p>
     <p v-if="self.role === 'seer' && seerResult">
-      Last vision: {{ seerResult.name }} is {{ seerResult.result }}.
+      {{
+        t('header.lastVision', {
+          name: seerResult.name,
+          result: seerResultLabel(seerResult.result),
+        })
+      }}
     </p>
   </div>
 </template>

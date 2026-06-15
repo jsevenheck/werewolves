@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../stores/game';
 import { getPlayerName, notify } from '../utils/helpers';
+import { useGameI18n } from '../composables/useGameI18n';
 import { NIGHT_DELAY_MS } from '@shared/constants';
 import type { TypedSocket } from '../composables/useSocket';
 import SeerResultOverlay from './overlays/SeerResultOverlay.vue';
@@ -13,6 +14,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const store = useGameStore();
+const { t, localizeError, nightStepName, seerResultLabel } = useGameI18n();
 const { room, playerId, pendingWolfVote } = storeToRefs(store);
 
 const wolfTarget = ref('');
@@ -25,9 +27,11 @@ const witchActionTaken = ref(false);
 
 const self = computed(() => room.value?.self || null);
 const isHost = computed(() => room.value?.hostId === playerId.value);
-const stepLabel = computed(() => room.value?.phaseStep?.toUpperCase() || 'NIGHT');
+const stepLabel = computed(() => nightStepName(room.value?.phaseStep));
 const isTransition = computed(() => room.value?.phaseStep === 'transition');
-const nextLabel = computed(() => room.value?.nextNightStep?.toUpperCase() || '...');
+const nextLabel = computed(() =>
+  room.value?.nextNightStep ? nightStepName(room.value.nextNightStep) : t('nightSteps.nextUnknown')
+);
 const durationSeconds = computed(() => Math.round(NIGHT_DELAY_MS / 1000));
 
 // Wolf form
@@ -78,13 +82,13 @@ const witchState = computed(
 const witchWolfTarget = computed(() => room.value?.wolfTarget || null);
 const healedText = computed(() =>
   witchWolfTarget.value && room.value
-    ? `Wolves targeted ${getPlayerName(room.value, witchWolfTarget.value)}.`
-    : 'Wolves have no target.'
+    ? t('night.wolvesTargeted', { name: getPlayerName(room.value, witchWolfTarget.value) })
+    : t('night.wolvesNoTarget')
 );
 const aliveWitchTargets = computed(() =>
   (room.value?.players ?? []).filter((p) => p && p.alive && p.id !== playerId.value)
 );
-const skipLabel = computed(() => (witchActionTaken.value ? 'Continue' : 'Skip'));
+const skipLabel = computed(() => (witchActionTaken.value ? t('common.continue') : t('night.skip')));
 
 // Guard form
 const isGuard = computed(
@@ -120,6 +124,10 @@ function onWolfSelectChange() {
   store.pendingWolfVote = wolfTarget.value || undefined;
 }
 
+function formatWolfVoteEntry(name: string, count: number) {
+  return t(count === 1 ? 'night.wolfVoteEntry' : 'night.wolfVoteEntryPlural', { name, count });
+}
+
 function submitWolfVote() {
   if (!wolfTarget.value || !playerId.value || !room.value) return;
   store.pendingWolfVote = undefined;
@@ -141,7 +149,7 @@ function submitSeerInspect() {
     },
     (res) => {
       if (res && 'error' in res && res.error) {
-        notify(`Error: ${res.error}`);
+        notify(localizeError(res));
       } else if (res && 'ok' in res && res.name && res.result) {
         pendingSeerResult.value = { name: res.name, result: res.result };
       }
@@ -190,7 +198,7 @@ function submitGuardProtection() {
     },
     (res) => {
       if (res && 'error' in res && res.error) {
-        notify(`Error: ${res.error}`);
+        notify(localizeError(res));
       }
     }
   );
@@ -207,7 +215,7 @@ function submitHarlotVisit() {
     },
     (res) => {
       if (res && 'error' in res && res.error) {
-        notify(`Error: ${res.error}`);
+        notify(localizeError(res));
       }
     }
   );
@@ -256,37 +264,38 @@ watch(
 
 <template>
   <section v-if="room" class="panel">
-    <h2>Night Phase - {{ stepLabel }}</h2>
+    <h2>{{ t('night.title', { step: stepLabel }) }}</h2>
 
     <!-- Transition state -->
     <template v-if="isTransition">
-      <p>Transitioning... next: {{ nextLabel }}.</p>
-      <p>Duration: {{ durationSeconds }}s.</p>
+      <p>{{ t('night.transitionNext', { step: nextLabel }) }}</p>
+      <p>{{ t('app.transition.duration', { seconds: durationSeconds }) }}</p>
     </template>
 
     <!-- Wolf form -->
     <template v-else-if="isWolf">
       <form id="wolf-form" class="actions" @submit.prevent="submitWolfVote">
-        <p v-if="wolfPeers.length">Other wolves: {{ wolfPeers.join(', ') }}</p>
+        <p v-if="wolfPeers.length">{{ t('night.otherWolves', { names: wolfPeers.join(', ') }) }}</p>
         <p v-if="Object.keys(targetVoteCounts).length">
-          Wolf votes:
+          {{ t('night.wolfVotes') }}
           <template v-for="(count, targetId) in targetVoteCounts" :key="targetId">
-            {{ getPlayerName(room, targetId as string) }} ({{ count }} vote{{
-              count > 1 ? 's' : ''
-            }}){{ ' ' }}
+            {{ formatWolfVoteEntry(getPlayerName(room, targetId as string), count) }}{{ ' ' }}
           </template>
         </p>
         <template v-if="wolfLocked">
           <p style="color: #4ade80">
-            Vote submitted{{ currentWolfVote ? `: ${getPlayerName(room, currentWolfVote)}` : '' }}.
-            Awaiting other wolves.
+            {{
+              currentWolfVote
+                ? t('night.voteSubmittedTarget', { name: getPlayerName(room, currentWolfVote) })
+                : t('night.voteSubmitted')
+            }}
           </p>
         </template>
         <template v-else>
           <label>
-            <span>Select a victim</span>
+            <span>{{ t('night.selectVictim') }}</span>
             <select v-model="wolfTarget" name="target" required @change="onWolfSelectChange">
-              <option value="">Pick target</option>
+              <option value="">{{ t('night.pickTarget') }}</option>
               <option
                 v-for="player in aliveTargets"
                 :key="player.id"
@@ -297,9 +306,11 @@ watch(
               </option>
             </select>
           </label>
-          <button type="submit">Submit vote</button>
+          <button type="submit">{{ t('common.submitVote') }}</button>
         </template>
-        <small>{{ votesCast }} / {{ wolfIds.length || 1 }} votes submitted.</small>
+        <small>{{
+          t('common.votesSubmitted', { submitted: votesCast, required: wolfIds.length || 1 })
+        }}</small>
       </form>
     </template>
 
@@ -307,16 +318,23 @@ watch(
     <template v-else-if="isSeer">
       <form id="seer-form" class="actions" @submit.prevent="submitSeerInspect">
         <label>
-          <span>Inspect someone</span>
+          <span>{{ t('night.inspectSomeone') }}</span>
           <select v-model="seerTarget" name="target" required>
-            <option value="">Select target</option>
+            <option value="">{{ t('common.selectTarget') }}</option>
             <option v-for="player in seerTargets" :key="player.id" :value="player.id">
               {{ player.name }}
             </option>
           </select>
         </label>
-        <button type="submit">Reveal alignment</button>
-        <p v-if="seerResult">Last vision: {{ seerResult.name }} is {{ seerResult.result }}.</p>
+        <button type="submit">{{ t('night.revealAlignment') }}</button>
+        <p v-if="seerResult">
+          {{
+            t('night.lastVision', {
+              name: seerResult.name,
+              result: seerResultLabel(seerResult.result),
+            })
+          }}
+        </p>
       </form>
     </template>
 
@@ -331,17 +349,17 @@ watch(
             :disabled="!witchState.healAvailable || !witchWolfTarget"
             @click="healTarget"
           >
-            Use heal potion
+            {{ t('night.useHealPotion') }}
           </button>
           <div style="flex: 1; min-width: 220px">
             <label>
-              <span>Poison target</span>
+              <span>{{ t('night.poisonTarget') }}</span>
               <select
                 id="poison-select"
                 v-model="poisonTarget"
                 :disabled="!witchState.poisonAvailable"
               >
-                <option value="">Choose player</option>
+                <option value="">{{ t('night.choosePlayer') }}</option>
                 <option v-for="player in aliveWitchTargets" :key="player.id" :value="player.id">
                   {{ player.name }}
                 </option>
@@ -354,7 +372,7 @@ watch(
             :disabled="!witchState.poisonAvailable"
             @click="poisonSubmit"
           >
-            Use poison
+            {{ t('night.usePoison') }}
           </button>
         </div>
         <button id="skip-witch" type="button" @click="skipWitch">{{ skipLabel }}</button>
@@ -365,50 +383,52 @@ watch(
     <template v-else-if="isGuard">
       <form id="guard-form" class="actions" @submit.prevent="submitGuardProtection">
         <p v-if="lastProtectedName">
-          Last night you protected {{ lastProtectedName }}. You cannot protect them again tonight.
+          {{ t('night.lastProtected', { name: lastProtectedName }) }}
         </p>
         <label>
-          <span>Protect a player</span>
+          <span>{{ t('night.protectPlayer') }}</span>
           <select v-model="guardTarget" name="target" required>
-            <option value="">Select target</option>
+            <option value="">{{ t('common.selectTarget') }}</option>
             <option v-for="player in guardTargets" :key="player.id" :value="player.id">
               {{ player.name }}
             </option>
           </select>
         </label>
-        <button type="submit">Protect</button>
+        <button type="submit">{{ t('night.protect') }}</button>
       </form>
     </template>
 
     <!-- Harlot form -->
     <template v-else-if="isHarlot">
       <form id="harlot-form" class="actions" @submit.prevent="submitHarlotVisit">
-        <p>Choose a player to visit tonight. If wolves attack them, you will die too.</p>
+        <p>{{ t('night.harlotPrompt') }}</p>
         <label>
-          <span>Visit a player</span>
+          <span>{{ t('night.visitPlayer') }}</span>
           <select v-model="harlotTarget" name="target" required>
-            <option value="">Select target</option>
+            <option value="">{{ t('common.selectTarget') }}</option>
             <option v-for="player in harlotTargets" :key="player.id" :value="player.id">
               {{ player.name }}
             </option>
           </select>
         </label>
-        <button type="submit">Visit</button>
+        <button type="submit">{{ t('night.visit') }}</button>
       </form>
     </template>
 
     <!-- Alive but not active role -->
     <template v-else-if="self?.alive">
-      <p>You sleep peacefully.</p>
+      <p>{{ t('night.sleepPeacefully') }}</p>
     </template>
 
     <!-- Dead spectator -->
     <template v-else>
-      <p>You are dead. Spectating only.</p>
+      <p>{{ t('night.deadSpectating') }}</p>
     </template>
 
     <div v-if="showHostSkip" class="actions host-actions">
-      <button id="skip-step" type="button" @click="skipStep">Skip current action</button>
+      <button id="skip-step" type="button" @click="skipStep">
+        {{ t('night.skipCurrentAction') }}
+      </button>
     </div>
   </section>
 

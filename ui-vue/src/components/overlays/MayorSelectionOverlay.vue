@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../../stores/game';
+import { useGameI18n } from '../../composables/useGameI18n';
 import type { TypedSocket } from '../../composables/useSocket';
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const store = useGameStore();
+const { t } = useGameI18n();
 const { room, roomCode, playerId } = storeToRefs(store);
 
 const selectedTarget = ref('');
@@ -32,19 +34,19 @@ function submitSelection() {
 <template>
   <div id="mayor-overlay" class="mayor-overlay">
     <div class="panel">
-      <h2>Select New Mayor</h2>
-      <p>As the dying Mayor, you must select your successor.</p>
+      <h2>{{ t('overlays.mayorTitle') }}</h2>
+      <p>{{ t('overlays.mayorDescription') }}</p>
       <form id="mayor-form" class="actions" @submit.prevent="submitSelection">
         <label>
-          <span>Choose the new Mayor</span>
+          <span>{{ t('overlays.mayorChoose') }}</span>
           <select v-model="selectedTarget" name="target" required>
-            <option value="">Select player</option>
+            <option value="">{{ t('common.selectPlayer') }}</option>
             <option v-for="player in targets" :key="player.id" :value="player.id">
               {{ player.name }}
             </option>
           </select>
         </label>
-        <button type="submit">Appoint Mayor</button>
+        <button type="submit">{{ t('overlays.mayorAppoint') }}</button>
       </form>
     </div>
   </div>

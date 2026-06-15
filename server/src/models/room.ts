@@ -57,6 +57,7 @@ function createRoom(
     lastNightDeaths: [],
     lastDayDeaths: [],
     lastDayMessage: null,
+    lastDayMessageI18n: null,
     awaitingHunterShot: null,
     dayVoteResolved: false,
     logs: [],

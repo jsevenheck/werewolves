@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../../stores/game';
+import { useGameI18n } from '../../composables/useGameI18n';
 import type { TypedSocket } from '../../composables/useSocket';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 const props = defineProps<Props>();
 const emit = defineEmits<{ dismiss: [] }>();
 
+const { t, seerResultLabel } = useGameI18n();
 const store = useGameStore();
 const { room, playerId } = storeToRefs(store);
 
@@ -26,15 +28,17 @@ function dismiss() {
 <template>
   <div class="seer-result-overlay" @click.self="dismiss">
     <div class="panel seer-result-panel">
-      <p class="seer-result-greeting">Your vision...</p>
+      <p class="seer-result-greeting">{{ t('overlays.seerGreeting') }}</p>
       <h2 class="seer-result-name">{{ result.name }}</h2>
       <p
         class="seer-result-alignment"
         :class="isWerewolf ? 'seer-result-wolf' : 'seer-result-safe'"
       >
-        {{ result.result }}
+        {{ seerResultLabel(result.result) }}
       </p>
-      <button type="button" class="seer-result-btn" @click="dismiss">Got it!</button>
+      <button type="button" class="seer-result-btn" @click="dismiss">
+        {{ t('common.gotIt') }}
+      </button>
     </div>
   </div>
 </template>

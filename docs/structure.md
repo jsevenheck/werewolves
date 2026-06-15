@@ -40,7 +40,14 @@ werewolves/
 │       ├── main.ts           # App entry (Pinia + config)
 │       ├── App.vue           # Root component with phase switching
 │       ├── components/       # Phase screens, panels, overlays
-│       ├── composables/      # Socket, narrator hooks
+│       ├── composables/      # Socket, narrator hooks, i18n helpers
+│       │   └── useGameI18n.ts
+│       ├── i18n/             # vue-i18n setup and locale message files
+│       │   ├── index.ts
+│       │   ├── messages/
+│       │   │   ├── de.ts
+│       │   │   └── en.ts
+│       │   └── types.ts
 │       ├── stores/           # Pinia stores
 │       ├── types/            # Client types (config.ts)
 │       ├── utils/            # Client helpers
@@ -118,7 +125,32 @@ Phase-specific screens in `ui-vue/src/components/*Phase.vue`. Shared UI in
 
 ### Composables
 
-Reusable client logic (socket setup, narrator audio) in `ui-vue/src/composables/`.
+Reusable client logic in `ui-vue/src/composables/`:
+
+- `useSocket.ts`: Socket.IO setup and typed event helpers.
+- `useNarrator.ts`: Audio playback, gesture unlock, and state management.
+- `useGameI18n.ts`: Centralized translation helpers for roles, teams, phases,
+  night steps, seer results, server-originated messages, and errors.
+
+## Internationalization
+
+The client uses `vue-i18n` with English (`en`) as the fallback locale and German
+(`de`) as the second supported locale. Locale detection order:
+
+1. Stored choice in `localStorage` (`werewolves.locale`).
+2. Browser language preference.
+3. English fallback.
+
+Server-originated display text (errors, room logs, winner reasons, day results,
+death reasons) is sent as stable message keys plus params. The client resolves
+those keys through `useGameI18n().localizeMessage()` / `localizeError()`.
+Internal protocol values such as role ids, phases, socket events, and seer
+result payloads remain English and language-neutral.
+
+When adding user-facing text, prefer new translation keys in
+`ui-vue/src/i18n/messages/en.ts` and `ui-vue/src/i18n/messages/de.ts` over
+hardcoded strings. When adding a new role or passive role, add keys for its
+name and description to both locale files.
 
 ### Stores
 

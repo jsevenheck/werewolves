@@ -2,6 +2,7 @@
 import { computed, watch, nextTick, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../../stores/game';
+import { useGameI18n } from '../../composables/useGameI18n';
 import type { TypedSocket } from '../../composables/useSocket';
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const store = useGameStore();
+const { t, localizeMessage } = useGameI18n();
 const { room, playerId } = storeToRefs(store);
 const logsContainer = ref<HTMLElement | null>(null);
 const confirmingClose = ref(false);
@@ -38,12 +40,14 @@ function closeSession() {
 
 <template>
   <section v-if="room" id="logs-panel" class="panel">
-    <h2>Events</h2>
+    <h2>{{ t('panels.events') }}</h2>
     <div ref="logsContainer" class="logs">
       <template v-if="logs.length">
-        <div v-for="(log, i) in logs" :key="i">{{ formatTime(log.ts) }} - {{ log.text }}</div>
+        <div v-for="(log, i) in logs" :key="i">
+          {{ formatTime(log.ts) }} - {{ localizeMessage(log.message, log.text) }}
+        </div>
       </template>
-      <p v-else>No events yet.</p>
+      <p v-else>{{ t('panels.noEvents') }}</p>
     </div>
 
     <template v-if="isHost && socket">
@@ -60,7 +64,7 @@ function closeSession() {
           "
           @click="confirmingClose = true"
         >
-          Close Session
+          {{ t('panels.closeSession') }}
         </button>
       </div>
       <div
@@ -76,7 +80,7 @@ function closeSession() {
         "
       >
         <p style="margin: 0; font-size: 0.875rem; color: #fca5a5">
-          This ends the session for <strong>all players</strong> and cannot be undone.
+          {{ t('panels.closeWarning') }}
         </p>
         <div style="display: flex; gap: 0.5rem">
           <button
@@ -90,14 +94,14 @@ function closeSession() {
             "
             @click="closeSession"
           >
-            Yes, close
+            {{ t('panels.confirmClose') }}
           </button>
           <button
             type="button"
             style="flex: 1; font-size: 0.85rem"
             @click="confirmingClose = false"
           >
-            Cancel
+            {{ t('common.cancel') }}
           </button>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../stores/game';
 import { getPlayerName, notify } from '../utils/helpers';
+import { useGameI18n } from '../composables/useGameI18n';
 import type { TypedSocket } from '../composables/useSocket';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const store = useGameStore();
+const { t } = useGameI18n();
 const { room, playerId } = storeToRefs(store);
 
 const selectedTarget = ref('');
@@ -39,7 +41,7 @@ function onSelectChange() {
 
 function submitVote() {
   if (!selectedTarget.value || !playerId.value || !room.value) {
-    notify('Unable to submit vote: missing player state.');
+    notify(t('notifications.unableSubmitMissing'));
     return;
   }
   store.pendingMayorVote = selectedTarget.value;
@@ -61,40 +63,50 @@ function endVoting() {
 
 <template>
   <section v-if="room" class="panel">
-    <h2>Mayor Election</h2>
-    <p>Vote for the first Mayor. The Mayor's vote will break ties during day voting.</p>
+    <h2>{{ t('mayor.title') }}</h2>
+    <p>{{ t('mayor.description') }}</p>
 
     <template v-if="self?.alive">
       <template v-if="hasVoted">
-        <p v-if="yourVote === null" style="color: #4ade80">Vote submitted: Abstain.</p>
-        <p v-else style="color: #4ade80">
-          Vote submitted: {{ yourVote ? getPlayerName(room, yourVote) : '' }}.
+        <p v-if="yourVote === null" style="color: #4ade80">
+          {{ t('mayor.voteSubmittedAbstain') }}
         </p>
-        <small v-if="showVoteProgress">{{ submitted }} / {{ required }} votes submitted.</small>
+        <p v-else style="color: #4ade80">
+          {{
+            t('mayor.voteSubmittedPlayer', { name: yourVote ? getPlayerName(room, yourVote) : '' })
+          }}
+        </p>
+        <small v-if="showVoteProgress">{{
+          t('common.votesSubmitted', { submitted, required })
+        }}</small>
       </template>
       <template v-else>
         <form id="mayor-vote-form" class="actions" @submit.prevent="submitVote">
-          <p v-if="isRevote">Revote among tied candidates.</p>
+          <p v-if="isRevote">{{ t('mayor.revote') }}</p>
           <label>
-            <span>Choose the Mayor</span>
+            <span>{{ t('mayor.chooseMayor') }}</span>
             <select v-model="selectedTarget" name="target" required @change="onSelectChange">
-              <option value="">Select a player</option>
+              <option value="">{{ t('common.selectPlayer') }}</option>
               <option v-for="player in eligible" :key="player.id" :value="player.id">
                 {{ player.name }}
               </option>
             </select>
           </label>
           <button id="mayor-vote-submit" type="submit" :disabled="!selectedTarget">
-            Submit vote
+            {{ t('common.submitVote') }}
           </button>
-          <small v-if="showVoteProgress">{{ submitted }} / {{ required }} votes submitted.</small>
+          <small v-if="showVoteProgress">{{
+            t('common.votesSubmitted', { submitted, required })
+          }}</small>
         </form>
       </template>
     </template>
-    <p v-else>You are dead and cannot vote.</p>
+    <p v-else>{{ t('mayor.deadCannotVote') }}</p>
 
     <div v-if="isHost" class="actions host-actions">
-      <button id="end-mayor-vote-btn" type="button" @click="endVoting">End Mayor Voting</button>
+      <button id="end-mayor-vote-btn" type="button" @click="endVoting">
+        {{ t('mayor.endVoting') }}
+      </button>
     </div>
   </section>
 </template>

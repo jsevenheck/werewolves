@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../stores/game';
 import { notify } from '../utils/helpers';
+import { useGameI18n } from '../composables/useGameI18n';
 import type { TypedSocket } from '../composables/useSocket';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const store = useGameStore();
+const { t } = useGameI18n();
 const { room, playerId } = storeToRefs(store);
 
 const self = computed(() => room.value?.self || null);
@@ -29,7 +31,7 @@ const loverB = ref('');
 
 function submitArmor() {
   if (!loverA.value || !loverB.value || loverA.value === loverB.value) {
-    notify('Choose two distinct Lovers.');
+    notify(t('armor.distinctLovers'));
     return;
   }
   if (!playerId.value || !room.value) return;
@@ -49,36 +51,36 @@ function skipArmor() {
 <template>
   <section v-if="room" class="panel">
     <template v-if="isArmor">
-      <h2>Choose Lovers</h2>
+      <h2>{{ t('armor.chooseTitle') }}</h2>
       <form id="armor-form" class="actions" @submit.prevent="submitArmor">
         <label>
-          <span>Lover A</span>
+          <span>{{ t('armor.loverA') }}</span>
           <select v-model="loverA" name="loverA" required>
-            <option value="">Select player</option>
+            <option value="">{{ t('common.selectPlayer') }}</option>
             <option v-for="player in alivePlayers" :key="player.id" :value="player.id">
               {{ player.name }}
             </option>
           </select>
         </label>
         <label>
-          <span>Lover B</span>
+          <span>{{ t('armor.loverB') }}</span>
           <select v-model="loverB" name="loverB" required>
-            <option value="">Select player</option>
+            <option value="">{{ t('common.selectPlayer') }}</option>
             <option v-for="player in alivePlayers" :key="player.id" :value="player.id">
               {{ player.name }}
             </option>
           </select>
         </label>
-        <button type="submit">Link Lovers</button>
+        <button type="submit">{{ t('armor.linkLovers') }}</button>
       </form>
     </template>
     <template v-else>
-      <h2>Armor is working</h2>
-      <p>The Armor is selecting two Lovers in secret.</p>
+      <h2>{{ t('armor.workingTitle') }}</h2>
+      <p>{{ t('armor.workingDescription') }}</p>
     </template>
 
     <div v-if="isHost" class="actions host-actions">
-      <button id="skip-armor" type="button" @click="skipArmor">Skip armor step</button>
+      <button id="skip-armor" type="button" @click="skipArmor">{{ t('armor.skipStep') }}</button>
     </div>
   </section>
 </template>

@@ -28,6 +28,14 @@ export type PhaseTransition =
   | null;
 export type PassiveRole = 'mayor';
 
+export type LocalizedMessageParam = string | number | boolean | null;
+export type LocalizedMessageParams = Record<string, LocalizedMessageParam>;
+
+export interface LocalizedMessage {
+  key: string;
+  params?: LocalizedMessageParams;
+}
+
 export interface RoleConfig {
   werewolf: number;
   seer: number;
@@ -94,6 +102,8 @@ export interface RoomLog {
   ts: number;
   text: string;
   publicText: string | null;
+  message?: LocalizedMessage | null;
+  publicMessage?: LocalizedMessage | null;
 }
 
 export interface PendingDeath {
@@ -109,6 +119,7 @@ export interface NightDeathAnnouncement {
 export interface Winner {
   team: Team;
   reason: string;
+  reasonMessage?: LocalizedMessage | null;
 }
 
 export interface Room {
@@ -144,6 +155,7 @@ export interface Room {
   lastNightDeaths: NightDeathAnnouncement[];
   lastDayDeaths: NightDeathAnnouncement[];
   lastDayMessage: string | null;
+  lastDayMessageI18n?: LocalizedMessage | null;
   awaitingHunterShot: string | null;
   dayVoteResolved: boolean;
   logs: RoomLog[];
@@ -178,6 +190,7 @@ export interface RoomViewVoteState {
 export interface RoomViewLog {
   ts: number;
   text: string;
+  message?: LocalizedMessage | null;
 }
 
 export interface RoomViewSelf {
@@ -224,6 +237,7 @@ export interface RoomView {
   lastNightDeaths: NightDeathAnnouncement[];
   lastDayDeaths: NightDeathAnnouncement[];
   lastDayMessage: string | null;
+  lastDayMessageI18n?: LocalizedMessage | null;
   awaitingHunterShot: boolean;
   hunterShotPending: boolean;
   hunterShotEndsAt: number | null;

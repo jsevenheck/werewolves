@@ -1,8 +1,9 @@
 import type { Namespace } from 'socket.io';
+import { localizedMessage } from '../utils/helpers';
 import { updateRoomActivity } from '../models/room';
 import { MAX_VISIBLE_LOGS } from '../config/constants';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
-import type { Room, RoomView, Player } from '../../../core/src/types';
+import type { LocalizedMessage, Room, RoomView, Player, Winner } from '../../../core/src/types';
 
 function broadcastRoom(room: Room, io: Namespace<ClientToServerEvents, ServerToClientEvents>) {
   updateRoomActivity(room);
@@ -20,6 +21,31 @@ function sendStateToPlayer(
   socket.emit('roomUpdate', sanitizeRoom(room, player.id));
 }
 
+function getWinnerReasonMessage(winner: Winner | null): LocalizedMessage | null {
+  switch (winner?.reason) {
+    case 'All Werewolves are dead.':
+      return localizedMessage('server.winnerReasons.allWerewolvesDead');
+    case 'Werewolves have the majority.':
+      return localizedMessage('server.winnerReasons.wolvesMajority');
+    case 'Witch can heal and poison to break parity.':
+      return localizedMessage('server.winnerReasons.witchBreakParity');
+    case 'Werewolves reached parity.':
+      return localizedMessage('server.winnerReasons.wolvesParity');
+    case 'Joker was voted out and laughs last!':
+      return localizedMessage('server.winnerReasons.jokerVotedOut');
+    default:
+      return null;
+  }
+}
+
+function localizeWinner(winner: Winner | null): Winner | null {
+  if (!winner) return null;
+  return {
+    ...winner,
+    reasonMessage: winner.reasonMessage ?? getWinnerReasonMessage(winner),
+  };
+}
+
 function sanitizeRoom(room: Room, viewerId: string): RoomView {
   const viewer = room.players[viewerId];
   const players = Object.values(room.players).map((player) => ({
@@ -32,10 +58,14 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     ...(room.phase === 'roleReveal' ? { ready: player.ready } : {}),
   }));
   const viewerAlive = viewer ? viewer.alive : false;
-  const logs = room.logs.slice(-MAX_VISIBLE_LOGS).map((log) => ({
-    ts: log.ts,
-    text: viewerAlive && log.publicText ? log.publicText : log.text,
-  }));
+  const logs = room.logs.slice(-MAX_VISIBLE_LOGS).map((log) => {
+    const usePublic = viewerAlive && !!log.publicText;
+    return {
+      ts: log.ts,
+      text: usePublic ? log.publicText! : log.text,
+      message: usePublic ? (log.publicMessage ?? null) : (log.message ?? null),
+    };
+  });
   return {
     code: room.code,
     phase: room.phase,
@@ -98,11 +128,12 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     lastNightDeaths: room.lastNightDeaths,
     lastDayDeaths: room.lastDayDeaths,
     lastDayMessage: room.lastDayMessage,
+    lastDayMessageI18n: room.lastDayMessageI18n ?? null,
     awaitingHunterShot: room.awaitingHunterShot === viewerId,
     hunterShotPending: !!room.awaitingHunterShot,
     hunterShotEndsAt: room.awaitingHunterShot === viewerId ? room.hunterShotEndsAt : null,
     dayVoteResolved: room.dayVoteResolved,
-    winner: room.winner,
+    winner: localizeWinner(room.winner),
     logs,
     self: viewer
       ? {

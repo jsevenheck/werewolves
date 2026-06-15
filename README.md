@@ -10,6 +10,7 @@ Run a multiplayer Werewolf/Mafia party game in the browser with no human moderat
 - Joker instant win on day vote; Hunter shot on death.
 - Mayor election with tie-breaking and succession on death.
 - Reconnect support and mobile-friendly UI.
+- German and English UI with a language switcher in the game header.
 - Acting host handoff on disconnect, plus skip controls for blocked armor/night steps.
 - Automatic timeouts (60s) for hunter shots and mayor succession to prevent game stalls.
 - Automatic room cleanup (24h idle, 1h after game ends) to prevent memory leaks.

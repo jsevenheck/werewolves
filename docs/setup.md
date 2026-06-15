@@ -61,6 +61,7 @@ pnpm run test:e2e
 - Armor links Lovers once, then night/day cycles begin.
 - Host can skip the armor step or a night action step if a player is offline or unresponsive.
 - If the host disconnects, another connected player becomes the acting host until the original host reconnects.
+- Players can switch between English and German in the game header.
 
 ## Narrator Audio
 

@@ -1528,7 +1528,12 @@ describe('socketHandlers security checks', () => {
       cb
     );
 
-    expect(cb).toHaveBeenCalledWith({ error: 'Invalid session' });
+    expect(cb).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: 'Invalid session',
+        message: { key: 'server.errors.invalidSession' },
+      })
+    );
     expect(room.players.p1.socketId).toBe('socket-old');
     expect(room.players.p1.connected).toBe(true);
   });

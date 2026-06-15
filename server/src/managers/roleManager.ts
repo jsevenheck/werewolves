@@ -1,6 +1,13 @@
 import { DEFAULT_ROLE_CONFIG, DEFAULT_PASSIVE_ROLE_CONFIG, ROLE_INFO } from '../config/constants';
 import { shuffle } from '../utils/helpers';
-import type { Room, RoleConfig, PassiveRoleConfig, Role } from '../../../core/src/types';
+import type { ErrorResponse } from '../../../core/src/events';
+import type {
+  LocalizedMessageParams,
+  Room,
+  RoleConfig,
+  PassiveRoleConfig,
+  Role,
+} from '../../../core/src/types';
 
 function normalizeRoleConfig(config: Partial<RoleConfig> = {}): RoleConfig {
   const normalized: RoleConfig = { ...DEFAULT_ROLE_CONFIG };
@@ -20,23 +27,40 @@ function normalizePassiveRoleConfig(config: Partial<PassiveRoleConfig> = {}): Pa
   return normalized;
 }
 
-function validateCounts(room: Room): { ok: true } | { error: string } {
+function validationError(
+  error: string,
+  key: string,
+  params?: LocalizedMessageParams
+): ErrorResponse {
+  return { error, message: params ? { key, params } : { key } };
+}
+
+function validateCounts(room: Room): { ok: true } | ErrorResponse {
   const players = Object.values(room.players);
   if (players.length < room.minPlayers) {
-    return { error: `Need at least ${room.minPlayers} players` };
+    return validationError(
+      `Need at least ${room.minPlayers} players`,
+      'server.errors.needPlayers',
+      {
+        count: room.minPlayers,
+      }
+    );
   }
   const configured = Object.entries(room.roleConfig).reduce((sum, [, count]) => sum + count, 0);
   if (configured > players.length) {
-    return { error: 'Role count exceeds players' };
+    return validationError('Role count exceeds players', 'server.errors.roleCountExceedsPlayers');
   }
   if (room.roleConfig.werewolf < 1) {
-    return { error: 'Need at least 1 Werewolf' };
+    return validationError('Need at least 1 Werewolf', 'server.errors.needWerewolf');
   }
   // Singleton roles validation (max 1)
   const singletonRoles: (keyof RoleConfig)[] = ['seer', 'witch', 'armor', 'guard', 'harlot'];
   for (const role of singletonRoles) {
     if (room.roleConfig[role] > 1) {
-      return { error: `Only 1 ${role.charAt(0).toUpperCase() + role.slice(1)} allowed` };
+      const roleName = role.charAt(0).toUpperCase() + role.slice(1);
+      return validationError(`Only 1 ${roleName} allowed`, 'server.errors.onlyOneRole', {
+        role: roleName,
+      });
     }
   }
   return { ok: true };

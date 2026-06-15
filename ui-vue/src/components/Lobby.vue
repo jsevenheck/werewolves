@@ -2,11 +2,10 @@
 import { computed, ref, onBeforeUnmount } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../stores/game';
+import { useGameI18n } from '../composables/useGameI18n';
 import { notify } from '../utils/helpers';
 import { MIN_PLAYERS } from '@shared/constants';
 import type { TypedSocket } from '../composables/useSocket';
-
-import { ROLE_DETAILS, PASSIVE_ROLE_DETAILS } from '../utils/roleDetails';
 
 const SINGLETON_ROLES = new Set(['seer', 'witch', 'armor', 'guard', 'harlot']);
 
@@ -22,6 +21,7 @@ const ROLE_CONFIG_DEBOUNCE_MS = 400;
 
 const props = defineProps<Props>();
 const store = useGameStore();
+const { t, localizeError, roleName, passiveRoleName } = useGameI18n();
 const { room, playerId } = storeToRefs(store);
 
 const canStart = computed(() => playerId.value === room.value?.hostId);
@@ -109,7 +109,7 @@ function startGame() {
     { roomCode: room.value!.code, playerId: playerId.value },
     (res) => {
       if (res && 'error' in res && res.error) {
-        notify(res.error);
+        notify(localizeError(res));
       }
     }
   );
@@ -118,15 +118,13 @@ function startGame() {
 
 <template>
   <section v-if="room" class="panel">
-    <h2>Lobby</h2>
-    <p>
-      Share this code so friends can join: <strong>{{ room.code }}</strong>
-    </p>
+    <h2>{{ t('lobby.title') }}</h2>
+    <p :data-room-code="room.code">{{ t('lobby.shareCode', { code: room.code }) }}</p>
     <form v-if="canStart" id="role-config" class="actions" @submit.prevent>
       <label v-for="[role, count] in Object.entries(roleConfig)" :key="role" class="role-row">
         <span>
-          {{ ROLE_DETAILS[role]?.name || role }}
-          <span v-if="isSingletonRole(role)" class="role-hint">(max 1)</span>
+          {{ roleName(role) }}
+          <span v-if="isSingletonRole(role)" class="role-hint">{{ t('lobby.maxOne') }}</span>
         </span>
         <input
           type="number"
@@ -140,14 +138,14 @@ function startGame() {
         />
       </label>
       <div class="passive-roles">
-        <h3>Passive Roles</h3>
+        <h3>{{ t('lobby.passiveRoles') }}</h3>
         <div class="passive-role-list">
           <div
             v-for="[role, enabled] in Object.entries(passiveRoleConfig)"
             :key="role"
             class="toggle"
           >
-            <span>{{ PASSIVE_ROLE_DETAILS[role]?.name || role }}</span>
+            <span>{{ passiveRoleName(role) }}</span>
             <span
               class="toggle-control"
               role="switch"
@@ -163,12 +161,16 @@ function startGame() {
         </div>
       </div>
     </form>
-    <p v-else>Waiting for host to configure roles.</p>
+    <p v-else>{{ t('lobby.waitingForHost') }}</p>
     <p class="role-summary">
-      Configured roles: {{ totals }} / {{ playersCount }}. Villagers auto-fill: {{ villagerSlots }}
+      {{
+        t('lobby.roleSummary', { total: totals, players: playersCount, villagers: villagerSlots })
+      }}
     </p>
-    <p>Minimum players to start: {{ minPlayers }}</p>
-    <p v-if="needsAdjust" style="color: #fca5a5">Too many roles for current players.</p>
-    <button id="start-game" :disabled="!canStart" @click="startGame">Start Game</button>
+    <p>{{ t('lobby.minimumPlayers', { count: minPlayers }) }}</p>
+    <p v-if="needsAdjust" style="color: #fca5a5">{{ t('lobby.tooManyRoles') }}</p>
+    <button id="start-game" :disabled="!canStart" @click="startGame">
+      {{ t('lobby.startGame') }}
+    </button>
   </section>
 </template>

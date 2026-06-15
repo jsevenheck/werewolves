@@ -1,5 +1,6 @@
 import { ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useI18n } from 'vue-i18n';
 import { useGameStore } from '../stores/game';
 import { createNarrator } from '../utils/narrator';
 import type { Narrator } from '../utils/narrator';
@@ -10,9 +11,19 @@ const NARRATOR_UNLOCK_COOLDOWN_MS = 1500;
 
 export function useNarrator(assetsBasePath?: string) {
   const store = useGameStore();
+  const { t } = useI18n();
   const { room, roomCode } = storeToRefs(store);
 
-  const narrator: Narrator = createNarrator({ notify, assetsBasePath });
+  const narrator: Narrator = createNarrator({
+    notify: (message) => {
+      notify(
+        message === 'Audio is blocked. Tap to enable narrator.'
+          ? t('app.notifications.audioBlocked')
+          : message
+      );
+    },
+    assetsBasePath,
+  });
   const storageKey = 'werewolves_narrator_enabled';
 
   const enabled = ref(false);
@@ -70,7 +81,7 @@ export function useNarrator(assetsBasePath?: string) {
       const result = await narrator.unlock();
       if (currentToken !== unlockToken) return;
       if (!result) {
-        notify('Tap again to enable audio.');
+        notify(t('app.notifications.tapAgainEnableAudio'));
         narrator.setEnabled(false);
         enabled.value = narrator.isEnabled();
         unlocked.value = narrator.isUnlocked();
