@@ -230,6 +230,7 @@ export const en = {
       leftRoom: '{name} left the room.',
       rolesAssigned: 'Roles assigned. Secret information has been delivered.',
       mayorSelected: '{selector} selected {successor} as the new Mayor.',
+      mayorSelectedPublic: '{successor} has been appointed as the new Mayor.',
       loversPrivate: '{loverA} and {loverB} are now Lovers.',
       loversPublic: 'Two players are now Lovers.',
       loversChosen: '{name} linked two souls together as Lovers.',

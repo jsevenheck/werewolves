@@ -287,8 +287,7 @@ function setupSocketHandlers(
         selector: player.name,
         successor: target.name,
       }),
-      localizedMessage('server.logs.mayorSelected', {
-        selector: player.name,
+      localizedMessage('server.logs.mayorSelectedPublic', {
         successor: target.name,
       })
     );

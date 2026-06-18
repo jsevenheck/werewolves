@@ -234,6 +234,7 @@ export const de = {
       leftRoom: '{name} hat den Raum verlassen.',
       rolesAssigned: 'Rollen verteilt. Geheime Informationen wurden zugestellt.',
       mayorSelected: '{selector} hat {successor} als neuen Bürgermeister gewählt.',
+      mayorSelectedPublic: '{successor} wurde zum neuen Bürgermeister ernannt.',
       loversPrivate: '{loverA} und {loverB} sind nun Liebende.',
       loversPublic: 'Zwei Spieler sind nun Liebende.',
       loversChosen: '{name} hat zwei Seelen als Liebende verbunden.',

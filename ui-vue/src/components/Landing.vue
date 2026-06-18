@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../stores/game';
 import { useGameI18n } from '../composables/useGameI18n';
-import { pushNotification, notify } from '../utils/helpers';
+import { notify } from '../utils/helpers';
 import type { TypedSocket } from '../composables/useSocket';
 import type { StoredSession } from '@shared/types';
 import { MAX_PLAYER_NAME_LENGTH } from '@shared/constants';
@@ -57,7 +57,7 @@ function createRoom() {
   props.socket.emit('createRoom', { name }, (payload) => {
     if (!payload || 'error' in payload) {
       if (payload?.error) {
-        pushNotification(payload.error);
+        notify(localizeError(payload));
       }
       return;
     }
@@ -78,7 +78,7 @@ function joinRoom() {
   props.socket.emit('joinRoom', { name, code }, (payload) => {
     if (!payload || 'error' in payload) {
       if (payload?.error) {
-        pushNotification(payload.error);
+        notify(localizeError(payload));
       }
       return;
     }
