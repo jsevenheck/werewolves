@@ -35,7 +35,6 @@ export const en = {
     abstain: 'Abstain',
     alive: 'Alive',
     cancel: 'Cancel',
-    close: 'Close',
     continue: 'Continue',
     dead: 'Dead',
     disconnected: 'Disconnected',
@@ -148,7 +147,6 @@ export const en = {
     sleepPeacefully: 'You sleep peacefully.',
     deadSpectating: 'You are dead. Spectating only.',
     skipCurrentAction: 'Skip current action',
-    error: 'Error: {message}',
   },
   day: {
     title: 'Day {count}',

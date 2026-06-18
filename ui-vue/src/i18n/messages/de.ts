@@ -35,7 +35,6 @@ export const de = {
     abstain: 'Enthalten',
     alive: 'Lebendig',
     cancel: 'Abbrechen',
-    close: 'Schließen',
     continue: 'Weiter',
     dead: 'Tot',
     disconnected: 'Getrennt',
@@ -151,7 +150,6 @@ export const de = {
     sleepPeacefully: 'Du schläfst friedlich.',
     deadSpectating: 'Du bist tot. Du siehst nur noch zu.',
     skipCurrentAction: 'Aktuelle Aktion überspringen',
-    error: 'Fehler: {message}',
   },
   day: {
     title: 'Tag {count}',
