@@ -101,7 +101,9 @@ function proceedToNight() {
         </p>
         <p v-else style="color: #4ade80">
           {{
-            t('day.voteSubmittedPlayer', { name: yourVote ? getPlayerName(room, yourVote) : '' })
+            t('day.voteSubmittedPlayer', {
+              name: yourVote ? getPlayerName(room, yourVote, t('common.unknown')) : '',
+            })
           }}
         </p>
         <small v-if="showVoteProgress">{{

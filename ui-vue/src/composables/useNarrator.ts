@@ -16,11 +16,7 @@ export function useNarrator(assetsBasePath?: string) {
 
   const narrator: Narrator = createNarrator({
     notify: (message) => {
-      notify(
-        message === 'Audio is blocked. Tap to enable narrator.'
-          ? t('app.notifications.audioBlocked')
-          : message
-      );
+      notify(t(`app.notifications.${message}`));
     },
     assetsBasePath,
   });

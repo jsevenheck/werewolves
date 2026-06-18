@@ -269,6 +269,7 @@ export const en = {
       caughtVisiting: 'caught visiting the victim',
       poisonedByWitch: 'poisoned by Witch',
       executedByVote: 'executed by vote',
+      shotByHunter: 'shot by Hunter',
     },
     winnerReasons: {
       allWerewolvesDead: 'All Werewolves are dead.',

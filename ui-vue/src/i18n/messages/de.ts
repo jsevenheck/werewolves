@@ -274,6 +274,7 @@ export const de = {
       caughtVisiting: 'beim Besuch des Opfers erwischt',
       poisonedByWitch: 'von der Hexe vergiftet',
       executedByVote: 'durch Abstimmung hingerichtet',
+      shotByHunter: 'vom Jäger erschossen',
     },
     winnerReasons: {
       allWerewolvesDead: 'Alle Werwölfe sind tot.',

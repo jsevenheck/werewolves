@@ -18,6 +18,8 @@ function deathReasonKey(reason: string): string | null {
       return 'server.deathReasons.poisonedByWitch';
     case 'executed by vote':
       return 'server.deathReasons.executedByVote';
+    case 'shot by Hunter':
+      return 'server.deathReasons.shotByHunter';
     default:
       return null;
   }

@@ -18,8 +18,8 @@ function pushNotification(text: string) {
   notify(text);
 }
 
-function getPlayerName(room: RoomView, id: string) {
-  return room.players.find((p) => p.id === id)?.name || 'Unknown';
+function getPlayerName(room: RoomView, id: string, fallback: string) {
+  return room.players.find((p) => p.id === id)?.name || fallback;
 }
 
 function formatPhase(room: RoomView) {

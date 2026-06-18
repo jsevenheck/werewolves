@@ -73,7 +73,9 @@ function endVoting() {
         </p>
         <p v-else style="color: #4ade80">
           {{
-            t('mayor.voteSubmittedPlayer', { name: yourVote ? getPlayerName(room, yourVote) : '' })
+            t('mayor.voteSubmittedPlayer', {
+              name: yourVote ? getPlayerName(room, yourVote, t('common.unknown')) : '',
+            })
           }}
         </p>
         <small v-if="showVoteProgress">{{

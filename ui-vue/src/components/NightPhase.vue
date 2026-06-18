@@ -82,7 +82,9 @@ const witchState = computed(
 const witchWolfTarget = computed(() => room.value?.wolfTarget || null);
 const healedText = computed(() =>
   witchWolfTarget.value && room.value
-    ? t('night.wolvesTargeted', { name: getPlayerName(room.value, witchWolfTarget.value) })
+    ? t('night.wolvesTargeted', {
+        name: getPlayerName(room.value, witchWolfTarget.value, t('common.unknown')),
+      })
     : t('night.wolvesNoTarget')
 );
 const aliveWitchTargets = computed(() =>
@@ -101,7 +103,9 @@ const guardTargets = computed(() =>
   )
 );
 const lastProtectedName = computed(() =>
-  lastGuardedTarget.value && room.value ? getPlayerName(room.value, lastGuardedTarget.value) : null
+  lastGuardedTarget.value && room.value
+    ? getPlayerName(room.value, lastGuardedTarget.value, t('common.unknown'))
+    : null
 );
 
 // Harlot form
@@ -279,14 +283,21 @@ watch(
         <p v-if="Object.keys(targetVoteCounts).length">
           {{ t('night.wolfVotes') }}
           <template v-for="(count, targetId) in targetVoteCounts" :key="targetId">
-            {{ formatWolfVoteEntry(getPlayerName(room, targetId as string), count) }}{{ ' ' }}
+            {{
+              formatWolfVoteEntry(
+                getPlayerName(room, targetId as string, t('common.unknown')),
+                count
+              )
+            }}{{ ' ' }}
           </template>
         </p>
         <template v-if="wolfLocked">
           <p style="color: #4ade80">
             {{
               currentWolfVote
-                ? t('night.voteSubmittedTarget', { name: getPlayerName(room, currentWolfVote) })
+                ? t('night.voteSubmittedTarget', {
+                    name: getPlayerName(room, currentWolfVote, t('common.unknown')),
+                  })
                 : t('night.voteSubmitted')
             }}
           </p>
