@@ -25,11 +25,15 @@ test('player can switch lobby language between English and German', async ({ pag
   await expect(page.getByText('Configured roles:')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Start Game' })).toBeVisible();
 
-  await page.getByLabel('Language').selectOption('de');
+  const languageSelect = page.getByRole('combobox', { name: 'Language' });
+  await expect(languageSelect).toHaveValue('en');
+  await expect(languageSelect).toHaveAttribute('autocomplete', 'language');
+
+  await languageSelect.selectOption('de');
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'de');
   await expectStoredLocale(page, 'de');
-  await expect(page.getByLabel('Sprache')).toHaveValue('de');
+  await expect(page.getByRole('combobox', { name: 'Sprache' })).toHaveValue('de');
   await expect(page.getByRole('heading', { name: /^Raum [A-Z2-9]{4}$/ })).toBeVisible();
   await expect(page.getByText('Teile diesen Code, damit Freunde beitreten können:')).toBeVisible();
   await expect(page.getByText('Konfigurierte Rollen:')).toBeVisible();
@@ -43,11 +47,11 @@ test('player can switch lobby language between English and German', async ({ pag
   await expect(page.getByRole('heading', { name: /^Raum [A-Z2-9]{4}$/ })).toBeVisible();
   await expect(page.getByText('Teile diesen Code, damit Freunde beitreten können:')).toBeVisible();
 
-  await page.getByLabel('Sprache').selectOption('en');
+  await page.getByRole('combobox', { name: 'Sprache' }).selectOption('en');
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expectStoredLocale(page, 'en');
-  await expect(page.getByLabel('Language')).toHaveValue('en');
+  await expect(page.getByRole('combobox', { name: 'Language' })).toHaveValue('en');
   await expect(page.getByRole('heading', { name: /^Room [A-Z2-9]{4}$/ })).toBeVisible();
   await expect(page.getByText('Share this code so friends can join:')).toBeVisible();
   await expect(page.getByText('Configured roles:')).toBeVisible();

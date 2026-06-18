@@ -11,21 +11,33 @@ const options: { code: SupportedLocale; labelKey: string }[] = [
   { code: 'de', labelKey: 'language.german' },
 ];
 
-const selectedLocale = computed({
+const selectedLocale = computed<SupportedLocale>({
   get: () => getCurrentLocale(),
-  set: (locale: SupportedLocale) => setLocale(locale),
+  set: (locale) => setLocale(locale),
 });
+
+const labelId = 'language-switcher-label';
+const selectId = 'language-switcher-select';
 </script>
 
 <template>
-  <label class="language-switcher">
-    <span class="language-switcher-label">{{ t('language.label') }}</span>
-    <select v-model="selectedLocale" class="language-switcher-select" name="locale">
+  <div class="language-switcher">
+    <label :id="labelId" class="language-switcher-label" :for="selectId">
+      {{ t('language.label') }}
+    </label>
+    <select
+      :id="selectId"
+      v-model="selectedLocale"
+      class="language-switcher-select"
+      name="locale"
+      autocomplete="language"
+      :aria-labelledby="labelId"
+    >
       <option v-for="option in options" :key="option.code" :value="option.code">
         {{ t(option.labelKey) }}
       </option>
     </select>
-  </label>
+  </div>
 </template>
 
 <style scoped>

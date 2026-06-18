@@ -10,25 +10,48 @@ function isSupportedLocale(locale: string): locale is SupportedLocale {
   return SUPPORTED_LOCALES.includes(locale as SupportedLocale);
 }
 
-function normalizeLocale(locale: string | null | undefined): SupportedLocale | null {
-  if (!locale) return null;
-  const normalized = locale.toLowerCase();
+export function normalizeLocale(locale: string | null | undefined): SupportedLocale | null {
+  if (typeof locale !== 'string') return null;
+
+  const normalized = locale.trim().replace(/_/g, '-').toLowerCase();
+  if (!normalized) return null;
   if (isSupportedLocale(normalized)) return normalized;
-  if (normalized.startsWith('de')) return 'de';
-  if (normalized.startsWith('en')) return 'en';
-  return null;
+
+  const [language] = normalized.split('-');
+  return isSupportedLocale(language) ? language : null;
 }
 
-function getStoredLocale(): SupportedLocale | null {
+function readStoredLocale(): string | null {
   if (typeof window === 'undefined') return null;
-  return normalizeLocale(window.localStorage.getItem(STORAGE_KEY));
+
+  try {
+    return window.localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
 }
 
-function getBrowserLocale(): SupportedLocale | null {
+function writeStoredLocale(locale: SupportedLocale) {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.setItem(STORAGE_KEY, locale);
+  } catch {
+    // Storage can be unavailable in private mode or restricted embeds; locale still applies in memory.
+  }
+}
+
+export function getStoredLocale(): SupportedLocale | null {
+  const storedLocale = readStoredLocale();
+  if (storedLocale === null) return null;
+  return normalizeLocale(storedLocale) ?? DEFAULT_LOCALE;
+}
+
+export function getBrowserLocale(): SupportedLocale | null {
   if (typeof window === 'undefined') return null;
-  const preferredLocales = window.navigator.languages?.length
-    ? window.navigator.languages
-    : [window.navigator.language];
+
+  const { navigator } = window;
+  const preferredLocales = navigator.languages?.length ? navigator.languages : [navigator.language];
   for (const locale of preferredLocales) {
     const normalized = normalizeLocale(locale);
     if (normalized) return normalized;
@@ -36,8 +59,10 @@ function getBrowserLocale(): SupportedLocale | null {
   return null;
 }
 
-function getInitialLocale(defaultLocale?: SupportedLocale): SupportedLocale {
-  return getStoredLocale() ?? defaultLocale ?? getBrowserLocale() ?? DEFAULT_LOCALE;
+function getInitialLocale(defaultLocale?: string | null): SupportedLocale {
+  return (
+    getStoredLocale() ?? normalizeLocale(defaultLocale) ?? getBrowserLocale() ?? DEFAULT_LOCALE
+  );
 }
 
 export const messages = { en, de };
@@ -56,14 +81,13 @@ function applyLocale(locale: SupportedLocale) {
   }
 }
 
-export function setLocale(locale: SupportedLocale) {
-  applyLocale(locale);
-  if (typeof window !== 'undefined') {
-    window.localStorage.setItem(STORAGE_KEY, locale);
-  }
+export function setLocale(locale: string | null | undefined) {
+  const normalizedLocale = normalizeLocale(locale) ?? DEFAULT_LOCALE;
+  applyLocale(normalizedLocale);
+  writeStoredLocale(normalizedLocale);
 }
 
-export function initializeLocale(defaultLocale?: SupportedLocale) {
+export function initializeLocale(defaultLocale?: string | null) {
   applyLocale(getInitialLocale(defaultLocale));
 }
 
