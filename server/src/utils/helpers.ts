@@ -36,8 +36,12 @@ function localizedMessage(key: string, params?: LocalizedMessageParams): Localiz
   return params ? { key, params } : { key };
 }
 
-function errorResponse(error: string, key: string, params?: LocalizedMessageParams): ErrorResponse {
-  return { error, message: localizedMessage(key, params) };
+function errorResponse(
+  _error: string,
+  key: string,
+  params?: LocalizedMessageParams
+): ErrorResponse {
+  return { error: key, message: localizedMessage(key, params) };
 }
 
 function addLog(

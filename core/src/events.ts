@@ -6,7 +6,7 @@ import type {
   StoredSession,
 } from './types';
 
-export type ErrorResponse = { error: string; message?: LocalizedMessage };
+export type ErrorResponse = { error: string; message: LocalizedMessage };
 export type OkResponse = { ok: true };
 
 export interface ClientToServerEvents {

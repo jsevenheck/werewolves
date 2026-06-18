@@ -193,6 +193,7 @@ export const en = {
   },
   server: {
     errors: {
+      unknown: 'Unknown error',
       nameRequired: 'Name required',
       roomNotFound: 'Room not found',
       gameAlreadyStarted: 'Game already started',

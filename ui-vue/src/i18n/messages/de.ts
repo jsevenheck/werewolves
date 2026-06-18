@@ -197,6 +197,7 @@ export const de = {
   },
   server: {
     errors: {
+      unknown: 'Unbekannter Fehler',
       nameRequired: 'Name erforderlich',
       roomNotFound: 'Raum nicht gefunden',
       gameAlreadyStarted: 'Spiel hat bereits begonnen',

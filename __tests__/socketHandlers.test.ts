@@ -1530,7 +1530,7 @@ describe('socketHandlers security checks', () => {
 
     expect(cb).toHaveBeenCalledWith(
       expect.objectContaining({
-        error: 'Invalid session',
+        error: 'server.errors.invalidSession',
         message: { key: 'server.errors.invalidSession' },
       })
     );

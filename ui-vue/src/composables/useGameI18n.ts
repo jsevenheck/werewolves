@@ -78,7 +78,7 @@ export function useGameI18n() {
   }
 
   function localizeError(response: ErrorResponse): string {
-    return localizeMessage(response.message, response.error);
+    return localizeMessage(response.message, t('server.errors.unknown'));
   }
 
   function formatRoomPhase(room: RoomView): string {

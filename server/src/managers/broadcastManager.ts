@@ -40,9 +40,11 @@ function getWinnerReasonMessage(winner: Winner | null): LocalizedMessage | null 
 
 function localizeWinner(winner: Winner | null): Winner | null {
   if (!winner) return null;
+  const reasonMessage = winner.reasonMessage ?? getWinnerReasonMessage(winner);
   return {
     ...winner,
-    reasonMessage: winner.reasonMessage ?? getWinnerReasonMessage(winner),
+    reason: reasonMessage?.key ?? winner.reason,
+    reasonMessage,
   };
 }
 
@@ -60,10 +62,11 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
   const viewerAlive = viewer ? viewer.alive : false;
   const logs = room.logs.slice(-MAX_VISIBLE_LOGS).map((log) => {
     const usePublic = viewerAlive && !!log.publicText;
+    const message = usePublic ? (log.publicMessage ?? null) : (log.message ?? null);
     return {
       ts: log.ts,
-      text: usePublic ? log.publicText! : log.text,
-      message: usePublic ? (log.publicMessage ?? null) : (log.message ?? null),
+      text: message?.key ?? (usePublic ? log.publicText! : log.text),
+      message,
     };
   });
   return {
@@ -127,7 +130,7 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     },
     lastNightDeaths: room.lastNightDeaths,
     lastDayDeaths: room.lastDayDeaths,
-    lastDayMessage: room.lastDayMessage,
+    lastDayMessage: room.lastDayMessageI18n?.key ?? room.lastDayMessage,
     lastDayMessageI18n: room.lastDayMessageI18n ?? null,
     awaitingHunterShot: room.awaitingHunterShot === viewerId,
     hunterShotPending: !!room.awaitingHunterShot,

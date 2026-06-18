@@ -6,8 +6,10 @@ import {
 } from '../server/src/managers/roleManager';
 import type { Player, Room, RoleConfig } from '../core/src/types';
 
-vi.mock('../server/src/utils/helpers', () => ({
-  ...vi.importActual('../server/src/utils/helpers'),
+vi.mock('../server/src/utils/helpers', async () => ({
+  ...(await vi.importActual<typeof import('../server/src/utils/helpers')>(
+    '../server/src/utils/helpers'
+  )),
   shuffle: (arr: unknown[]) => arr,
 }));
 
@@ -55,7 +57,7 @@ describe('roleManager', () => {
       roleConfig: DEFAULT_ROLE_CONFIG,
     } as Room;
     expect(validateCounts(tooFew)).toMatchObject({
-      error: 'Need at least 5 players',
+      error: 'server.errors.needPlayers',
       message: { key: 'server.errors.needPlayers', params: { count: 5 } },
     });
 
@@ -65,7 +67,7 @@ describe('roleManager', () => {
       roleConfig: { ...DEFAULT_ROLE_CONFIG, werewolf: 3, seer: 2 },
     } as Room;
     expect(validateCounts(tooManyRoles)).toMatchObject({
-      error: 'Role count exceeds players',
+      error: 'server.errors.roleCountExceedsPlayers',
       message: { key: 'server.errors.roleCountExceedsPlayers' },
     });
 
@@ -75,7 +77,7 @@ describe('roleManager', () => {
       roleConfig: { ...DEFAULT_ROLE_CONFIG, werewolf: 0 },
     } as Room;
     expect(validateCounts(noWolves)).toMatchObject({
-      error: 'Need at least 1 Werewolf',
+      error: 'server.errors.needWerewolf',
       message: { key: 'server.errors.needWerewolf' },
     });
   });
