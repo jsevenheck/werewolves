@@ -1,6 +1,10 @@
 services:
   app:
-    build: .
+    # Image is built and pushed to GHCR by the CI workflow, tagged with the
+    # commit SHA. The deploy workflow injects IMAGE_TAG=<sha> so the VPS pulls
+    # that exact, immutable image instead of rebuilding from source. Falls back
+    # to :latest if IMAGE_TAG is unset (e.g. a manual `docker compose pull`).
+    image: ghcr.io/jsevenheck/werewolves:${IMAGE_TAG:-latest}
     restart: unless-stopped
     ports:
       - '3001:3001'

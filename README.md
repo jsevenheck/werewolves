@@ -182,6 +182,18 @@ docker run --rm -p 3001:3001 werewolves
 
 Note: The Docker image defaults to port 3001 (see `ENV PORT=3001`). Override with `-e PORT=<port>` if needed.
 
+### Production image (CI → GHCR → VPS)
+
+Production does **not** build on the VPS. On every push to `main`, after tests
+pass, CI builds the image and pushes it to GHCR tagged with the commit SHA
+(`ghcr.io/jsevenheck/werewolves:<sha>`). The deploy workflow then injects
+`IMAGE_TAG=<sha>`, so `docker-compose.yml` pulls that exact, immutable image
+instead of rebuilding from source — guaranteeing each deploy ships the new code.
+
+The GHCR package must be pullable from the VPS: either make it **public**
+(Packages → werewolves → Package settings → Change visibility), or run
+`docker login ghcr.io` once on the VPS with a token that has `read:packages`.
+
 Troubleshooting:
 
 - `ui-vue` is a pnpm workspace package (see [`pnpm-workspace.yaml`](pnpm-workspace.yaml)), so a root `pnpm install` installs its dependencies too.

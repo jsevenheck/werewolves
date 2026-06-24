@@ -29,4 +29,5 @@ jobs:
           docker-compose-path: docker-compose.yml
           environment-variables: |
             NODE_ENV=production
+            IMAGE_TAG=${{ github.event.workflow_run.head_sha }}
             WEREWOLVES_ADMIN_TOKEN=${{ secrets.WEREWOLVES_ADMIN_TOKEN }}
