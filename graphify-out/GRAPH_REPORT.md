@@ -1,16 +1,16 @@
 # Graph Report - werewolves  (2026-06-24)
 
 ## Corpus Check
-- 115 files · ~63,545 words
+- 116 files · ~65,073 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 686 nodes · 1364 edges · 48 communities (44 shown, 4 thin omitted)
+- 688 nodes · 1391 edges · 48 communities (44 shown, 4 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 15 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `22258f9a`
+- Built from commit: `8f2843c7`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -48,7 +48,7 @@
 - [[_COMMUNITY_Community 49|Community 49]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `setupSocketHandlers()` - 40 edges
+1. `setupSocketHandlers()` - 41 edges
 2. `Room` - 23 edges
 3. `localizedMessage()` - 23 edges
 4. `addLog()` - 21 edges
@@ -62,12 +62,12 @@
 ## Surprising Connections (you probably didn't know these)
 - `makeSocket()` --calls--> `attachAdminToSocket()`  [EXTRACTED]
   __tests__/adminHandlers.test.ts → server/src/utils/adminAuth.ts
-- `AdminState` --references--> `RoomView`  [EXTRACTED]
-  ui-vue/src/stores/admin.ts → core/src/types.ts
 - `useAdminSocket()` --calls--> `io`  [INFERRED]
   ui-vue/src/composables/useAdminSocket.ts → server/src/index.ts
 - `useSocket()` --calls--> `io`  [INFERRED]
   ui-vue/src/composables/useSocket.ts → server/src/index.ts
+- `AdminState` --references--> `RoomView`  [EXTRACTED]
+  ui-vue/src/stores/admin.ts → core/src/types.ts
 - `GameState` --references--> `RoomView`  [EXTRACTED]
   ui-vue/src/stores/game.ts → core/src/types.ts
 
@@ -77,20 +77,20 @@
 ## Communities (48 total, 4 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.10
-Nodes (55): PLAYER_ID, RESUME_TOKEN, ROOM_CODE, kickPlayerFromRoom(), detachSocketFromRoom(), ensureActingHost(), pendingDisconnects, setupSocketHandlers() (+47 more)
+Cohesion: 0.12
+Nodes (48): AdminSocket, TypedSocket, detachSocketFromRoom(), ensureActingHost(), pendingDisconnects, setupSocketHandlers(), updateHostIfNeeded(), broadcastRoom() (+40 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.08
 Nodes (40): getRoleName(), mapRolesToPages(), advanceToDay(), AdvanceToDayResult, closeContexts(), completeMayorElection(), configureRoles(), createLobbyWithPlayers() (+32 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.06
-Nodes (28): BUNDLED_AUDIO, getBundledAudioUrl(), useNarrator(), HowlEvent, MockHowl, RoomView, StoredSession, GameState (+20 more)
+Cohesion: 0.05
+Nodes (31): BUNDLED_AUDIO, getBundledAudioUrl(), useNarrator(), HowlEvent, MockHowl, RoomSummary, RoomView, StoredSession (+23 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.05
-Nodes (50): AdminSocket, useAdminSocket(), DEATH_REASON_KEYS, SERVER_DEATH_REASONS, AdminSocket, HostKickResult, TypedSocket, useSocket() (+42 more)
+Cohesion: 0.06
+Nodes (48): DEATH_REASON_KEYS, SERVER_DEATH_REASONS, AdminSocket, HostKickResult, DEFAULT_PASSIVE_ROLE_CONFIG, DEFAULT_ROLE_CONFIG, PLAYER_ID, RESUME_TOKEN (+40 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.05
@@ -117,8 +117,8 @@ Cohesion: 0.11
 Nodes (17): compilerOptions, baseUrl, esModuleInterop, forceConsistentCasingInFileNames, isolatedModules, jsx, lib, module (+9 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.08
-Nodes (28): setupAdminSocketHandlers(), getAdminObserversForRoom(), getRoomForAdminSocket(), observersByRoom, registerAdminObserver(), removeAdminObserver(), _resetAdminManagerForTests(), roomBySocket (+20 more)
+Cohesion: 0.07
+Nodes (37): useAdminSocket(), useSocket(), kickPlayerFromRoom(), setupAdminSocketHandlers(), cancelPendingDisconnect(), getAdminObserversForRoom(), getRoomForAdminSocket(), observersByRoom (+29 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.12
@@ -192,17 +192,17 @@ Nodes (3): overrides, diff, esbuild
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `RoomView` connect `Community 2` to `Community 10`, `Community 3`?**
+- **Why does `RoomView` connect `Community 2` to `Community 0`, `Community 10`, `Community 3`?**
   _High betweenness centrality (0.016) - this node is a cross-community bridge._
 - **What connects `IoStub`, `HowlEvent`, `RoomOverrides` to the rest of the system?**
   _265 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.09831932773109243 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.11551277304701962 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.07672634271099744 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.05605499735589635 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05004389815627744 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**
-  _Cohesion score 0.053830227743271224 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05794556628621598 - nodes in this community are weakly interconnected._
 - **Should `Community 4` be split into smaller, more focused modules?**
   _Cohesion score 0.04878048780487805 - nodes in this community are weakly interconnected._

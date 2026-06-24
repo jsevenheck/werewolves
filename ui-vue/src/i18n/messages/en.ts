@@ -377,6 +377,10 @@ export const en = {
     backToList: 'Back to room list',
     kick: 'Kick',
     kickConfirm: 'Kick {name} from this room?',
+    closeRoom: 'Close Session',
+    closeRoomConfirm:
+      'Close this room entirely? This disconnects all players and deletes the room. This cannot be undone.',
+    closeRoomSuccess: 'Room {code} was closed.',
     joinAsObserver: 'Join as Observer',
     leaveRoom: 'Leave observer view',
     detailTitle: 'Room {code}',

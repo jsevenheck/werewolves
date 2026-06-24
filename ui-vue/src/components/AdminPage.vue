@@ -161,6 +161,7 @@ function openSocket() {
   next.on('connect', handleConnect);
   next.on('disconnect', handleDisconnect);
   next.on('roomUpdate', handleRoomUpdate);
+  next.on('roomClosed', handleRoomClosed);
   next.on('connect_error', handleConnectError);
   socket = next;
 }
@@ -295,6 +296,30 @@ function humanizeLastDayMessage(view: RoomView): string {
   return localizeMessage(view.lastDayMessageI18n, view.lastDayMessage || '');
 }
 
+function handleRoomClosed() {
+  store.endObserving();
+  if (view.value === 'observer' || view.value === 'detail') {
+    view.value = 'list';
+  }
+  fetchRooms();
+}
+
+function closeRoom(roomCode: string) {
+  if (!socket) return;
+  if (!window.confirm(t('admin.closeRoomConfirm'))) return;
+  socket.emit('adminCloseRoom', { roomCode }, (response) => {
+    if (response && 'error' in response && response.error) {
+      notify(localizeError(response));
+      return;
+    }
+    notify(t('admin.closeRoomSuccess', { code: roomCode }));
+    store.endObserving();
+    store.selectRoom(null);
+    view.value = 'list';
+    fetchRooms();
+  });
+}
+
 onMounted(() => {
   if (store.hasToken) {
     openSocket();
@@ -306,6 +331,7 @@ onBeforeUnmount(() => {
     socket.off('connect', handleConnect);
     socket.off('disconnect', handleDisconnect);
     socket.off('roomUpdate', handleRoomUpdate);
+    socket.off('roomClosed', handleRoomClosed);
     socket.off('connect_error', handleConnectError);
     socket.disconnect();
     socket = null;
@@ -362,14 +388,14 @@ onBeforeUnmount(() => {
         <p v-else-if="rooms.length === 0" data-testid="admin-no-rooms">
           {{ t('admin.noRooms') }}
         </p>
-        <table v-else style="width: 100%; border-collapse: collapse">
+        <table v-else class="admin-table">
           <thead>
             <tr>
-              <th style="text-align: left">{{ t('admin.codeHeader') }}</th>
-              <th style="text-align: left">{{ t('admin.playersHeader') }}</th>
-              <th style="text-align: left">{{ t('admin.phaseHeader') }}</th>
-              <th style="text-align: left">{{ t('admin.dayCountHeader') }}</th>
-              <th style="text-align: left">{{ t('admin.hostHeader') }}</th>
+              <th>{{ t('admin.codeHeader') }}</th>
+              <th>{{ t('admin.playersHeader') }}</th>
+              <th>{{ t('admin.phaseHeader') }}</th>
+              <th>{{ t('admin.dayCountHeader') }}</th>
+              <th>{{ t('admin.hostHeader') }}</th>
               <th></th>
             </tr>
           </thead>
@@ -413,31 +439,38 @@ onBeforeUnmount(() => {
             {{ t('admin.backToList') }}
           </button>
         </header>
-        <p>
-          <strong>{{ t('admin.phaseHeader') }}:</strong>
-          {{ phaseLabel(selectedRoom.phase) }}
-        </p>
-        <p>
-          <strong>{{ t('admin.hostHeader') }}:</strong>
-          {{ selectedRoom.hostName || '—' }}
-        </p>
-        <p>
-          <strong>{{ t('admin.playersHeader') }}:</strong>
-          {{ describeRoom(selectedRoom) }}
-        </p>
+        <dl class="admin-meta">
+          <div>
+            <dt>{{ t('admin.phaseHeader') }}</dt>
+            <dd>{{ phaseLabel(selectedRoom.phase) }}</dd>
+          </div>
+          <div>
+            <dt>{{ t('admin.hostHeader') }}</dt>
+            <dd>{{ selectedRoom.hostName || '—' }}</dd>
+          </div>
+          <div>
+            <dt>{{ t('admin.playersHeader') }}</dt>
+            <dd>{{ describeRoom(selectedRoom) }}</dd>
+          </div>
+        </dl>
         <h2>{{ t('admin.playersHeader') }}</h2>
-        <ul>
+        <ul class="admin-players">
           <li
             v-for="player in selectedRoom?.players || []"
             :key="player.id"
             :data-testid="`admin-player-${player.id}`"
           >
-            <strong>{{ player.name }}</strong>
-            <span v-if="player.isHost"> ({{ t('common.host') }})</span>
-            <span v-if="!player.alive"> ({{ t('common.dead') }})</span>
-            <span v-if="!player.connected"> ({{ t('common.disconnected') }})</span>
+            <span class="player-name">
+              <strong>{{ player.name }}</strong>
+              <span v-if="player.isHost" class="player-meta"> ({{ t('common.host') }})</span>
+              <span v-if="!player.alive" class="player-meta"> ({{ t('common.dead') }})</span>
+              <span v-if="!player.connected" class="player-meta">
+                ({{ t('common.disconnected') }})</span
+              >
+            </span>
             <button
               type="button"
+              class="kick-btn"
               :data-testid="`admin-kick-${player.id}`"
               :aria-label="t('admin.kickAriaLabel', { name: player.name })"
               @click="kickPlayer(player.id, player.name)"
@@ -446,6 +479,16 @@ onBeforeUnmount(() => {
             </button>
           </li>
         </ul>
+        <div style="margin-top: 1rem">
+          <button
+            type="button"
+            class="admin-close-room"
+            data-testid="admin-close-room"
+            @click="closeRoom(selectedRoom.code)"
+          >
+            {{ t('admin.closeRoom') }}
+          </button>
+        </div>
       </section>
     </template>
 
@@ -454,46 +497,49 @@ onBeforeUnmount(() => {
       <section class="panel" data-testid="admin-observer-view">
         <header style="display: flex; justify-content: space-between; align-items: center">
           <h1>{{ t('admin.observerViewTitle', { code: observingRoom.code }) }}</h1>
-          <div>
-            <button type="button" data-testid="admin-back" @click="leaveObserver">
-              {{ t('admin.leaveRoom') }}
-            </button>
-            <button type="button" data-testid="admin-back-list" @click="leaveObserver">
-              {{ t('admin.backToList') }}
-            </button>
-          </div>
+          <button type="button" data-testid="admin-back" @click="leaveObserver">
+            {{ t('admin.leaveRoom') }}
+          </button>
         </header>
-        <p>
-          <strong>{{ t('admin.phaseHeader') }}:</strong>
-          {{ phaseLabel(observingRoom.phase) }}
-          <span v-if="observingRoom.phase === 'night' && observingRoom.phaseStep">
-            ({{ nightStepName(observingRoom.phaseStep) }})
-          </span>
-        </p>
-        <p>
-          <strong>{{ t('admin.dayCountHeader') }}:</strong>
-          {{ observingRoom.dayCount }}
-        </p>
-        <p>
+        <dl class="admin-meta">
+          <div>
+            <dt>{{ t('admin.phaseHeader') }}</dt>
+            <dd>
+              {{ phaseLabel(observingRoom.phase) }}
+              <span v-if="observingRoom.phase === 'night' && observingRoom.phaseStep">
+                ({{ nightStepName(observingRoom.phaseStep) }})
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt>{{ t('admin.dayCountHeader') }}</dt>
+            <dd>{{ observingRoom.dayCount }}</dd>
+          </div>
+          <div v-if="observingRoom.winner">
+            <dt>{{ t('gameOver.winner') }}</dt>
+            <dd>{{ teamName(observingRoom.winner.team) }}</dd>
+          </div>
+        </dl>
+        <p class="observer-hint">
           <em>{{ t('admin.observerHint') }}</em>
         </p>
-        <p v-if="observingRoom.winner">
-          <strong>{{ t('gameOver.winner') }}</strong>
-          {{ teamName(observingRoom.winner.team) }}
-        </p>
-        <p v-if="observingRoom.lastDayMessage">
+        <p v-if="observingRoom.lastDayMessage" class="last-day-message">
           {{ humanizeLastDayMessage(observingRoom) }}
         </p>
-        <ul>
+        <ul class="admin-players">
           <li
             v-for="player in observingRoom.players"
             :key="player.id"
             :data-testid="`observer-player-${player.id}`"
           >
-            <strong>{{ player.name }}</strong>
-            <span v-if="player.isHost"> ({{ t('common.host') }})</span>
-            <span v-if="!player.alive"> ({{ t('common.dead') }})</span>
-            <span v-if="!player.connected"> ({{ t('common.disconnected') }})</span>
+            <span class="player-name">
+              <strong>{{ player.name }}</strong>
+              <span v-if="player.isHost" class="player-meta"> ({{ t('common.host') }})</span>
+              <span v-if="!player.alive" class="player-meta"> ({{ t('common.dead') }})</span>
+              <span v-if="!player.connected" class="player-meta">
+                ({{ t('common.disconnected') }})</span
+              >
+            </span>
           </li>
         </ul>
       </section>
@@ -509,17 +555,159 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .admin-root {
-  padding: 1rem;
+  padding: 1.5rem 1rem 3rem;
 }
-.admin-root table {
-  margin-top: 0.5rem;
+
+/* Header: title + actions get room to breathe, separated from the body. */
+.admin-root header {
+  gap: 1rem 1.25rem;
+  flex-wrap: wrap;
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
 }
-.admin-root th,
-.admin-root td {
-  padding: 0.25rem 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+.admin-root header h1 {
+  margin: 0;
+  font-size: 1.55rem;
+  letter-spacing: -0.01em;
 }
-.admin-root button + button {
-  margin-left: 0.25rem;
+.admin-root h2 {
+  margin: 1.75rem 0 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.85);
+}
+
+/* Meta rows (phase / host / players / day) as an aligned definition grid. */
+.admin-meta {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+}
+.admin-meta div {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+.admin-meta dt {
+  flex: 0 0 7rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.8);
+}
+.admin-meta dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Room list table. */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.75rem;
+}
+.admin-table th {
+  text-align: left;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.8);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+}
+.admin-table td {
+  padding: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: middle;
+}
+.admin-table tbody tr {
+  transition: background 0.15s ease;
+}
+.admin-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+.admin-table th:last-child,
+.admin-table td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Player lists (detail + observer) as spaced cards. */
+.admin-players {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.admin-players li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.95rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+.admin-players .player-meta {
+  color: rgba(148, 163, 184, 0.85);
+  font-weight: 400;
+}
+
+/* Red kick button matching the lobby host control. */
+.admin-root .kick-btn {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid #f87171;
+  color: #f87171;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+.admin-root .kick-btn:hover {
+  background: #f87171;
+  color: #0b1120;
+}
+
+.observer-hint {
+  color: rgba(148, 163, 184, 0.85);
+}
+.last-day-message {
+  padding: 0.75rem 0.95rem;
+  border-radius: 10px;
+  background: rgba(248, 197, 144, 0.08);
+  border: 1px solid rgba(248, 197, 144, 0.25);
+}
+
+.admin-table td button + button {
+  margin-left: 0.5rem;
+}
+.admin-close-room {
+  background: transparent;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+.admin-close-room:hover {
+  background: #ef4444;
+  color: #fff;
 }
 </style>

@@ -29,3 +29,4 @@ jobs:
           docker-compose-path: docker-compose.yml
           environment-variables: |
             NODE_ENV=production
+            WEREWOLVES_ADMIN_TOKEN=${{ secrets.WEREWOLVES_ADMIN_TOKEN }}

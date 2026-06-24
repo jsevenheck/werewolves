@@ -6,3 +6,8 @@ services:
       - '3001:3001'
     environment:
       - NODE_ENV=production
+      # Admin token for the global admin console (?admin=1). Substituted from
+      # the host environment: set via the deploy workflow's GitHub Secret, or
+      # via a .env file next to this compose file on the VPS. Empty/unset =
+      # admin endpoints disabled (no crash, just no admin access).
+      - WEREWOLVES_ADMIN_TOKEN=${WEREWOLVES_ADMIN_TOKEN:-}

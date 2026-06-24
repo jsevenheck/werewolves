@@ -2,12 +2,32 @@ import type { Namespace } from 'socket.io';
 import { localizedMessage } from '../utils/helpers';
 import { updateRoomActivity } from '../models/room';
 import { MAX_VISIBLE_LOGS } from '../config/constants';
+import { getAdminObserversForRoom, removeAdminObserver } from '../managers/adminManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { LocalizedMessage, Room, RoomView, Player, Winner } from '../../../core/src/types';
 
 function broadcastRoom(room: Room, io: Namespace<ClientToServerEvents, ServerToClientEvents>) {
   updateRoomActivity(room);
   Object.values(room.players).forEach((player) => sendStateToPlayer(room, player, io));
+}
+
+/**
+ * Notify every admin observer of a room that the room is being closed, then
+ * drop them from the observer registry. Called when a room is deleted
+ * (host closeSession, admin closeRoom, or the last player leaving/kicked).
+ * Emits `roomClosed` so the AdminPage can return to the room list.
+ */
+function notifyAdminObserversRoomClosed(
+  roomCode: string,
+  io: Namespace<ClientToServerEvents, ServerToClientEvents>
+) {
+  for (const socketId of getAdminObserversForRoom(roomCode)) {
+    const socket = io.sockets.get(socketId);
+    if (socket) {
+      socket.emit('roomClosed');
+    }
+    removeAdminObserver(socketId);
+  }
 }
 
 /**
@@ -252,4 +272,5 @@ export {
   sanitizeRoom,
   buildAdminRoomView,
   broadcastRoomToAdmins,
+  notifyAdminObserversRoomClosed,
 };

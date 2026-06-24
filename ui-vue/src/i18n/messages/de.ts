@@ -382,6 +382,10 @@ export const de = {
     backToList: 'Zurück zur Raumliste',
     kick: 'Entfernen',
     kickConfirm: '{name} aus diesem Raum entfernen?',
+    closeRoom: 'Sitzung schließen',
+    closeRoomConfirm:
+      'Diesen Raum komplett schließen? Das trennt alle Spieler und löscht den Raum. Vorgang nicht umkehrbar.',
+    closeRoomSuccess: 'Raum {code} wurde geschlossen.',
     kickAriaLabel: '{name} aus diesem Raum entfernen',
     joinAsObserver: 'Als Beobachter beitreten',
     leaveRoom: 'Beobachteransicht verlassen',

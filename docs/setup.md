@@ -69,20 +69,47 @@ pnpm run test:e2e
 The server can expose a global admin console for operators (read-only room
 observation + emergency kick). It is disabled by default.
 
-1. Set the admin token on the server:
+### Local development
 
-   ```bash
-   WEREWOLVES_ADMIN_TOKEN=your-secret pnpm start
-   ```
+Create a `.env` file in the repo root (gitignored) — the server loads it
+automatically on startup via Node's `process.loadEnvFile`:
 
-   If the env var is unset, admin endpoints are disabled and a one-shot warning
-   is logged at startup. The token is never logged.
+```bash
+# .env
+WEREWOLVES_ADMIN_TOKEN=your-secret
+PORT=3001
+```
 
-2. Open the admin console at `http://localhost:3001/?admin=1` (or your
-   production URL with `?admin=1`).
+A `.env.example` template is committed; copy it to `.env` and fill in the
+value. Then run `pnpm run dev` as usual. Alternatively set the var inline:
 
-3. Enter the token. The token is stored in `localStorage`
-   (`werewolves_admin_token`) and sent only in the Socket.IO handshake.
+```bash
+WEREWOLVES_ADMIN_TOKEN=your-secret pnpm run dev
+```
+
+If the env var is unset, admin endpoints are disabled and a one-shot warning
+is logged at startup. The token is never logged.
+
+### Production (Hostinger VPS via GitHub Actions)
+
+The token is injected from a GitHub Secret — never commit it.
+
+1. In the repo: Settings → Secrets and variables → Actions → New secret:
+   name `WEREWOLVES_ADMIN_TOKEN`, value your secret.
+2. The deploy workflow (`.github/workflows/deploy.yml`) passes it through to
+   the VPS environment.
+3. `docker-compose.yml` substitutes it into the container via
+   `WEREWOLVES_ADMIN_TOKEN=${WEREWOLVES_ADMIN_TOKEN:-}` (empty/unset = admin
+   disabled, no crash).
+
+If you run the container manually on the VPS instead, set the var in a
+`.env` next to `docker-compose.yml` or via the hPanel environment.
+
+### Opening the console
+
+Open `http://localhost:3001/?admin=1` (or your production URL with
+`?admin=1`). Enter the token. It is stored in `localStorage`
+(`werewolves_admin_token`) and sent only in the Socket.IO handshake.
 
 The admin console can:
 

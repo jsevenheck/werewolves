@@ -9,7 +9,11 @@ import {
 } from '../utils/helpers';
 import { createRoom, getRoom, deleteRoom } from '../models/room';
 import { createPlayer, setSocketIndex, getSocketIndex, deleteSocketIndex } from '../models/player';
-import { broadcastRoom, sendStateToPlayer } from '../managers/broadcastManager';
+import {
+  broadcastRoom,
+  sendStateToPlayer,
+  notifyAdminObserversRoomClosed,
+} from '../managers/broadcastManager';
 import {
   normalizeRoleConfig,
   normalizePassiveRoleConfig,
@@ -58,6 +62,10 @@ function cancelPendingDisconnect(playerId: string) {
     pendingDisconnects.delete(playerId);
   }
 }
+
+// Exported so the admin close-session handler can cancel grace timers for
+// every player in a room it is about to tear down.
+export { cancelPendingDisconnect };
 
 function getPlayerForSocket(room: Room, playerId: string, socketId: string) {
   const player = room.players[playerId];
@@ -943,9 +951,11 @@ function setupSocketHandlers(
       return;
     }
 
-    // If no players remain, nothing to resolve
+    // If no players remain, tear the empty room down immediately so it does
+    // not linger in the admin room list. Notify admin observers and delete.
     if (!Object.keys(room.players).length) {
-      broadcastRoom(room, io);
+      notifyAdminObserversRoomClosed(room.code, io);
+      deleteRoom(room.code);
       cb?.({ ok: true });
       return;
     }
@@ -1058,6 +1068,9 @@ function setupSocketHandlers(
         }
       }
     }
+
+    // Also release any admin observers watching this room.
+    notifyAdminObserversRoomClosed(roomCode, io);
 
     deleteRoom(roomCode);
     cb?.({ ok: true });

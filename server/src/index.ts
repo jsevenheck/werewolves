@@ -82,6 +82,15 @@ function resolveStaticDir(rootDir: string): { staticDir: string } {
 // Server bootstrap
 // ---------------------------------------------------------------------------
 
+// Load a local `.env` file if present (dev convenience). Node's built-in
+// `process.loadEnvFile` does nothing in production where no `.env` ships
+// (`.env` is in `.dockerignore` and `.gitignore`), so this is a no-op there.
+try {
+  process.loadEnvFile('.env');
+} catch {
+  // No `.env` present — ignore. (loadEnvFile throws if the file is missing.)
+}
+
 const PORT = process.env.PORT ?? 3001;
 
 // Warn once at process start if admin endpoints are going to be disabled.

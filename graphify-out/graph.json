@@ -162,7 +162,7 @@
       "source_file": "__tests__/edgeCases.test.ts",
       "source_location": "L1",
       "id": "tests_edgecases_test",
-      "community": 0,
+      "community": 3,
       "norm_label": "edgecases.test.ts"
     },
     {
@@ -171,7 +171,7 @@
       "source_file": "__tests__/edgeCases.test.ts",
       "source_location": "L7",
       "id": "tests_edgecases_test_makeplayer",
-      "community": 0,
+      "community": 3,
       "norm_label": "makeplayer()"
     },
     {
@@ -180,7 +180,7 @@
       "source_file": "__tests__/helpers.test.ts",
       "source_location": "L1",
       "id": "tests_helpers_test",
-      "community": 0,
+      "community": 3,
       "norm_label": "helpers.test.ts"
     },
     {
@@ -490,6 +490,15 @@
       "norm_label": "makeplayers()"
     },
     {
+      "label": "roomCleanup.test.ts",
+      "file_type": "code",
+      "source_file": "__tests__/roomCleanup.test.ts",
+      "source_location": "L1",
+      "id": "tests_roomcleanup_test",
+      "community": 3,
+      "norm_label": "roomcleanup.test.ts"
+    },
+    {
       "label": "socketHandlers.test.ts",
       "file_type": "code",
       "source_file": "__tests__/socketHandlers.test.ts",
@@ -502,7 +511,7 @@
       "label": "makeSocket()",
       "file_type": "code",
       "source_file": "__tests__/socketHandlers.test.ts",
-      "source_location": "L79",
+      "source_location": "L85",
       "id": "tests_sockethandlers_test_makesocket",
       "community": 0,
       "norm_label": "makesocket()"
@@ -511,7 +520,7 @@
       "label": "makeIo()",
       "file_type": "code",
       "source_file": "__tests__/socketHandlers.test.ts",
-      "source_location": "L91",
+      "source_location": "L97",
       "id": "tests_sockethandlers_test_makeio",
       "community": 0,
       "norm_label": "makeio()"
@@ -576,7 +585,7 @@
       "source_file": "core/src/events.ts",
       "source_location": "L1",
       "id": "src_events",
-      "community": 3,
+      "community": 0,
       "norm_label": "events.ts"
     },
     {
@@ -603,34 +612,34 @@
       "source_file": "core/src/events.ts",
       "source_location": "L13",
       "id": "src_events_clienttoserverevents",
-      "community": 3,
+      "community": 0,
       "norm_label": "clienttoserverevents"
     },
     {
       "label": "ServerToClientEvents",
       "file_type": "code",
       "source_file": "core/src/events.ts",
-      "source_location": "L136",
+      "source_location": "L146",
       "id": "src_events_servertoclientevents",
-      "community": 3,
+      "community": 0,
       "norm_label": "servertoclientevents"
     },
     {
       "label": "InterServerEvents",
       "file_type": "code",
       "source_file": "core/src/events.ts",
-      "source_location": "L143",
+      "source_location": "L153",
       "id": "src_events_interserverevents",
-      "community": 3,
+      "community": 0,
       "norm_label": "interserverevents"
     },
     {
       "label": "SocketData",
       "file_type": "code",
       "source_file": "core/src/events.ts",
-      "source_location": "L147",
+      "source_location": "L157",
       "id": "src_events_socketdata",
-      "community": 3,
+      "community": 0,
       "norm_label": "socketdata"
     },
     {
@@ -765,7 +774,7 @@
       "source_file": "core/src/types.ts",
       "source_location": "L70",
       "id": "src_types_player",
-      "community": 0,
+      "community": 3,
       "norm_label": "player"
     },
     {
@@ -900,7 +909,7 @@
       "source_file": "core/src/types.ts",
       "source_location": "L267",
       "id": "src_types_roomsummary",
-      "community": 3,
+      "community": 2,
       "norm_label": "roomsummary"
     },
     {
@@ -2097,7 +2106,7 @@
       "source_file": "server/src/config/constants.ts",
       "source_location": "L30",
       "id": "config_constants_room_code",
-      "community": 0,
+      "community": 3,
       "norm_label": "room_code"
     },
     {
@@ -2106,7 +2115,7 @@
       "source_file": "server/src/config/constants.ts",
       "source_location": "L31",
       "id": "config_constants_player_id",
-      "community": 0,
+      "community": 3,
       "norm_label": "player_id"
     },
     {
@@ -2115,7 +2124,7 @@
       "source_file": "server/src/config/constants.ts",
       "source_location": "L32",
       "id": "config_constants_resume_token",
-      "community": 0,
+      "community": 3,
       "norm_label": "resume_token"
     },
     {
@@ -2167,7 +2176,7 @@
       "label": "toRoomSummary()",
       "file_type": "code",
       "source_file": "server/src/handlers/adminSocketHandlers.ts",
-      "source_location": "L41",
+      "source_location": "L46",
       "id": "handlers_adminsockethandlers_toroomsummary",
       "community": 10,
       "norm_label": "toroomsummary()"
@@ -2176,16 +2185,16 @@
       "label": "kickPlayerFromRoom()",
       "file_type": "code",
       "source_file": "server/src/handlers/adminSocketHandlers.ts",
-      "source_location": "L77",
+      "source_location": "L82",
       "id": "handlers_adminsockethandlers_kickplayerfromroom",
-      "community": 0,
+      "community": 10,
       "norm_label": "kickplayerfromroom()"
     },
     {
       "label": "setupAdminSocketHandlers()",
       "file_type": "code",
       "source_file": "server/src/handlers/adminSocketHandlers.ts",
-      "source_location": "L120",
+      "source_location": "L133",
       "id": "handlers_adminsockethandlers_setupadminsockethandlers",
       "community": 10,
       "norm_label": "setupadminsockethandlers()"
@@ -2203,7 +2212,7 @@
       "label": "pendingDisconnects",
       "file_type": "code",
       "source_file": "server/src/handlers/socketHandlers.ts",
-      "source_location": "L52",
+      "source_location": "L56",
       "id": "handlers_sockethandlers_pendingdisconnects",
       "community": 0,
       "norm_label": "pendingdisconnects"
@@ -2212,16 +2221,16 @@
       "label": "cancelPendingDisconnect()",
       "file_type": "code",
       "source_file": "server/src/handlers/socketHandlers.ts",
-      "source_location": "L54",
+      "source_location": "L58",
       "id": "handlers_sockethandlers_cancelpendingdisconnect",
-      "community": 0,
+      "community": 10,
       "norm_label": "cancelpendingdisconnect()"
     },
     {
       "label": "getPlayerForSocket()",
       "file_type": "code",
       "source_file": "server/src/handlers/socketHandlers.ts",
-      "source_location": "L62",
+      "source_location": "L70",
       "id": "handlers_sockethandlers_getplayerforsocket",
       "community": 0,
       "norm_label": "getplayerforsocket()"
@@ -2230,7 +2239,7 @@
       "label": "ensureActingHost()",
       "file_type": "code",
       "source_file": "server/src/handlers/socketHandlers.ts",
-      "source_location": "L68",
+      "source_location": "L76",
       "id": "handlers_sockethandlers_ensureactinghost",
       "community": 0,
       "norm_label": "ensureactinghost()"
@@ -2239,7 +2248,7 @@
       "label": "updateHostIfNeeded()",
       "file_type": "code",
       "source_file": "server/src/handlers/socketHandlers.ts",
-      "source_location": "L84",
+      "source_location": "L92",
       "id": "handlers_sockethandlers_updatehostifneeded",
       "community": 0,
       "norm_label": "updatehostifneeded()"
@@ -2248,7 +2257,7 @@
       "label": "detachSocketFromRoom()",
       "file_type": "code",
       "source_file": "server/src/handlers/socketHandlers.ts",
-      "source_location": "L88",
+      "source_location": "L96",
       "id": "handlers_sockethandlers_detachsocketfromroom",
       "community": 0,
       "norm_label": "detachsocketfromroom()"
@@ -2257,7 +2266,7 @@
       "label": "setupSocketHandlers()",
       "file_type": "code",
       "source_file": "server/src/handlers/socketHandlers.ts",
-      "source_location": "L123",
+      "source_location": "L131",
       "id": "handlers_sockethandlers_setupsockethandlers",
       "community": 0,
       "norm_label": "setupsockethandlers()"
@@ -2293,7 +2302,7 @@
       "label": "app",
       "file_type": "code",
       "source_file": "server/src/index.ts",
-      "source_location": "L93",
+      "source_location": "L102",
       "id": "src_index_app",
       "community": 10,
       "norm_label": "app"
@@ -2302,7 +2311,7 @@
       "label": "server",
       "file_type": "code",
       "source_file": "server/src/index.ts",
-      "source_location": "L94",
+      "source_location": "L103",
       "id": "src_index_server",
       "community": 10,
       "norm_label": "server"
@@ -2311,16 +2320,16 @@
       "label": "io",
       "file_type": "code",
       "source_file": "server/src/index.ts",
-      "source_location": "L96",
+      "source_location": "L105",
       "id": "src_index_io",
-      "community": 3,
+      "community": 10,
       "norm_label": "io"
     },
     {
       "label": "sharedAudioDir",
       "file_type": "code",
       "source_file": "server/src/index.ts",
-      "source_location": "L103",
+      "source_location": "L112",
       "id": "src_index_sharedaudiodir",
       "community": 10,
       "norm_label": "sharedaudiodir"
@@ -2329,7 +2338,7 @@
       "label": "{ staticDir }",
       "file_type": "code",
       "source_file": "server/src/index.ts",
-      "source_location": "L108",
+      "source_location": "L117",
       "id": "src_index_staticdir",
       "community": 10,
       "norm_label": "{ staticdir }"
@@ -2338,7 +2347,7 @@
       "label": "shutdown()",
       "file_type": "code",
       "source_file": "server/src/index.ts",
-      "source_location": "L143",
+      "source_location": "L152",
       "id": "src_index_shutdown",
       "community": 10,
       "norm_label": "shutdown()"
@@ -2437,16 +2446,25 @@
       "label": "broadcastRoom()",
       "file_type": "code",
       "source_file": "server/src/managers/broadcastManager.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "id": "managers_broadcastmanager_broadcastroom",
       "community": 0,
       "norm_label": "broadcastroom()"
     },
     {
+      "label": "notifyAdminObserversRoomClosed()",
+      "file_type": "code",
+      "source_file": "server/src/managers/broadcastManager.ts",
+      "source_location": "L20",
+      "id": "managers_broadcastmanager_notifyadminobserversroomclosed",
+      "community": 10,
+      "norm_label": "notifyadminobserversroomclosed()"
+    },
+    {
       "label": "buildAdminRoomView()",
       "file_type": "code",
       "source_file": "server/src/managers/broadcastManager.ts",
-      "source_location": "L25",
+      "source_location": "L45",
       "id": "managers_broadcastmanager_buildadminroomview",
       "community": 10,
       "norm_label": "buildadminroomview()"
@@ -2455,7 +2473,7 @@
       "label": "broadcastRoomToAdmins()",
       "file_type": "code",
       "source_file": "server/src/managers/broadcastManager.ts",
-      "source_location": "L94",
+      "source_location": "L114",
       "id": "managers_broadcastmanager_broadcastroomtoadmins",
       "community": 10,
       "norm_label": "broadcastroomtoadmins()"
@@ -2464,7 +2482,7 @@
       "label": "sendStateToPlayer()",
       "file_type": "code",
       "source_file": "server/src/managers/broadcastManager.ts",
-      "source_location": "L109",
+      "source_location": "L129",
       "id": "managers_broadcastmanager_sendstatetoplayer",
       "community": 10,
       "norm_label": "sendstatetoplayer()"
@@ -2473,7 +2491,7 @@
       "label": "getWinnerReasonMessage()",
       "file_type": "code",
       "source_file": "server/src/managers/broadcastManager.ts",
-      "source_location": "L120",
+      "source_location": "L140",
       "id": "managers_broadcastmanager_getwinnerreasonmessage",
       "community": 10,
       "norm_label": "getwinnerreasonmessage()"
@@ -2482,7 +2500,7 @@
       "label": "localizeWinner()",
       "file_type": "code",
       "source_file": "server/src/managers/broadcastManager.ts",
-      "source_location": "L137",
+      "source_location": "L157",
       "id": "managers_broadcastmanager_localizewinner",
       "community": 10,
       "norm_label": "localizewinner()"
@@ -2491,7 +2509,7 @@
       "label": "sanitizeRoom()",
       "file_type": "code",
       "source_file": "server/src/managers/broadcastManager.ts",
-      "source_location": "L147",
+      "source_location": "L167",
       "id": "managers_broadcastmanager_sanitizeroom",
       "community": 10,
       "norm_label": "sanitizeroom()"
@@ -2817,7 +2835,7 @@
       "source_file": "server/src/models/player.ts",
       "source_location": "L1",
       "id": "models_player",
-      "community": 0,
+      "community": 3,
       "norm_label": "player.ts"
     },
     {
@@ -2826,7 +2844,7 @@
       "source_file": "server/src/models/player.ts",
       "source_location": "L4",
       "id": "models_player_socketindex",
-      "community": 0,
+      "community": 3,
       "norm_label": "socketindex"
     },
     {
@@ -2835,7 +2853,7 @@
       "source_file": "server/src/models/player.ts",
       "source_location": "L6",
       "id": "models_player_createplayer",
-      "community": 0,
+      "community": 3,
       "norm_label": "createplayer()"
     },
     {
@@ -2862,7 +2880,7 @@
       "source_file": "server/src/models/player.ts",
       "source_location": "L30",
       "id": "models_player_deletesocketindex",
-      "community": 0,
+      "community": 10,
       "norm_label": "deletesocketindex()"
     },
     {
@@ -2871,7 +2889,7 @@
       "source_file": "server/src/models/room.ts",
       "source_location": "L1",
       "id": "models_room",
-      "community": 0,
+      "community": 3,
       "norm_label": "room.ts"
     },
     {
@@ -2880,7 +2898,7 @@
       "source_file": "server/src/models/room.ts",
       "source_location": "L10",
       "id": "models_room_rooms",
-      "community": 0,
+      "community": 3,
       "norm_label": "rooms"
     },
     {
@@ -2889,7 +2907,7 @@
       "source_file": "server/src/models/room.ts",
       "source_location": "L17",
       "id": "models_room_createroom",
-      "community": 0,
+      "community": 3,
       "norm_label": "createroom()"
     },
     {
@@ -2907,7 +2925,7 @@
       "source_file": "server/src/models/room.ts",
       "source_location": "L85",
       "id": "models_room_getallrooms",
-      "community": 10,
+      "community": 3,
       "norm_label": "getallrooms()"
     },
     {
@@ -2916,7 +2934,7 @@
       "source_file": "server/src/models/room.ts",
       "source_location": "L89",
       "id": "models_room_deleteroom",
-      "community": 0,
+      "community": 10,
       "norm_label": "deleteroom()"
     },
     {
@@ -2925,7 +2943,7 @@
       "source_file": "server/src/models/room.ts",
       "source_location": "L99",
       "id": "models_room_updateroomactivity",
-      "community": 0,
+      "community": 10,
       "norm_label": "updateroomactivity()"
     },
     {
@@ -2934,7 +2952,7 @@
       "source_file": "server/src/models/room.ts",
       "source_location": "L103",
       "id": "models_room_cleanupidlerooms",
-      "community": 0,
+      "community": 3,
       "norm_label": "cleanupidlerooms()"
     },
     {
@@ -3015,7 +3033,7 @@
       "source_file": "server/src/utils/helpers.ts",
       "source_location": "L11",
       "id": "utils_helpers_sanitizename",
-      "community": 0,
+      "community": 3,
       "norm_label": "sanitizename()"
     },
     {
@@ -3051,7 +3069,7 @@
       "source_file": "server/src/utils/helpers.ts",
       "source_location": "L39",
       "id": "utils_helpers_errorresponse",
-      "community": 3,
+      "community": 10,
       "norm_label": "errorresponse()"
     },
     {
@@ -4572,7 +4590,7 @@
       "source_file": "ui-vue/src/composables/useAdminSocket.ts",
       "source_location": "L1",
       "id": "composables_useadminsocket",
-      "community": 3,
+      "community": 0,
       "norm_label": "useadminsocket.ts"
     },
     {
@@ -4581,7 +4599,7 @@
       "source_file": "ui-vue/src/composables/useAdminSocket.ts",
       "source_location": "L27",
       "id": "composables_useadminsocket_adminsocket",
-      "community": 3,
+      "community": 0,
       "norm_label": "adminsocket"
     },
     {
@@ -4590,7 +4608,7 @@
       "source_file": "ui-vue/src/composables/useAdminSocket.ts",
       "source_location": "L29",
       "id": "composables_useadminsocket_useadminsocket",
-      "community": 3,
+      "community": 10,
       "norm_label": "useadminsocket()"
     },
     {
@@ -4716,7 +4734,7 @@
       "source_file": "ui-vue/src/composables/useSocket.ts",
       "source_location": "L1",
       "id": "composables_usesocket",
-      "community": 3,
+      "community": 0,
       "norm_label": "usesocket.ts"
     },
     {
@@ -4725,7 +4743,7 @@
       "source_file": "ui-vue/src/composables/useSocket.ts",
       "source_location": "L5",
       "id": "composables_usesocket_typedsocket",
-      "community": 3,
+      "community": 0,
       "norm_label": "typedsocket"
     },
     {
@@ -4734,7 +4752,7 @@
       "source_file": "ui-vue/src/composables/useSocket.ts",
       "source_location": "L7",
       "id": "composables_usesocket_usesocket",
-      "community": 3,
+      "community": 10,
       "norm_label": "usesocket()"
     },
     {
@@ -4968,7 +4986,7 @@
       "source_file": "ui-vue/src/stores/admin.ts",
       "source_location": "L1",
       "id": "stores_admin",
-      "community": 3,
+      "community": 2,
       "norm_label": "admin.ts"
     },
     {
@@ -4977,7 +4995,7 @@
       "source_file": "ui-vue/src/stores/admin.ts",
       "source_location": "L32",
       "id": "stores_admin_adminstate",
-      "community": 3,
+      "community": 2,
       "norm_label": "adminstate"
     },
     {
@@ -4986,7 +5004,7 @@
       "source_file": "ui-vue/src/stores/admin.ts",
       "source_location": "L43",
       "id": "stores_admin_readstoredtoken",
-      "community": 3,
+      "community": 2,
       "norm_label": "readstoredtoken()"
     },
     {
@@ -4995,7 +5013,7 @@
       "source_file": "ui-vue/src/stores/admin.ts",
       "source_location": "L52",
       "id": "stores_admin_writestoredtoken",
-      "community": 3,
+      "community": 2,
       "norm_label": "writestoredtoken()"
     },
     {
@@ -5004,7 +5022,7 @@
       "source_file": "ui-vue/src/stores/admin.ts",
       "source_location": "L66",
       "id": "stores_admin_useadminstore",
-      "community": 3,
+      "community": 2,
       "norm_label": "useadminstore"
     },
     {
@@ -8018,6 +8036,83 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "__tests__/roomCleanup.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "tests_roomcleanup_test",
+      "target": "models_player",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/roomCleanup.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "tests_roomcleanup_test",
+      "target": "models_player_createplayer",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/roomCleanup.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "tests_roomcleanup_test",
+      "target": "models_room",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/roomCleanup.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "tests_roomcleanup_test",
+      "target": "models_room_cleanupidlerooms",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/roomCleanup.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "tests_roomcleanup_test",
+      "target": "models_room_createroom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/roomCleanup.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "tests_roomcleanup_test",
+      "target": "models_room_getallrooms",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/roomCleanup.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "tests_roomcleanup_test",
+      "target": "models_room_getroom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "__tests__/socketHandlers.test.ts",
       "source_location": "L24",
       "weight": 1.0,
@@ -8057,6 +8152,17 @@
       "confidence_score": 1.0,
       "source": "tests_sockethandlers_test",
       "target": "managers_broadcastmanager_broadcastroom"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/socketHandlers.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "tests_sockethandlers_test",
+      "target": "managers_broadcastmanager_notifyadminobserversroomclosed",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -8365,6 +8471,17 @@
       "confidence_score": 1.0,
       "source": "tests_sockethandlers_test",
       "target": "models_room_createroom"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/socketHandlers.test.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "tests_sockethandlers_test",
+      "target": "models_room_deleteroom",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -13288,6 +13405,28 @@
       "source_file": "server/src/handlers/adminSocketHandlers.ts",
       "source_location": "L25",
       "weight": 1.0,
+      "source": "handlers_adminsockethandlers",
+      "target": "handlers_sockethandlers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/handlers/adminSocketHandlers.ts",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "handlers_adminsockethandlers",
+      "target": "handlers_sockethandlers_cancelpendingdisconnect",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/handlers/adminSocketHandlers.ts",
+      "source_location": "L25",
+      "weight": 1.0,
       "confidence_score": 1.0,
       "source": "handlers_adminsockethandlers",
       "target": "managers_adminmanager"
@@ -13370,6 +13509,17 @@
       "target": "managers_broadcastmanager_broadcastroomtoadmins"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/handlers/adminSocketHandlers.ts",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "handlers_adminsockethandlers",
+      "target": "managers_broadcastmanager_notifyadminobserversroomclosed",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -13401,6 +13551,17 @@
       "confidence_score": 1.0,
       "source": "handlers_adminsockethandlers",
       "target": "models_room"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/handlers/adminSocketHandlers.ts",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "handlers_adminsockethandlers",
+      "target": "models_room_deleteroom",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -13495,11 +13656,33 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "server/src/handlers/adminSocketHandlers.ts",
+      "source_location": "L126",
+      "weight": 1.0,
+      "source": "handlers_adminsockethandlers_kickplayerfromroom",
+      "target": "managers_broadcastmanager_notifyadminobserversroomclosed",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/handlers/adminSocketHandlers.ts",
       "source_location": "L95",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "handlers_adminsockethandlers_kickplayerfromroom",
       "target": "models_player_deletesocketindex"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/handlers/adminSocketHandlers.ts",
+      "source_location": "L127",
+      "weight": 1.0,
+      "source": "handlers_adminsockethandlers_kickplayerfromroom",
+      "target": "models_room_deleteroom",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -13522,6 +13705,17 @@
       "confidence_score": 1.0,
       "source": "handlers_adminsockethandlers_kickplayerfromroom",
       "target": "utils_helpers_localizedmessage"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/handlers/adminSocketHandlers.ts",
+      "source_location": "L252",
+      "weight": 1.0,
+      "source": "handlers_adminsockethandlers_setupadminsockethandlers",
+      "target": "handlers_sockethandlers_cancelpendingdisconnect",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -13588,6 +13782,39 @@
       "confidence_score": 1.0,
       "source": "handlers_adminsockethandlers_setupadminsockethandlers",
       "target": "managers_broadcastmanager_broadcastroomtoadmins"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/handlers/adminSocketHandlers.ts",
+      "source_location": "L268",
+      "weight": 1.0,
+      "source": "handlers_adminsockethandlers_setupadminsockethandlers",
+      "target": "managers_broadcastmanager_notifyadminobserversroomclosed",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/handlers/adminSocketHandlers.ts",
+      "source_location": "L261",
+      "weight": 1.0,
+      "source": "handlers_adminsockethandlers_setupadminsockethandlers",
+      "target": "models_player_deletesocketindex",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/handlers/adminSocketHandlers.ts",
+      "source_location": "L270",
+      "weight": 1.0,
+      "source": "handlers_adminsockethandlers_setupadminsockethandlers",
+      "target": "models_room_deleteroom",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -13735,6 +13962,17 @@
       "confidence_score": 1.0,
       "source": "handlers_sockethandlers",
       "target": "managers_broadcastmanager_broadcastroom"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/handlers/socketHandlers.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "handlers_sockethandlers",
+      "target": "managers_broadcastmanager_notifyadminobserversroomclosed",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -14351,6 +14589,17 @@
       "confidence_score": 1.0,
       "source": "handlers_sockethandlers_setupsockethandlers",
       "target": "managers_broadcastmanager_broadcastroom"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/handlers/socketHandlers.ts",
+      "source_location": "L957",
+      "weight": 1.0,
+      "source": "handlers_sockethandlers_setupsockethandlers",
+      "target": "managers_broadcastmanager_notifyadminobserversroomclosed",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -14986,6 +15235,17 @@
       "target": "managers_adminmanager_roombysocket"
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/managers/broadcastManager.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "managers_broadcastmanager",
+      "target": "managers_adminmanager",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -14995,6 +15255,50 @@
       "confidence_score": 1.0,
       "source": "managers_adminmanager_registeradminobserver",
       "target": "managers_adminmanager_removeadminobserver"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/managers/broadcastManager.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "managers_broadcastmanager",
+      "target": "managers_adminmanager_removeadminobserver",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/managers/broadcastManager.ts",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "managers_broadcastmanager_notifyadminobserversroomclosed",
+      "target": "managers_adminmanager_removeadminobserver",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/managers/broadcastManager.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "managers_broadcastmanager",
+      "target": "managers_adminmanager_getadminobserversforroom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/managers/broadcastManager.ts",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "managers_broadcastmanager_notifyadminobserversroomclosed",
+      "target": "managers_adminmanager_getadminobserversforroom",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -15045,6 +15349,16 @@
       "confidence_score": 1.0,
       "source": "managers_broadcastmanager",
       "target": "managers_broadcastmanager_localizewinner"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/managers/broadcastManager.ts",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "managers_broadcastmanager",
+      "target": "managers_broadcastmanager_notifyadminobserversroomclosed",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -20615,5 +20929,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "22258f9aa7363f36734aa585d3a2f0301fb2dfa9"
+  "built_at_commit": "8f2843c7877dc0a560e31f357190407ed339d48c"
 }

@@ -122,6 +122,16 @@ export interface ClientToServerEvents {
     cb?: (response: OkResponse | ErrorResponse) => void
   ) => void;
   /**
+   * Global admin close-session. Deletes the room entirely: disconnects all
+   * players (emitting `roomClosed`), notifies admin observers with
+   * `roomClosed`, and removes the room from the registry. Admin-only.
+   * Analogous to the host `closeSession` event but callable in ANY phase.
+   */
+  adminCloseRoom: (
+    payload: { roomCode: string },
+    cb?: (response: OkResponse | ErrorResponse) => void
+  ) => void;
+  /**
    * Host mid-game kick. The acting socket MUST be the current host of the
    * lobby AND must have presented a valid admin token on connect (this lets
    * the host use the elevated mid-game kick that bypasses the lobby-only

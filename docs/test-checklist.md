@@ -53,6 +53,8 @@ Manual and automated testing expectations for the Werewolves game.
 - **Admin drill-in + kick**: Open a room detail; confirm the full player list renders (names, host/dead/disconnected tags, per-player Kick button). Kick a target and confirm the player is removed and the list player count drops. Verify the admin can kick in any phase (lobby, night, day) and can even remove the last remaining player.
 - **Admin observer view**: Click "Join as Observer"; confirm a live, read-only room view appears. Verify roles are hidden (no role column), private state (seer result, witch potions, wolf peers/votes, guard/harlot targets, lover names) is not shown, but public state (phase, day count, players alive/dead/connected, logs, winner) is visible. "Leave observer view" returns to the list.
 - **Admin cannot act without token**: With no token configured server-side, confirm admin events respond with `server.errors.adminRequired` and do not mutate state.
+- **Admin close session**: From a room detail view, click the red "Close Session" button, confirm the dialog, and verify the room is deleted: connected players are sent back to the landing screen (`roomClosed`), admin observers of that room are returned to the room list, and the room disappears from the list on refresh. Verify it works in any phase.
+- **Empty room cleanup**: As admin, kick every player in a room (including the host). Confirm the room disappears from the admin list immediately (the room is torn down when it becomes empty). Separately, confirm a brand-new empty room is also reaped by the hourly idle cleanup.
 
 ## Host Mid-Game Kick
 

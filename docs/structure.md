@@ -205,7 +205,10 @@ operators, gated by a shared secret.
 - **Events** (all admin-gated; see `core/src/events.ts`):
   - `adminListRooms` — list every room as a sanitized `RoomSummary`.
   - `adminJoinRoom` / `adminLeaveRoom` — observe / stop observing a room.
-  - `adminKickPlayer` — admin override kick, works in ANY phase.
+  - `adminKickPlayer` — admin override kick, works in ANY phase. If it empties
+    the room, the room is torn down immediately (observers get `roomClosed`).
+  - `adminCloseRoom` — admin close-session: deletes the room entirely
+    (disconnects all players with `roomClosed`, releases admin observers).
   - `hostMidGameKickPlayer` — host-only mid-game kick; the acting socket must be
     BOTH admin (token) AND the current host (`room.hostId === playerId`).
 - **Host side panel**: `HostControlPanel.vue` is shown only to hosts outside the

@@ -1,5 +1,9 @@
-import { createRoom, getRoom } from '../server/src/models/room';
-import { broadcastRoom, sendStateToPlayer } from '../server/src/managers/broadcastManager';
+import { createRoom, getRoom, deleteRoom } from '../server/src/models/room';
+import {
+  broadcastRoom,
+  sendStateToPlayer,
+  notifyAdminObserversRoomClosed,
+} from '../server/src/managers/broadcastManager';
 import {
   scheduleNightStep,
   schedulePhaseTransition,
@@ -30,11 +34,13 @@ vi.mock('../server/src/models/room', () => ({
   createRoom: vi.fn(),
   getRoom: vi.fn(),
   getAllRooms: vi.fn(),
+  deleteRoom: vi.fn(),
 }));
 
 vi.mock('../server/src/managers/broadcastManager', () => ({
   broadcastRoom: vi.fn(),
   sendStateToPlayer: vi.fn(),
+  notifyAdminObserversRoomClosed: vi.fn(),
 }));
 
 vi.mock('../server/src/managers/phaseManager', () => ({
@@ -490,7 +496,10 @@ describe('socketHandlers room entry and state events', () => {
 
     expect(Object.keys(room.players)).toEqual([]);
     expect(cb).toHaveBeenCalledWith({ ok: true });
-    expect(broadcastRoom).toHaveBeenCalledWith(room, io);
+    // Empty room is torn down (observers notified + room deleted), not broadcast.
+    expect(notifyAdminObserversRoomClosed).toHaveBeenCalledWith(room.code, io);
+    expect(deleteRoom).toHaveBeenCalledWith(room.code);
+    expect(broadcastRoom).not.toHaveBeenCalled();
     expect(checkWinners).not.toHaveBeenCalled();
   });
 

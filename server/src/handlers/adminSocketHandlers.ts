@@ -18,17 +18,22 @@
  * untouched — it remains the lobby-only in-game kick used by players/hosts.
  */
 import type { Namespace, Socket } from 'socket.io';
-import { getRoom, getAllRooms } from '../models/room';
+import { getRoom, getAllRooms, deleteRoom } from '../models/room';
 import { deleteSocketIndex } from '../models/player';
 import { errorResponse, localizedMessage, addLog } from '../utils/helpers';
 import { isAdminSocket } from '../utils/adminAuth';
+import { cancelPendingDisconnect } from './socketHandlers';
 import {
   registerAdminObserver,
   removeAdminObserver,
   getAdminObserversForRoom,
   getRoomForAdminSocket,
 } from '../managers/adminManager';
-import { broadcastRoom, broadcastRoomToAdmins } from '../managers/broadcastManager';
+import {
+  broadcastRoom,
+  broadcastRoomToAdmins,
+  notifyAdminObserversRoomClosed,
+} from '../managers/broadcastManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { Room, RoomSummary } from '../../../core/src/types';
 
@@ -79,9 +84,9 @@ function kickPlayerFromRoom(
   room: Room,
   targetId: string,
   reason: string
-) {
+): boolean {
   const target = room.players[targetId];
-  if (!target) return null;
+  if (!target) return false;
   // Add a localized log entry before we drop the player record.
   addLog(
     room,
@@ -114,7 +119,15 @@ function kickPlayerFromRoom(
       room.hostId = null;
     }
   }
-  return target;
+  // If the kick emptied the room, tear it down immediately so it does not
+  // linger in the admin room list. Admin observers are notified via
+  // `roomClosed` and removed from the observer registry.
+  if (Object.keys(room.players).length === 0) {
+    notifyAdminObserversRoomClosed(room.code, io);
+    deleteRoom(room.code);
+    return true;
+  }
+  return false;
 }
 
 function setupAdminSocketHandlers(
@@ -181,18 +194,22 @@ function setupAdminSocketHandlers(
       return cb?.(errorResponse('Target not found', 'server.errors.targetNotFound'));
     }
     // Admins can kick anyone (including the host — the whole point of an
-    // admin override), in any phase, even the last remaining player. An
-    // emptied room is left with `hostId = null` and is reaped later by the
-    // idle-room cleanup, so there is no state corruption.
+    // admin override), in any phase, even the last remaining player. If the
+    // kick empties the room, `kickPlayerFromRoom` tears it down immediately
+    // (admin observers get `roomClosed`, the room is deleted) — so there is
+    // no lingering empty room and no state corruption.
     //
     // (A previous "cannot remove the last player" guard here was dead code:
     // it required `connectedCount === 0` while the target was still in
     // `room.players`, which can never hold for a connected host. It was
     // removed because it contradicted the documented admin-override intent.)
-    kickPlayerFromRoom(io, room, targetId, 'admin kick');
+    const roomDeleted = kickPlayerFromRoom(io, room, targetId, 'admin kick');
     cb?.({ ok: true });
-    broadcastRoom(room, io);
-    broadcastRoomToAdmins(room, io, getAdminObserversForRoom(room.code));
+    // Skip broadcasts if the kick emptied and deleted the room.
+    if (!roomDeleted) {
+      broadcastRoom(room, io);
+      broadcastRoomToAdmins(room, io, getAdminObserversForRoom(room.code));
+    }
   });
 
   socket.on('hostMidGameKickPlayer', ({ roomCode, playerId, targetId }, cb) => {
@@ -216,10 +233,43 @@ function setupAdminSocketHandlers(
     // Mid-game kicks are intentionally allowed in ANY phase — the host may
     // need to remove a player who is disrupting the game. We still log the
     // action for transparency.
-    kickPlayerFromRoom(io, room, targetId, 'host mid-game kick');
+    const roomDeleted = kickPlayerFromRoom(io, room, targetId, 'host mid-game kick');
     cb?.({ ok: true });
-    broadcastRoom(room, io);
-    broadcastRoomToAdmins(room, io, getAdminObserversForRoom(room.code));
+    if (!roomDeleted) {
+      broadcastRoom(room, io);
+      broadcastRoomToAdmins(room, io, getAdminObserversForRoom(room.code));
+    }
+  });
+
+  socket.on('adminCloseRoom', ({ roomCode }, cb) => {
+    if (!isAdminSocket(socket)) {
+      return cb?.(errorResponse('Admin access required', 'server.errors.adminRequired'));
+    }
+    const room = getRoom(roomCode);
+    if (!room) return cb?.(errorResponse('Room not found', 'server.errors.roomNotFound'));
+
+    // Cancel any pending disconnect grace timers for all players in the room.
+    for (const pid of Object.keys(room.players)) {
+      cancelPendingDisconnect(pid);
+    }
+
+    // Notify all connected players before tearing down.
+    for (const player of Object.values(room.players)) {
+      if (player.socketId) {
+        const playerSocket = io.sockets.get(player.socketId);
+        if (playerSocket) {
+          playerSocket.emit('roomClosed');
+          deleteSocketIndex(player.socketId);
+          playerSocket.disconnect(true);
+        }
+      }
+    }
+
+    // Release any admin observers watching this room.
+    notifyAdminObserversRoomClosed(roomCode, io);
+
+    deleteRoom(roomCode);
+    cb?.({ ok: true });
   });
 
   // On disconnect, drop this socket from any room it was observing so we

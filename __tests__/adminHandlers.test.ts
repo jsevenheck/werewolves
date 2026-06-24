@@ -531,3 +531,91 @@ describe('setupAdminSocketHandlers — adminJoinRoom / adminLeaveRoom', () => {
     );
   });
 });
+
+describe('setupAdminSocketHandlers — adminCloseRoom', () => {
+  beforeEach(() => {
+    _resetAdminManagerForTests();
+    _resetAdminAuthWarningForTests();
+    (broadcastModule.broadcastRoom as Mock).mockClear();
+    (broadcastModule.broadcastRoomToAdmins as Mock).mockClear();
+  });
+
+  test('closes a room: disconnects players and acknowledges', () => {
+    const room = makeRoom({ phase: 'day', dayCount: 1 });
+    (roomsModule.getRoom as Mock).mockReturnValue(room);
+    const { io, sockets } = makeIo();
+    const hostSocket = { disconnect: vi.fn(), emit: vi.fn() };
+    const targetSocket = { disconnect: vi.fn(), emit: vi.fn() };
+    sockets.set('socket-host', hostSocket);
+    sockets.set('socket-target', targetSocket);
+
+    const { handlers, socket } = makeSocket('socket-admin', true);
+    setupAdminSocketHandlers(io, socket);
+    const cb = vi.fn();
+    handlers.adminCloseRoom({ roomCode: 'ABCD' }, cb);
+
+    expect(cb).toHaveBeenCalledWith({ ok: true });
+    // Both player sockets received roomClosed and were disconnected.
+    expect(hostSocket.emit).toHaveBeenCalledWith('roomClosed');
+    expect(targetSocket.emit).toHaveBeenCalledWith('roomClosed');
+    expect(hostSocket.disconnect).toHaveBeenCalledWith(true);
+    expect(targetSocket.disconnect).toHaveBeenCalledWith(true);
+  });
+
+  test('rejects without admin token', () => {
+    const room = makeRoom();
+    (roomsModule.getRoom as Mock).mockReturnValue(room);
+    const { io } = makeIo();
+    const { handlers, socket } = makeSocket('socket-non-admin', false);
+    setupAdminSocketHandlers(io, socket);
+    const cb = vi.fn();
+    handlers.adminCloseRoom({ roomCode: 'ABCD' }, cb);
+    expect(cb).toHaveBeenCalledWith(
+      expect.objectContaining({ error: 'server.errors.adminRequired' })
+    );
+  });
+
+  test('returns error for unknown room', () => {
+    (roomsModule.getRoom as Mock).mockReturnValue(undefined);
+    const { io } = makeIo();
+    const { handlers, socket } = makeSocket('socket-admin', true);
+    setupAdminSocketHandlers(io, socket);
+    const cb = vi.fn();
+    handlers.adminCloseRoom({ roomCode: 'ZZZZ' }, cb);
+    expect(cb).toHaveBeenCalledWith(
+      expect.objectContaining({ error: 'server.errors.roomNotFound' })
+    );
+  });
+});
+
+describe('setupAdminSocketHandlers — adminKickPlayer empties the room', () => {
+  beforeEach(() => {
+    _resetAdminManagerForTests();
+    _resetAdminAuthWarningForTests();
+    (broadcastModule.broadcastRoom as Mock).mockClear();
+    (broadcastModule.broadcastRoomToAdmins as Mock).mockClear();
+  });
+
+  test('kicking the last player tears the room down (no broadcast of a dead room)', () => {
+    const room = makeRoom();
+    // Only the host remains.
+    delete room.players.target;
+    (roomsModule.getRoom as Mock).mockReturnValue(room);
+    const { io, sockets } = makeIo();
+    sockets.set('socket-host', { disconnect: vi.fn() });
+
+    const { handlers, socket } = makeSocket('socket-admin', true);
+    setupAdminSocketHandlers(io, socket);
+    const cb = vi.fn();
+    handlers.adminKickPlayer({ roomCode: 'ABCD', targetId: 'host' }, cb);
+
+    expect(cb).toHaveBeenCalledWith({ ok: true });
+    expect(room.players.host).toBeUndefined();
+    // After emptying, the room is deleted; the handler must NOT broadcast a
+    // stale roomUpdate. We assert broadcastRoom was not called for the dead
+    // room by checking getRoom returns undefined afterwards (the real rooms
+    // map no longer contains it) — but since getRoom is mocked we instead
+    // assert broadcastRoom was not invoked.
+    expect(broadcastModule.broadcastRoom).not.toHaveBeenCalled();
+  });
+});

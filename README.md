@@ -152,9 +152,16 @@ Mobile browsers require a user gesture before audio can play. If a player enable
 The server can expose a token-gated admin console for operators (read-only
 room observation + emergency kicks in any phase). It is disabled by default.
 
+**Local:** create a `.env` with `WEREWOLVES_ADMIN_TOKEN=your-secret` (loaded
+automatically on startup), or set it inline:
+
 ```bash
 WEREWOLVES_ADMIN_TOKEN=your-secret pnpm start
 ```
+
+**Production (Hostinger VPS):** store the token as a GitHub Secret named
+`WEREWOLVES_ADMIN_TOKEN`; the deploy workflow injects it into the container
+via `docker-compose.yml`. Never commit the real token.
 
 Open `http://localhost:3001/?admin=1` and enter the token. The token is stored
 in `localStorage` and sent only in the Socket.IO handshake. See

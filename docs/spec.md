@@ -248,11 +248,20 @@ onAdminKickPlayer(roomCode, targetId):
   admin-only (socket.data.adminToken === true, verified at handshake against WEREWOLVES_ADMIN_TOKEN)
   works in ANY phase (lobby, night, day, ended)
   can kick any player, including the host and the last remaining player
-    (an admin override is the whole point; an emptied room is left with
-    hostId = null and reaped by idle-room cleanup)
   target socket is disconnected, player record removed, host fallback applied
   a localized 'kicked' log entry is added; admins never appear in room.players
   no phase continuation is triggered (this is an emergency stop, not a leave)
+  if the kick empties the room (0 players left), the room is torn down
+    immediately: admin observers receive roomClosed, the room is deleted
+
+onAdminCloseRoom(roomCode):
+  admin-only; works in ANY phase
+  deletes the room entirely: cancels pending disconnect grace timers,
+    emits roomClosed to every connected player and disconnects them,
+    emits roomClosed to admin observers (and removes them from the
+    observer registry), then deletes the room
+  analogous to the host closeSession event but callable by an admin
+    from the admin detail view (red 'Close Session' button)
 
 onHostMidGameKickPlayer(roomCode, playerId, targetId):
   admin-only AND host-only (room.hostId === playerId; playerId is the host's own player id)
@@ -297,6 +306,11 @@ onPlayerResume(roomCode, playerId, resumeToken):
 
 Rooms are automatically cleaned up to prevent memory leaks:
 - **Ended games**: Deleted 1 hour after the game ends (phase='ended')
+- **Empty rooms**: Deleted immediately when the last player is removed
+  (via admin kick, host mid-game kick, or a player leaving). Admin
+  observers of such a room receive `roomClosed` and are returned to the
+  room list. As a safety net, the hourly cleanup pass also reaps any
+  0-player room it finds.
 - **Idle rooms**: Deleted after 24 hours of inactivity if:
   - Room is still in lobby phase, OR
   - All players are disconnected
