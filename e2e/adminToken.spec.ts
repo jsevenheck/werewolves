@@ -78,8 +78,11 @@ test.describe('admin token flow', () => {
     await adminPage.click('[data-testid="admin-refresh"]');
     const updatedRow = adminPage.locator(`[data-testid="admin-room-row-${roomCode}"]`);
     await expect(updatedRow).toBeVisible({ timeout: 5000 });
-    const playerCountCell = updatedRow.locator('td').nth(2);
-    await expect(playerCountCell).toHaveText(/^1$/);
+    // Column layout in AdminPage.vue: [code, players, phase, dayCount, hostName, actions]
+    // The players column shows "connectedCount/totalCount" (e.g. "1/1" for a
+    // single remaining player). After the kick, total should be 1.
+    const playerCountCell = updatedRow.locator('td').nth(1);
+    await expect(playerCountCell).toHaveText(/^1\/\d+$/);
 
     // Cleanup.
     await adminContext.close();

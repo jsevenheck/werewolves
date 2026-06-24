@@ -25,14 +25,11 @@ export function registerNamespace(io: Server, namespace = '/g/werewolves') {
   const nsp = io.of(namespace);
 
   // Admin auth middleware: stamp `socket.data.adminToken` when a valid token
-  // is presented in the handshake. Without a valid token, the socket stays a
-  // regular (non-admin) client.
-  //
-  // IMPORTANT: once `WEREWOLVES_ADMIN_TOKEN` is configured, every connection
-  // MUST present a valid token — otherwise we reject the connection with
-  // `connect_error` so the client can show the token prompt. A silent accept
-  // would let the user "log in" with a wrong token, see an empty room list,
-  // and never learn that the server rejected them.
+  // is presented in the handshake. Without a token, the socket is treated
+  // as a regular (non-admin) client — players do not need to know the
+  // admin token. Only when a token IS presented do we validate it; a
+  // wrong token rejects the connection so the client can show the
+  // token prompt and the user learns their token is wrong.
   nsp.use((socket, next) => {
     const configured = getAdminTokenFromEnv();
     if (!configured) {
@@ -41,13 +38,17 @@ export function registerNamespace(io: Server, namespace = '/g/werewolves') {
       return next();
     }
     const provided = socket.handshake.auth?.adminToken;
+    if (provided === undefined || provided === null || provided === '') {
+      // No admin token provided — this is a regular player, accept.
+      return next();
+    }
     if (typeof provided === 'string' && verifyAdminToken(provided)) {
       attachAdminToSocket(socket);
       return next();
     }
-    // No token, wrong token, or non-string value: reject the connection so
-    // the client receives a `connect_error` and can route the user back to
-    // the token prompt.
+    // A token was provided but it is wrong. Reject the connection so
+    // the client receives `connect_error` and can route the user back
+    // to the token prompt.
     return next(new Error('Admin token required'));
   });
 
