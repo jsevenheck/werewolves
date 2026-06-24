@@ -10,6 +10,102 @@ function broadcastRoom(room: Room, io: Namespace<ClientToServerEvents, ServerToC
   Object.values(room.players).forEach((player) => sendStateToPlayer(room, player, io));
 }
 
+/**
+ * Build a sanitized room view for an admin observer.
+ *
+ * Differences from `sanitizeRoom(viewerId)`:
+ *   - `self` is `null` (the admin is not a player).
+ *   - Every player's `role` is `null` so admins never see secret roles.
+ *   - `awaitingMayorSelection`, `awaitingHunterShot` and `hunterShotEndsAt`
+ *     are scrubbed of identity (kept as the boolean `*Pending` flags only).
+ *   - All role-specific fields (seerResult, witchState, wolfVotes, etc.) are
+ *     zeroed so admins see game state but no role secrets.
+ *   - `loversKnown` is always false (admins don't learn who the lovers are).
+ */
+function buildAdminRoomView(room: Room): RoomView {
+  const players = Object.values(room.players).map((player) => ({
+    id: player.id,
+    name: player.name,
+    alive: player.alive,
+    connected: player.connected,
+    isHost: player.id === room.hostId,
+    role: null,
+    ...(room.phase === 'roleReveal' ? { ready: player.ready } : {}),
+  }));
+  return {
+    code: room.code,
+    phase: room.phase,
+    phaseStep: room.phaseStep,
+    dayCount: room.dayCount,
+    players,
+    hostId: room.hostId,
+    minPlayers: room.minPlayers,
+    roleConfig: room.roleConfig,
+    passiveRoleConfig: room.passiveRoleConfig,
+    mayorId: null,
+    awaitingMayorSelection: false,
+    mayorSelectionPending: !!room.awaitingMayorSelection,
+    loversKnown: false,
+    loversAssigned: !!room.lovers,
+    loverName: null,
+    witchState: { healAvailable: null, poisonAvailable: null },
+    wolfVotes: null,
+    wolfVoteState: null,
+    wolfTarget: null,
+    wolfPeers: [],
+    wolfIds: [],
+    guardedTarget: null,
+    lastGuardedTarget: null,
+    harlotVisitedTarget: null,
+    nextNightStep: room.phaseStep === 'transition' ? room.nextNightStep : null,
+    phaseTransition: room.phaseTransition,
+    seerResult: null,
+    voteState: {
+      revoteFromTie: null,
+      submitted: Object.values(room.voteState.votes).filter((v) => v !== undefined).length,
+      required: Object.values(room.players).filter((p) => p.alive).length,
+      yourVote: undefined,
+    },
+    lastNightDeaths: room.lastNightDeaths,
+    lastDayDeaths: room.lastDayDeaths,
+    lastDayMessage: room.lastDayMessageI18n?.key ?? room.lastDayMessage,
+    lastDayMessageI18n: room.lastDayMessageI18n ?? null,
+    awaitingHunterShot: false,
+    hunterShotPending: !!room.awaitingHunterShot,
+    hunterShotEndsAt: null,
+    dayVoteResolved: room.dayVoteResolved,
+    winner: localizeWinner(room.winner),
+    logs: room.logs.slice(-MAX_VISIBLE_LOGS).map((log) => ({
+      ts: log.ts,
+      text: log.text,
+      message: log.message ?? null,
+    })),
+    self: null,
+  };
+}
+
+/**
+ * Push the latest room view to all admin observers of `room`.
+ *
+ * Callers MUST already have mutated `room` to a coherent state. We do not
+ * update `lastActivityAt` here — that is only bumped when a regular player
+ * does something (`broadcastRoom` does it).
+ */
+function broadcastRoomToAdmins(
+  room: Room,
+  io: Namespace<ClientToServerEvents, ServerToClientEvents>,
+  observerSocketIds: string[]
+) {
+  if (observerSocketIds.length === 0) return;
+  const view = buildAdminRoomView(room);
+  for (const socketId of observerSocketIds) {
+    const socket = io.sockets.get(socketId);
+    if (socket) {
+      socket.emit('roomUpdate', view);
+    }
+  }
+}
+
 function sendStateToPlayer(
   room: Room,
   player: Player,
@@ -150,4 +246,10 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
   };
 }
 
-export { broadcastRoom, sendStateToPlayer, sanitizeRoom };
+export {
+  broadcastRoom,
+  sendStateToPlayer,
+  sanitizeRoom,
+  buildAdminRoomView,
+  broadcastRoomToAdmins,
+};

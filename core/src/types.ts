@@ -253,3 +253,40 @@ export interface StoredSession {
   name: string;
   resumeToken: string;
 }
+
+/**
+ * Lightweight summary of a room used by the global admin page.
+ * Intentionally avoids leaking secret game state (roles, votes, etc.).
+ *
+ * The `players` field is a sanitized snapshot (id/name/alive/connected/isHost,
+ * no `role`/team) so the admin detail view can render the full player list
+ * and per-player kick buttons WITHOUT requiring the admin to first join as
+ * a live observer. Server-side `toRoomSummary` builds this from
+ * `room.players` and strips every role-specific field.
+ */
+export interface RoomSummary {
+  code: string;
+  phase: Phase;
+  dayCount: number;
+  playerCount: number;
+  connectedPlayerCount: number;
+  hostName: string | null;
+  createdAt: number;
+  lastActivityAt: number;
+  players: PlayerPublic[];
+}
+
+/**
+ * Server-side representation of an "admin observer" socket.
+ * Admin observers are NOT regular players: they are not in room.players,
+ * do not have a Player record, do not receive a roomView.self, and cannot
+ * vote, act, or be targeted by game logic. They receive read-only
+ * roomUpdate events for the room they have joined.
+ */
+export interface AdminObserver {
+  socketId: string;
+  roomCode: string;
+  /** Identifier (e.g. "admin") used only for logging — never for auth. */
+  label: string;
+  joinedAt: number;
+}

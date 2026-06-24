@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, inject } from 'vue';
+import { computed, onMounted, onBeforeUnmount, inject, ref } from 'vue';
 import { useGameStore } from './stores/game';
 import { useSocket } from './composables/useSocket';
 import { useNarrator } from './composables/useNarrator';
@@ -29,6 +29,8 @@ import RoleRevealOverlay from './components/overlays/RoleRevealOverlay.vue';
 import HeaderPanel from './components/panels/Header.vue';
 import PlayersPanel from './components/panels/PlayersPanel.vue';
 import LogsPanel from './components/panels/LogsPanel.vue';
+import HostControlPanel from './components/panels/HostControlPanel.vue';
+import AdminPage from './components/AdminPage.vue';
 
 // Injected config from app.provide('werewolvesConfig', { ... })
 const config = inject<Partial<WerewolvesGameConfig>>('werewolvesConfig', {});
@@ -54,9 +56,23 @@ const effectiveAssetsBasePath = config.assetsBasePath
   ? normalizeAssetsBasePath(config.assetsBasePath)
   : undefined;
 
+// Admin route is gated by the `?admin=1` query string. We deliberately
+// avoid pulling in a router for this — the admin page is a sibling root
+// to the existing phase UI and uses its own socket connection.
+const isAdminRoute = ref(false);
+function detectAdminRoute() {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  return params.get('admin') === '1';
+}
+isAdminRoute.value = detectAdminRoute();
+
 const store = useGameStore();
 const { t, localizeError, localizeMessage, roleName } = useGameI18n();
 
+// The player socket is only wired when we are NOT on the admin route. The
+// admin page creates its own socket via `useAdminSocket` and never shares
+// state with this player socket.
 const socket = useSocket({
   url: '/g/werewolves',
 });
@@ -191,6 +207,12 @@ function onConnect() {
 }
 
 onMounted(() => {
+  // On the admin route we do NOT wire the player socket. The admin page
+  // creates its own connection via `useAdminSocket`.
+  if (isAdminRoute.value) {
+    return;
+  }
+
   // Bind gesture-based narrator unlock
   bindGestureUnlock();
 
@@ -219,8 +241,13 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="werewolves-root app">
+    <!-- Admin route (`?admin=1`) replaces the entire phase UI with a
+         self-contained admin console. The admin page uses its own socket
+         connection and Pinia store; it never touches the game state. -->
+    <AdminPage v-if="isAdminRoute" />
+
     <!-- Show Landing when no room is active -->
-    <Landing v-if="!hasRoom" :socket="socket" />
+    <Landing v-else-if="!hasRoom" :socket="socket" />
 
     <!-- In-game view -->
     <template v-else>
@@ -290,6 +317,7 @@ onBeforeUnmount(() => {
 
       <PlayersPanel :socket="socket" />
       <LogsPanel :socket="socket" />
+      <HostControlPanel :socket="socket" />
 
       <!-- Overlays -->
       <Teleport to="body">
