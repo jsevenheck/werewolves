@@ -27,6 +27,12 @@ export function registerNamespace(io: Server, namespace = '/g/werewolves') {
   // Admin auth middleware: stamp `socket.data.adminToken` when a valid token
   // is presented in the handshake. Without a valid token, the socket stays a
   // regular (non-admin) client.
+  //
+  // IMPORTANT: once `WEREWOLVES_ADMIN_TOKEN` is configured, every connection
+  // MUST present a valid token — otherwise we reject the connection with
+  // `connect_error` so the client can show the token prompt. A silent accept
+  // would let the user "log in" with a wrong token, see an empty room list,
+  // and never learn that the server rejected them.
   nsp.use((socket, next) => {
     const configured = getAdminTokenFromEnv();
     if (!configured) {
@@ -37,8 +43,12 @@ export function registerNamespace(io: Server, namespace = '/g/werewolves') {
     const provided = socket.handshake.auth?.adminToken;
     if (typeof provided === 'string' && verifyAdminToken(provided)) {
       attachAdminToSocket(socket);
+      return next();
     }
-    next();
+    // No token, wrong token, or non-string value: reject the connection so
+    // the client receives a `connect_error` and can route the user back to
+    // the token prompt.
+    return next(new Error('Admin token required'));
   });
 
   nsp.on('connection', (socket) => {

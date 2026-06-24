@@ -28,7 +28,7 @@ test.describe('admin token flow', () => {
     // 1. Create a real room with a host and a target so the admin view has
     //    something to list.
     const lobby = await createLobbyWithPlayers(browser, ['AdminHost', 'KickTarget']);
-    const [hostPage, targetPage] = lobby.pages;
+    const [hostPage] = lobby.pages;
     const { code: roomCode } = lobby;
     expect(roomCode).toMatch(/^[A-Z0-9]+$/);
 
@@ -53,16 +53,24 @@ test.describe('admin token flow', () => {
     expect(targetPlayerId).toBeTruthy();
     const targetPlayerIdClean = targetPlayerId!.replace('admin-player-', '');
 
-    // 6. Race a server-side disconnect against a generous timeout. The host
-    //    page can stay connected; only the target should drop.
-    const targetClosed = targetPage.waitForEvent('close', { timeout: 10000 });
-
-    // 7. Confirm the kick (auto-accept any confirm dialog).
+    // 6. Confirm the kick (auto-accept any confirm dialog).
     adminPage.on('dialog', (dialog) => dialog.accept());
-    await adminPage.click(`[data-testid="admin-kick-${targetPlayerIdClean}"]`);
 
-    // 8. The kicked player's tab should close because the server disconnects it.
-    await targetClosed;
+    // 7. Race a server-side state change: after the kick, the admin
+    //    page's list refresh (triggered automatically by the click) shows
+    //    the room with player count 1. This implicitly proves the server
+    //    processed the kick — we do NOT wait for the target's browser tab
+    //    to close, because the server only disconnects the socket
+    //    (`socket.disconnect(true)`) and never closes the browser tab.
+    const kickButton = adminPage.locator(`[data-testid="admin-kick-${targetPlayerIdClean}"]`);
+    await kickButton.click();
+
+    // 8. The target player's row must disappear from the detail view
+    //    (selectedRoom.players re-derives from the refreshed RoomSummary
+    //    list — see AdminPage.vue:418 and the comment in kickPlayer).
+    await expect(
+      adminPage.locator(`[data-testid="admin-player-${targetPlayerIdClean}"]`)
+    ).toHaveCount(0, { timeout: 10000 });
 
     // 9. Go back to the list and verify the player count dropped to 1.
     await adminPage.click('[data-testid="admin-back"]');
