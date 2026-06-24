@@ -7,8 +7,9 @@ Roles can be **active** (with night/day actions like Seer, Witch) or **passive**
 
 - Add the role to shared types in `core/src/types.ts` (Role union, RoleConfig, optional Team/NightStep/Phase).
 - Add server role metadata and defaults in `server/src/config/constants.ts` (ROLE_INFO, DEFAULT_ROLE_CONFIG).
-- Update client role labels/details in `ui-vue/src/utils/roleDetails.ts`
-  (consumed by role-related Vue components).
+- Add localized role name/description keys in `ui-vue/src/i18n/messages/en.ts` and
+  `ui-vue/src/i18n/messages/de.ts` under `roles.<roleId>`.
+  Keep purely presentational metadata (e.g., color) in `ui-vue/src/utils/roleDetails.ts` if needed.
 - Update server flow (managers + handlers) for actions, win/lose, and validation.
 - Update client UI + interaction for the role's actions.
 - Ensure role-specific data is only broadcast to allowed players in `server/src/managers/broadcastManager.ts`.
@@ -32,7 +33,7 @@ Roles can be **active** (with night/day actions like Seer, Witch) or **passive**
 [Server logic: managers/handlers/room state]
         |
         v
-[Client UI: Vue components/composables/stores]
+[Client UI: Vue components/composables/stores + i18n message files]
         |
         v
 [Broadcast visibility rules]
@@ -51,11 +52,14 @@ counts. These are single-instance toggles:
 2. Defaults + room state:
    - `server/src/config/constants.ts`: update `DEFAULT_PASSIVE_ROLE_CONFIG`.
    - `server/src/models/room.ts`: initialize `passiveRoleConfig`.
-3. Lobby UI + updates:
+3. Labels:
+   - Add `passiveRoles.<role>` keys to `ui-vue/src/i18n/messages/en.ts` and
+     `ui-vue/src/i18n/messages/de.ts`.
+4. Lobby UI + updates:
    - `ui-vue/src/components/Lobby.vue`: add a toggle input.
    - `ui-vue/src/components/Lobby.vue`: send `passiveRoles` in `updateRoleConfig`.
    - `server/src/handlers/socketHandlers.ts`: normalize `passiveRoles`.
-4. Flow:
+5. Flow:
    - `server/src/managers/phaseManager.ts`: gate the phase(s) with the toggle.
 
 ## Minimal Path (Passive Role, No Actions)
@@ -68,9 +72,11 @@ villager variant with no active abilities.
    - `core/src/types.ts`: extend `Role` and `RoleConfig`.
    - Add to `Team` only if you need a new faction.
 2. Config:
-   - `server/src/config/constants.ts`: add to `ROLE_INFO` and `DEFAULT_ROLE_CONFIG`.
-   - Update role details in `ui-vue/src/utils/roleDetails.ts`.
-     That module is shared by role labels/descriptions across role-related components.
+   - `server/src/config/constants.ts`: add the role to `ROLE_INFO` with team and description,
+     and add it to `DEFAULT_ROLE_CONFIG` with a default count (often 0).
+   - Add `roles.<roleId>.name` and `roles.<roleId>.description` keys to
+     `ui-vue/src/i18n/messages/en.ts` and `ui-vue/src/i18n/messages/de.ts`.
+     Keep color/emoji metadata in `ui-vue/src/utils/roleDetails.ts` if needed.
 3. Assignment and display:
    - Role assignment uses `ROLE_INFO` and `RoleConfig` in `server/src/managers/roleManager.ts`.
    - Role labels use `ROLE_INFO` via `getPlayerRoleLabel` in `server/src/utils/helpers.ts`.
@@ -118,8 +124,9 @@ Goal: add a village role with no active ability.
 2. `server/src/config/constants.ts`
    - Add `elder` to `ROLE_INFO` with team `village` and a description.
    - Add `elder` to `DEFAULT_ROLE_CONFIG` with a default count (often 0).
-3. `ui-vue/src/utils/roleDetails.ts`
-   - Add `elder` to `ROLE_DETAILS` with name/description/color.
+3. `ui-vue/src/i18n/messages/en.ts` and `ui-vue/src/i18n/messages/de.ts`
+   - Add `roles.elder.name` and `roles.elder.description`.
+   - Keep color metadata in `ui-vue/src/utils/roleDetails.ts` if needed.
 4. Tests
    - Update role list and default config expectations in `__tests__/roleManager.test.ts` and any other role-specific tests.
 
@@ -176,6 +183,21 @@ If the role affects win conditions or death resolution:
 - `server/src/managers/deathManager.ts`: update death chains and winner checks.
 - `server/src/managers/voteManager.ts`: update day-vote outcomes (e.g., instant win role).
 
+### Death reasons and the i18n contract
+
+If your role introduces a **new death reason** string (passed to
+`queueDeath(room, playerId, '<reason>')`), you MUST also:
+
+1. Add a mapping in `DEATH_REASON_KEYS` in `ui-vue/src/composables/useGameI18n.ts`
+   (the client maps the raw server reason to a `server.deathReasons.*` i18n key).
+2. Add the matching `server.deathReasons.<key>` entries to **both**
+   `ui-vue/src/i18n/messages/en.ts` and `ui-vue/src/i18n/messages/de.ts`.
+3. Keep the reason as a **string literal** in the `queueDeath` call. The
+   `__tests__/deathReasonContract.test.ts` parity test extracts reasons via a
+   regex that only matches string literals; a variable/template-literal reason
+   would silently slip past the test and fall back to the raw English string
+   in the client.
+
 ## File Reference (Short List)
 
 - Shared types: `core/src/types.ts`
@@ -187,7 +209,8 @@ If the role affects win conditions or death resolution:
 - Socket events: `core/src/events.ts`, `server/src/handlers/socketHandlers.ts`
 - Broadcast visibility: `server/src/managers/broadcastManager.ts`
 - UI screens: `ui-vue/src/components/Lobby.vue`, `ui-vue/src/components/NightPhase.vue`, `ui-vue/src/components/DayPhase.vue`
-- Role metadata: `ui-vue/src/utils/roleDetails.ts`
+- i18n message files: `ui-vue/src/i18n/messages/en.ts`, `ui-vue/src/i18n/messages/de.ts`
+- Role metadata/presentational fallback: `ui-vue/src/utils/roleDetails.ts`
 - Role overlays/panels: `ui-vue/src/components/overlays/RoleCard.vue`, `ui-vue/src/components/panels/Header.vue`
 - Client state: `ui-vue/src/stores/game.ts`
 - Audio: `ui-vue/public/audio/README.md`
@@ -195,6 +218,9 @@ If the role affects win conditions or death resolution:
 
 ## Pitfalls and Notes
 
+- If you add a new role, remember to add its `roles.<roleId>` keys to **both**
+  `ui-vue/src/i18n/messages/en.ts` and `ui-vue/src/i18n/messages/de.ts`.
+  Missing keys fall back to the role id, which looks broken in the UI.
 - `DEFAULT_ROLE_CONFIG` must match `RoleConfig`, otherwise lobby validation breaks.
 - `validateCounts` in `server/src/managers/roleManager.ts` may need updates if your role has minimums.
 - `assignRoles` in `server/src/managers/roleManager.ts` is the place to initialize any per-role player state you add.

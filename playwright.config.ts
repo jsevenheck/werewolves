@@ -3,6 +3,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: 'e2e',
   timeout: 60000,
+  workers: process.env.CI ? 1 : 4,
   use: {
     baseURL: 'http://localhost:5173',
     headless: true,
@@ -14,6 +15,7 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       env: {
         E2E_TESTS: '1',
+        WEREWOLVES_ADMIN_TOKEN: process.env.WEREWOLVES_ADMIN_TOKEN ?? 'e2e-admin-token',
       },
     },
     {

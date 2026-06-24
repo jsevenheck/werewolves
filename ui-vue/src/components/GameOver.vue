@@ -3,9 +3,8 @@ import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../stores/game';
 import { notify } from '../utils/helpers';
+import { useGameI18n } from '../composables/useGameI18n';
 import type { TypedSocket } from '../composables/useSocket';
-
-import { ROLE_DETAILS } from '../utils/roleDetails';
 
 interface Props {
   socket: TypedSocket;
@@ -13,6 +12,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const store = useGameStore();
+const { t, localizeMessage, roleName, teamName } = useGameI18n();
 const { room, playerId } = storeToRefs(store);
 
 const self = computed(() => room.value?.self || null);
@@ -23,11 +23,11 @@ const players = computed(() => room.value?.players ?? []);
 function restartGame() {
   if (!room.value || !playerId.value) return;
   if (room.value.hostId !== playerId.value) {
-    notify('Only the host can restart the game.');
+    notify(t('gameOver.onlyHostRestart'));
     return;
   }
   if (room.value.phase !== 'ended') {
-    notify('The game can only be restarted after it has ended.');
+    notify(t('gameOver.restartOnlyEnded'));
     return;
   }
   props.socket.emit('restartGame', { roomCode: room.value.code, playerId: playerId.value });
@@ -36,16 +36,18 @@ function restartGame() {
 
 <template>
   <section v-if="room && winner" class="panel">
-    <h2>Game Over</h2>
-    <p>{{ winner.reason }}</p>
-    <p><strong>Winner:</strong> {{ winner.team.toUpperCase() }}</p>
+    <h2>{{ t('gameOver.title') }}</h2>
+    <p>{{ localizeMessage(winner.reasonMessage, winner.reason) }}</p>
+    <p>
+      <strong>{{ t('gameOver.winner') }}</strong> {{ teamName(winner.team) }}
+    </p>
     <button v-if="isHost" id="restart-btn" type="button" @click="restartGame">
-      Return to lobby
+      {{ t('gameOver.returnToLobby') }}
     </button>
     <div style="margin-top: 1rem">
       <div v-for="player in players" :key="player.id">
         {{ player.name }} -
-        {{ ROLE_DETAILS[player.role || 'villager']?.name || player.role || 'Unknown' }}
+        {{ roleName(player.role || 'villager') }}
       </div>
     </div>
   </section>

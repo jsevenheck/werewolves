@@ -10,7 +10,9 @@ Run a multiplayer Werewolf/Mafia party game in the browser with no human moderat
 - Joker instant win on day vote; Hunter shot on death.
 - Mayor election with tie-breaking and succession on death.
 - Reconnect support and mobile-friendly UI.
+- German and English UI with a language switcher on the landing page, in-game header, and admin console.
 - Acting host handoff on disconnect, plus skip controls for blocked armor/night steps.
+- Optional global admin console (`?admin=1`, token-gated) for read-only room observation and emergency kicks in any phase; hosts can also mid-game kick from an in-game side panel.
 - Automatic timeouts (60s) for hunter shots and mayor succession to prevent game stalls.
 - Automatic room cleanup (24h idle, 1h after game ends) to prevent memory leaks.
 - Full TypeScript codebase with type-safe Socket.IO events and shared types.
@@ -144,6 +146,29 @@ Mobile browsers require a user gesture before audio can play. If a player enable
 - Fallback chain: custom audio (`${assetsBasePath}/custom/*`) → default override (`${assetsBasePath}/*`) → bundled audio → silent
 - Supports audio variants for variety (e.g., `custom/day_1.mp3`, `custom/day_2.mp3`)
 - See `ui-vue/public/audio/README.md` for detailed instructions, file naming conventions, and per-file descriptions
+
+## Admin Console
+
+The server can expose a token-gated admin console for operators (read-only
+room observation + emergency kicks in any phase). It is disabled by default.
+
+**Local:** create a `.env` with `WEREWOLVES_ADMIN_TOKEN=your-secret` (loaded
+automatically on startup), or set it inline:
+
+```bash
+WEREWOLVES_ADMIN_TOKEN=your-secret pnpm start
+```
+
+**Production (Hostinger VPS):** store the token as a GitHub Secret named
+`WEREWOLVES_ADMIN_TOKEN`; the deploy workflow injects it into the container
+via `docker-compose.yml`. Never commit the real token.
+
+Open `http://localhost:3001/?admin=1` and enter the token. The token is stored
+in `localStorage` and sent only in the Socket.IO handshake. See
+[`docs/setup.md`](docs/setup.md) for details.
+
+Hosts can also perform mid-game kicks from an in-game side panel; the first
+mid-game kick requires the admin token to be set via the admin page once.
 
 ## Docker
 

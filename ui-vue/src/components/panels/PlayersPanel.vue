@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../../stores/game';
-import { ROLE_DETAILS } from '../../utils/roleDetails';
+import { useGameI18n } from '../../composables/useGameI18n';
 import { notify } from '../../utils/helpers';
 import type { TypedSocket } from '../../composables/useSocket';
 
@@ -12,6 +12,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const store = useGameStore();
+const { t, localizeError, roleName } = useGameI18n();
 const { room, playerId } = storeToRefs(store);
 
 const players = computed(() => room.value?.players || []);
@@ -25,7 +26,7 @@ function kickPlayer(targetId: string) {
     { roomCode: room.value.code, playerId: playerId.value, targetId },
     (res) => {
       if (res && 'error' in res && res.error) {
-        notify(res.error);
+        notify(localizeError(res));
       }
     }
   );
@@ -34,7 +35,7 @@ function kickPlayer(targetId: string) {
 
 <template>
   <section v-if="room" class="panel">
-    <h2>Players ({{ players.length }})</h2>
+    <h2>{{ t('panels.players', { count: players.length }) }}</h2>
     <div class="players-list">
       <div
         v-for="player in players"
@@ -56,7 +57,7 @@ function kickPlayer(targetId: string) {
             "
             @click="kickPlayer(player.id)"
           >
-            Kick
+            {{ t('common.kick') }}
           </button>
         </div>
         <div
@@ -68,22 +69,25 @@ function kickPlayer(targetId: string) {
             gap: 0.35rem;
           "
         >
-          <span v-if="player.isHost" class="tag">Host</span>
+          <span v-if="player.isHost" class="tag">{{ t('common.host') }}</span>
           <span
             v-if="room.mayorId === player.id"
             class="tag"
             style="border-color: #fbbf24; color: #fbbf24"
-            >Mayor</span
+            >{{ t('passiveRoles.mayor') }}</span
           >
-          <span v-if="!player.connected" class="tag" style="border-color: #fbbf24; color: #fbbf24"
-            >Disconnected</span
+          <span
+            v-if="!player.connected"
+            class="tag"
+            style="border-color: #fbbf24; color: #fbbf24"
+            >{{ t('common.disconnected') }}</span
           >
           <span
             v-if="(!player.alive || room.phase === 'ended') && player.role"
             class="tag"
             style="border-color: #38bdf8; color: #38bdf8"
           >
-            {{ ROLE_DETAILS[player.role]?.name || player.role }}
+            {{ roleName(player.role) }}
           </span>
         </div>
       </div>

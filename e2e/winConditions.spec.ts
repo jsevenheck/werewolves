@@ -66,7 +66,7 @@ test('village wins after the last werewolf is eliminated', async ({ browser }) =
 
     await dayPage.waitForSelector('h2:has-text("Game Over")', { timeout: 20000 });
     const panel = dayPage.locator('section.panel:has(h2:has-text("Game Over"))');
-    await expect(panel).toContainText('Winner: VILLAGE');
+    await expect(panel).toContainText('Winner: Village');
   } finally {
     await closeContexts(contexts);
   }
@@ -94,7 +94,7 @@ test('wolves win when they reach parity', async ({ browser }) => {
 
     await host.waitForSelector('h2:has-text("Game Over")', { timeout: 20000 });
     const panel = host.locator('section.panel:has(h2:has-text("Game Over"))');
-    await expect(panel).toContainText('Winner: WOLVES');
+    await expect(panel).toContainText('Winner: Werewolves');
   } finally {
     await closeContexts(contexts);
   }
@@ -154,7 +154,7 @@ test('joker wins when voted out during the day', async ({ browser }) => {
 
     await dayPage.waitForSelector('h2:has-text("Game Over")', { timeout: 20000 });
     const panel = dayPage.locator('section.panel:has(h2:has-text("Game Over"))');
-    await expect(panel).toContainText('Winner: JOKER');
+    await expect(panel).toContainText('Winner: Joker');
   } finally {
     await closeContexts(contexts);
   }

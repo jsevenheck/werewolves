@@ -20,6 +20,7 @@
       "Bash(git status)",
       "Bash(git diff*)",
       "Bash(git log*)",
+      "Bash(graphify*)",
 
       "Edit(**/*.ts)",
       "Edit(**/*.vue)",
@@ -44,9 +45,6 @@
       "Read(**/*)"
     ],
     "deny": [
-      "Bash(git add*)",
-      "Bash(git commit*)",
-      "Bash(git push*)",
       "Bash(git merge*)",
       "Bash(git rebase*)",
       "Bash(git reset*)",
@@ -63,6 +61,18 @@
       "Bash(rm -rf*)",
       "Bash(sudo*)",
       "Bash(su*)"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python ${CLAUDE_PROJECT_DIR}/.claude/hooks/graphify_hint.py"
+          }
+        ]
+      }
     ]
   }
 }

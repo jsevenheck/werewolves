@@ -57,6 +57,7 @@ function createRoom(
     lastNightDeaths: [],
     lastDayDeaths: [],
     lastDayMessage: null,
+    lastDayMessageI18n: null,
     awaitingHunterShot: null,
     dayVoteResolved: false,
     logs: [],
@@ -104,6 +105,15 @@ function cleanupIdleRooms() {
   const roomsToDelete: string[] = [];
 
   for (const [code, room] of rooms.entries()) {
+    // Reap empty rooms immediately (e.g. after an admin kicked everyone).
+    // A room with zero players has no game state worth keeping; do not wait
+    // for the idle timeout. Admin observers were notified with `roomClosed`
+    // at deletion time by the kick/leave/close handlers.
+    if (Object.values(room.players).length === 0) {
+      roomsToDelete.push(code);
+      continue;
+    }
+
     const idleTime = now - room.lastActivityAt;
 
     // Clean up ended games after 1 hour

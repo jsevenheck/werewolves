@@ -1,5 +1,6 @@
 import { DEFAULT_ROLE_CONFIG, DEFAULT_PASSIVE_ROLE_CONFIG, ROLE_INFO } from '../config/constants';
-import { shuffle } from '../utils/helpers';
+import { errorResponse, shuffle } from '../utils/helpers';
+import type { ErrorResponse } from '../../../core/src/events';
 import type { Room, RoleConfig, PassiveRoleConfig, Role } from '../../../core/src/types';
 
 function normalizeRoleConfig(config: Partial<RoleConfig> = {}): RoleConfig {
@@ -20,23 +21,40 @@ function normalizePassiveRoleConfig(config: Partial<PassiveRoleConfig> = {}): Pa
   return normalized;
 }
 
-function validateCounts(room: Room): { ok: true } | { error: string } {
+function validateCounts(room: Room): { ok: true } | ErrorResponse {
   const players = Object.values(room.players);
   if (players.length < room.minPlayers) {
-    return { error: `Need at least ${room.minPlayers} players` };
+    return errorResponse(`Need at least ${room.minPlayers} players`, 'server.errors.needPlayers', {
+      count: room.minPlayers,
+    });
+  }
+  // Block start while any player is disconnected. A disconnected player cannot
+  // receive their role or mark ready, so starting would silently lock them
+  // out. The host should either wait for them to reconnect or kick them
+  // (lobby kicks are reversible — they can rejoin via the room code).
+  const disconnectedCount = players.filter((p) => !p.connected).length;
+  if (disconnectedCount > 0) {
+    return errorResponse(
+      `${disconnectedCount} player(s) are disconnected`,
+      'server.errors.playersDisconnected',
+      { count: disconnectedCount }
+    );
   }
   const configured = Object.entries(room.roleConfig).reduce((sum, [, count]) => sum + count, 0);
   if (configured > players.length) {
-    return { error: 'Role count exceeds players' };
+    return errorResponse('Role count exceeds players', 'server.errors.roleCountExceedsPlayers');
   }
   if (room.roleConfig.werewolf < 1) {
-    return { error: 'Need at least 1 Werewolf' };
+    return errorResponse('Need at least 1 Werewolf', 'server.errors.needWerewolf');
   }
   // Singleton roles validation (max 1)
   const singletonRoles: (keyof RoleConfig)[] = ['seer', 'witch', 'armor', 'guard', 'harlot'];
   for (const role of singletonRoles) {
     if (room.roleConfig[role] > 1) {
-      return { error: `Only 1 ${role.charAt(0).toUpperCase() + role.slice(1)} allowed` };
+      const roleName = role.charAt(0).toUpperCase() + role.slice(1);
+      return errorResponse(`Only 1 ${roleName} allowed`, 'server.errors.onlyOneRole', {
+        role: roleName,
+      });
     }
   }
   return { ok: true };

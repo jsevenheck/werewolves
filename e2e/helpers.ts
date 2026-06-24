@@ -73,7 +73,7 @@ export const createLobbyWithPlayers = async (browser: Browser, names: string[]) 
   await host.fill('#create-form input[name="name"]', names[0]);
   await host.click('#create-form button[type="submit"]');
   await host.waitForSelector('text=Share this code');
-  const codeRaw = await host.locator('section:has(h2:has-text("Lobby")) strong').textContent();
+  const codeRaw = await host.locator('[data-room-code]').getAttribute('data-room-code');
   const code = (codeRaw || '').trim();
   expect(code).not.toBe('');
 

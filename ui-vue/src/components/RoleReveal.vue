@@ -3,6 +3,7 @@ import { computed, ref, onBeforeUnmount } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../stores/game';
 import { notify } from '../utils/helpers';
+import { useGameI18n } from '../composables/useGameI18n';
 import type { TypedSocket } from '../composables/useSocket';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const store = useGameStore();
+const { t, localizeError } = useGameI18n();
 const { room, playerId } = storeToRefs(store);
 
 import { ROLE_DETAILS } from '../utils/roleDetails';
@@ -43,7 +45,7 @@ function markReady() {
   readyButtonTimeout = window.setTimeout(() => {
     if (readyDisabled.value) {
       readyDisabled.value = false;
-      notify('Failed to mark you as ready. Please try again.');
+      notify(t('roleReveal.markReadyFailed'));
     }
     readyButtonTimeout = null;
   }, READY_ACK_TIMEOUT_MS);
@@ -54,7 +56,7 @@ function markReady() {
       readyButtonTimeout = null;
     }
     if (res && 'error' in res && res.error) {
-      notify(res.error);
+      notify(localizeError(res));
       readyDisabled.value = false;
     }
   });
@@ -68,21 +70,27 @@ function continueAfterReveal() {
 
 <template>
   <section v-if="room" class="panel">
-    <h2>Your Role</h2>
-    <p v-if="info">Tap "Reveal Role" to view your role.</p>
-    <p v-else>Waiting for assignment...</p>
+    <h2>{{ t('roleReveal.title') }}</h2>
+    <p v-if="info">{{ t('roleReveal.hint') }}</p>
+    <p v-else>{{ t('roleReveal.waitingAssignment') }}</p>
 
     <template v-if="isHost && !isSelfReady">
-      <button id="ready-btn" :disabled="readyDisabled" @click="markReady">I'm Ready</button>
+      <button id="ready-btn" :disabled="readyDisabled" @click="markReady">
+        {{ t('common.ready') }}
+      </button>
     </template>
     <template v-else-if="isHost">
-      <button id="continue-btn" :disabled="!allReady" @click="continueAfterReveal">Continue</button>
+      <button id="continue-btn" :disabled="!allReady" @click="continueAfterReveal">
+        {{ t('common.continue') }}
+      </button>
     </template>
     <template v-else-if="!isSelfReady">
-      <button id="ready-btn" :disabled="readyDisabled" @click="markReady">I'm Ready</button>
+      <button id="ready-btn" :disabled="readyDisabled" @click="markReady">
+        {{ t('common.ready') }}
+      </button>
     </template>
-    <p v-else style="color: #4ade80">You are ready. Waiting for others...</p>
+    <p v-else style="color: #4ade80">{{ t('roleReveal.readyStatus') }}</p>
 
-    <p>Players ready: {{ readyCount }} / {{ totalCount }}</p>
+    <p>{{ t('roleReveal.playersReady', { ready: readyCount, total: totalCount }) }}</p>
   </section>
 </template>

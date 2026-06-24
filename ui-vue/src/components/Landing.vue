@@ -2,7 +2,9 @@
 import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../stores/game';
-import { pushNotification, notify } from '../utils/helpers';
+import { useGameI18n } from '../composables/useGameI18n';
+import { notify } from '../utils/helpers';
+import LanguageSwitcher from './settings/LanguageSwitcher.vue';
 import type { TypedSocket } from '../composables/useSocket';
 import type { StoredSession } from '@shared/types';
 import { MAX_PLAYER_NAME_LENGTH } from '@shared/constants';
@@ -13,6 +15,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const store = useGameStore();
+const { t, localizeError } = useGameI18n();
 
 const createName = ref('');
 const joinName = ref('');
@@ -33,13 +36,13 @@ function enterRoom(params: {
 
 function attemptResume(saved: StoredSession) {
   if (!saved.resumeToken) {
-    notify('Saved session expired. Please rejoin the room.');
+    notify(t('app.notifications.savedSessionExpired'));
     store.clearSession();
     return;
   }
   props.socket.emit('resumePlayer', saved, (res) => {
     if (res && 'error' in res && res.error) {
-      notify(res.error);
+      notify(localizeError(res));
       store.clearSession();
     } else {
       store.setPlayer(saved.playerId, saved.name, saved.resumeToken);
@@ -55,7 +58,7 @@ function createRoom() {
   props.socket.emit('createRoom', { name }, (payload) => {
     if (!payload || 'error' in payload) {
       if (payload?.error) {
-        pushNotification(payload.error);
+        notify(localizeError(payload));
       }
       return;
     }
@@ -76,7 +79,7 @@ function joinRoom() {
   props.socket.emit('joinRoom', { name, code }, (payload) => {
     if (!payload || 'error' in payload) {
       if (payload?.error) {
-        pushNotification(payload.error);
+        notify(localizeError(payload));
       }
       return;
     }
@@ -98,50 +101,72 @@ function resumeSession() {
 </script>
 
 <template>
-  <section class="panel">
-    <h1>Werewolves</h1>
-    <p>Host or join a moderator-free social deduction match.</p>
-    <form id="create-form" @submit.prevent="createRoom">
-      <label>
-        <span>Your name</span>
-        <input
-          v-model="createName"
-          name="name"
-          required
-          :maxlength="MAX_PLAYER_NAME_LENGTH"
-          placeholder="e.g. Alex"
-        />
-      </label>
-      <button type="submit">Create Lobby</button>
-    </form>
-  </section>
-  <section class="panel">
-    <h2>Join a Lobby</h2>
-    <form id="join-form" @submit.prevent="joinRoom">
-      <label>
-        <span>Your name</span>
-        <input v-model="joinName" name="name" required :maxlength="MAX_PLAYER_NAME_LENGTH" />
-      </label>
-      <label>
-        <span>Room code</span>
-        <input
-          v-model="joinCode"
-          name="code"
-          required
-          maxlength="4"
-          placeholder="ABCD"
-          style="text-transform: uppercase"
-        />
-      </label>
-      <button type="submit">Join Game</button>
-    </form>
-    <div
-      v-if="savedSession?.resumeToken"
-      style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem"
-    >
-      <button id="resume-btn" @click="resumeSession">
-        Resume {{ savedSession.roomCode }} as {{ savedSession.name }}
-      </button>
-    </div>
-  </section>
+  <div class="landing-root">
+    <div class="landing-lang"><LanguageSwitcher /></div>
+    <section class="panel">
+      <h1>{{ t('landing.title') }}</h1>
+      <p>{{ t('landing.subtitle') }}</p>
+      <form id="create-form" @submit.prevent="createRoom">
+        <label>
+          <span>{{ t('landing.yourName') }}</span>
+          <input
+            v-model="createName"
+            name="name"
+            required
+            :maxlength="MAX_PLAYER_NAME_LENGTH"
+            :placeholder="t('landing.namePlaceholder')"
+          />
+        </label>
+        <button type="submit">{{ t('landing.createLobby') }}</button>
+      </form>
+    </section>
+    <section class="panel">
+      <h2>{{ t('landing.joinTitle') }}</h2>
+      <form id="join-form" @submit.prevent="joinRoom">
+        <label>
+          <span>{{ t('landing.yourName') }}</span>
+          <input v-model="joinName" name="name" required :maxlength="MAX_PLAYER_NAME_LENGTH" />
+        </label>
+        <label>
+          <span>{{ t('landing.roomCode') }}</span>
+          <input
+            v-model="joinCode"
+            name="code"
+            required
+            maxlength="4"
+            placeholder="ABCD"
+            style="text-transform: uppercase"
+          />
+        </label>
+        <button type="submit">{{ t('landing.joinGame') }}</button>
+      </form>
+      <div
+        v-if="savedSession?.resumeToken"
+        style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem"
+      >
+        <button id="resume-btn" @click="resumeSession">
+          {{
+            t('landing.resumeSession', { roomCode: savedSession.roomCode, name: savedSession.name })
+          }}
+        </button>
+      </div>
+    </section>
+  </div>
 </template>
+
+<style scoped>
+.landing-root {
+  position: relative;
+}
+.landing-lang {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+@media (max-width: 480px) {
+  .landing-lang {
+    position: static;
+    margin-bottom: 0.5rem;
+  }
+}
+</style>

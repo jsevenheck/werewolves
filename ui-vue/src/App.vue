@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, inject } from 'vue';
+import { computed, onMounted, onBeforeUnmount, inject, ref } from 'vue';
 import { useGameStore } from './stores/game';
 import { useSocket } from './composables/useSocket';
 import { useNarrator } from './composables/useNarrator';
+import { useGameI18n } from './composables/useGameI18n';
 import { notify } from './utils/helpers';
 import type { WerewolvesGameConfig } from './types/config';
 import type { StoredSession } from '@shared/types';
@@ -28,6 +29,8 @@ import RoleRevealOverlay from './components/overlays/RoleRevealOverlay.vue';
 import HeaderPanel from './components/panels/Header.vue';
 import PlayersPanel from './components/panels/PlayersPanel.vue';
 import LogsPanel from './components/panels/LogsPanel.vue';
+import HostControlPanel from './components/panels/HostControlPanel.vue';
+import AdminPage from './components/AdminPage.vue';
 
 // Injected config from app.provide('werewolvesConfig', { ... })
 const config = inject<Partial<WerewolvesGameConfig>>('werewolvesConfig', {});
@@ -53,8 +56,23 @@ const effectiveAssetsBasePath = config.assetsBasePath
   ? normalizeAssetsBasePath(config.assetsBasePath)
   : undefined;
 
-const store = useGameStore();
+// Admin route is gated by the `?admin=1` query string. We deliberately
+// avoid pulling in a router for this — the admin page is a sibling root
+// to the existing phase UI and uses its own socket connection.
+const isAdminRoute = ref(false);
+function detectAdminRoute() {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  return params.get('admin') === '1';
+}
+isAdminRoute.value = detectAdminRoute();
 
+const store = useGameStore();
+const { t, localizeError, localizeMessage, roleName } = useGameI18n();
+
+// The player socket is only wired when we are NOT on the admin route. The
+// admin page creates its own socket via `useAdminSocket` and never shares
+// state with this player socket.
 const socket = useSocket({
   url: '/g/werewolves',
 });
@@ -82,16 +100,6 @@ const mayorName = computed(() => {
   return store.room.players.find((player) => player.id === store.room?.mayorId)?.name ?? null;
 });
 
-import { ROLE_DETAILS } from './utils/roleDetails';
-
-const transitionMessages: Record<string, string> = {
-  postReveal: 'The village falls asleep.',
-  postMayor: 'Mayor elected. Preparing the next phase...',
-  postArmor: 'Starting the first night...',
-  nightToDay: 'Dawn is breaking. Day phase begins soon...',
-  dayToNight: 'Night falls. Close your eyes...',
-};
-
 const transitionDurations: Record<string, number> = {
   postReveal: POST_REVEAL_DELAY_MS,
   postMayor: POST_MAYOR_DELAY_MS,
@@ -104,13 +112,11 @@ const transitionMessage = computed(() => {
   if (!phaseTransition.value) return '';
   if (phaseTransition.value === 'postMayor') {
     return mayorName.value
-      ? `Mayor elected: ${mayorName.value}. Preparing the next phase...`
-      : transitionMessages.postMayor;
+      ? t('app.transition.postMayorWithName', { name: mayorName.value })
+      : t('app.transition.postMayor');
   }
-  return (
-    transitionMessages[phaseTransition.value] ||
-    'Next phase in a few seconds. Close your eyes if needed.'
-  );
+  const transitionKey = `app.transition.${phaseTransition.value}`;
+  return t(transitionKey, t('app.transition.fallback'));
 });
 
 const transitionDurationSeconds = computed(() => {
@@ -125,7 +131,10 @@ const dayResults = computed(() => {
   }
   return {
     type: 'message' as const,
-    message: store.room.lastDayMessage || 'No one was eliminated.',
+    message: localizeMessage(
+      store.room.lastDayMessageI18n,
+      store.room.lastDayMessage || t('app.voteResults.noElimination')
+    ),
   };
 });
 
@@ -148,14 +157,14 @@ function skipStep() {
 function attemptResume(saved: StoredSession): Promise<boolean> {
   return new Promise((resolve) => {
     if (!saved.resumeToken) {
-      notify('Saved session expired. Please rejoin the room.');
+      notify(t('app.notifications.savedSessionExpired'));
       store.clearSession();
       resolve(false);
       return;
     }
     socket.emit('resumePlayer', saved, (res) => {
       if (res && 'error' in res && res.error) {
-        notify(res.error);
+        notify(localizeError(res));
         store.clearSession();
         resolve(false);
         return;
@@ -181,7 +190,7 @@ function onMayorPrompt() {
 }
 
 function onRoomClosed() {
-  notify('The host has closed this session.');
+  notify(t('app.notifications.roomClosed'));
   store.resetState();
   store.clearSession();
 }
@@ -198,6 +207,12 @@ function onConnect() {
 }
 
 onMounted(() => {
+  // On the admin route we do NOT wire the player socket. The admin page
+  // creates its own connection via `useAdminSocket`.
+  if (isAdminRoute.value) {
+    return;
+  }
+
   // Bind gesture-based narrator unlock
   bindGestureUnlock();
 
@@ -226,8 +241,13 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="werewolves-root app">
+    <!-- Admin route (`?admin=1`) replaces the entire phase UI with a
+         self-contained admin console. The admin page uses its own socket
+         connection and Pinia store; it never touches the game state. -->
+    <AdminPage v-if="isAdminRoute" />
+
     <!-- Show Landing when no room is active -->
-    <Landing v-if="!hasRoom" :socket="socket" />
+    <Landing v-else-if="!hasRoom" :socket="socket" />
 
     <!-- In-game view -->
     <template v-else>
@@ -243,24 +263,22 @@ onBeforeUnmount(() => {
       <!-- Phase transition -->
       <template v-if="phaseTransition">
         <section class="panel">
-          <h2>Transitioning...</h2>
+          <h2>{{ t('app.transition.title') }}</h2>
           <p>{{ transitionMessage }}</p>
-          <p>Duration: {{ transitionDurationSeconds }}s.</p>
+          <p>{{ t('app.transition.duration', { seconds: transitionDurationSeconds }) }}</p>
           <template v-if="dayResults">
-            <h3>Vote Results</h3>
+            <h3>{{ t('app.voteResults.title') }}</h3>
             <template v-if="dayResults.type === 'deaths'">
               <ul>
                 <li v-for="(entry, i) in dayResults.deaths" :key="i">
-                  {{ entry.name }} ({{
-                    ROLE_DETAILS[entry.role || 'villager']?.name || entry.role || 'Unknown'
-                  }})
+                  {{ entry.name }} ({{ roleName(entry.role || 'villager') }})
                 </li>
               </ul>
             </template>
             <p v-else>{{ dayResults.message }}</p>
           </template>
           <button v-if="showHostSkip" id="host-skip-btn" type="button" @click="skipStep">
-            Skip transition
+            {{ t('app.transition.skip') }}
           </button>
         </section>
       </template>
@@ -282,23 +300,24 @@ onBeforeUnmount(() => {
 
       <!-- Pending actions panels -->
       <section v-if="mayorSelectionPending" class="panel">
-        <h2>Awaiting Mayor Selection</h2>
-        <p>The dying Mayor is selecting their successor...</p>
+        <h2>{{ t('app.pending.mayorTitle') }}</h2>
+        <p>{{ t('app.pending.mayorDescription') }}</p>
         <button v-if="isHost" id="skip-mayor-selection" type="button" @click="skipStep">
-          Skip Mayor Selection
+          {{ t('app.pending.skipMayor') }}
         </button>
       </section>
 
       <section v-if="hunterShotPending" class="panel">
-        <h2>Awaiting Hunter's Shot</h2>
-        <p>The Hunter is choosing their final target...</p>
+        <h2>{{ t('app.pending.hunterTitle') }}</h2>
+        <p>{{ t('app.pending.hunterDescription') }}</p>
         <button v-if="isHost" id="skip-hunter-shot" type="button" @click="skipStep">
-          Skip Hunter Shot
+          {{ t('app.pending.skipHunter') }}
         </button>
       </section>
 
       <PlayersPanel :socket="socket" />
       <LogsPanel :socket="socket" />
+      <HostControlPanel :socket="socket" />
 
       <!-- Overlays -->
       <Teleport to="body">

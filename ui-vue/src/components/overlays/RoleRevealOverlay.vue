@@ -3,8 +3,10 @@ import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../../stores/game';
 import { ROLE_DETAILS } from '../../utils/roleDetails';
+import { useGameI18n } from '../../composables/useGameI18n';
 
 const store = useGameStore();
+const { t, roleName, roleDescription } = useGameI18n();
 const { room } = storeToRefs(store);
 
 const self = computed(() => {
@@ -23,13 +25,17 @@ function dismiss() {
 <template>
   <div class="role-reveal-overlay" @click.self="dismiss">
     <div class="panel role-reveal-panel">
-      <p class="role-reveal-greeting">You are...</p>
+      <p class="role-reveal-greeting">{{ t('overlays.roleRevealGreeting') }}</p>
       <h2 class="role-reveal-name" :style="{ color: info?.color ?? '#f8fafc' }">
-        {{ info?.name ?? selfRole ?? '?' }}
+        {{ roleName(selfRole) }}
       </h2>
-      <p class="role-reveal-description">{{ info?.description }}</p>
-      <p v-if="self" class="role-reveal-player-name">Player: {{ self.name }}</p>
-      <button type="button" class="role-reveal-btn" @click="dismiss">Got it!</button>
+      <p class="role-reveal-description">{{ roleDescription(selfRole) }}</p>
+      <p v-if="self" class="role-reveal-player-name">
+        {{ t('common.player', { name: self.name }) }}
+      </p>
+      <button type="button" class="role-reveal-btn" @click="dismiss">
+        {{ t('common.gotIt') }}
+      </button>
     </div>
   </div>
 </template>

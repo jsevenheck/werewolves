@@ -6,8 +6,10 @@ import {
 } from '../server/src/managers/roleManager';
 import type { Player, Room, RoleConfig } from '../core/src/types';
 
-vi.mock('../server/src/utils/helpers', () => ({
-  ...vi.importActual('../server/src/utils/helpers'),
+vi.mock('../server/src/utils/helpers', async () => ({
+  ...(await vi.importActual<typeof import('../server/src/utils/helpers')>(
+    '../server/src/utils/helpers'
+  )),
   shuffle: (arr: unknown[]) => arr,
 }));
 
@@ -54,21 +56,63 @@ describe('roleManager', () => {
       minPlayers: 5,
       roleConfig: DEFAULT_ROLE_CONFIG,
     } as Room;
-    expect(validateCounts(tooFew)).toEqual({ error: 'Need at least 5 players' });
+    expect(validateCounts(tooFew)).toMatchObject({
+      error: 'server.errors.needPlayers',
+      message: { key: 'server.errors.needPlayers', params: { count: 5 } },
+    });
 
     const tooManyRoles = {
       players: makePlayers(5),
       minPlayers: 5,
       roleConfig: { ...DEFAULT_ROLE_CONFIG, werewolf: 3, seer: 2 },
     } as Room;
-    expect(validateCounts(tooManyRoles)).toEqual({ error: 'Role count exceeds players' });
+    expect(validateCounts(tooManyRoles)).toMatchObject({
+      error: 'server.errors.roleCountExceedsPlayers',
+      message: { key: 'server.errors.roleCountExceedsPlayers' },
+    });
 
     const noWolves = {
       players: makePlayers(5),
       minPlayers: 5,
       roleConfig: { ...DEFAULT_ROLE_CONFIG, werewolf: 0 },
     } as Room;
-    expect(validateCounts(noWolves)).toEqual({ error: 'Need at least 1 Werewolf' });
+    expect(validateCounts(noWolves)).toMatchObject({
+      error: 'server.errors.needWerewolf',
+      message: { key: 'server.errors.needWerewolf' },
+    });
+  });
+
+  test('validateCounts blocks start while players are disconnected', () => {
+    const players = makePlayers(5);
+    // mark one player as disconnected
+    players.p1!.connected = false;
+    const room = {
+      players,
+      minPlayers: 5,
+      roleConfig: DEFAULT_ROLE_CONFIG,
+    } as Room;
+    expect(validateCounts(room)).toMatchObject({
+      error: 'server.errors.playersDisconnected',
+      message: { key: 'server.errors.playersDisconnected', params: { count: 1 } },
+    });
+  });
+
+  test('validateCounts passes when all players are connected', () => {
+    const room = {
+      players: makePlayers(5),
+      minPlayers: 5,
+      roleConfig: {
+        werewolf: 1,
+        seer: 1,
+        hunter: 1,
+        witch: 0,
+        armor: 0,
+        joker: 0,
+        guard: 0,
+        harlot: 0,
+      },
+    } as Room;
+    expect(validateCounts(room)).toEqual({ ok: true });
   });
 
   test('assignRoles sets roles and teams', () => {

@@ -354,7 +354,7 @@ test('dying mayor selects successor', async ({ browser }) => {
 
     // Check logs for appointment message
     const logsPanel = await host.locator('#logs-panel').textContent();
-    expect(logsPanel).toContain('appointed as the new Mayor');
+    expect(logsPanel).toContain('as the new Mayor');
 
     // Proceed to night after mayor succession
     await proceedToNightIfAvailable(host);

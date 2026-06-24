@@ -58,10 +58,13 @@ Werewolves is a social deduction game where:
 - `seerAwaitingDismiss`: boolean, true after seer submits inspect and before they dismiss the result overlay; phase does not advance to witch while this is true.
 - `voteState`: `{votes: map playerId -> targetId|null|undefined, revoteFromTie: array|null}`.
 - `pendingDeaths`: queue of `{playerId, reason}` awaiting resolution.
-- `logs`: array of structured entries for UI recap (`{ts, text, publicText}`).
+- `logs`: array of structured entries for UI recap (`{ts, text, publicText, message?, publicMessage?}`).
+  `message`/`publicMessage` contain a stable localization key + params so the client can
+  translate the log; legacy `text`/`publicText` remains for backward compatibility.
 - `lastNightDeaths`: array of `{name, role}` announced in the day report.
 - `lastDayDeaths`: array of `{name, role}` announced after day vote.
 - `lastDayMessage`: string or null (used when no one is eliminated).
+- `lastDayMessageI18n`: optional localized message key + params for `lastDayMessage`.
 - `awaitingHunterShot`: playerId awaiting a hunter shot, or null.
 - `hunterShotEndsAt`: timestamp for hunter shot timeout UI, or null.
 - `hunterShotTimer`: timeout for hunter shot (60 seconds; auto-skips if no target selected).
@@ -71,7 +74,8 @@ Werewolves is a social deduction game where:
 - `transitionTimer`: timeout for night-step transitions.
 - `phaseTimer`: timeout for phase transitions (postReveal/postMayor/postArmor/nightToDay/dayToNight).
 - `dayVoteResolved`: boolean, true after day vote resolves and all pending actions are done.
-- `winner`: `{team: 'village' | 'wolves' | 'joker', reason}` when ended.
+- `winner`: `{team: 'village' | 'wolves' | 'joker', reason, reasonMessage?}` when ended.
+  `reasonMessage` is an optional localization key + params for the winner reason.
 - `createdAt`: timestamp when room was created.
 - `lastActivityAt`: timestamp of last room activity (updated on each broadcast; used for automatic cleanup).
 
@@ -82,6 +86,8 @@ loop:
   switch phase:
     lobby:
       host config roles; on start validate counts
+      (counts include a connected-check: start is blocked while any player
+      is disconnected, so no one is silently locked out of role assignment)
       assign roles randomly; set phase=roleReveal
     roleReveal:
       send each player role; wolves get list of other wolves (private UI fields)
@@ -238,6 +244,43 @@ onPlayerKick(hostId, targetId):
   target is removed from the room entirely (same cleanup as onPlayerLeave in lobby)
   remaining players receive a broadcast with the updated room state
 
+onAdminKickPlayer(roomCode, targetId):
+  admin-only (socket.data.adminToken === true, verified at handshake against WEREWOLVES_ADMIN_TOKEN)
+  works in ANY phase (lobby, night, day, ended)
+  can kick any player, including the host and the last remaining player
+  target socket is disconnected, player record removed, host fallback applied
+  a localized 'kicked' log entry is added; admins never appear in room.players
+  no phase continuation is triggered (this is an emergency stop, not a leave)
+  if the kick empties the room (0 players left), the room is torn down
+    immediately: admin observers receive roomClosed, the room is deleted
+
+onAdminCloseRoom(roomCode):
+  admin-only; works in ANY phase
+  deletes the room entirely: cancels pending disconnect grace timers,
+    emits roomClosed to every connected player and disconnects them,
+    emits roomClosed to admin observers (and removes them from the
+    observer registry), then deletes the room
+  analogous to the host closeSession event but callable by an admin
+    from the admin detail view (red 'Close Session' button)
+
+onHostMidGameKickPlayer(roomCode, playerId, targetId):
+  admin-only AND host-only (room.hostId === playerId; playerId is the host's own player id)
+  works in ANY phase; intended for removing a disrupting player mid-game
+  the host's regular player socket has no admin token, so the host UI lazily
+    opens a short-lived admin socket (useHostAdminKick) to emit this event
+  host cannot kick themselves (playerId === targetId is rejected)
+  same teardown as onAdminKickPlayer (socket disconnect, host fallback, localized log)
+
+AdminObserver:
+  an admin socket may register as a read-only observer of one room via adminJoinRoom
+  observers are NOT players: not in room.players, no self, cannot vote/act/be targeted
+  they receive sanitized roomUpdate events built by buildAdminRoomView, which strips
+    self, all player.role, mayorId, seerResult, witchState, wolfVotes, wolfPeers,
+    wolfIds, guardedTarget, harlotVisitedTarget, loverName, loversKnown, and
+    Hunter/Mayor identity (only boolean *Pending flags remain)
+  adminLeaveRoom (or disconnect) removes the observer mapping
+  one socket observes at most one room at a time
+
 onPlayerLeave(playerId):
   remove player from the room entirely (not just disconnect)
   if room is in lobby phase -> simply remove and broadcast
@@ -263,6 +306,11 @@ onPlayerResume(roomCode, playerId, resumeToken):
 
 Rooms are automatically cleaned up to prevent memory leaks:
 - **Ended games**: Deleted 1 hour after the game ends (phase='ended')
+- **Empty rooms**: Deleted immediately when the last player is removed
+  (via admin kick, host mid-game kick, or a player leaving). Admin
+  observers of such a room receive `roomClosed` and are returned to the
+  room list. As a safety net, the hourly cleanup pass also reaps any
+  0-player room it finds.
 - **Idle rooms**: Deleted after 24 hours of inactivity if:
   - Room is still in lobby phase, OR
   - All players are disconnected

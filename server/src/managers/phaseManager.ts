@@ -7,7 +7,7 @@ import {
   POST_MAYOR_DELAY_MS,
   POST_REVEAL_DELAY_MS,
 } from '../config/constants';
-import { createVoteState, addLog, clearRoomTimers } from '../utils/helpers';
+import { createVoteState, addLog, clearRoomTimers, localizedMessage } from '../utils/helpers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { NightStep, PhaseTransition, Room } from '../../../core/src/types';
 import { resolveNight, advanceNightStep } from './nightManager';
@@ -34,6 +34,7 @@ function startNight(room: Room) {
   room.lastNightDeaths = [];
   room.lastDayDeaths = [];
   room.lastDayMessage = null;
+  room.lastDayMessageI18n = null;
   room.voteState = createVoteState();
   room.awaitingHunterShot = null;
   room.awaitingMayorSelection = null;
@@ -129,7 +130,12 @@ function schedulePhaseTransition(
       room.nextNightStep = null;
       room.voteState = createVoteState();
       room.dayVoteResolved = false;
-      addLog(room, `Day ${room.dayCount} has begun.`);
+      addLog(
+        room,
+        `Day ${room.dayCount} has begun.`,
+        null,
+        localizedMessage('server.logs.dayBegun', { count: room.dayCount })
+      );
       broadcastRoom(room);
       return;
     }
@@ -189,11 +195,21 @@ function advanceFromReveal(room: Room, broadcastRoom: (room: Room) => void) {
   room.voteState = createVoteState();
   if (mayorEnabled) {
     room.phase = 'mayor';
-    addLog(room, 'Mayor election begins.');
+    addLog(
+      room,
+      'Mayor election begins.',
+      null,
+      localizedMessage('server.logs.mayorElectionBegins')
+    );
     broadcastRoom(room);
     return;
   }
-  addLog(room, 'Mayor role disabled. Skipping election.');
+  addLog(
+    room,
+    'Mayor role disabled. Skipping election.',
+    null,
+    localizedMessage('server.logs.mayorDisabled')
+  );
   if (
     room.roleConfig.armor > 0 &&
     Object.values(room.players).some((p) => p.role === 'armor' && p.alive)
@@ -226,7 +242,9 @@ function notifyLovers(room: Room) {
     addLog(
       room,
       `${loverA.name} and ${loverB.name} are now Lovers.`,
-      'Two players are now Lovers.'
+      'Two players are now Lovers.',
+      localizedMessage('server.logs.loversPrivate', { loverA: loverA.name, loverB: loverB.name }),
+      localizedMessage('server.logs.loversPublic')
     );
   }
 }

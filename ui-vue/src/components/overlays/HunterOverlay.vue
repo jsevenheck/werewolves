@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../../stores/game';
+import { useGameI18n } from '../../composables/useGameI18n';
 import type { TypedSocket } from '../../composables/useSocket';
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const store = useGameStore();
+const { t } = useGameI18n();
 const { room, roomCode, playerId } = storeToRefs(store);
 
 const selectedTarget = ref('');
@@ -64,18 +66,18 @@ onBeforeUnmount(() => {
       <div v-if="remainingSeconds !== null" class="overlay-timer">
         {{ formatSeconds(remainingSeconds) }}
       </div>
-      <h2>Hunter's Last Shot</h2>
+      <h2>{{ t('overlays.hunterTitle') }}</h2>
       <form id="hunter-form" class="actions" @submit.prevent="submitShot">
         <label>
-          <span>Choose who to shoot</span>
+          <span>{{ t('overlays.hunterChoose') }}</span>
           <select v-model="selectedTarget" name="target" required>
-            <option value="">Select player</option>
+            <option value="">{{ t('common.selectPlayer') }}</option>
             <option v-for="player in targets" :key="player.id" :value="player.id">
               {{ player.name }}
             </option>
           </select>
         </label>
-        <button type="submit">Fire</button>
+        <button type="submit">{{ t('overlays.hunterFire') }}</button>
       </form>
     </div>
   </div>

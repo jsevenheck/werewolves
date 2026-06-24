@@ -1,8 +1,19 @@
 import type { Namespace, Socket } from 'socket.io';
-import { sanitizeName, createVoteState, addLog, clearRoomTimers } from '../utils/helpers';
+import {
+  sanitizeName,
+  createVoteState,
+  addLog,
+  clearRoomTimers,
+  errorResponse,
+  localizedMessage,
+} from '../utils/helpers';
 import { createRoom, getRoom, deleteRoom } from '../models/room';
 import { createPlayer, setSocketIndex, getSocketIndex, deleteSocketIndex } from '../models/player';
-import { broadcastRoom, sendStateToPlayer } from '../managers/broadcastManager';
+import {
+  broadcastRoom,
+  sendStateToPlayer,
+  notifyAdminObserversRoomClosed,
+} from '../managers/broadcastManager';
 import {
   normalizeRoleConfig,
   normalizePassiveRoleConfig,
@@ -52,6 +63,10 @@ function cancelPendingDisconnect(playerId: string) {
   }
 }
 
+// Exported so the admin close-session handler can cancel grace timers for
+// every player in a room it is about to tear down.
+export { cancelPendingDisconnect };
+
 function getPlayerForSocket(room: Room, playerId: string, socketId: string) {
   const player = room.players[playerId];
   if (!player || player.socketId !== socketId) return null;
@@ -94,7 +109,14 @@ function detachSocketFromRoom(
   player.connected = false;
   player.socketId = null;
   if (reason) {
-    addLog(room, `${player.name} ${reason}.`);
+    addLog(
+      room,
+      `${player.name} ${reason}.`,
+      null,
+      reason === 'left the room'
+        ? localizedMessage('server.logs.leftRoom', { name: player.name })
+        : localizedMessage('server.logs.playerReason', { name: player.name, reason })
+    );
   }
   updateHostIfNeeded(room);
   if (room.phase === 'day' && player.alive && !room.phaseTransition && !room.awaitingHunterShot) {
@@ -113,7 +135,7 @@ function setupSocketHandlers(
   socket.on('createRoom', ({ name }, cb) => {
     detachSocketFromRoom(io, socket.id, 'left the room');
     const cleanName = sanitizeName(name);
-    if (!cleanName) return cb?.({ error: 'Name required' });
+    if (!cleanName) return cb?.(errorResponse('Name required', 'server.errors.nameRequired'));
     const { room, player } = createRoom(cleanName, socket.id, createPlayer);
     setSocketIndex(socket.id, room.code, player.id);
     cb?.({ roomCode: room.code, playerId: player.id, resumeToken: player.resumeToken });
@@ -123,13 +145,17 @@ function setupSocketHandlers(
   socket.on('joinRoom', ({ name, code }, cb) => {
     detachSocketFromRoom(io, socket.id, 'left the room');
     const cleanName = sanitizeName(name);
-    if (!cleanName) return cb?.({ error: 'Name required' });
+    if (!cleanName) return cb?.(errorResponse('Name required', 'server.errors.nameRequired'));
     const room = getRoom(code?.toUpperCase());
-    if (!room) return cb?.({ error: 'Room not found' });
-    if (room.phase !== 'lobby') return cb?.({ error: 'Game already started' });
+    if (!room) return cb?.(errorResponse('Room not found', 'server.errors.roomNotFound'));
+    if (room.phase !== 'lobby') {
+      return cb?.(errorResponse('Game already started', 'server.errors.gameAlreadyStarted'));
+    }
     // Check for duplicate names
     const nameExists = Object.values(room.players).some((p) => p.name === cleanName);
-    if (nameExists) return cb?.({ error: 'Name already taken' });
+    if (nameExists) {
+      return cb?.(errorResponse('Name already taken', 'server.errors.nameAlreadyTaken'));
+    }
     const player = createPlayer(cleanName, socket.id, false);
     room.players[player.id] = player;
     setSocketIndex(socket.id, room.code, player.id);
@@ -146,14 +172,14 @@ function setupSocketHandlers(
       detachSocketFromRoom(io, socket.id, 'left the room');
     }
     const room = getRoom(roomCode);
-    if (!room) return cb?.({ error: 'Room not found' });
+    if (!room) return cb?.(errorResponse('Room not found', 'server.errors.roomNotFound'));
     const player = room.players[playerId];
-    if (!player) return cb?.({ error: 'Player not in room' });
+    if (!player) return cb?.(errorResponse('Player not in room', 'server.errors.playerNotInRoom'));
     if (!player.resumeToken) {
-      return cb?.({ error: 'Invalid session' });
+      return cb?.(errorResponse('Invalid session', 'server.errors.invalidSession'));
     }
     if (!resumeToken || resumeToken !== player.resumeToken) {
-      return cb?.({ error: 'Invalid session' });
+      return cb?.(errorResponse('Invalid session', 'server.errors.invalidSession'));
     }
     if (player.socketId && player.socketId !== socket.id) {
       const previousSocketId = player.socketId;
@@ -189,10 +215,16 @@ function setupSocketHandlers(
 
   socket.on('startGame', ({ roomCode, playerId }, cb) => {
     const room = getRoom(roomCode);
-    if (!room) return cb?.({ error: 'Room missing' });
-    if (!getPlayerForSocket(room, playerId, socket.id)) return cb?.({ error: 'Player missing' });
-    if (room.hostId !== playerId) return cb?.({ error: 'Only host can start' });
-    if (room.phase !== 'lobby') return cb?.({ error: 'Already started' });
+    if (!room) return cb?.(errorResponse('Room missing', 'server.errors.roomMissing'));
+    if (!getPlayerForSocket(room, playerId, socket.id)) {
+      return cb?.(errorResponse('Player missing', 'server.errors.playerMissing'));
+    }
+    if (room.hostId !== playerId) {
+      return cb?.(errorResponse('Only host can start', 'server.errors.onlyHostStart'));
+    }
+    if (room.phase !== 'lobby') {
+      return cb?.(errorResponse('Already started', 'server.errors.alreadyStarted'));
+    }
     const validation = validateCounts(room);
     if ('error' in validation) return cb?.(validation);
     assignRoles(room);
@@ -202,17 +234,26 @@ function setupSocketHandlers(
     room.lastNightDeaths = [];
     room.voteState = createVoteState();
     cb?.({ ok: true });
-    addLog(room, 'Roles assigned. Secret information has been delivered.');
+    addLog(
+      room,
+      'Roles assigned. Secret information has been delivered.',
+      null,
+      localizedMessage('server.logs.rolesAssigned')
+    );
     broadcastRoom(room, io);
   });
 
   socket.on('markReady', ({ roomCode, playerId }, cb) => {
     const room = getRoom(roomCode);
-    if (!room) return cb?.({ error: 'Room missing' });
-    if (room.phase !== 'roleReveal') return cb?.({ error: 'Not in roleReveal phase' });
+    if (!room) return cb?.(errorResponse('Room missing', 'server.errors.roomMissing'));
+    if (room.phase !== 'roleReveal') {
+      return cb?.(errorResponse('Not in roleReveal phase', 'server.errors.notRoleReveal'));
+    }
     const player = room.players[playerId];
-    if (!player) return cb?.({ error: 'Player missing' });
-    if (player.socketId !== socket.id) return cb?.({ error: 'Socket mismatch' });
+    if (!player) return cb?.(errorResponse('Player missing', 'server.errors.playerMissing'));
+    if (player.socketId !== socket.id) {
+      return cb?.(errorResponse('Socket mismatch', 'server.errors.socketMismatch'));
+    }
     player.ready = true;
     broadcastRoom(room, io);
     cb?.({ ok: true });
@@ -249,7 +290,14 @@ function setupSocketHandlers(
     addLog(
       room,
       `${target.name} has been appointed as the new Mayor by ${player.name}.`,
-      `${target.name} has been appointed as the new Mayor.`
+      `${target.name} has been appointed as the new Mayor.`,
+      localizedMessage('server.logs.mayorSelected', {
+        selector: player.name,
+        successor: target.name,
+      }),
+      localizedMessage('server.logs.mayorSelectedPublic', {
+        successor: target.name,
+      })
     );
     room.awaitingMayorSelection = null;
 
@@ -318,7 +366,9 @@ function setupSocketHandlers(
     addLog(
       room,
       `${player.name} linked two souls together as Lovers.`,
-      'The Lovers have been chosen.'
+      'The Lovers have been chosen.',
+      localizedMessage('server.logs.loversChosen', { name: player.name }),
+      localizedMessage('server.logs.loversChosenPublic')
     );
     schedulePhaseTransition(room, 'postArmor', (r) => broadcastRoom(r, io));
   });
@@ -339,7 +389,14 @@ function setupSocketHandlers(
       const votedPlayer = targetId ? room.players[targetId] : null;
       addLog(
         room,
-        `${player.name} changed their wolf vote${votedPlayer ? ` to ${votedPlayer.name}` : ''}.`
+        `${player.name} changed their wolf vote${votedPlayer ? ` to ${votedPlayer.name}` : ''}.`,
+        null,
+        votedPlayer
+          ? localizedMessage('server.logs.wolfVoteChangedTarget', {
+              name: player.name,
+              target: votedPlayer.name,
+            })
+          : localizedMessage('server.logs.wolfVoteChanged', { name: player.name })
       );
     }
     if (!tryFinalizeWolfVote(room, (r) => broadcastRoom(r, io), io)) {
@@ -349,14 +406,20 @@ function setupSocketHandlers(
 
   socket.on('submitSeerInspect', ({ roomCode, playerId, targetId }, cb) => {
     const room = getRoom(roomCode);
-    if (!room || room.phase !== 'night' || room.phaseStep !== 'seer')
-      return cb?.({ error: 'Invalid room or phase' });
+    if (!room || room.phase !== 'night' || room.phaseStep !== 'seer') {
+      return cb?.(errorResponse('Invalid room or phase', 'server.errors.invalidRoomOrPhase'));
+    }
     const player = getPlayerForSocket(room, playerId, socket.id);
-    if (!player || player.role !== 'seer' || !player.alive)
-      return cb?.({ error: 'Invalid player' });
-    if (targetId === playerId) return cb?.({ error: 'Cannot inspect yourself' });
+    if (!player || player.role !== 'seer' || !player.alive) {
+      return cb?.(errorResponse('Invalid player', 'server.errors.invalidPlayer'));
+    }
+    if (targetId === playerId) {
+      return cb?.(errorResponse('Cannot inspect yourself', 'server.errors.cannotInspectSelf'));
+    }
     const target = room.players[targetId];
-    if (!target || !target.alive) return cb?.({ error: 'Invalid target' });
+    if (!target || !target.alive) {
+      return cb?.(errorResponse('Invalid target', 'server.errors.invalidTarget'));
+    }
     const result = target.role === 'werewolf' ? 'Werewolf' : 'Not Werewolf';
     player.seerResult = { name: target.name, result };
     cb?.({ ok: true, name: target.name, result });
@@ -385,21 +448,33 @@ function setupSocketHandlers(
 
   socket.on('submitGuardProtection', ({ roomCode, playerId, targetId }, cb) => {
     const room = getRoom(roomCode);
-    if (!room || room.phase !== 'night' || room.phaseStep !== 'guard')
-      return cb?.({ error: 'Invalid room or phase' });
+    if (!room || room.phase !== 'night' || room.phaseStep !== 'guard') {
+      return cb?.(errorResponse('Invalid room or phase', 'server.errors.invalidRoomOrPhase'));
+    }
 
     const player = getPlayerForSocket(room, playerId, socket.id);
-    if (!player || player.role !== 'guard' || !player.alive)
-      return cb?.({ error: 'Invalid player' });
+    if (!player || player.role !== 'guard' || !player.alive) {
+      return cb?.(errorResponse('Invalid player', 'server.errors.invalidPlayer'));
+    }
 
-    if (targetId === playerId) return cb?.({ error: 'Cannot protect yourself' });
+    if (targetId === playerId) {
+      return cb?.(errorResponse('Cannot protect yourself', 'server.errors.cannotProtectSelf'));
+    }
 
     // Check consecutive protection rule
-    if (room.lastGuardedTarget && room.lastGuardedTarget === targetId)
-      return cb?.({ error: 'Cannot protect the same player two nights in a row' });
+    if (room.lastGuardedTarget && room.lastGuardedTarget === targetId) {
+      return cb?.(
+        errorResponse(
+          'Cannot protect the same player two nights in a row',
+          'server.errors.cannotProtectSame'
+        )
+      );
+    }
 
     const target = room.players[targetId];
-    if (!target || !target.alive) return cb?.({ error: 'Invalid target' });
+    if (!target || !target.alive) {
+      return cb?.(errorResponse('Invalid target', 'server.errors.invalidTarget'));
+    }
 
     room.guardedTarget = targetId;
     room.guardActed = true;
@@ -410,17 +485,23 @@ function setupSocketHandlers(
 
   socket.on('submitHarlotVisit', ({ roomCode, playerId, targetId }, cb) => {
     const room = getRoom(roomCode);
-    if (!room || room.phase !== 'night' || room.phaseStep !== 'harlot')
-      return cb?.({ error: 'Invalid room or phase' });
+    if (!room || room.phase !== 'night' || room.phaseStep !== 'harlot') {
+      return cb?.(errorResponse('Invalid room or phase', 'server.errors.invalidRoomOrPhase'));
+    }
 
     const player = getPlayerForSocket(room, playerId, socket.id);
-    if (!player || player.role !== 'harlot' || !player.alive)
-      return cb?.({ error: 'Invalid player' });
+    if (!player || player.role !== 'harlot' || !player.alive) {
+      return cb?.(errorResponse('Invalid player', 'server.errors.invalidPlayer'));
+    }
 
-    if (targetId === playerId) return cb?.({ error: 'Cannot visit yourself' });
+    if (targetId === playerId) {
+      return cb?.(errorResponse('Cannot visit yourself', 'server.errors.cannotVisitSelf'));
+    }
 
     const target = room.players[targetId];
-    if (!target || !target.alive) return cb?.({ error: 'Invalid target' });
+    if (!target || !target.alive) {
+      return cb?.(errorResponse('Invalid target', 'server.errors.invalidTarget'));
+    }
 
     room.harlotVisitedTarget = targetId;
     room.harlotActed = true;
@@ -531,7 +612,12 @@ function setupSocketHandlers(
         room.phaseStep = null;
         room.nextNightStep = null;
         room.voteState = createVoteState();
-        addLog(room, `Day ${room.dayCount} has begun.`);
+        addLog(
+          room,
+          `Day ${room.dayCount} has begun.`,
+          null,
+          localizedMessage('server.logs.dayBegun', { count: room.dayCount })
+        );
         broadcastRoom(room, io);
         return;
       }
@@ -562,7 +648,12 @@ function setupSocketHandlers(
     }
 
     if (room.phase === 'armor') {
-      addLog(room, 'Armor selection skipped. Moving to night.');
+      addLog(
+        room,
+        'Armor selection skipped. Moving to night.',
+        null,
+        localizedMessage('server.logs.armorSkipped')
+      );
       schedulePhaseTransition(room, 'postArmor', (r) => broadcastRoom(r, io));
       return;
     }
@@ -740,6 +831,7 @@ function setupSocketHandlers(
     room.lastNightDeaths = [];
     room.lastDayDeaths = [];
     room.lastDayMessage = null;
+    room.lastDayMessageI18n = null;
     room.awaitingHunterShot = null;
     room.dayVoteResolved = false;
     room.logs = [];
@@ -757,21 +849,34 @@ function setupSocketHandlers(
       player.ready = false;
       player.seerResult = null;
     });
-    addLog(room, 'Game reset. Back to lobby.');
+    addLog(room, 'Game reset. Back to lobby.', null, localizedMessage('server.logs.gameReset'));
     broadcastRoom(room, io);
   });
 
   socket.on('kickPlayer', ({ roomCode, playerId, targetId }, cb) => {
     const room = getRoom(roomCode);
-    if (!room) return cb?.({ error: 'Room not found' });
-    if (room.phase !== 'lobby') return cb?.({ error: 'Can only kick during lobby' });
-    if (!getPlayerForSocket(room, playerId, socket.id)) return cb?.({ error: 'Player not found' });
-    if (room.hostId !== playerId) return cb?.({ error: 'Only host can kick players' });
-    if (playerId === targetId) return cb?.({ error: 'Cannot kick yourself' });
+    if (!room) return cb?.(errorResponse('Room not found', 'server.errors.roomNotFound'));
+    if (room.phase !== 'lobby') {
+      return cb?.(errorResponse('Can only kick during lobby', 'server.errors.canOnlyKickLobby'));
+    }
+    if (!getPlayerForSocket(room, playerId, socket.id)) {
+      return cb?.(errorResponse('Player not found', 'server.errors.playerNotFound'));
+    }
+    if (room.hostId !== playerId) {
+      return cb?.(errorResponse('Only host can kick players', 'server.errors.onlyHostKick'));
+    }
+    if (playerId === targetId) {
+      return cb?.(errorResponse('Cannot kick yourself', 'server.errors.cannotKickSelf'));
+    }
     const target = room.players[targetId];
-    if (!target) return cb?.({ error: 'Target not found' });
+    if (!target) return cb?.(errorResponse('Target not found', 'server.errors.targetNotFound'));
 
-    addLog(room, `${target.name} was kicked from the room.`);
+    addLog(
+      room,
+      `${target.name} was kicked from the room.`,
+      null,
+      localizedMessage('server.logs.kicked', { name: target.name })
+    );
     // Disconnect the kicked player's socket
     if (target.socketId) {
       const targetSocket = io.sockets.get(target.socketId);
@@ -788,16 +893,21 @@ function setupSocketHandlers(
 
   socket.on('leaveRoom', ({ roomCode, playerId }, cb) => {
     const room = getRoom(roomCode);
-    if (!room) return cb?.({ error: 'Room not found' });
+    if (!room) return cb?.(errorResponse('Room not found', 'server.errors.roomNotFound'));
     const player = getPlayerForSocket(room, playerId, socket.id);
-    if (!player) return cb?.({ error: 'Player not found' });
+    if (!player) return cb?.(errorResponse('Player not found', 'server.errors.playerNotFound'));
 
     const wasAlive = player.alive;
     const playerRole = player.role;
     const playerPhaseStep = room.phaseStep;
 
     // Remove player completely from the room
-    addLog(room, `${player.name} left the game.`);
+    addLog(
+      room,
+      `${player.name} left the game.`,
+      null,
+      localizedMessage('server.logs.leftGame', { name: player.name })
+    );
     delete room.players[playerId];
     deleteSocketIndex(socket.id);
 
@@ -841,9 +951,11 @@ function setupSocketHandlers(
       return;
     }
 
-    // If no players remain, nothing to resolve
+    // If no players remain, tear the empty room down immediately so it does
+    // not linger in the admin room list. Notify admin observers and delete.
     if (!Object.keys(room.players).length) {
-      broadcastRoom(room, io);
+      notifyAdminObserversRoomClosed(room.code, io);
+      deleteRoom(room.code);
       cb?.({ ok: true });
       return;
     }
@@ -916,7 +1028,12 @@ function setupSocketHandlers(
       }
 
       if (room.phase === 'armor' && playerRole === 'armor') {
-        addLog(room, 'Armor left the game. Skipping armor phase.');
+        addLog(
+          room,
+          'Armor left the game. Skipping armor phase.',
+          null,
+          localizedMessage('server.logs.armorLeft')
+        );
         schedulePhaseTransition(room, 'postArmor', (r) => broadcastRoom(r, io));
       }
     }
@@ -927,9 +1044,13 @@ function setupSocketHandlers(
 
   socket.on('closeSession', ({ roomCode, playerId }, cb) => {
     const room = getRoom(roomCode);
-    if (!room) return cb?.({ error: 'Room not found' });
-    if (!getPlayerForSocket(room, playerId, socket.id)) return cb?.({ error: 'Player not found' });
-    if (room.hostId !== playerId) return cb?.({ error: 'Only host can close the session' });
+    if (!room) return cb?.(errorResponse('Room not found', 'server.errors.roomNotFound'));
+    if (!getPlayerForSocket(room, playerId, socket.id)) {
+      return cb?.(errorResponse('Player not found', 'server.errors.playerNotFound'));
+    }
+    if (room.hostId !== playerId) {
+      return cb?.(errorResponse('Only host can close the session', 'server.errors.onlyHostClose'));
+    }
 
     // Cancel any pending disconnect grace timers for all players in the room.
     for (const pid of Object.keys(room.players)) {
@@ -947,6 +1068,9 @@ function setupSocketHandlers(
         }
       }
     }
+
+    // Also release any admin observers watching this room.
+    notifyAdminObserversRoomClosed(roomCode, io);
 
     deleteRoom(roomCode);
     cb?.({ ok: true });
@@ -978,7 +1102,12 @@ function setupSocketHandlers(
       if (!player || player.socketId !== disconnectedSocketId) return;
       player.connected = false;
       player.socketId = null;
-      addLog(room, `${player.name} disconnected.`);
+      addLog(
+        room,
+        `${player.name} disconnected.`,
+        null,
+        localizedMessage('server.logs.disconnected', { name: player.name })
+      );
       updateHostIfNeeded(room);
       if (
         room.phase === 'day' &&

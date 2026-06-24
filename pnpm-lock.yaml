@@ -28,8 +28,8 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.4.1)
       '@playwright/test':
-        specifier: ^1.60.0
-        version: 1.60.0
+        specifier: ^1.61.1
+        version: 1.61.1
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
@@ -93,6 +93,9 @@ importers:
       vue:
         specifier: ^3.5.16
         version: 3.5.33(typescript@5.9.3)
+      vue-i18n:
+        specifier: ^11.4.5
+        version: 11.4.5(vue@3.5.33(typescript@5.9.3))
     devDependencies:
       '@types/howler':
         specifier: ^2.2.12
@@ -504,6 +507,22 @@ packages:
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
 
+  '@intlify/core-base@11.4.5':
+    resolution: {integrity: sha512-lja3F/iKVIvTa48mIwmrIeDcQUFZ0F0drvFvT8AwINOvbwnAzl/S/p8p2DxILZpWEUHRi1qewfWNIkMvhD3kKA==}
+    engines: {node: '>= 22'}
+
+  '@intlify/devtools-types@11.4.5':
+    resolution: {integrity: sha512-W5vydP9Yq3t82IyWqCM6aR0BTWCZrN5RAwjZEPpH8I2OQWp2RLy03Evh2ANZlSMhcvGAoyDg25k0so85Kwncpw==}
+    engines: {node: '>= 22'}
+
+  '@intlify/message-compiler@11.4.5':
+    resolution: {integrity: sha512-IEOZiHtbQopyPc/Dz2M869lOlZYX1SdcniNJwphATDYHhovvIneEKf1EFF37DE7NAABZtza1FNtnwwqZWInfpw==}
+    engines: {node: '>= 22'}
+
+  '@intlify/shared@11.4.5':
+    resolution: {integrity: sha512-g/i5mtdUa9ia/8BaJ4w6ZRHgAXYQd9XyCaQPRMvsd8d5qmZwkjoTmHrNsI28Q/7I8h+2ijUkI4uEnnMCziKupQ==}
+    engines: {node: '>= 22'}
+
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
     engines: {node: '>=6.0.0'}
@@ -518,8 +537,8 @@ packages:
     resolution: {integrity: sha512-SEeaJLb3qBNF/OaXnaR1NmmBbFYk1zC0ZH/52fATcRPLFg/p791YrcyFFy44Bo9sLaGuSuLp5Q6axbb/O+v/RA==}
     engines: {node: ^14.18.0 || >=16.0.0}
 
-  '@playwright/test@1.60.0':
-    resolution: {integrity: sha512-O71yZIbAh/PxDMNGns37GHBIfrVkEVyn+AXyIa5dOTfb4/xNvRWV+Vv/NMbNCtODB/pO7vLlF2OTmMVLhmr7Ag==}
+  '@playwright/test@1.61.1':
+    resolution: {integrity: sha512-8nKv6+0RJSL9FE4jYOEGXnPeM/Hg12qZpmqzZjRh3qM0Y7c3z1mrOTfFLids72RDQYVh9WpLEfR5WdpNX4fkig==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -857,6 +876,9 @@ packages:
 
   '@vue/compiler-ssr@3.5.33':
     resolution: {integrity: sha512-IErjYdnj1qIupG5xxiVIYiiRvDhGWV4zuh/RCrwfYpuL+HWQzeU6lCk/nF9r7olWMnjKxCAkOctT2qFWFkzb1A==}
+
+  '@vue/devtools-api@6.6.4':
+    resolution: {integrity: sha512-sGhTPMuXqZ1rVOk32RylztWkfXTRhuS7vgAKv0zjqk8gbsHkJ7xfFf+jbySxt7tWObEJwyKaHMikV/WGDiQm8g==}
 
   '@vue/devtools-api@7.7.9':
     resolution: {integrity: sha512-kIE8wvwlcZ6TJTbNeU2HQNtaxLx3a84aotTITUuL/4bzfPxzajGBOoqjMhwZJ8L9qFYDU/lAYMEEm11dnZOD6g==}
@@ -1507,13 +1529,13 @@ packages:
       typescript:
         optional: true
 
-  playwright-core@1.60.0:
-    resolution: {integrity: sha512-9bW6zvX/m0lEbgTKJ6YppOKx8H3VOPBMOCFh2irXFOT4BbHgrx5hPjwJYLT40Lu+4qtD36qKc/Hn56StUW57IA==}
+  playwright-core@1.61.1:
+    resolution: {integrity: sha512-h7Qlt6m4REp25qvIdvbDtVmD4LqVXfpRxhORv9L0jzETM05p4fuPJ3dKyuSXQxDSbXnmS79HAgi9589lGSpLkg==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.60.0:
-    resolution: {integrity: sha512-hheHdokM8cdqCb0lcE3s+zT4t4W+vvjpGxsZlDnikarzx8tSzMebh3UiFtgqwFwnTnjYQcsyMF8ei2mCO/tpeA==}
+  playwright@1.61.1:
+    resolution: {integrity: sha512-DWnY5o3YbLWK4GovuAVwpqL+1VwGNdUGrRr++8j8PtQQzvAVZUIMjKQ90fY689sEJZJBbZVw1rXaOKSTitkzPQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -1866,6 +1888,12 @@ packages:
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
 
+  vue-i18n@11.4.5:
+    resolution: {integrity: sha512-rm8YJ6RpjOrkcgS2GLrZwLvs/VbhxbTSuEspbyXDo233+fPK0OMFNLOj3fdQYVKdOgcpSfLW91JhbqgpkkcBWA==}
+    engines: {node: '>= 22'}
+    peerDependencies:
+      vue: ^3.0.0
+
   vue-tsc@3.2.7:
     resolution: {integrity: sha512-zc1tL3HoQni1zGTGrwBVRQb7rGP5SWdu/m4rGB6JcnAC5MT5LFZIxF7Y+EJEnt4hGF23d60rXH7gRjHGb5KQQQ==}
     hasBin: true
@@ -2166,6 +2194,24 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
+  '@intlify/core-base@11.4.5':
+    dependencies:
+      '@intlify/devtools-types': 11.4.5
+      '@intlify/message-compiler': 11.4.5
+      '@intlify/shared': 11.4.5
+
+  '@intlify/devtools-types@11.4.5':
+    dependencies:
+      '@intlify/core-base': 11.4.5
+      '@intlify/shared': 11.4.5
+
+  '@intlify/message-compiler@11.4.5':
+    dependencies:
+      '@intlify/shared': 11.4.5
+      source-map-js: 1.2.1
+
+  '@intlify/shared@11.4.5': {}
+
   '@jridgewell/resolve-uri@3.1.2': {}
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
@@ -2177,9 +2223,9 @@ snapshots:
 
   '@pkgr/core@0.3.6': {}
 
-  '@playwright/test@1.60.0':
+  '@playwright/test@1.61.1':
     dependencies:
-      playwright: 1.60.0
+      playwright: 1.61.1
 
   '@rolldown/pluginutils@1.0.0-rc.13': {}
 
@@ -2517,6 +2563,8 @@ snapshots:
     dependencies:
       '@vue/compiler-dom': 3.5.33
       '@vue/shared': 3.5.33
+
+  '@vue/devtools-api@6.6.4': {}
 
   '@vue/devtools-api@7.7.9':
     dependencies:
@@ -3203,11 +3251,11 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
-  playwright-core@1.60.0: {}
+  playwright-core@1.61.1: {}
 
-  playwright@1.60.0:
+  playwright@1.61.1:
     dependencies:
-      playwright-core: 1.60.0
+      playwright-core: 1.61.1
     optionalDependencies:
       fsevents: 2.3.2
 
@@ -3579,6 +3627,14 @@ snapshots:
       semver: 7.7.4
     transitivePeerDependencies:
       - supports-color
+
+  vue-i18n@11.4.5(vue@3.5.33(typescript@5.9.3)):
+    dependencies:
+      '@intlify/core-base': 11.4.5
+      '@intlify/devtools-types': 11.4.5
+      '@intlify/shared': 11.4.5
+      '@vue/devtools-api': 6.6.4
+      vue: 3.5.33(typescript@5.9.3)
 
   vue-tsc@3.2.7(typescript@5.9.3):
     dependencies:

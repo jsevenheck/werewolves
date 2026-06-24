@@ -2,7 +2,9 @@
 import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../../stores/game';
-import { formatPhase } from '../../utils/helpers';
+import { useGameI18n } from '../../composables/useGameI18n';
+import { ROLE_DETAILS } from '../../utils/roleDetails';
+import LanguageSwitcher from '../settings/LanguageSwitcher.vue';
 import type { TypedSocket } from '../../composables/useSocket';
 
 interface Props {
@@ -17,16 +19,15 @@ interface Props {
 const props = defineProps<Props>();
 const store = useGameStore();
 const { room, playerName, roleVisible } = storeToRefs(store);
-
-import { ROLE_DETAILS } from '../../utils/roleDetails';
+const { t, roleName, roleDescription, seerResultLabel, formatRoomPhase } = useGameI18n();
 
 const self = computed(() => room.value?.self || null);
 const detail = computed(() => (self.value?.role ? ROLE_DETAILS[self.value.role] : null));
 const seerResult = computed(() => room.value?.seerResult || null);
 
-const phaseText = computed(() => (room.value ? formatPhase(room.value) : ''));
+const phaseText = computed(() => (room.value ? formatRoomPhase(room.value) : ''));
 const narratorLabel = computed(() => {
-  return props.narratorEnabled ? 'On' : 'Off';
+  return props.narratorEnabled ? t('header.narratorOn') : t('header.narratorOff');
 });
 
 function toggleRole() {
@@ -56,17 +57,22 @@ function leaveRoom() {
         "
       >
         <div>
-          <h1>Room {{ room.code }}</h1>
-          <p>Phase: {{ phaseText }}</p>
+          <h1>{{ t('header.room', { code: room.code }) }}</h1>
+          <p>{{ t('header.phase', { phase: phaseText }) }}</p>
         </div>
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center">
-          <span class="tag">You: {{ playerName || 'Unknown' }}</span>
-          <span v-if="self?.alive" class="tag" style="border-color: #4ade80; color: #4ade80"
-            >Alive</span
-          >
-          <span v-else class="tag" style="border-color: #ef4444; color: #ef4444">Dead</span>
+          <LanguageSwitcher />
+          <span class="tag">{{
+            t('header.you', { name: playerName || t('common.unknown') })
+          }}</span>
+          <span v-if="self?.alive" class="tag" style="border-color: #4ade80; color: #4ade80">{{
+            t('common.alive')
+          }}</span>
+          <span v-else class="tag" style="border-color: #ef4444; color: #ef4444">{{
+            t('common.dead')
+          }}</span>
           <button v-if="self?.role" id="toggle-role" type="button" @click="toggleRole">
-            {{ roleVisible ? 'Hide Role' : 'Reveal Role' }}
+            {{ roleVisible ? t('header.hideRole') : t('header.revealRole') }}
           </button>
           <button
             id="toggle-narrator"
@@ -74,9 +80,11 @@ function leaveRoom() {
             :disabled="narratorUnlockInProgress"
             @click="onToggleNarrator"
           >
-            Narrator: {{ narratorLabel }}
+            {{ t('header.narrator', { state: narratorLabel }) }}
           </button>
-          <button id="leave-room" type="button" @click="leaveRoom">Leave Game</button>
+          <button id="leave-room" type="button" @click="leaveRoom">
+            {{ t('header.leaveGame') }}
+          </button>
         </div>
       </div>
       <div
@@ -84,11 +92,16 @@ function leaveRoom() {
         class="role-card"
         :style="{ borderColor: detail?.color || '#f8fafc', color: detail?.color || '#f8fafc' }"
       >
-        <strong>{{ detail?.name || self.role }}</strong>
-        <p>{{ detail?.description || '' }}</p>
-        <p v-if="room.loverName">Lover: {{ room.loverName }}</p>
+        <strong>{{ roleName(self.role) }}</strong>
+        <p>{{ roleDescription(self.role) }}</p>
+        <p v-if="room.loverName">{{ t('common.lover', { name: room.loverName }) }}</p>
         <p v-if="self.role === 'seer' && seerResult">
-          Last vision: {{ seerResult.name }} is {{ seerResult.result }}.
+          {{
+            t('header.lastVision', {
+              name: seerResult.name,
+              result: seerResultLabel(seerResult.result),
+            })
+          }}
         </p>
       </div>
     </div>

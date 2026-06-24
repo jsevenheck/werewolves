@@ -1,6 +1,13 @@
-import type { RoleConfig, PassiveRoleConfig, RoomView, StoredSession } from './types';
+import type {
+  LocalizedMessage,
+  RoleConfig,
+  PassiveRoleConfig,
+  RoomSummary,
+  RoomView,
+  StoredSession,
+} from './types';
 
-export type ErrorResponse = { error: string };
+export type ErrorResponse = { error: string; message: LocalizedMessage };
 export type OkResponse = { ok: true };
 
 export interface ClientToServerEvents {
@@ -85,6 +92,55 @@ export interface ClientToServerEvents {
     cb?: (response: OkResponse | ErrorResponse) => void
   ) => void;
   requestState: (payload: { roomCode: string; playerId: string }) => void;
+
+  /**
+   * ADMIN-ONLY events. The server validates `auth.adminToken` on the socket
+   * against `process.env.WEREWOLVES_ADMIN_TOKEN` for every action. Regular
+   * clients (with no/invalid admin token) cannot use these events.
+   *
+   * The existing `kickPlayer` event is unchanged: it remains the host-only,
+   * lobby-only in-game kick used by PlayersPanel.vue.
+   */
+  adminListRooms: (
+    _payload?: Record<string, never>,
+    cb?: (response: { rooms: RoomSummary[] } | ErrorResponse) => void
+  ) => void;
+  adminJoinRoom: (
+    payload: { roomCode: string },
+    cb?: (response: OkResponse | ErrorResponse) => void
+  ) => void;
+  adminLeaveRoom: (
+    payload: { roomCode?: string },
+    cb?: (response: OkResponse | ErrorResponse) => void
+  ) => void;
+  /**
+   * Global admin kick. Works in ANY phase. The target may be ANY player in
+   * the room (not the admin socket itself, since admins are observers).
+   */
+  adminKickPlayer: (
+    payload: { roomCode: string; targetId: string },
+    cb?: (response: OkResponse | ErrorResponse) => void
+  ) => void;
+  /**
+   * Global admin close-session. Deletes the room entirely: disconnects all
+   * players (emitting `roomClosed`), notifies admin observers with
+   * `roomClosed`, and removes the room from the registry. Admin-only.
+   * Analogous to the host `closeSession` event but callable in ANY phase.
+   */
+  adminCloseRoom: (
+    payload: { roomCode: string },
+    cb?: (response: OkResponse | ErrorResponse) => void
+  ) => void;
+  /**
+   * Host mid-game kick. The acting socket MUST be the current host of the
+   * lobby AND must have presented a valid admin token on connect (this lets
+   * the host use the elevated mid-game kick that bypasses the lobby-only
+   * restriction of `kickPlayer`).
+   */
+  hostMidGameKickPlayer: (
+    payload: { roomCode: string; playerId: string; targetId: string },
+    cb?: (response: OkResponse | ErrorResponse) => void
+  ) => void;
 }
 
 export interface ServerToClientEvents {
@@ -101,4 +157,12 @@ export interface InterServerEvents {
 export interface SocketData {
   roomCode?: string;
   playerId?: string;
+  /**
+   * True when the socket presented a valid `WEREWOLVES_ADMIN_TOKEN` during the
+   * Socket.IO handshake. The server's `io.use` middleware sets this once and
+   * admin-only handlers check it before doing privileged work.
+   *
+   * Always false / undefined for regular player sockets.
+   */
+  adminToken?: boolean;
 }

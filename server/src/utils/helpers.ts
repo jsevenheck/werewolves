@@ -1,4 +1,11 @@
-import type { Room, VoteState, Player } from '../../../core/src/types';
+import type {
+  LocalizedMessage,
+  LocalizedMessageParams,
+  Room,
+  VoteState,
+  Player,
+} from '../../../core/src/types';
+import type { ErrorResponse } from '../../../core/src/events';
 import { ROLE_INFO, MAX_PLAYER_NAME_LENGTH } from '../config/constants';
 
 function sanitizeName(name: unknown): string {
@@ -25,8 +32,26 @@ function createVoteState(): VoteState {
   };
 }
 
-function addLog(room: Room, text: string, publicText: string | null = null) {
-  room.logs.push({ ts: Date.now(), text, publicText });
+function localizedMessage(key: string, params?: LocalizedMessageParams): LocalizedMessage {
+  return params ? { key, params } : { key };
+}
+
+function errorResponse(
+  _error: string,
+  key: string,
+  params?: LocalizedMessageParams
+): ErrorResponse {
+  return { error: key, message: localizedMessage(key, params) };
+}
+
+function addLog(
+  room: Room,
+  text: string,
+  publicText: string | null = null,
+  message: LocalizedMessage | null = null,
+  publicMessage: LocalizedMessage | null = null
+) {
+  room.logs.push({ ts: Date.now(), text, publicText, message, publicMessage });
 }
 
 function clearRoomTimers(room: Room) {
@@ -68,4 +93,13 @@ function getPlayerRoleLabel(player: Player): string {
   return ROLE_INFO[role]?.label || role;
 }
 
-export { sanitizeName, shuffle, createVoteState, addLog, clearRoomTimers, getPlayerRoleLabel };
+export {
+  sanitizeName,
+  shuffle,
+  createVoteState,
+  localizedMessage,
+  errorResponse,
+  addLog,
+  clearRoomTimers,
+  getPlayerRoleLabel,
+};

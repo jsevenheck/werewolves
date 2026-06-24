@@ -3,6 +3,7 @@ import type { RoomView } from '@shared/types';
 import { getBundledAudioUrl } from '../assets/audio/manifest';
 
 type NarrationKey = string | null;
+type NarratorNotification = 'audioBlocked';
 
 type NarratorOptions = {
   /**
@@ -18,7 +19,7 @@ type NarratorOptions = {
   initialEnabled?: boolean;
   initialUnlocked?: boolean;
   playClip?: (key: string) => void;
-  notify?: (message: string) => void;
+  notify?: (message: NarratorNotification) => void;
   playDebounceMs?: number;
 };
 
@@ -58,7 +59,7 @@ class Narrator {
   private readonly assetsBasePath: string | undefined;
   private readonly storage: Storage | null;
   private readonly playClip: (key: string) => void;
-  private readonly notify: (message: string) => void;
+  private readonly notify: (message: NarratorNotification) => void;
   private readonly playDebounceMs: number;
   private readonly variants = new Map<string, number>([
     ['day', -1],
@@ -460,10 +461,10 @@ class Narrator {
     if (this.enabled) {
       this.setEnabled(false);
     }
-    this.informUser('Audio is blocked. Tap to enable narrator.');
+    this.informUser('audioBlocked');
   }
 
-  private informUser(message: string) {
+  private informUser(message: NarratorNotification) {
     const now = Date.now();
     if (now - this.lastUserMessageAt < USER_MESSAGE_COOLDOWN_MS) return;
     this.lastUserMessageAt = now;
@@ -476,4 +477,4 @@ function createNarrator(options: NarratorOptions = {}) {
 }
 
 export { createNarrator, computeNarrationKey };
-export type { NarrationKey, Narrator, NarratorOptions };
+export type { NarrationKey, Narrator, NarratorNotification, NarratorOptions };

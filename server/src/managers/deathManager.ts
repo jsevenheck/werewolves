@@ -1,5 +1,5 @@
 import type { Namespace } from 'socket.io';
-import { addLog, clearRoomTimers, getPlayerRoleLabel } from '../utils/helpers';
+import { addLog, clearRoomTimers, getPlayerRoleLabel, localizedMessage } from '../utils/helpers';
 import { HUNTER_SHOT_TIMEOUT_MS } from '../config/constants';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { NightDeathAnnouncement, Room } from '../../../core/src/types';
@@ -45,7 +45,12 @@ function startHunterShot(
   // Auto-skip hunter shot after timeout if no response
   room.hunterShotTimer = setTimeout(() => {
     if (room.awaitingHunterShot === hunterId) {
-      addLog(room, `Hunter shot timed out. No target selected.`);
+      addLog(
+        room,
+        `Hunter shot timed out. No target selected.`,
+        null,
+        localizedMessage('server.logs.hunterTimeout')
+      );
       room.awaitingHunterShot = null;
       room.hunterShotTimer = null;
       room.hunterShotEndsAt = null;
@@ -121,7 +126,16 @@ function resolveDeaths(
     addLog(
       room,
       `${player.name} died (${reason}). Role: ${roleLabel}.`,
-      `${player.name} died. Role: ${roleLabel}.`
+      `${player.name} died. Role: ${roleLabel}.`,
+      localizedMessage('server.logs.diedPrivate', {
+        name: player.name,
+        reason,
+        role: player.role ?? 'villager',
+      }),
+      localizedMessage('server.logs.diedPublic', {
+        name: player.name,
+        role: player.role ?? 'villager',
+      })
     );
     if (player.role === 'hunter') {
       const alreadyQueued =
@@ -160,6 +174,7 @@ function resolveDeaths(
       room.lastDayDeaths = (room.lastDayDeaths || []).concat(announced);
       // If there were any day deaths, clear lastDayMessage since the death announcement itself is sufficient.
       room.lastDayMessage = null;
+      room.lastDayMessageI18n = null;
     }
   }
   if (!room.awaitingHunterShot && room.hunterShotQueue.length === 0) {

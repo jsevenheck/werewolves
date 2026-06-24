@@ -1,5 +1,5 @@
 import type { Namespace } from 'socket.io';
-import { addLog, clearRoomTimers, getPlayerRoleLabel } from '../utils/helpers';
+import { addLog, clearRoomTimers, getPlayerRoleLabel, localizedMessage } from '../utils/helpers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { Room } from '../../../core/src/types';
 import { queueDeath, resolveDeaths } from './deathManager';
@@ -49,9 +49,16 @@ function tryResolveDayVote(
 
   const entries = Object.entries(tallies);
   if (!effectiveVotes.length || !entries.length) {
-    addLog(room, 'Vote skipped. No one eliminated.', 'Vote skipped. No one eliminated.');
+    addLog(
+      room,
+      'Vote skipped. No one eliminated.',
+      'Vote skipped. No one eliminated.',
+      localizedMessage('server.logs.voteSkipped'),
+      localizedMessage('server.logs.voteSkipped')
+    );
     room.lastDayDeaths = [];
     room.lastDayMessage = 'No one was eliminated.';
+    room.lastDayMessageI18n = localizedMessage('server.dayResults.noElimination');
     room.dayVoteResolved = true;
     broadcastRoom(room);
     return true;
@@ -67,10 +74,13 @@ function tryResolveDayVote(
     addLog(
       room,
       'Majority abstained. No one eliminated.',
-      'Majority abstained. No one eliminated.'
+      'Majority abstained. No one eliminated.',
+      localizedMessage('server.logs.majorityAbstained'),
+      localizedMessage('server.logs.majorityAbstained')
     );
     room.lastDayDeaths = [];
     room.lastDayMessage = 'No one was eliminated.';
+    room.lastDayMessageI18n = localizedMessage('server.dayResults.noElimination');
     room.dayVoteResolved = true;
     broadcastRoom(room);
     return true;
@@ -83,7 +93,9 @@ function tryResolveDayVote(
       addLog(
         room,
         `Vote tied. Mayor's vote decided the outcome.`,
-        `Vote tied. Mayor's vote decided the outcome.`
+        `Vote tied. Mayor's vote decided the outcome.`,
+        localizedMessage('server.logs.voteTieMayor'),
+        localizedMessage('server.logs.voteTieMayor')
       );
       resolveDayKill(room, mayorVote, broadcastRoom, io);
       return true;
@@ -92,7 +104,12 @@ function tryResolveDayVote(
     if (!room.voteState.revoteFromTie) {
       room.voteState.revoteFromTie = tied;
       room.voteState.votes = {};
-      addLog(room, 'Vote tied. Revote among highlighted players.');
+      addLog(
+        room,
+        'Vote tied. Revote among highlighted players.',
+        null,
+        localizedMessage('server.logs.voteTiedRevote')
+      );
       broadcastRoom(room);
       return true;
     }
@@ -101,7 +118,9 @@ function tryResolveDayVote(
       addLog(
         room,
         `Revote tied. Mayor's vote decided the outcome.`,
-        `Revote tied. Mayor's vote decided the outcome.`
+        `Revote tied. Mayor's vote decided the outcome.`,
+        localizedMessage('server.logs.revoteTieMayor'),
+        localizedMessage('server.logs.revoteTieMayor')
       );
       resolveDayKill(room, mayorVote, broadcastRoom, io);
       return true;
@@ -112,7 +131,17 @@ function tryResolveDayVote(
     const selectionMessage = randomPlayer
       ? `Vote tied again. Randomly selected ${randomPlayer.name}.`
       : 'Vote tied again. Randomly selected a player.';
-    addLog(room, selectionMessage, selectionMessage);
+    addLog(
+      room,
+      selectionMessage,
+      selectionMessage,
+      randomPlayer
+        ? localizedMessage('server.logs.voteTiedRandom', { name: randomPlayer.name })
+        : localizedMessage('server.logs.voteTiedRandomFallback'),
+      randomPlayer
+        ? localizedMessage('server.logs.voteTiedRandom', { name: randomPlayer.name })
+        : localizedMessage('server.logs.voteTiedRandomFallback')
+    );
     resolveDayKill(room, randomPick, broadcastRoom, io);
   } else {
     resolveDayKill(room, top[0], broadcastRoom, io);
@@ -129,11 +158,17 @@ function resolveDayKill(
   const target = room.players[targetId];
   if (!target || !target.alive) return;
   room.lastDayMessage = null;
+  room.lastDayMessageI18n = null;
   const roleLabel = getPlayerRoleLabel(target);
   addLog(
     room,
     `${target.name} was voted out. Role: ${roleLabel}.`,
-    `${target.name} was voted out. Role: ${roleLabel}.`
+    `${target.name} was voted out. Role: ${roleLabel}.`,
+    localizedMessage('server.logs.votedOut', {
+      name: target.name,
+      role: target.role ?? 'villager',
+    }),
+    localizedMessage('server.logs.votedOut', { name: target.name, role: target.role ?? 'villager' })
   );
   if (target.role === 'joker') {
     // Process joker's death properly so lover heartbreak triggers

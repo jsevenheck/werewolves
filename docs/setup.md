@@ -61,6 +61,66 @@ pnpm run test:e2e
 - Armor links Lovers once, then night/day cycles begin.
 - Host can skip the armor step or a night action step if a player is offline or unresponsive.
 - If the host disconnects, another connected player becomes the acting host until the original host reconnects.
+- Players can switch between English and German via the language switcher in
+  the game header, on the landing page, and on the admin console.
+
+## Admin Console
+
+The server can expose a global admin console for operators (read-only room
+observation + emergency kick). It is disabled by default.
+
+### Local development
+
+Create a `.env` file in the repo root (gitignored) — the server loads it
+automatically on startup via Node's `process.loadEnvFile`:
+
+```bash
+# .env
+WEREWOLVES_ADMIN_TOKEN=your-secret
+PORT=3001
+```
+
+A `.env.example` template is committed; copy it to `.env` and fill in the
+value. Then run `pnpm run dev` as usual. Alternatively set the var inline:
+
+```bash
+WEREWOLVES_ADMIN_TOKEN=your-secret pnpm run dev
+```
+
+If the env var is unset, admin endpoints are disabled and a one-shot warning
+is logged at startup. The token is never logged.
+
+### Production (Hostinger VPS via GitHub Actions)
+
+The token is injected from a GitHub Secret — never commit it.
+
+1. In the repo: Settings → Secrets and variables → Actions → New secret:
+   name `WEREWOLVES_ADMIN_TOKEN`, value your secret.
+2. The deploy workflow (`.github/workflows/deploy.yml`) passes it through to
+   the VPS environment.
+3. `docker-compose.yml` substitutes it into the container via
+   `WEREWOLVES_ADMIN_TOKEN=${WEREWOLVES_ADMIN_TOKEN:-}` (empty/unset = admin
+   disabled, no crash).
+
+If you run the container manually on the VPS instead, set the var in a
+`.env` next to `docker-compose.yml` or via the hPanel environment.
+
+### Opening the console
+
+Open `http://localhost:3001/?admin=1` (or your production URL with
+`?admin=1`). Enter the token. It is stored in `localStorage`
+(`werewolves_admin_token`) and sent only in the Socket.IO handshake.
+
+The admin console can:
+
+- list all active rooms (sanitized; no roles/votes leak),
+- drill into a room's player list and kick any player in any phase,
+- join a room as a read-only observer and watch live, sanitized state
+  (roles and private state are hidden).
+
+Hosts can also perform mid-game kicks from the in-game host side panel. The
+first mid-game kick requires the admin token; if the host has not set it yet,
+they are prompted to open the admin page once to store it.
 
 ## Narrator Audio
 

@@ -1,5 +1,5 @@
 import type { Namespace } from 'socket.io';
-import { addLog, createVoteState } from '../utils/helpers';
+import { addLog, createVoteState, localizedMessage } from '../utils/helpers';
 import { MAYOR_SELECTION_TIMEOUT_MS } from '../config/constants';
 import { schedulePhaseTransition } from './phaseManager';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
@@ -48,10 +48,17 @@ function startMayorSelection(
         addLog(
           room,
           `Mayor succession timed out. ${randomSuccessor.name} was randomly selected as the new Mayor.`,
-          `Mayor succession timed out. ${randomSuccessor.name} was randomly selected as the new Mayor.`
+          `Mayor succession timed out. ${randomSuccessor.name} was randomly selected as the new Mayor.`,
+          localizedMessage('server.logs.mayorSuccessionRandom', { name: randomSuccessor.name }),
+          localizedMessage('server.logs.mayorSuccessionRandom', { name: randomSuccessor.name })
         );
       } else {
-        addLog(room, `Mayor succession timed out. No alive players to select.`);
+        addLog(
+          room,
+          `Mayor succession timed out. No alive players to select.`,
+          null,
+          localizedMessage('server.logs.mayorSuccessionNoAlive')
+        );
         room.mayorId = null;
       }
 
@@ -112,7 +119,9 @@ function finalizeMayorVote(room: Room, mayorId: string, broadcastRoom: (room: Ro
   addLog(
     room,
     `${mayor.name} has been elected as the Mayor.`,
-    `${mayor.name} has been elected as the Mayor.`
+    `${mayor.name} has been elected as the Mayor.`,
+    localizedMessage('server.logs.mayorElected', { name: mayor.name }),
+    localizedMessage('server.logs.mayorElected', { name: mayor.name })
   );
   schedulePhaseTransition(room, 'postMayor', broadcastRoom);
   return true;
@@ -167,7 +176,12 @@ function tryResolveMayorVote(
     if (!room.voteState.revoteFromTie) {
       room.voteState.revoteFromTie = tied;
       room.voteState.votes = {};
-      addLog(room, 'Mayor vote tied. Revote among highlighted players.');
+      addLog(
+        room,
+        'Mayor vote tied. Revote among highlighted players.',
+        null,
+        localizedMessage('server.logs.mayorVoteTied')
+      );
       broadcastRoom(room);
       return false;
     }

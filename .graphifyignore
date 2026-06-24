@@ -1,0 +1,102 @@
+# .graphifyignore
+# Ziel: Nur code-relevante Dateien dieses Vue/Node/Socket.IO-Projekts in den Graph aufnehmen.
+# Strategie: Standardmäßig alles ignorieren und gezielt Quellcode, Tests sowie Build-/Tooling-Konfiguration erlauben.
+
+# Zuerst alles ignorieren
+*
+
+# === Shared Core ===
+!core/
+!core/src/
+!core/src/**/
+!core/src/**/*.ts
+
+# === Backend: Node.js / Express / Socket.IO ===
+!server/
+!server/src/
+!server/src/**/
+!server/src/**/*.ts
+
+# === Frontend: Vue 3 / TypeScript ===
+!ui-vue/
+!ui-vue/index.html
+!ui-vue/env.d.ts
+!ui-vue/package.json
+!ui-vue/tsconfig.json
+!ui-vue/vite.config.ts
+!ui-vue/src/
+!ui-vue/src/**/
+!ui-vue/src/**/*.ts
+!ui-vue/src/**/*.d.ts
+!ui-vue/src/**/*.vue
+!ui-vue/src/**/*.css
+
+# === Tests ===
+!__tests__/
+!__tests__/**/
+!__tests__/**/*.ts
+!e2e/
+!e2e/**/
+!e2e/**/*.ts
+
+# === Projekt- und Tooling-Konfiguration ===
+!package.json
+!pnpm-workspace.yaml
+!tsconfig.json
+!tsconfig.*.json
+!eslint.config.mjs
+!vitest.config.ts
+!vitest.setup.ts
+!playwright.config.ts
+!global.d.ts
+!.prettierrc
+
+# === Explizit ausgeschlossen: Dependencies, Builds, Caches, Reports ===
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+build/
+**/build/
+coverage/
+playwright-report/
+test-results/
+.eslintcache
+.vite/
+**/.vite/
+
+# === Explizit ausgeschlossen: Nicht-Code-Artefakte und Assets ===
+docs/
+README.md
+CLAUDE.md
+*.md
+*.log
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.webp
+*.mp3
+*.wav
+*.ogg
+ui-vue/public/
+ui-vue/src/assets/audio/*.mp3
+
+# === Explizit ausgeschlossen: Agent-/Editor-/VCS-Dateien ===
+.git/
+.github/
+.agents/
+.claude/
+.pi/
+.vscode/
+.idea/
+
+# === Explizit ausgeschlossen: Secrets und lokale Umgebung ===
+.env
+.env.*
+*.local
+
+# === Graphify Output selbst nicht einlesen ===
+graphify-out/

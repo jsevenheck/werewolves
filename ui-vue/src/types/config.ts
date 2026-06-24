@@ -9,4 +9,9 @@ export interface WerewolvesGameConfig {
    * When provided, narrator tries custom audio first, then falls back to bundled.
    */
   assetsBasePath?: string;
+
+  /**
+   * Optional initial UI language. User choices stored in localStorage take precedence.
+   */
+  defaultLocale?: 'en' | 'de';
 }

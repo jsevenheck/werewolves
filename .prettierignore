@@ -12,9 +12,5 @@ pnpm-lock.yaml
 # Agent tooling (mirrors eslint ignore; not application code)
 .pi/
 
-# Generated files
-*.log
-.env
-
-# Audio files
-*.mp3
+# Graphify generated graph
+graphify-out/
