@@ -87,6 +87,8 @@ export const en = {
     roleSummary: 'Configured roles: {total} / {players}. Villagers auto-fill: {villagers}',
     minimumPlayers: 'Minimum players to start: {count}',
     tooManyRoles: 'Too many roles for current players.',
+    disconnectedWarning:
+      '{count} player(s) are disconnected. Kick them or wait for them to reconnect before starting.',
     startGame: 'Start Game',
   },
   roleReveal: {
@@ -214,6 +216,8 @@ export const en = {
       cannotProtectSame: 'Cannot protect the same player two nights in a row',
       cannotVisitSelf: 'Cannot visit yourself',
       needPlayers: 'Need at least {count} players',
+      playersDisconnected:
+        '{count} player(s) are disconnected. Wait for them to reconnect or remove them before starting.',
       roleCountExceedsPlayers: 'Role count exceeds players',
       needWerewolf: 'Need at least 1 Werewolf',
       onlyOneRole: 'Only 1 {role} allowed',
@@ -226,7 +230,6 @@ export const en = {
       adminRequired: 'Admin access required',
       adminNotObserving: 'Not observing any room',
       adminNotObservingRoom: 'Not observing that room',
-      cannotRemoveLastPlayer: 'Cannot remove the last player',
     },
     logs: {
       playerReason: '{name} {reason}.',

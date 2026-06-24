@@ -2,27 +2,36 @@ import { useI18n } from 'vue-i18n';
 import type { LocalizedMessage, NightStep, Phase, Role, RoomView, Team } from '@shared/types';
 import type { ErrorResponse } from '@shared/events';
 
-function isWerewolfResult(result: string | null | undefined) {
-  return result === 'Werewolf';
+const DEATH_REASON_KEYS: Record<string, string> = {
+  'died of heartbreak': 'server.deathReasons.heartbreak',
+  'eaten by Werewolves': 'server.deathReasons.eatenByWerewolves',
+  'caught visiting the victim': 'server.deathReasons.caughtVisiting',
+  'poisoned by Witch': 'server.deathReasons.poisonedByWitch',
+  'executed by vote': 'server.deathReasons.executedByVote',
+  'shot by Hunter': 'server.deathReasons.shotByHunter',
+};
+
+/**
+ * Map a raw server-side death reason string to its i18n key.
+ *
+ * Exported so the server/client death-reason contract can be asserted by a
+ * parity test (see `__tests__/deathReasonContract.test.ts`). Every reason
+ * passed to `queueDeath(room, id, reason)` on the server MUST have a mapping
+ * here, otherwise the client silently falls back to the raw English string.
+ */
+export function deathReasonKey(reason: string): string | null {
+  return DEATH_REASON_KEYS[reason] ?? null;
 }
 
-function deathReasonKey(reason: string): string | null {
-  switch (reason) {
-    case 'died of heartbreak':
-      return 'server.deathReasons.heartbreak';
-    case 'eaten by Werewolves':
-      return 'server.deathReasons.eatenByWerewolves';
-    case 'caught visiting the victim':
-      return 'server.deathReasons.caughtVisiting';
-    case 'poisoned by Witch':
-      return 'server.deathReasons.poisonedByWitch';
-    case 'executed by vote':
-      return 'server.deathReasons.executedByVote';
-    case 'shot by Hunter':
-      return 'server.deathReasons.shotByHunter';
-    default:
-      return null;
-  }
+/**
+ * The set of death-reason strings the server is allowed to emit via
+ * `queueDeath`. Kept in sync with `DEATH_REASON_KEYS` and asserted by the
+ * `deathReasonContract` test. Exported for that test only.
+ */
+export const SERVER_DEATH_REASONS = Object.keys(DEATH_REASON_KEYS);
+
+function isWerewolfResult(result: string | null | undefined) {
+  return result === 'Werewolf';
 }
 
 export function useGameI18n() {

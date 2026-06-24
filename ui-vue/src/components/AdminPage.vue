@@ -39,13 +39,14 @@ import { storeToRefs } from 'pinia';
 import { useAdminStore } from '../stores/admin';
 import { useGameI18n } from '../composables/useGameI18n';
 import { useAdminSocket, type AdminSocket } from '../composables/useAdminSocket';
+import LanguageSwitcher from './settings/LanguageSwitcher.vue';
 import { notify } from '../utils/helpers';
 import type { Phase, RoomSummary, RoomView } from '@shared/types';
 
 type View = 'list' | 'detail' | 'observer';
 
 const store = useAdminStore();
-const { t, localizeError, localizeMessage } = useGameI18n();
+const { t, localizeError, localizeMessage, nightStepName, teamName } = useGameI18n();
 const {
   token: _token,
   connected,
@@ -341,10 +342,11 @@ onBeforeUnmount(() => {
          submit the server rejects the socket and the user should see
          the prompt again, not an empty list). -->
     <template v-else-if="view === 'list' && connected">
-      <section class="panel" data-testid="admin-room-list">
+      <section class="panel admin-list-panel" data-testid="admin-room-list">
         <header style="display: flex; justify-content: space-between; align-items: center">
           <h1>{{ t('admin.title') }}</h1>
-          <div>
+          <div style="display: flex; align-items: center; gap: 0.5rem">
+            <LanguageSwitcher />
             <button type="button" data-testid="admin-refresh" @click="fetchRooms">
               {{ t('admin.refresh') }}
             </button>
@@ -465,7 +467,7 @@ onBeforeUnmount(() => {
           <strong>{{ t('admin.phaseHeader') }}:</strong>
           {{ phaseLabel(observingRoom.phase) }}
           <span v-if="observingRoom.phase === 'night' && observingRoom.phaseStep">
-            ({{ observingRoom.phaseStep }})
+            ({{ nightStepName(observingRoom.phaseStep) }})
           </span>
         </p>
         <p>
@@ -477,7 +479,7 @@ onBeforeUnmount(() => {
         </p>
         <p v-if="observingRoom.winner">
           <strong>{{ t('gameOver.winner') }}</strong>
-          {{ observingRoom.winner.team }}
+          {{ teamName(observingRoom.winner.team) }}
         </p>
         <p v-if="observingRoom.lastDayMessage">
           {{ humanizeLastDayMessage(observingRoom) }}

@@ -183,6 +183,21 @@ If the role affects win conditions or death resolution:
 - `server/src/managers/deathManager.ts`: update death chains and winner checks.
 - `server/src/managers/voteManager.ts`: update day-vote outcomes (e.g., instant win role).
 
+### Death reasons and the i18n contract
+
+If your role introduces a **new death reason** string (passed to
+`queueDeath(room, playerId, '<reason>')`), you MUST also:
+
+1. Add a mapping in `DEATH_REASON_KEYS` in `ui-vue/src/composables/useGameI18n.ts`
+   (the client maps the raw server reason to a `server.deathReasons.*` i18n key).
+2. Add the matching `server.deathReasons.<key>` entries to **both**
+   `ui-vue/src/i18n/messages/en.ts` and `ui-vue/src/i18n/messages/de.ts`.
+3. Keep the reason as a **string literal** in the `queueDeath` call. The
+   `__tests__/deathReasonContract.test.ts` parity test extracts reasons via a
+   regex that only matches string literals; a variable/template-literal reason
+   would silently slip past the test and fall back to the raw English string
+   in the client.
+
 ## File Reference (Short List)
 
 - Shared types: `core/src/types.ts`

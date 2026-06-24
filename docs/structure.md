@@ -30,30 +30,32 @@ werewolves/
 │   └── src/
 │       ├── index.ts          # Server entry point (Express + Socket.IO + static)
 │       ├── config/           # Server-only constants and role data
-│       ├── handlers/         # Socket.IO event handlers
-│       ├── managers/         # Business logic (role, phase, vote, death, etc.)
+│       ├── handlers/         # Socket.IO event handlers (game + admin)
+│       ├── managers/         # Business logic (role, phase, vote, death, admin, etc.)
 │       ├── models/           # Room and Player models
-│       └── utils/            # Server helpers
+│       └── utils/            # Server helpers (incl. admin auth)
 ├── ui-vue/                   # Vue 3 frontend (Vite)
 │   ├── index.html
 │   └── src/
 │       ├── main.ts           # App entry (Pinia + config)
 │       ├── App.vue           # Root component with phase switching
-│       ├── components/       # Phase screens, panels, overlays
-│       ├── composables/      # Socket, narrator hooks, i18n helpers
-│       │   └── useGameI18n.ts
+│       ├── components/       # Phase screens, panels, overlays, admin page, settings
+│       ├── composables/      # Socket, narrator hooks, i18n helpers, admin socket
+│       │   ├── useGameI18n.ts
+│       │   ├── useAdminSocket.ts
+│       │   └── useHostAdminKick.ts
 │       ├── i18n/             # vue-i18n setup and locale message files
 │       │   ├── index.ts
 │       │   ├── messages/
 │       │   │   ├── de.ts
 │       │   │   └── en.ts
 │       │   └── types.ts
-│       ├── stores/           # Pinia stores
+│       ├── stores/           # Pinia stores (game, admin)
 │       ├── types/            # Client types (config.ts)
 │       ├── utils/            # Client helpers
 │       └── assets/           # CSS, audio
-├── __tests__/                # Vitest unit tests
-├── e2e/                      # Playwright E2E tests
+├── __tests__/                # Vitest unit tests (incl. i18n + admin contracts)
+├── e2e/                      # Playwright E2E tests (incl. admin token, language switch)
 └── docs/                     # Documentation
 ```
 
@@ -92,15 +94,20 @@ Business logic separated by concern:
 - `voteManager.ts`: Day voting and elimination (includes mayor tie-breaking)
 - `mayorManager.ts`: Mayor election and succession
 - `deathManager.ts`: Death queue, resolution, hunter shots, win checking
-- `broadcastManager.ts`: Room state sanitization and broadcasting
+- `broadcastManager.ts`: Room state sanitization and broadcasting (player views + admin observer view)
+- `adminManager.ts`: Admin observer registry (socket → room mapping, fan-out)
 
 ### Handlers Layer
 
-- `socketHandlers.ts`: All Socket.IO event handlers organized by game phase
+- `socketHandlers.ts`: Player Socket.IO event handlers organized by game phase
+- `adminSocketHandlers.ts`: Admin-only event handlers (list/join/leave rooms,
+  admin kick, host mid-game kick). Every handler checks `socket.data.adminToken`
+  before mutating state.
 
 ### Utils Layer
 
-- `helpers.ts`: Common utility functions (shuffle, sanitize, logging)
+- `helpers.ts`: Common utility functions (shuffle, sanitize, logging, localized messages)
+- `adminAuth.ts`: Admin token verification (`crypto.timingSafeEqual`) and socket stamping
 
 ## Client-Side Architecture
 
@@ -123,6 +130,14 @@ export interface WerewolvesGameConfig {
 Phase-specific screens in `ui-vue/src/components/*Phase.vue`. Shared UI in
 `ui-vue/src/components/panels` and `ui-vue/src/components/overlays`.
 
+- `AdminPage.vue`: Global admin console (`?admin=1` route). Token prompt, room
+  list, room detail, and live read-only observer view. Uses its own socket and
+  Pinia store; never touches player game state.
+- `panels/HostControlPanel.vue`: Collapsible host side panel for mid-game kicks
+  (lobby kicks still use `PlayersPanel.vue`).
+- `settings/LanguageSwitcher.vue`: Locale dropdown (EN/DE), used in the Header,
+  Landing, and Admin page.
+
 ### Composables
 
 Reusable client logic in `ui-vue/src/composables/`:
@@ -130,7 +145,13 @@ Reusable client logic in `ui-vue/src/composables/`:
 - `useSocket.ts`: Socket.IO setup and typed event helpers.
 - `useNarrator.ts`: Audio playback, gesture unlock, and state management.
 - `useGameI18n.ts`: Centralized translation helpers for roles, teams, phases,
-  night steps, seer results, server-originated messages, and errors.
+  night steps, seer results, server-originated messages, and errors. Exports
+  `deathReasonKey` for the server/client death-reason contract test.
+- `useAdminSocket.ts`: Admin Socket.IO setup tagging the handshake with
+  `auth.adminToken`. Used only by `AdminPage.vue`.
+- `useHostAdminKick.ts`: Lazily opens a short-lived admin socket for the
+  host's mid-game kick (`hostMidGameKickPlayer`), since the host's regular
+  player socket has no admin token.
 
 ## Internationalization
 
@@ -154,11 +175,43 @@ name and description to both locale files.
 
 ### Stores
 
-Pinia stores in `ui-vue/src/stores/` (game/session state, pending actions).
+Pinia stores in `ui-vue/src/stores/`:
+
+- `game.ts`: Player session, room state, pending prompts (hunter/mayor).
+- `admin.ts`: Admin console state (token, room list, observer view). Kept
+  separate from `game.ts` because admin observers are never players.
 
 ### Utils
 
 Helper functions in `ui-vue/src/utils/`.
+
+## Admin Console
+
+The global admin console is a read-only observer and emergency-kick surface for
+operators, gated by a shared secret.
+
+- **Route**: `?admin=1` (no Vue Router; `App.vue` branches on the query param).
+- **Auth**: `WEREWOLVES_ADMIN_TOKEN` env var. Clients present it in the Socket.IO
+  handshake (`auth.adminToken`); the namespace middleware verifies it with
+  `crypto.timingSafeEqual` and stamps `socket.data.adminToken = true`. A wrong
+  token rejects the connection (`connect_error`) so the UI can re-prompt.
+- **Admin observers are not players**: they are never in `room.players`, never
+  receive `self`, never vote/act, and cannot be targeted by game logic. They are
+  tracked by `adminManager.ts` and receive sanitized `roomUpdate` events built
+  by `buildAdminRoomView()` (which strips `self`, all `player.role`,
+  `mayorId`, `seerResult`, `witchState`, `wolfVotes`, `wolfPeers`, `wolfIds`,
+  `guardedTarget`, `harlotVisitedTarget`, `loverName`, `loversKnown`, and
+  Hunter/Mayor identity).
+- **Events** (all admin-gated; see `core/src/events.ts`):
+  - `adminListRooms` — list every room as a sanitized `RoomSummary`.
+  - `adminJoinRoom` / `adminLeaveRoom` — observe / stop observing a room.
+  - `adminKickPlayer` — admin override kick, works in ANY phase.
+  - `hostMidGameKickPlayer` — host-only mid-game kick; the acting socket must be
+    BOTH admin (token) AND the current host (`room.hostId === playerId`).
+- **Host side panel**: `HostControlPanel.vue` is shown only to hosts outside the
+  lobby. Mid-game kicks use `useHostAdminKick` to spin up a short-lived admin
+  socket (the host's player socket has no admin token). If no admin token is
+  stored locally, the host is prompted to open the admin page once to set it.
 
 ## Import Conventions
 
@@ -183,21 +236,33 @@ Helper functions in `ui-vue/src/utils/`.
 
 ```
 server/src/index.ts
-  └── setupSocketHandlers(nsp, socket)
-       ├── models/ (room, player)
-       ├── managers/ (role, phase, night, vote, death, broadcast)
-       └── utils/ (helpers)
+  └── registerNamespace(io)
+        ├── setupSocketHandlers(nsp, socket)     # player events
+        └── setupAdminSocketHandlers(nsp, socket) # admin events
+             ├── models/ (room, player)
+             ├── managers/ (role, phase, night, vote, death, broadcast, admin)
+             └── utils/ (helpers, adminAuth)
 ```
+
+The namespace middleware validates `auth.adminToken` against
+`WEREWOLVES_ADMIN_TOKEN` and stamps `socket.data.adminToken = true`. Admin
+sockets are never added to `room.players`; they are tracked by
+`adminManager.ts` and receive sanitized `roomUpdate` events via
+`broadcastRoomToAdmins`.
 
 ### Client Dependencies
 
 ```
 App.vue
-  ├── stores/ (game)
-  ├── composables/ (socket, narrator)
-  ├── components/ (phases, panels, overlays)
+  ├── stores/ (game, admin)
+  ├── composables/ (socket, narrator, useGameI18n)
+  ├── components/ (phases, panels, overlays, AdminPage, HostControlPanel)
   └── utils/helpers.ts, narrator.ts
 ```
+
+When `?admin=1` is present, `App.vue` renders `AdminPage.vue` instead of the
+phase UI and does NOT wire the player socket; the admin page creates its own
+socket via `useAdminSocket`.
 
 **Narrator**: The `utils/narrator.ts` module handles audio playback with support
 for multiple audio variants per clip. Variants are discovered only in

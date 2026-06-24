@@ -139,7 +139,7 @@ function makeRoom(overrides: Partial<Room> = {}): Room {
     guardedTarget: null,
     lastGuardedTarget: null,
     guardActed: false,
-    harlotVisitedTarget: false,
+    harlotVisitedTarget: null,
     harlotActed: false,
     voteState: { votes: {}, revoteFromTie: null },
     pendingDeaths: [],
@@ -293,6 +293,30 @@ describe('setupAdminSocketHandlers — adminKickPlayer', () => {
     expect(cb).toHaveBeenCalledWith({ ok: true });
     expect(room.players.target).toBeUndefined();
     expect(room.phase).toBe('day');
+  });
+
+  // Documents the intended admin-override behavior: an admin may kick
+  // anyone, including the last remaining player. The previous last-player
+  // guard was dead code (it required a connected count of 0 while the
+  // target was still in room.players) and contradicted the documented
+  // intent, so it was removed. An emptied room is left with hostId = null
+  // and reaped by idle-room cleanup.
+  test('admin override can kick the last remaining player', () => {
+    room = makeRoom();
+    // Remove the non-host player so only the host remains.
+    delete room.players.target;
+    (roomsModule.getRoom as Mock).mockReturnValue(room);
+    const { io, sockets } = makeIo();
+    sockets.set('socket-host', { disconnect: vi.fn() });
+
+    const { handlers, socket } = makeSocket('socket-admin', true);
+    setupAdminSocketHandlers(io, socket);
+    const cb = vi.fn();
+    handlers.adminKickPlayer({ roomCode: 'ABCD', targetId: 'host' }, cb);
+
+    expect(cb).toHaveBeenCalledWith({ ok: true });
+    expect(room.players.host).toBeUndefined();
+    expect(room.hostId).toBeNull();
   });
 
   test('rejects without admin token', () => {

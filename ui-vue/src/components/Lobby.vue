@@ -26,6 +26,14 @@ const { room, playerId } = storeToRefs(store);
 
 const canStart = computed(() => playerId.value === room.value?.hostId);
 const minPlayers = computed(() => room.value?.minPlayers ?? MIN_PLAYERS);
+const disconnectedCount = computed(
+  () => (room.value?.players ?? []).filter((p) => !p.connected).length
+);
+const hasDisconnectedPlayers = computed(() => disconnectedCount.value > 0);
+// Host cannot start while any player is disconnected: they could not receive
+// a role or mark ready. The host should wait for reconnect or kick them
+// (lobby kicks are reversible; the player can rejoin via the room code).
+const startBlocked = computed(() => !canStart.value || hasDisconnectedPlayers.value);
 const roleConfig = computed(
   () =>
     room.value?.roleConfig || {
@@ -169,7 +177,10 @@ function startGame() {
     </p>
     <p>{{ t('lobby.minimumPlayers', { count: minPlayers }) }}</p>
     <p v-if="needsAdjust" style="color: #fca5a5">{{ t('lobby.tooManyRoles') }}</p>
-    <button id="start-game" :disabled="!canStart" @click="startGame">
+    <p v-if="hasDisconnectedPlayers" style="color: #fbbf24">
+      {{ t('lobby.disconnectedWarning', { count: disconnectedCount }) }}
+    </p>
+    <button id="start-game" :disabled="startBlocked" @click="startGame">
       {{ t('lobby.startGame') }}
     </button>
   </section>

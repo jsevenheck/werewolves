@@ -181,16 +181,14 @@ function setupAdminSocketHandlers(
       return cb?.(errorResponse('Target not found', 'server.errors.targetNotFound'));
     }
     // Admins can kick anyone (including the host — the whole point of an
-    // admin override). They cannot, however, "kick themselves": admins are
-    // never in room.players, so this branch is just a guard.
-    if (
-      targetId === room.hostId &&
-      Object.values(room.players).filter((p) => p.connected).length === 0
-    ) {
-      return cb?.(
-        errorResponse('Cannot remove the last player', 'server.errors.cannotRemoveLastPlayer')
-      );
-    }
+    // admin override), in any phase, even the last remaining player. An
+    // emptied room is left with `hostId = null` and is reaped later by the
+    // idle-room cleanup, so there is no state corruption.
+    //
+    // (A previous "cannot remove the last player" guard here was dead code:
+    // it required `connectedCount === 0` while the target was still in
+    // `room.players`, which can never hold for a connected host. It was
+    // removed because it contradicted the documented admin-override intent.)
     kickPlayerFromRoom(io, room, targetId, 'admin kick');
     cb?.({ ok: true });
     broadcastRoom(room, io);

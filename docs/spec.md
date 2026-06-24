@@ -86,6 +86,8 @@ loop:
   switch phase:
     lobby:
       host config roles; on start validate counts
+      (counts include a connected-check: start is blocked while any player
+      is disconnected, so no one is silently locked out of role assignment)
       assign roles randomly; set phase=roleReveal
     roleReveal:
       send each player role; wolves get list of other wolves (private UI fields)
@@ -241,6 +243,34 @@ onPlayerKick(hostId, targetId):
   target player's socket is disconnected immediately
   target is removed from the room entirely (same cleanup as onPlayerLeave in lobby)
   remaining players receive a broadcast with the updated room state
+
+onAdminKickPlayer(roomCode, targetId):
+  admin-only (socket.data.adminToken === true, verified at handshake against WEREWOLVES_ADMIN_TOKEN)
+  works in ANY phase (lobby, night, day, ended)
+  can kick any player, including the host and the last remaining player
+    (an admin override is the whole point; an emptied room is left with
+    hostId = null and reaped by idle-room cleanup)
+  target socket is disconnected, player record removed, host fallback applied
+  a localized 'kicked' log entry is added; admins never appear in room.players
+  no phase continuation is triggered (this is an emergency stop, not a leave)
+
+onHostMidGameKickPlayer(roomCode, playerId, targetId):
+  admin-only AND host-only (room.hostId === playerId; playerId is the host's own player id)
+  works in ANY phase; intended for removing a disrupting player mid-game
+  the host's regular player socket has no admin token, so the host UI lazily
+    opens a short-lived admin socket (useHostAdminKick) to emit this event
+  host cannot kick themselves (playerId === targetId is rejected)
+  same teardown as onAdminKickPlayer (socket disconnect, host fallback, localized log)
+
+AdminObserver:
+  an admin socket may register as a read-only observer of one room via adminJoinRoom
+  observers are NOT players: not in room.players, no self, cannot vote/act/be targeted
+  they receive sanitized roomUpdate events built by buildAdminRoomView, which strips
+    self, all player.role, mayorId, seerResult, witchState, wolfVotes, wolfPeers,
+    wolfIds, guardedTarget, harlotVisitedTarget, loverName, loversKnown, and
+    Hunter/Mayor identity (only boolean *Pending flags remain)
+  adminLeaveRoom (or disconnect) removes the observer mapping
+  one socket observes at most one room at a time
 
 onPlayerLeave(playerId):
   remove player from the room entirely (not just disconnect)

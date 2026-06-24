@@ -28,6 +28,18 @@ function validateCounts(room: Room): { ok: true } | ErrorResponse {
       count: room.minPlayers,
     });
   }
+  // Block start while any player is disconnected. A disconnected player cannot
+  // receive their role or mark ready, so starting would silently lock them
+  // out. The host should either wait for them to reconnect or kick them
+  // (lobby kicks are reversible — they can rejoin via the room code).
+  const disconnectedCount = players.filter((p) => !p.connected).length;
+  if (disconnectedCount > 0) {
+    return errorResponse(
+      `${disconnectedCount} player(s) are disconnected`,
+      'server.errors.playersDisconnected',
+      { count: disconnectedCount }
+    );
+  }
   const configured = Object.entries(room.roleConfig).reduce((sum, [, count]) => sum + count, 0);
   if (configured > players.length) {
     return errorResponse('Role count exceeds players', 'server.errors.roleCountExceedsPlayers');

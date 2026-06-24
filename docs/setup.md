@@ -61,7 +61,39 @@ pnpm run test:e2e
 - Armor links Lovers once, then night/day cycles begin.
 - Host can skip the armor step or a night action step if a player is offline or unresponsive.
 - If the host disconnects, another connected player becomes the acting host until the original host reconnects.
-- Players can switch between English and German in the game header.
+- Players can switch between English and German via the language switcher in
+  the game header, on the landing page, and on the admin console.
+
+## Admin Console
+
+The server can expose a global admin console for operators (read-only room
+observation + emergency kick). It is disabled by default.
+
+1. Set the admin token on the server:
+
+   ```bash
+   WEREWOLVES_ADMIN_TOKEN=your-secret pnpm start
+   ```
+
+   If the env var is unset, admin endpoints are disabled and a one-shot warning
+   is logged at startup. The token is never logged.
+
+2. Open the admin console at `http://localhost:3001/?admin=1` (or your
+   production URL with `?admin=1`).
+
+3. Enter the token. The token is stored in `localStorage`
+   (`werewolves_admin_token`) and sent only in the Socket.IO handshake.
+
+The admin console can:
+
+- list all active rooms (sanitized; no roles/votes leak),
+- drill into a room's player list and kick any player in any phase,
+- join a room as a read-only observer and watch live, sanitized state
+  (roles and private state are hidden).
+
+Hosts can also perform mid-game kicks from the in-game host side panel. The
+first mid-game kick requires the admin token; if the host has not set it yet,
+they are prompted to open the admin page once to store it.
 
 ## Narrator Audio
 

@@ -37,7 +37,7 @@ Manual and automated testing expectations for the Werewolves game.
 - **Seer result overlay**: After the Seer submits an inspection, verify a full-screen overlay appears showing the inspected player's name and alignment ("Werewolf" in red, or "Not Werewolf" in green). Confirm the night phase does NOT advance to the witch step until the Seer clicks "Got it!" (or taps the backdrop). After dismissal, verify the result is also stored in the role card ("Last vision: …"). Also test: if the Seer disconnects while the overlay is open, the phase auto-advances after the grace period.
 - **Seer and Witch private info**: Confirm Seer sees the last inspection result only on their device and Witch sees the wolves' target before acting.
 - **Voting UI**: Ensure vote submit is disabled until a selection is made; choose Abstain explicitly; test majority abstain -> no elimination.
-- **Lobby validation**: Attempt to start with fewer than 5 players; ensure the backend rejects the start and displays an error alert. Also test too many roles vs player count.
+- **Lobby validation**: Attempt to start with fewer than 5 players; ensure the backend rejects the start and displays an error alert. Also test too many roles vs player count. Also disconnect a player (close their tab), wait past the 5-second grace period, and confirm the host cannot start (the Start button is disabled and a yellow warning shows the disconnected count). Kick the disconnected player from the lobby and confirm the host can start again. (Lobby kicks are reversible: the kicked player can rejoin via the room code before the game starts.)
 - **Disconnect / reconnect**: Join from a browser, disconnect (close tab), reopen and resume via stored session to confirm state restores (including role, death state, and pending prompts like Hunter shot).
 - **Player leaves mid-game**: Have a player leave (not just disconnect) during various phases: (a) during wolf vote — ensure remaining wolves' votes still resolve, (b) during day vote — ensure remaining votes still resolve, (c) when the departed player is the active night-action role (Seer/Witch/Guard/Harlot) — ensure the night step advances, (d) when the departed player had pending hunter shot or mayor succession — ensure those prompts clear and the game continues.
 - **Stale votes after leave**: Have a player leave who was the target of wolf or day votes; confirm those votes are cleaned up and don't cause resolution errors.
@@ -45,6 +45,20 @@ Manual and automated testing expectations for the Werewolves game.
 - **Endgame reveal**: When a team wins, ensure all roles reveal in the player list and that win condition matches expectations (wolves parity, all wolves dead, or Joker instant win).
 - **Narrator audio toggle**: On mobile Safari/Chrome, tap "Narrator: Off" to enable sound, confirm audio unlock succeeds, and verify announcements only fire on phase/step/transition changes.
 - **Narrator default state**: Reload or join a new room and confirm the narrator resets to Off.
+
+## Admin Console
+
+- **Admin token prompt**: Open `/?admin=1` with no stored token; confirm the token prompt is shown and the room list is NOT visible. Enter a wrong token and confirm the list still does not appear (connection rejected, prompt re-shown).
+- **Admin room list**: With `WEREWOLVES_ADMIN_TOKEN` set, enter the correct token and confirm active rooms appear with code, player count (connected/total), phase, day count, and host name. Empty state shows "No active rooms."
+- **Admin drill-in + kick**: Open a room detail; confirm the full player list renders (names, host/dead/disconnected tags, per-player Kick button). Kick a target and confirm the player is removed and the list player count drops. Verify the admin can kick in any phase (lobby, night, day) and can even remove the last remaining player.
+- **Admin observer view**: Click "Join as Observer"; confirm a live, read-only room view appears. Verify roles are hidden (no role column), private state (seer result, witch potions, wolf peers/votes, guard/harlot targets, lover names) is not shown, but public state (phase, day count, players alive/dead/connected, logs, winner) is visible. "Leave observer view" returns to the list.
+- **Admin cannot act without token**: With no token configured server-side, confirm admin events respond with `server.errors.adminRequired` and do not mutate state.
+
+## Host Mid-Game Kick
+
+- **Host side panel visibility**: As the host, confirm the collapsible host control panel appears only outside the lobby phase (in the lobby, the existing PlayersPanel kick UI is used instead). Regular players never see the panel.
+- **Host mid-game kick**: During night or day, open the side panel and kick a player; confirm the target is removed, the remaining players update, and a success notification appears. Verify the kick works in any phase.
+- **Host mid-game kick token flow**: Clear the stored admin token, then attempt a mid-game kick as host; confirm the prompt to open the admin page appears. Open the admin page, enter the token, return to the game, and confirm the kick now succeeds. With an invalid stored token, confirm an "Invalid admin token" notification is shown.
 
 ## Narrator Audio Assets
 

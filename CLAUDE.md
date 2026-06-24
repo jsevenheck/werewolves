@@ -38,16 +38,17 @@ Keep detailed guidance in docs/ and link to it from here.
 - server/src/...
   - config/: server-only constants and role data
   - models/: Room/Player models
-  - managers/: business logic
-  - handlers/: Socket.IO handlers (thin)
-  - utils/: helpers
+  - managers/: business logic (incl. adminManager for admin observers)
+  - handlers/: Socket.IO handlers (thin) — game handlers + adminSocketHandlers
+  - utils/: helpers (incl. adminAuth for admin token verification)
 - ui-vue/src/...
-  - components/: Vue phase screens, panels, overlays
-  - composables/: socket, narrator hooks
-  - stores/: Pinia stores
+  - components/: Vue phase screens, panels, overlays, AdminPage, settings/LanguageSwitcher
+  - composables/: socket, narrator hooks, useGameI18n, useAdminSocket, useHostAdminKick
+  - stores/: Pinia stores (game, admin)
   - utils/: helpers
-- `__tests__/`: Vitest unit tests
-- e2e/: Playwright specs
+- `__tests__/`: Vitest unit tests (incl. i18n + admin + death-reason contract tests)
+- e2e/: Playwright specs (incl. admin token, language switch, locale handling)
+- i18n/: message catalogs (ui-vue/src/i18n) — EN + DE
 
 ## Change Workflow
 
@@ -103,8 +104,16 @@ Environment splits in ESLint:
 - **Managers** contain business logic (not handlers)
 - **Handlers** are thin - validate input, call managers, broadcast
 - **broadcastRoom()** sanitizes room state per-player before sending
+- **buildAdminRoomView()** sanitizes room state for admin observers (strips self, roles, votes, private state)
 - **Socket events** defined in `core/src/events.ts` (shared contract)
 - **Phase flow**: lobby → roleReveal → mayor? → armor? → night ↔ day → ended
+- **Admin observers** are gated by `WEREWOLVES_ADMIN_TOKEN` (handshake `auth.adminToken`),
+  are never in `room.players`, and receive only sanitized `roomUpdate` events.
+  Admin events (`adminListRooms`, `adminJoinRoom`, `adminLeaveRoom`,
+  `adminKickPlayer`, `hostMidGameKickPlayer`) all check `socket.data.adminToken`.
+- **i18n**: server emits `LocalizedMessage { key, params }`; client translates via
+  `useGameI18n`. Death reasons map through `deathReasonKey` (kept in sync by
+  `__tests__/deathReasonContract.test.ts`).
 
 ## Agent Tooling
 

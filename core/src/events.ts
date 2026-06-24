@@ -110,7 +110,7 @@ export interface ClientToServerEvents {
     cb?: (response: OkResponse | ErrorResponse) => void
   ) => void;
   adminLeaveRoom: (
-    payload: { roomCode: string },
+    payload: { roomCode?: string },
     cb?: (response: OkResponse | ErrorResponse) => void
   ) => void;
   /**

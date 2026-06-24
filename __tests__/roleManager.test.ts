@@ -82,6 +82,39 @@ describe('roleManager', () => {
     });
   });
 
+  test('validateCounts blocks start while players are disconnected', () => {
+    const players = makePlayers(5);
+    // mark one player as disconnected
+    players.p1!.connected = false;
+    const room = {
+      players,
+      minPlayers: 5,
+      roleConfig: DEFAULT_ROLE_CONFIG,
+    } as Room;
+    expect(validateCounts(room)).toMatchObject({
+      error: 'server.errors.playersDisconnected',
+      message: { key: 'server.errors.playersDisconnected', params: { count: 1 } },
+    });
+  });
+
+  test('validateCounts passes when all players are connected', () => {
+    const room = {
+      players: makePlayers(5),
+      minPlayers: 5,
+      roleConfig: {
+        werewolf: 1,
+        seer: 1,
+        hunter: 1,
+        witch: 0,
+        armor: 0,
+        joker: 0,
+        guard: 0,
+        harlot: 0,
+      },
+    } as Room;
+    expect(validateCounts(room)).toEqual({ ok: true });
+  });
+
   test('assignRoles sets roles and teams', () => {
     const room = {
       players: makePlayers(3),

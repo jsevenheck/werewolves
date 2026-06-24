@@ -87,6 +87,8 @@ export const de = {
     roleSummary: 'Konfigurierte Rollen: {total} / {players}. Dorfbewohner automatisch: {villagers}',
     minimumPlayers: 'Mindestanzahl Spieler zum Starten: {count}',
     tooManyRoles: 'Zu viele Rollen für die aktuelle Spieleranzahl.',
+    disconnectedWarning:
+      '{count} Spieler sind nicht verbunden. Entferne sie oder warte auf die Rückverbindung vor dem Start.',
     startGame: 'Spiel starten',
   },
   roleReveal: {
@@ -218,6 +220,8 @@ export const de = {
       cannotProtectSame: 'Du kannst dieselbe Person nicht zwei Nächte hintereinander beschützen',
       cannotVisitSelf: 'Du kannst dich nicht selbst besuchen',
       needPlayers: 'Mindestens {count} Spieler erforderlich',
+      playersDisconnected:
+        '{count} Spieler sind nicht verbunden. Warte auf die Rückverbindung oder entferne sie vor dem Start.',
       roleCountExceedsPlayers: 'Rollenanzahl überschreitet Spieleranzahl',
       needWerewolf: 'Mindestens 1 Werwolf erforderlich',
       onlyOneRole: 'Nur 1× {role} erlaubt',
@@ -230,7 +234,6 @@ export const de = {
       adminRequired: 'Admin-Zugriff erforderlich',
       adminNotObserving: 'Beobachtet derzeit keinen Raum',
       adminNotObservingRoom: 'Beobachtet diesen Raum nicht',
-      cannotRemoveLastPlayer: 'Der letzte Spieler kann nicht entfernt werden',
     },
     logs: {
       playerReason: '{name} {reason}.',
