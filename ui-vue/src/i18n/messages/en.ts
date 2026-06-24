@@ -381,6 +381,7 @@ export const en = {
     observerHint: 'You are watching this room as an admin. Roles and private state are hidden.',
     actionFailed: 'Admin action failed.',
     changeToken: 'Change token',
+    kickAriaLabel: 'Kick {name} from this room',
     phase: {
       lobby: 'Lobby',
       roleReveal: 'Role Reveal',

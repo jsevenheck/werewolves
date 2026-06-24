@@ -102,7 +102,7 @@ export interface ClientToServerEvents {
    * lobby-only in-game kick used by PlayersPanel.vue.
    */
   adminListRooms: (
-    payload: Record<string, never>,
+    _payload?: Record<string, never>,
     cb?: (response: { rooms: RoomSummary[] } | ErrorResponse) => void
   ) => void;
   adminJoinRoom: (

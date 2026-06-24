@@ -437,6 +437,7 @@ onBeforeUnmount(() => {
             <button
               type="button"
               :data-testid="`admin-kick-${player.id}`"
+              :aria-label="t('admin.kickAriaLabel', { name: player.name })"
               @click="kickPlayer(player.id, player.name)"
             >
               {{ t('admin.kick') }}

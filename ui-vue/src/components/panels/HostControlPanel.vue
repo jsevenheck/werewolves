@@ -10,7 +10,9 @@
  * admin socket via `useHostAdminKick` to perform the elevated action.
  *
  * Visibility: rendered only when the store reports `isHost` — regular
- * players never see this panel.
+ * players never see this panel. It is further restricted to non-lobby
+ * phases to avoid duplicating the kick UI that already lives in
+ * PlayersPanel.vue during the lobby.
  */
 import { computed, ref, watch, onBeforeUnmount } from 'vue';
 import { storeToRefs } from 'pinia';
@@ -129,7 +131,7 @@ async function kickMidGameAction(targetId: string, name: string) {
 </script>
 
 <template>
-  <aside v-if="isHost" class="host-control-root" :class="{ open: isOpen }">
+  <aside v-if="isHost && !isLobby" class="host-control-root" :class="{ open: isOpen }">
     <button
       type="button"
       class="host-control-toggle"

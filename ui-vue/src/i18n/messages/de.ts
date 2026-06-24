@@ -379,6 +379,7 @@ export const de = {
     backToList: 'Zurück zur Raumliste',
     kick: 'Entfernen',
     kickConfirm: '{name} aus diesem Raum entfernen?',
+    kickAriaLabel: '{name} aus diesem Raum entfernen',
     joinAsObserver: 'Als Beobachter beitreten',
     leaveRoom: 'Beobachteransicht verlassen',
     detailTitle: 'Raum {code}',

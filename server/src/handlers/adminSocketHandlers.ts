@@ -91,16 +91,28 @@ function kickPlayerFromRoom(
   );
   if (target.socketId) {
     const targetSocket = io.sockets.get(target.socketId);
-    deleteSocketIndex(target.socketId);
     if (targetSocket) {
+      deleteSocketIndex(target.socketId);
       targetSocket.disconnect(true);
     }
   }
   delete room.players[targetId];
   // If we just removed the host, hand off to whoever is still connected.
+  // We also clear the previous host's `isHost` flag and set it on the
+  // fallback, so `player.isHost` stays consistent with `room.hostId`.
   if (room.hostId === targetId) {
     const fallback = Object.values(room.players).find((p) => p.connected);
-    room.hostId = fallback ? fallback.id : null;
+    // Clear the flag on every remaining player first to avoid stale
+    // `isHost = true` on the previous host (if they were tracked by id).
+    for (const p of Object.values(room.players)) {
+      p.isHost = false;
+    }
+    if (fallback) {
+      fallback.isHost = true;
+      room.hostId = fallback.id;
+    } else {
+      room.hostId = null;
+    }
   }
   return target;
 }
