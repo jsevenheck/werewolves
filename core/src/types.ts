@@ -257,6 +257,12 @@ export interface StoredSession {
 /**
  * Lightweight summary of a room used by the global admin page.
  * Intentionally avoids leaking secret game state (roles, votes, etc.).
+ *
+ * The `players` field is a sanitized snapshot (id/name/alive/connected/isHost,
+ * no `role`/team) so the admin detail view can render the full player list
+ * and per-player kick buttons WITHOUT requiring the admin to first join as
+ * a live observer. Server-side `toRoomSummary` builds this from
+ * `room.players` and strips every role-specific field.
  */
 export interface RoomSummary {
   code: string;
@@ -267,6 +273,7 @@ export interface RoomSummary {
   hostName: string | null;
   createdAt: number;
   lastActivityAt: number;
+  players: PlayerPublic[];
 }
 
 /**

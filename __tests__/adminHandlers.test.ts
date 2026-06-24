@@ -198,6 +198,24 @@ describe('setupAdminSocketHandlers — adminListRooms', () => {
     expect(summary.playerCount).toBe(2);
     expect(summary.connectedPlayerCount).toBe(2);
     expect(summary.hostName).toBe('Host');
+    // M1 fix: RoomSummary.players must include a sanitized per-player
+    // snapshot so the detail view can render the player list without
+    // joining as a live observer. `role` is always null (no leaks).
+    const players = summary.players as Array<Record<string, unknown>>;
+    expect(players).toHaveLength(2);
+    expect(players[0]).toMatchObject({
+      name: 'Host',
+      alive: true,
+      connected: true,
+      isHost: true,
+      role: null,
+    });
+    expect(players[1]).toMatchObject({
+      name: 'Target',
+      isHost: false,
+      role: null,
+    });
+    expect(players[0]).toHaveProperty('id');
   });
 
   test('refuses to list rooms without admin token', () => {

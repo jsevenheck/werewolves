@@ -51,6 +51,14 @@ function toRoomSummary(room: Room): RoomSummary {
     hostName: host ? host.name : null,
     createdAt: room.createdAt,
     lastActivityAt: room.lastActivityAt,
+    players: players.map((player) => ({
+      id: player.id,
+      name: player.name,
+      alive: player.alive,
+      connected: player.connected,
+      isHost: player.id === room.hostId,
+      role: null,
+    })),
   };
 }
 

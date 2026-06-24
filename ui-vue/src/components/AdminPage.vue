@@ -107,8 +107,18 @@ function handleRoomUpdate(view: RoomView) {
 
 function handleConnectError() {
   // Server-side admin token mismatch shows up here. We surface it in the
-  // UI rather than an alert.
+  // UI rather than an alert: drop the rejected token so the user is
+  // returned to the token prompt.
+  notify(t('admin.tokenInvalid'));
   store.setConnected(false);
+  store.clearToken();
+  view.value = 'list';
+  tokenInput.value = '';
+  tokenError.value = t('admin.tokenInvalid');
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
 }
 
 function fetchRooms() {
@@ -273,9 +283,9 @@ function kickPlayer(targetId: string, targetName: string) {
       notify(localizeError(response));
       return;
     }
-    // Refresh the list so the room reflects the new player count; the
-    // server also pushed a fresh `roomUpdate` to the room's admins, but
-    // we are not observing in the detail view.
+    // Refresh the list so the room reflects the new player count. The
+    // `selectedRoom` computed re-derives from `rooms`, so the detail view
+    // updates automatically once the new list arrives.
     fetchRooms();
   });
 }
@@ -325,8 +335,12 @@ onBeforeUnmount(() => {
       </form>
     </section>
 
-    <!-- 2. Connected, no room open: room list -->
-    <template v-else-if="view === 'list'">
+    <!-- 2. Connected, no room open: room list.
+         Rendered only when the socket is actually connected — otherwise
+         the token prompt must stay on screen (e.g. after a wrong token
+         submit the server rejects the socket and the user should see
+         the prompt again, not an empty list). -->
+    <template v-else-if="view === 'list' && connected">
       <section class="panel" data-testid="admin-room-list">
         <header style="display: flex; justify-content: space-between; align-items: center">
           <h1>{{ t('admin.title') }}</h1>
@@ -410,12 +424,9 @@ onBeforeUnmount(() => {
           {{ describeRoom(selectedRoom) }}
         </p>
         <h2>{{ t('admin.playersHeader') }}</h2>
-        <p>
-          <em>{{ t('admin.observerHint') }}</em>
-        </p>
         <ul>
           <li
-            v-for="player in observingRoom?.players || []"
+            v-for="player in selectedRoom?.players || []"
             :key="player.id"
             :data-testid="`admin-player-${player.id}`"
           >
