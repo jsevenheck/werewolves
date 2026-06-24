@@ -8,16 +8,16 @@ ENV CI=true
 # Build stage
 FROM base AS builder
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm config set store-dir /pnpm/store && \
     pnpm install --frozen-lockfile --prod=false
 
 COPY . .
 
-# The first install above only had the root package.json + lockfile; the workspace
-# manifest (pnpm-workspace.yaml + ui-vue/package.json) arrives with `COPY . .`, so
-# install the ui-vue workspace package's deps now.
+# The first install above has the root package.json, lockfile, and pnpm policy config;
+# the ui-vue/package.json manifest arrives with `COPY . .`, so install the ui-vue
+# workspace package's deps now.
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm config set store-dir /pnpm/store && \
     pnpm -C ui-vue install --prod=false --no-frozen-lockfile
@@ -29,7 +29,7 @@ RUN pnpm run build
 FROM base AS runtime
 ENV NODE_ENV=production
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm config set store-dir /pnpm/store && \
     pnpm install --prod --frozen-lockfile
