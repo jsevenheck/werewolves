@@ -13,6 +13,8 @@ import fs from 'fs';
 import { Server } from 'socket.io';
 import type { Namespace, Socket } from 'socket.io';
 import { setupSocketHandlers } from './handlers/socketHandlers';
+import { setupAdminSocketHandlers } from './handlers/adminSocketHandlers';
+import { getAdminTokenFromEnv, verifyAdminToken, attachAdminToSocket } from './utils/adminAuth';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../core/src/events';
 
 // ---------------------------------------------------------------------------
@@ -22,8 +24,29 @@ import type { ClientToServerEvents, ServerToClientEvents } from '../../core/src/
 export function registerNamespace(io: Server, namespace = '/g/werewolves') {
   const nsp = io.of(namespace);
 
+  // Admin auth middleware: stamp `socket.data.adminToken` when a valid token
+  // is presented in the handshake. Without a valid token, the socket stays a
+  // regular (non-admin) client.
+  nsp.use((socket, next) => {
+    const configured = getAdminTokenFromEnv();
+    if (!configured) {
+      // Admin tooling disabled. Do not warn here — `registerNamespace` is
+      // also called from tests; the helper warns once at process start.
+      return next();
+    }
+    const provided = socket.handshake.auth?.adminToken;
+    if (typeof provided === 'string' && verifyAdminToken(provided)) {
+      attachAdminToSocket(socket);
+    }
+    next();
+  });
+
   nsp.on('connection', (socket) => {
     setupSocketHandlers(
+      nsp as unknown as Namespace<ClientToServerEvents, ServerToClientEvents>,
+      socket as unknown as Socket<ClientToServerEvents, ServerToClientEvents>
+    );
+    setupAdminSocketHandlers(
       nsp as unknown as Namespace<ClientToServerEvents, ServerToClientEvents>,
       socket as unknown as Socket<ClientToServerEvents, ServerToClientEvents>
     );
@@ -49,6 +72,12 @@ function resolveStaticDir(rootDir: string): { staticDir: string } {
 // ---------------------------------------------------------------------------
 
 const PORT = process.env.PORT ?? 3001;
+
+// Warn once at process start if admin endpoints are going to be disabled.
+// (Tests deliberately run with no token — silence the warning there.)
+if (!getAdminTokenFromEnv() && process.env.NODE_ENV !== 'test') {
+  console.warn('[werewolves] WEREWOLVES_ADMIN_TOKEN is not set; admin endpoints are disabled');
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -118,4 +147,5 @@ process.on('SIGINT', () => shutdown('SIGINT'));
 // ---------------------------------------------------------------------------
 
 export { setupSocketHandlers } from './handlers/socketHandlers';
+export { setupAdminSocketHandlers } from './handlers/adminSocketHandlers';
 export type { ClientToServerEvents, ServerToClientEvents } from '../../core/src/events';

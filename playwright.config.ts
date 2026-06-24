@@ -15,6 +15,7 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       env: {
         E2E_TESTS: '1',
+        WEREWOLVES_ADMIN_TOKEN: process.env.WEREWOLVES_ADMIN_TOKEN ?? 'e2e-admin-token',
       },
     },
     {
