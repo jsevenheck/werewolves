@@ -1,31 +1,11 @@
 export type Role =
-  | 'werewolf'
-  | 'seer'
-  | 'hunter'
-  | 'witch'
-  | 'armor'
-  | 'joker'
-  | 'guard'
-  | 'harlot'
-  | 'villager';
+  'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'guard' | 'harlot' | 'villager';
 export type Team = 'wolves' | 'village' | 'neutral' | 'joker';
 export type Phase = 'lobby' | 'roleReveal' | 'mayor' | 'armor' | 'night' | 'day' | 'ended';
 export type NightStep =
-  | 'wolves'
-  | 'seer'
-  | 'witch'
-  | 'guard'
-  | 'harlot'
-  | 'resolve'
-  | 'transition'
-  | null;
+  'wolves' | 'seer' | 'witch' | 'guard' | 'harlot' | 'resolve' | 'transition' | null;
 export type PhaseTransition =
-  | 'postReveal'
-  | 'postMayor'
-  | 'postArmor'
-  | 'nightToDay'
-  | 'dayToNight'
-  | null;
+  'postReveal' | 'postMayor' | 'postArmor' | 'nightToDay' | 'dayToNight' | null;
 export type PassiveRole = 'mayor';
 
 export type LocalizedMessageParam = string | number | boolean | null;

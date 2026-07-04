@@ -13,14 +13,7 @@ type SubmissionState = {
 export type PassiveRoleConfig = Partial<Record<PassiveRole, boolean>>;
 
 type RoleCountKey =
-  | 'werewolf'
-  | 'seer'
-  | 'hunter'
-  | 'witch'
-  | 'armor'
-  | 'joker'
-  | 'guard'
-  | 'harlot';
+  'werewolf' | 'seer' | 'hunter' | 'witch' | 'armor' | 'joker' | 'guard' | 'harlot';
 
 export type RoleConfig = {
   werewolf: number;
@@ -109,8 +102,7 @@ export const configureRoles = async (host: Page, config: RoleConfig) => {
             if (!row) return;
             const label = row.querySelector('span')?.textContent?.trim().toLowerCase();
             const matchedRole = Object.keys(passive).find((r) => r === label) as
-              | keyof typeof passive
-              | undefined;
+              keyof typeof passive | undefined;
             if (!matchedRole || passive[matchedRole] === undefined) return;
             const current = toggle.getAttribute('aria-checked') === 'true';
             if (current !== Boolean(passive[matchedRole])) {
