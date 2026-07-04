@@ -6,8 +6,8 @@ services:
     # to :latest if IMAGE_TAG is unset (e.g. a manual `docker compose pull`).
     image: ghcr.io/jsevenheck/werewolves:${IMAGE_TAG:-latest}
     restart: unless-stopped
-    ports:
-      - '3001:3001'
+    expose:
+      - '3001'
     environment:
       - NODE_ENV=production
       # Admin token for the global admin console (?admin=1). Substituted from
@@ -15,3 +15,11 @@ services:
       # via a .env file next to this compose file on the VPS. Empty/unset =
       # admin endpoints disabled (no crash, just no admin access).
       - WEREWOLVES_ADMIN_TOKEN=${WEREWOLVES_ADMIN_TOKEN:-}
+    labels:
+      - traefik.enable=true
+
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.rule=Host(`${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+
+      - traefik.http.services.${COMPOSE_PROJECT_NAME}.loadbalancer.server.port=3001

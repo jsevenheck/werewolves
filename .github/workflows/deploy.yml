@@ -31,3 +31,4 @@ jobs:
             NODE_ENV=production
             IMAGE_TAG=${{ github.event.workflow_run.head_sha }}
             WEREWOLVES_ADMIN_TOKEN=${{ secrets.WEREWOLVES_ADMIN_TOKEN }}
+            TRAEFIK_HOST=${{ secrets.TRAEFIK_HOST }}
