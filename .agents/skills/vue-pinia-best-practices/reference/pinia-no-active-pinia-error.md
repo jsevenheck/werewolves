@@ -177,9 +177,7 @@ export default {
 import { createRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 
-const router = createRouter({
-  /* ... */
-});
+const router = createRouter({/* ... */});
 
 // This guard is registered immediately
 router.beforeEach((to) => {

@@ -374,9 +374,7 @@ export const useSearchFilters = defineStore('search-filters', () => {
   const appProvided = inject('appProvided');
 
   // Don't return these - access them directly in components
-  return {
-    /* ... */
-  };
+  return {/* ... */};
 });
 ```
 

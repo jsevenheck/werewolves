@@ -112,28 +112,16 @@ Pinia enforces conventions that help teams:
 // Consistent structure across all stores
 // stores/products.js
 export const useProductsStore = defineStore('products', {
-  state: () => ({
-    /* ... */
-  }),
-  getters: {
-    /* ... */
-  },
-  actions: {
-    /* ... */
-  },
+  state: () => ({/* ... */}),
+  getters: {/* ... */},
+  actions: {/* ... */},
 });
 
 // stores/cart.js - Same structure
 export const useCartStore = defineStore('cart', {
-  state: () => ({
-    /* ... */
-  }),
-  getters: {
-    /* ... */
-  },
-  actions: {
-    /* ... */
-  },
+  state: () => ({/* ... */}),
+  getters: {/* ... */},
+  actions: {/* ... */},
 });
 ```
 
