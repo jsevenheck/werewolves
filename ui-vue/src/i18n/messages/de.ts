@@ -268,6 +268,10 @@ export const de = {
       voteSkipped: 'Abstimmung übersprungen. Niemand wurde eliminiert.',
       majorityAbstained: 'Mehrheit hat sich enthalten. Niemand wurde eliminiert.',
       voteTieMayor: 'Abstimmung unentschieden. Die Stimme des Bürgermeisters entscheidet.',
+      voteTieMayorDouble:
+        'Abstimmung unentschieden. Die Bürgermeister-Stimme zählte doppelt und entschied.',
+      voteStillTiedAfterMayorDouble:
+        'Abstimmung weiterhin unentschieden nach doppelter Bürgermeister-Stimme.',
       voteTiedRevote: 'Abstimmung unentschieden. Stichwahl zwischen markierten Spielern.',
       revoteTieMayor: 'Stichwahl unentschieden. Die Stimme des Bürgermeisters entscheidet.',
       voteTiedRandom: 'Erneut unentschieden. {name} wurde zufällig ausgewählt.',

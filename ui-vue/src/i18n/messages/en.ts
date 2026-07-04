@@ -263,6 +263,8 @@ export const en = {
       voteSkipped: 'Vote skipped. No one eliminated.',
       majorityAbstained: 'Majority abstained. No one eliminated.',
       voteTieMayor: "Vote tied. Mayor's vote decided the outcome.",
+      voteTieMayorDouble: "Vote tied. Mayor's vote counted double and decided the outcome.",
+      voteStillTiedAfterMayorDouble: "Vote still tied after Mayor's doubled vote.",
       voteTiedRevote: 'Vote tied. Revote among highlighted players.',
       revoteTieMayor: "Revote tied. Mayor's vote decided the outcome.",
       voteTiedRandom: 'Vote tied again. Randomly selected {name}.',
