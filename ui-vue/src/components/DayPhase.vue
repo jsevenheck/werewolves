@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../stores/game';
 import { getPlayerName, notify } from '../utils/helpers';
@@ -36,6 +36,29 @@ const submitted = computed(() => room.value?.voteState?.submitted || 0);
 const required = computed(() => room.value?.voteState?.required || 0);
 const isRevote = computed(() => !!room.value?.voteState?.revoteFromTie);
 const showVoteProgress = computed(() => required.value > 0 && submitted.value < required.value);
+
+// Discussion period: voting is locked until the configured timer elapses.
+const now = ref(Date.now());
+let discussionTick: number | null = null;
+onMounted(() => {
+  discussionTick = window.setInterval(() => {
+    now.value = Date.now();
+  }, 1000);
+});
+onBeforeUnmount(() => {
+  if (discussionTick !== null) {
+    clearInterval(discussionTick);
+    discussionTick = null;
+  }
+});
+const discussionEndsAt = computed(() => room.value?.discussionEndsAt ?? null);
+const discussionActive = computed(
+  () => discussionEndsAt.value !== null && now.value < discussionEndsAt.value
+);
+const discussionSecondsLeft = computed(() =>
+  discussionEndsAt.value ? Math.max(0, Math.ceil((discussionEndsAt.value - now.value) / 1000)) : 0
+);
+const votingEnabled = computed(() => !discussionActive.value);
 
 const eligible = computed(() => {
   if (!room.value) return [];
@@ -94,6 +117,9 @@ function proceedToNight() {
     <p v-else>{{ t('day.noNightDeaths') }}</p>
 
     <h3>{{ t('day.voteToEliminate') }}</h3>
+    <p v-if="discussionActive" style="color: #fbbf24; font-weight: 600">
+      {{ t('day.discussionActive', { seconds: discussionSecondsLeft }) }}
+    </p>
     <template v-if="self?.alive">
       <template v-if="hasVoted">
         <p v-if="yourVote === null" style="color: #4ade80">
@@ -110,7 +136,7 @@ function proceedToNight() {
           t('common.votesSubmitted', { submitted, required })
         }}</small>
       </template>
-      <template v-else>
+      <template v-else-if="votingEnabled">
         <form id="vote-form" class="actions" @submit.prevent="submitVote">
           <p v-if="isRevote">{{ t('day.revote') }}</p>
           <label>
@@ -138,6 +164,7 @@ function proceedToNight() {
           }}</small>
         </form>
       </template>
+      <p v-else style="color: #fbbf24">{{ t('day.discussionHint') }}</p>
     </template>
     <p v-else>{{ t('day.deadCannotVote') }}</p>
 
@@ -156,7 +183,12 @@ function proceedToNight() {
     </template>
 
     <div v-if="isHost" class="actions host-actions">
-      <button v-if="!dayVoteResolved" id="end-vote-btn" type="button" @click="endVoting">
+      <button
+        v-if="!dayVoteResolved && votingEnabled"
+        id="end-vote-btn"
+        type="button"
+        @click="endVoting"
+      >
         {{ t('day.endVoting') }}
       </button>
       <button

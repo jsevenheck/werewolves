@@ -25,6 +25,8 @@ const baseRoom = (): RoomView => ({
     harlot: 0,
   },
   passiveRoleConfig: { mayor: true },
+  discussionTimerSeconds: 60,
+  discussionEndsAt: null,
   mayorId: null,
   awaitingMayorSelection: false,
   mayorSelectionPending: false,
@@ -90,6 +92,20 @@ describe('computeNarrationKey', () => {
   test('default phase yields phase name', () => {
     const room = buildRoom({ phase: 'armor', phaseStep: null });
     expect(computeNarrationKey(room)).toBe('armor');
+  });
+
+  test('postReveal is suppressed when mayor is enabled (initial election)', () => {
+    const room = buildRoom({ phase: 'roleReveal', phaseTransition: 'postReveal' });
+    expect(computeNarrationKey(room)).toBeNull();
+  });
+
+  test('postReveal plays when mayor is disabled (leads to night)', () => {
+    const room = buildRoom({
+      phase: 'roleReveal',
+      phaseTransition: 'postReveal',
+      passiveRoleConfig: { mayor: false },
+    });
+    expect(computeNarrationKey(room)).toBe('postReveal');
   });
 });
 

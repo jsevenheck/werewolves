@@ -83,7 +83,7 @@ function kickPlayer(targetId: string) {
             >{{ t('common.disconnected') }}</span
           >
           <span
-            v-if="(!player.alive || room.phase === 'ended') && player.role"
+            v-if="room.phase === 'ended' && player.role"
             class="tag"
             style="border-color: #38bdf8; color: #38bdf8"
           >

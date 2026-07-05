@@ -6,6 +6,7 @@ import {
   clearRoomTimers,
   errorResponse,
   localizedMessage,
+  isDiscussionLocked,
 } from '../utils/helpers';
 import { createRoom, getRoom, deleteRoom } from '../models/room';
 import { createPlayer, setSocketIndex, getSocketIndex, deleteSocketIndex } from '../models/player';
@@ -28,6 +29,7 @@ import {
   startNight,
   notifyLovers,
   holdDayToNightTransition,
+  beginDay,
 } from '../managers/phaseManager';
 import {
   tryFinalizeWolfVote,
@@ -206,9 +208,16 @@ function setupSocketHandlers(
     if (!getPlayerForSocket(room, playerId, socket.id)) return;
     if (room.hostId !== playerId) return;
     if (room.phase !== 'lobby') return;
-    room.roleConfig = normalizeRoleConfig(config);
+    room.roleConfig = normalizeRoleConfig(config, room.roleConfig);
     if (config.passiveRoles) {
-      room.passiveRoleConfig = normalizePassiveRoleConfig(config.passiveRoles);
+      room.passiveRoleConfig = normalizePassiveRoleConfig(
+        config.passiveRoles,
+        room.passiveRoleConfig
+      );
+    }
+    if (typeof config.discussionTimerSeconds === 'number') {
+      const clamped = Math.floor(config.discussionTimerSeconds);
+      room.discussionTimerSeconds = Number.isFinite(clamped) && clamped >= 0 ? clamped : 0;
     }
     broadcastRoom(room, io);
   });
@@ -425,6 +434,14 @@ function setupSocketHandlers(
     cb?.({ ok: true, name: target.name, result });
     room.seerActed = true;
     room.seerAwaitingDismiss = true;
+    addLog(
+      room,
+      `Seer inspected ${target.name} (${result}).`,
+      null,
+      localizedMessage('server.logs.seerInspected', { target: target.name, result }),
+      null,
+      true
+    );
     broadcastRoom(room, io);
   });
 
@@ -479,6 +496,14 @@ function setupSocketHandlers(
     room.guardedTarget = targetId;
     room.guardActed = true;
     cb?.({ ok: true });
+    addLog(
+      room,
+      `Guard protected ${target.name}.`,
+      null,
+      localizedMessage('server.logs.guardProtected', { target: target.name }),
+      null,
+      true
+    );
 
     advanceNightStep(room, (r) => broadcastRoom(r, io), io);
   });
@@ -506,6 +531,14 @@ function setupSocketHandlers(
     room.harlotVisitedTarget = targetId;
     room.harlotActed = true;
     cb?.({ ok: true });
+    addLog(
+      room,
+      `Harlot visited ${target.name}.`,
+      null,
+      localizedMessage('server.logs.harlotVisited', { target: target.name }),
+      null,
+      true
+    );
 
     advanceNightStep(room, (r) => broadcastRoom(r, io), io);
   });
@@ -607,17 +640,7 @@ function setupSocketHandlers(
       const kind = room.phaseTransition;
       room.phaseTransition = null;
       if (kind === 'nightToDay') {
-        room.dayCount += 1;
-        room.phase = 'day';
-        room.phaseStep = null;
-        room.nextNightStep = null;
-        room.voteState = createVoteState();
-        addLog(
-          room,
-          `Day ${room.dayCount} has begun.`,
-          null,
-          localizedMessage('server.logs.dayBegun', { count: room.dayCount })
-        );
+        beginDay(room);
         broadcastRoom(room, io);
         return;
       }
@@ -704,6 +727,7 @@ function setupSocketHandlers(
   socket.on('submitDayVote', ({ roomCode, playerId, targetId }) => {
     const room = getRoom(roomCode);
     if (!room || room.phase !== 'day') return;
+    if (isDiscussionLocked(room)) return;
     const player = room.players[playerId];
     if (!player || !player.alive) return;
     if (player.socketId !== socket.id) return;
@@ -730,6 +754,7 @@ function setupSocketHandlers(
     if (!room || room.phase !== 'day') return;
     if (room.hostId !== playerId) return;
     if (!getPlayerForSocket(room, playerId, socket.id)) return;
+    if (isDiscussionLocked(room)) return;
     tryResolveDayVote(room, (r) => broadcastRoom(r, io), io, { allowEarly: true });
   });
 
@@ -834,6 +859,7 @@ function setupSocketHandlers(
     room.lastDayMessageI18n = null;
     room.awaitingHunterShot = null;
     room.dayVoteResolved = false;
+    room.discussionEndsAt = null;
     room.logs = [];
     room.nextNightStep = null;
     room.phaseTransition = null;

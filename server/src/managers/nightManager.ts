@@ -1,6 +1,7 @@
 import type { Namespace } from 'socket.io';
 import { NIGHT_RESOLVE_DELAY_MS } from '../config/constants';
 import { scheduleNightStep, schedulePhaseTransition } from './phaseManager';
+import { addLog, localizedMessage } from '../utils/helpers';
 import type { ClientToServerEvents, ServerToClientEvents } from '../../../core/src/events';
 import type { Room } from '../../../core/src/types';
 import { queueDeath, resolveDeaths } from './deathManager';
@@ -40,6 +41,14 @@ function tryFinalizeWolfVote(
   }
   if (!chosen && options.allowNoKill) {
     room.wolfTarget = null;
+    addLog(
+      room,
+      'Werewolves chose no target.',
+      null,
+      localizedMessage('server.logs.wolfNoTarget'),
+      null,
+      true
+    );
     scheduleNightStep(room, 'seer', broadcastRoom, io);
     return true;
   }
@@ -53,6 +62,17 @@ function tryFinalizeWolfVote(
     }
   }
   room.wolfTarget = chosen;
+  const wolfTargetName = chosen ? (room.players[chosen]?.name ?? null) : null;
+  if (wolfTargetName) {
+    addLog(
+      room,
+      `Werewolves chose to attack ${wolfTargetName}.`,
+      null,
+      localizedMessage('server.logs.wolfAttackTarget', { target: wolfTargetName }),
+      null,
+      true
+    );
+  }
   scheduleNightStep(room, 'seer', broadcastRoom, io);
   return true;
 }
@@ -125,6 +145,14 @@ function handleWitchDecision(
     if (!target || !target.alive) return;
     room.witchState.healAvailable = false;
     room.healedTarget = room.wolfTarget;
+    addLog(
+      room,
+      `Witch healed ${target.name}.`,
+      null,
+      localizedMessage('server.logs.witchHealed', { target: target.name }),
+      null,
+      true
+    );
   }
 
   // Apply poison action if valid
@@ -136,6 +164,14 @@ function handleWitchDecision(
     if (!target || !target.alive) return;
     room.witchState.poisonAvailable = false;
     room.poisonTarget = targetId;
+    addLog(
+      room,
+      `Witch poisoned ${target.name}.`,
+      null,
+      localizedMessage('server.logs.witchPoisoned', { target: target.name }),
+      null,
+      true
+    );
   }
 
   // Check if witch can still perform actions after applying the current action

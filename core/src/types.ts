@@ -84,6 +84,13 @@ export interface RoomLog {
   publicText: string | null;
   message?: LocalizedMessage | null;
   publicMessage?: LocalizedMessage | null;
+  /**
+   * When true, this log entry is only shown to dead spectators (and to everyone
+   * once the game has ended). Alive players never see it. Used for night-action
+   * narration (e.g. "Wolves chose X", "Witch healed Y") so dead players can
+   * follow what is happening, mirroring in-person spectating.
+   */
+  deadOnly?: boolean;
 }
 
 export interface PendingDeath {
@@ -112,6 +119,10 @@ export interface Room {
   minPlayers: number;
   roleConfig: RoleConfig;
   passiveRoleConfig: PassiveRoleConfig;
+  /** Seconds of forced discussion after each night before day voting opens. */
+  discussionTimerSeconds: number;
+  /** Timestamp (ms) when the day discussion lock lifts and voting opens. */
+  discussionEndsAt: number | null;
   mayorId: string | null;
   awaitingMayorSelection: string | null;
   mayorSelectionQueue: string[];
@@ -191,6 +202,10 @@ export interface RoomView {
   minPlayers: number;
   roleConfig: RoleConfig;
   passiveRoleConfig: PassiveRoleConfig;
+  /** Configured discussion timer (seconds) for the lobby/day phase. */
+  discussionTimerSeconds: number;
+  /** Timestamp (ms) when the day discussion lock lifts, or null when inactive. */
+  discussionEndsAt: number | null;
   mayorId: string | null;
   awaitingMayorSelection: boolean;
   mayorSelectionPending: boolean;

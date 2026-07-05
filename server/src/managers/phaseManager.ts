@@ -39,6 +39,7 @@ function startNight(room: Room) {
   room.awaitingHunterShot = null;
   room.awaitingMayorSelection = null;
   room.dayVoteResolved = false;
+  room.discussionEndsAt = null;
 }
 
 function scheduleNightStep(
@@ -71,6 +72,24 @@ function scheduleNightStep(
       broadcastRoom(room);
     }
   }, NIGHT_DELAY_MS);
+}
+
+function beginDay(room: Room) {
+  room.dayCount += 1;
+  room.phase = 'day';
+  room.phaseStep = null;
+  room.nextNightStep = null;
+  room.voteState = createVoteState();
+  room.dayVoteResolved = false;
+  // Start the configured discussion period before voting opens.
+  room.discussionEndsAt =
+    room.discussionTimerSeconds > 0 ? Date.now() + room.discussionTimerSeconds * 1000 : null;
+  addLog(
+    room,
+    `Day ${room.dayCount} has begun.`,
+    null,
+    localizedMessage('server.logs.dayBegun', { count: room.dayCount })
+  );
 }
 
 function schedulePhaseTransition(
@@ -124,18 +143,7 @@ function schedulePhaseTransition(
       return;
     }
     if (kind === 'nightToDay') {
-      room.dayCount += 1;
-      room.phase = 'day';
-      room.phaseStep = null;
-      room.nextNightStep = null;
-      room.voteState = createVoteState();
-      room.dayVoteResolved = false;
-      addLog(
-        room,
-        `Day ${room.dayCount} has begun.`,
-        null,
-        localizedMessage('server.logs.dayBegun', { count: room.dayCount })
-      );
+      beginDay(room);
       broadcastRoom(room);
       return;
     }
@@ -257,4 +265,5 @@ export {
   advanceFromReveal,
   advanceFromMayor,
   notifyLovers,
+  beginDay,
 };

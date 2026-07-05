@@ -48,6 +48,7 @@ const roleConfig = computed(
     }
 );
 const passiveRoleConfig = computed(() => room.value?.passiveRoleConfig || { mayor: true });
+const discussionTimerSeconds = computed(() => room.value?.discussionTimerSeconds ?? 60);
 const totals = computed(() =>
   Object.values(roleConfig.value).reduce((sum, count) => sum + count, 0)
 );
@@ -58,6 +59,7 @@ const needsAdjust = computed(() => totals.value > playersCount.value);
 // Local state for role config inputs (host only)
 const localRoleConfig = ref<Record<string, number>>({});
 const localPassiveConfig = ref<Record<string, boolean>>({});
+const localDiscussionTimer = ref<number>(room.value?.discussionTimerSeconds ?? 60);
 
 let debounceTimer: number | null = null;
 
@@ -77,6 +79,9 @@ function emitConfig() {
   }
   if (Object.keys(localPassiveConfig.value).length) {
     config.passiveRoles = { ...localPassiveConfig.value };
+  }
+  if (localDiscussionTimer.value !== undefined) {
+    config.discussionTimerSeconds = localDiscussionTimer.value;
   }
   props.socket.emit('updateRoleConfig', {
     roomCode: room.value!.code,
@@ -107,6 +112,11 @@ function onRoleInput(role: string, value: number) {
 
 function onPassiveRoleChange(role: string, checked: boolean) {
   localPassiveConfig.value[role] = checked;
+  emitConfig();
+}
+
+function onDiscussionTimerChange(value: number) {
+  localDiscussionTimer.value = Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
   emitConfig();
 }
 
@@ -167,6 +177,21 @@ function startGame() {
             </span>
           </div>
         </div>
+      </div>
+      <div class="discussion-timer-config">
+        <label class="discussion-timer-row">
+          <span class="discussion-timer-label">{{ t('lobby.discussionTimer') }}</span>
+          <input
+            type="number"
+            class="discussion-timer-input"
+            data-role="discussionTimer"
+            min="0"
+            max="600"
+            :value="discussionTimerSeconds"
+            @change="onDiscussionTimerChange(Number(($event.target as HTMLInputElement).value))"
+            @input="onDiscussionTimerChange(Number(($event.target as HTMLInputElement).value))"
+          />
+        </label>
       </div>
     </form>
     <p v-else>{{ t('lobby.waitingForHost') }}</p>

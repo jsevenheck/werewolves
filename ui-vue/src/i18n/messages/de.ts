@@ -90,6 +90,7 @@ export const de = {
     disconnectedWarning:
       '{count} Spieler sind nicht verbunden. Entferne sie oder warte auf die Rückverbindung vor dem Start.',
     startGame: 'Spiel starten',
+    discussionTimer: 'Diskussionszeit vor der Abstimmung (Sekunden)',
   },
   roleReveal: {
     title: 'Deine Rolle',
@@ -166,6 +167,8 @@ export const de = {
     eliminated: '{name} ({role}) wurde eliminiert.',
     endVoting: 'Abstimmung beenden',
     proceedToNight: 'Zur Nacht übergehen',
+    discussionActive: 'Diskussionszeit: {seconds}s bis zur Abstimmung.',
+    discussionHint: 'Diskutiert, bevor die Abstimmung öffnet.',
   },
   gameOver: {
     title: 'Spiel vorbei',
@@ -268,11 +271,22 @@ export const de = {
       voteSkipped: 'Abstimmung übersprungen. Niemand wurde eliminiert.',
       majorityAbstained: 'Mehrheit hat sich enthalten. Niemand wurde eliminiert.',
       voteTieMayor: 'Abstimmung unentschieden. Die Stimme des Bürgermeisters entscheidet.',
+      voteTieMayorDouble:
+        'Abstimmung unentschieden. Die Bürgermeister-Stimme zählte doppelt und entschied.',
+      voteStillTiedAfterMayorDouble:
+        'Abstimmung weiterhin unentschieden nach doppelter Bürgermeister-Stimme.',
       voteTiedRevote: 'Abstimmung unentschieden. Stichwahl zwischen markierten Spielern.',
       revoteTieMayor: 'Stichwahl unentschieden. Die Stimme des Bürgermeisters entscheidet.',
       voteTiedRandom: 'Erneut unentschieden. {name} wurde zufällig ausgewählt.',
       voteTiedRandomFallback: 'Erneut unentschieden. Ein Spieler wurde zufällig ausgewählt.',
       votedOut: '{name} wurde herausgewählt. Rolle: {role}.',
+      wolfAttackTarget: 'Die Wölfe haben {target} als Ziel auserkoren.',
+      wolfNoTarget: 'Die Wölfe haben kein Ziel ausgewählt.',
+      witchHealed: 'Die Hexe hat {target} gerettet.',
+      witchPoisoned: 'Die Hexe hat {target} vergiftet.',
+      guardProtected: 'Der Wächter hat {target} beschützt.',
+      harlotVisited: 'Die Hure hat {target} besucht.',
+      seerInspected: 'Die Seherin hat {target} geprüft ({result}).',
     },
     deathReasons: {
       heartbreak: 'an gebrochenem Herzen',

@@ -1,16 +1,16 @@
-# Graph Report - werewolves  (2026-06-24)
+# Graph Report - werewolves  (2026-07-05)
 
 ## Corpus Check
-- 116 files · ~65,073 words
+- 116 files · ~67,021 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 688 nodes · 1391 edges · 48 communities (44 shown, 4 thin omitted)
+- 691 nodes · 1410 edges · 48 communities (44 shown, 4 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 15 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8f2843c7`
+- Built from commit: `eea87416`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -48,10 +48,10 @@
 - [[_COMMUNITY_Community 49|Community 49]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `setupSocketHandlers()` - 41 edges
-2. `Room` - 23 edges
-3. `localizedMessage()` - 23 edges
-4. `addLog()` - 21 edges
+1. `setupSocketHandlers()` - 43 edges
+2. `localizedMessage()` - 27 edges
+3. `addLog()` - 25 edges
+4. `Room` - 23 edges
 5. `createLobbyWithPlayers()` - 20 edges
 6. `broadcastRoom()` - 20 edges
 7. `resolveDeaths()` - 20 edges
@@ -62,12 +62,12 @@
 ## Surprising Connections (you probably didn't know these)
 - `makeSocket()` --calls--> `attachAdminToSocket()`  [EXTRACTED]
   __tests__/adminHandlers.test.ts → server/src/utils/adminAuth.ts
+- `AdminState` --references--> `RoomView`  [EXTRACTED]
+  ui-vue/src/stores/admin.ts → core/src/types.ts
 - `useAdminSocket()` --calls--> `io`  [INFERRED]
   ui-vue/src/composables/useAdminSocket.ts → server/src/index.ts
 - `useSocket()` --calls--> `io`  [INFERRED]
   ui-vue/src/composables/useSocket.ts → server/src/index.ts
-- `AdminState` --references--> `RoomView`  [EXTRACTED]
-  ui-vue/src/stores/admin.ts → core/src/types.ts
 - `GameState` --references--> `RoomView`  [EXTRACTED]
   ui-vue/src/stores/game.ts → core/src/types.ts
 
@@ -77,20 +77,20 @@
 ## Communities (48 total, 4 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.12
-Nodes (48): AdminSocket, TypedSocket, detachSocketFromRoom(), ensureActingHost(), pendingDisconnects, setupSocketHandlers(), updateHostIfNeeded(), broadcastRoom() (+40 more)
+Cohesion: 0.11
+Nodes (50): AdminSocket, TypedSocket, detachSocketFromRoom(), ensureActingHost(), pendingDisconnects, setupSocketHandlers(), updateHostIfNeeded(), broadcastRoom() (+42 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.08
 Nodes (40): getRoleName(), mapRolesToPages(), advanceToDay(), AdvanceToDayResult, closeContexts(), completeMayorElection(), configureRoles(), createLobbyWithPlayers() (+32 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.05
-Nodes (31): BUNDLED_AUDIO, getBundledAudioUrl(), useNarrator(), HowlEvent, MockHowl, RoomSummary, RoomView, StoredSession (+23 more)
+Cohesion: 0.06
+Nodes (28): BUNDLED_AUDIO, getBundledAudioUrl(), useNarrator(), HowlEvent, MockHowl, RoomView, StoredSession, GameState (+20 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.06
-Nodes (48): DEATH_REASON_KEYS, SERVER_DEATH_REASONS, AdminSocket, HostKickResult, DEFAULT_PASSIVE_ROLE_CONFIG, DEFAULT_ROLE_CONFIG, PLAYER_ID, RESUME_TOKEN (+40 more)
+Cohesion: 0.05
+Nodes (45): DEATH_REASON_KEYS, SERVER_DEATH_REASONS, AdminSocket, HostKickResult, DEFAULT_PASSIVE_ROLE_CONFIG, DEFAULT_ROLE_CONFIG, ROLE_INFO, RoleInfo (+37 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.05
@@ -118,7 +118,7 @@ Nodes (17): compilerOptions, baseUrl, esModuleInterop, forceConsistentCasingInFi
 
 ### Community 10 - "Community 10"
 Cohesion: 0.07
-Nodes (37): useAdminSocket(), useSocket(), kickPlayerFromRoom(), setupAdminSocketHandlers(), cancelPendingDisconnect(), getAdminObserversForRoom(), getRoomForAdminSocket(), observersByRoom (+29 more)
+Nodes (43): useAdminSocket(), useSocket(), PLAYER_ID, RESUME_TOKEN, ROOM_CODE, kickPlayerFromRoom(), setupAdminSocketHandlers(), cancelPendingDisconnect() (+35 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.12
@@ -141,8 +141,8 @@ Cohesion: 0.18
 Nodes (10): compilerOptions, module, moduleResolution, noEmit, outDir, rootDir, target, types (+2 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.28
-Nodes (6): emitConfig(), needsAdjust, onPassiveRoleChange(), onRoleChange(), playersCount, villagerSlots
+Cohesion: 0.27
+Nodes (7): emitConfig(), needsAdjust, onDiscussionTimerChange(), onPassiveRoleChange(), onRoleChange(), playersCount, villagerSlots
 
 ### Community 18 - "Community 18"
 Cohesion: 0.25
@@ -197,12 +197,12 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `IoStub`, `HowlEvent`, `RoomOverrides` to the rest of the system?**
   _265 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.11551277304701962 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.11197663096397274 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.07672634271099744 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.05004389815627744 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05605499735589635 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**
-  _Cohesion score 0.05794556628621598 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05446853516657853 - nodes in this community are weakly interconnected._
 - **Should `Community 4` be split into smaller, more focused modules?**
   _Cohesion score 0.04878048780487805 - nodes in this community are weakly interconnected._

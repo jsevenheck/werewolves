@@ -221,6 +221,8 @@ function joinAsObserver(roomCode: string) {
         harlot: 0,
       },
       passiveRoleConfig: { mayor: false },
+      discussionTimerSeconds: 0,
+      discussionEndsAt: null,
       mayorId: null,
       awaitingMayorSelection: false,
       mayorSelectionPending: false,

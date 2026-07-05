@@ -3,20 +3,26 @@ import { errorResponse, shuffle } from '../utils/helpers';
 import type { ErrorResponse } from '../../../core/src/events';
 import type { Room, RoleConfig, PassiveRoleConfig, Role } from '../../../core/src/types';
 
-function normalizeRoleConfig(config: Partial<RoleConfig> = {}): RoleConfig {
-  const normalized: RoleConfig = { ...DEFAULT_ROLE_CONFIG };
+function normalizeRoleConfig(
+  config: Partial<RoleConfig> = {},
+  base: RoleConfig = DEFAULT_ROLE_CONFIG
+): RoleConfig {
+  const normalized: RoleConfig = { ...base };
   for (const key of Object.keys(DEFAULT_ROLE_CONFIG) as (keyof RoleConfig)[]) {
     const raw = Number(config[key]);
-    normalized[key] = Number.isFinite(raw) && raw >= 0 ? Math.floor(raw) : DEFAULT_ROLE_CONFIG[key];
+    normalized[key] = Number.isFinite(raw) && raw >= 0 ? Math.floor(raw) : base[key];
   }
   return normalized;
 }
 
-function normalizePassiveRoleConfig(config: Partial<PassiveRoleConfig> = {}): PassiveRoleConfig {
-  const normalized: PassiveRoleConfig = { ...DEFAULT_PASSIVE_ROLE_CONFIG };
+function normalizePassiveRoleConfig(
+  config: Partial<PassiveRoleConfig> = {},
+  base: PassiveRoleConfig = DEFAULT_PASSIVE_ROLE_CONFIG
+): PassiveRoleConfig {
+  const normalized: PassiveRoleConfig = { ...base };
   for (const key of Object.keys(DEFAULT_PASSIVE_ROLE_CONFIG) as (keyof PassiveRoleConfig)[]) {
     const raw = config[key];
-    normalized[key] = typeof raw === 'boolean' ? raw : DEFAULT_PASSIVE_ROLE_CONFIG[key];
+    normalized[key] = typeof raw === 'boolean' ? raw : base[key];
   }
   return normalized;
 }

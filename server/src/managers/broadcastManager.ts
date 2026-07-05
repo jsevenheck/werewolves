@@ -62,6 +62,8 @@ function buildAdminRoomView(room: Room): RoomView {
     minPlayers: room.minPlayers,
     roleConfig: room.roleConfig,
     passiveRoleConfig: room.passiveRoleConfig,
+    discussionTimerSeconds: room.discussionTimerSeconds,
+    discussionEndsAt: room.discussionEndsAt,
     mayorId: null,
     awaitingMayorSelection: false,
     mayorSelectionPending: !!room.awaitingMayorSelection,
@@ -166,25 +168,33 @@ function localizeWinner(winner: Winner | null): Winner | null {
 
 function sanitizeRoom(room: Room, viewerId: string): RoomView {
   const viewer = room.players[viewerId];
+  const gameEnded = room.phase === 'ended';
   const players = Object.values(room.players).map((player) => ({
     id: player.id,
     name: player.name,
     alive: player.alive,
     connected: player.connected,
     isHost: player.id === room.hostId,
-    role: player.id === viewerId || room.phase === 'ended' || !player.alive ? player.role : null,
+    role: player.id === viewerId || gameEnded ? player.role : null,
     ...(room.phase === 'roleReveal' ? { ready: player.ready } : {}),
   }));
   const viewerAlive = viewer ? viewer.alive : false;
-  const logs = room.logs.slice(-MAX_VISIBLE_LOGS).map((log) => {
-    const usePublic = viewerAlive && !!log.publicText;
-    const message = usePublic ? (log.publicMessage ?? null) : (log.message ?? null);
-    return {
-      ts: log.ts,
-      text: message?.key ?? (usePublic ? log.publicText! : log.text),
-      message,
-    };
-  });
+  const logs = room.logs
+    .slice(-MAX_VISIBLE_LOGS)
+    .filter((log) => {
+      // deadOnly logs are hidden from alive viewers until the game ends.
+      if (log.deadOnly && viewerAlive && !gameEnded) return false;
+      return true;
+    })
+    .map((log) => {
+      const usePublic = viewerAlive && !gameEnded && !!log.publicText;
+      const message = usePublic ? (log.publicMessage ?? null) : (log.message ?? null);
+      return {
+        ts: log.ts,
+        text: message?.key ?? (usePublic ? log.publicText! : log.text),
+        message,
+      };
+    });
   return {
     code: room.code,
     phase: room.phase,
@@ -195,6 +205,8 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     minPlayers: room.minPlayers,
     roleConfig: room.roleConfig,
     passiveRoleConfig: room.passiveRoleConfig,
+    discussionTimerSeconds: room.discussionTimerSeconds,
+    discussionEndsAt: room.discussionEndsAt,
     mayorId: room.mayorId,
     awaitingMayorSelection: room.awaitingMayorSelection === viewerId,
     mayorSelectionPending: !!room.awaitingMayorSelection,

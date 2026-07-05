@@ -246,6 +246,7 @@ test('mayor vote breaks tie in day voting', async ({ browser }) => {
 
     // The mayor's vote should have broken the tie or someone was voted out
     const voteResolved =
+      logsPanel?.includes("Mayor's vote counted double") ||
       logsPanel?.includes("Mayor's vote decided") ||
       logsPanel?.includes('voted out') ||
       logsPanel?.includes('executed by vote');

@@ -79,7 +79,7 @@
       "label": "buildPlayer()",
       "file_type": "code",
       "source_file": "__tests__/broadcastManager.test.ts",
-      "source_location": "L60",
+      "source_location": "L62",
       "id": "tests_broadcastmanager_test_buildplayer",
       "community": 10,
       "norm_label": "buildplayer()"
@@ -115,7 +115,7 @@
       "label": "buildPlayer()",
       "file_type": "code",
       "source_file": "__tests__/deathManager.test.ts",
-      "source_location": "L63",
+      "source_location": "L65",
       "id": "tests_deathmanager_test_buildplayer",
       "community": 0,
       "norm_label": "buildplayer()"
@@ -162,7 +162,7 @@
       "source_file": "__tests__/edgeCases.test.ts",
       "source_location": "L1",
       "id": "tests_edgecases_test",
-      "community": 3,
+      "community": 0,
       "norm_label": "edgecases.test.ts"
     },
     {
@@ -171,7 +171,7 @@
       "source_file": "__tests__/edgeCases.test.ts",
       "source_location": "L7",
       "id": "tests_edgecases_test_makeplayer",
-      "community": 3,
+      "community": 0,
       "norm_label": "makeplayer()"
     },
     {
@@ -180,7 +180,7 @@
       "source_file": "__tests__/helpers.test.ts",
       "source_location": "L1",
       "id": "tests_helpers_test",
-      "community": 3,
+      "community": 0,
       "norm_label": "helpers.test.ts"
     },
     {
@@ -358,7 +358,7 @@
       "label": "buildRoom()",
       "file_type": "code",
       "source_file": "__tests__/narrator.test.ts",
-      "source_location": "L64",
+      "source_location": "L66",
       "id": "tests_narrator_test_buildroom",
       "community": 2,
       "norm_label": "buildroom()"
@@ -367,7 +367,7 @@
       "label": "flushPromises()",
       "file_type": "code",
       "source_file": "__tests__/narrator.test.ts",
-      "source_location": "L69",
+      "source_location": "L71",
       "id": "tests_narrator_test_flushpromises",
       "community": 2,
       "norm_label": "flushpromises()"
@@ -430,7 +430,7 @@
       "label": "buildPlayer()",
       "file_type": "code",
       "source_file": "__tests__/nightManager.test.ts",
-      "source_location": "L77",
+      "source_location": "L79",
       "id": "tests_nightmanager_test_buildplayer",
       "community": 0,
       "norm_label": "buildplayer()"
@@ -457,7 +457,7 @@
       "label": "buildPlayer()",
       "file_type": "code",
       "source_file": "__tests__/phaseManager.test.ts",
-      "source_location": "L65",
+      "source_location": "L67",
       "id": "tests_phasemanager_test_buildplayer",
       "community": 0,
       "norm_label": "buildplayer()"
@@ -484,7 +484,7 @@
       "label": "makePlayers()",
       "file_type": "code",
       "source_file": "__tests__/roleManager.test.ts",
-      "source_location": "L16",
+      "source_location": "L17",
       "id": "tests_rolemanager_test_makeplayers",
       "community": 3,
       "norm_label": "makeplayers()"
@@ -495,7 +495,7 @@
       "source_file": "__tests__/roomCleanup.test.ts",
       "source_location": "L1",
       "id": "tests_roomcleanup_test",
-      "community": 3,
+      "community": 10,
       "norm_label": "roomcleanup.test.ts"
     },
     {
@@ -511,7 +511,7 @@
       "label": "makeSocket()",
       "file_type": "code",
       "source_file": "__tests__/socketHandlers.test.ts",
-      "source_location": "L85",
+      "source_location": "L89",
       "id": "tests_sockethandlers_test_makesocket",
       "community": 0,
       "norm_label": "makesocket()"
@@ -520,7 +520,7 @@
       "label": "makeIo()",
       "file_type": "code",
       "source_file": "__tests__/socketHandlers.test.ts",
-      "source_location": "L97",
+      "source_location": "L101",
       "id": "tests_sockethandlers_test_makeio",
       "community": 0,
       "norm_label": "makeio()"
@@ -547,7 +547,7 @@
       "label": "buildPlayer()",
       "file_type": "code",
       "source_file": "__tests__/voteManager.test.ts",
-      "source_location": "L66",
+      "source_location": "L68",
       "id": "tests_votemanager_test_buildplayer",
       "community": 0,
       "norm_label": "buildplayer()"
@@ -585,7 +585,7 @@
       "source_file": "core/src/events.ts",
       "source_location": "L1",
       "id": "src_events",
-      "community": 0,
+      "community": 3,
       "norm_label": "events.ts"
     },
     {
@@ -619,7 +619,7 @@
       "label": "ServerToClientEvents",
       "file_type": "code",
       "source_file": "core/src/events.ts",
-      "source_location": "L146",
+      "source_location": "L149",
       "id": "src_events_servertoclientevents",
       "community": 0,
       "norm_label": "servertoclientevents"
@@ -628,18 +628,18 @@
       "label": "InterServerEvents",
       "file_type": "code",
       "source_file": "core/src/events.ts",
-      "source_location": "L153",
+      "source_location": "L156",
       "id": "src_events_interserverevents",
-      "community": 0,
+      "community": 3,
       "norm_label": "interserverevents"
     },
     {
       "label": "SocketData",
       "file_type": "code",
       "source_file": "core/src/events.ts",
-      "source_location": "L157",
+      "source_location": "L160",
       "id": "src_events_socketdata",
-      "community": 0,
+      "community": 3,
       "norm_label": "socketdata"
     },
     {
@@ -673,7 +673,7 @@
       "label": "Team",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L11",
+      "source_location": "L3",
       "id": "src_types_team",
       "community": 3,
       "norm_label": "team"
@@ -682,7 +682,7 @@
       "label": "Phase",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L12",
+      "source_location": "L4",
       "id": "src_types_phase",
       "community": 3,
       "norm_label": "phase"
@@ -691,7 +691,7 @@
       "label": "NightStep",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L13",
+      "source_location": "L5",
       "id": "src_types_nightstep",
       "community": 3,
       "norm_label": "nightstep"
@@ -700,7 +700,7 @@
       "label": "PhaseTransition",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L22",
+      "source_location": "L7",
       "id": "src_types_phasetransition",
       "community": 3,
       "norm_label": "phasetransition"
@@ -709,7 +709,7 @@
       "label": "PassiveRole",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L29",
+      "source_location": "L9",
       "id": "src_types_passiverole",
       "community": 3,
       "norm_label": "passiverole"
@@ -718,7 +718,7 @@
       "label": "LocalizedMessageParam",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L31",
+      "source_location": "L11",
       "id": "src_types_localizedmessageparam",
       "community": 3,
       "norm_label": "localizedmessageparam"
@@ -727,7 +727,7 @@
       "label": "LocalizedMessageParams",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L32",
+      "source_location": "L12",
       "id": "src_types_localizedmessageparams",
       "community": 3,
       "norm_label": "localizedmessageparams"
@@ -736,7 +736,7 @@
       "label": "LocalizedMessage",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L34",
+      "source_location": "L14",
       "id": "src_types_localizedmessage",
       "community": 3,
       "norm_label": "localizedmessage"
@@ -745,7 +745,7 @@
       "label": "RoleConfig",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L39",
+      "source_location": "L19",
       "id": "src_types_roleconfig",
       "community": 3,
       "norm_label": "roleconfig"
@@ -754,7 +754,7 @@
       "label": "PassiveRoleConfig",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L50",
+      "source_location": "L30",
       "id": "src_types_passiveroleconfig",
       "community": 3,
       "norm_label": "passiveroleconfig"
@@ -763,7 +763,7 @@
       "label": "SeerResult",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L54",
+      "source_location": "L34",
       "id": "src_types_seerresult",
       "community": 3,
       "norm_label": "seerresult"
@@ -772,16 +772,16 @@
       "label": "Player",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L70",
+      "source_location": "L50",
       "id": "src_types_player",
-      "community": 3,
+      "community": 0,
       "norm_label": "player"
     },
     {
       "label": "VoteState",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L86",
+      "source_location": "L66",
       "id": "src_types_votestate",
       "community": 3,
       "norm_label": "votestate"
@@ -790,7 +790,7 @@
       "label": "WitchState",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L91",
+      "source_location": "L71",
       "id": "src_types_witchstate",
       "community": 3,
       "norm_label": "witchstate"
@@ -799,7 +799,7 @@
       "label": "LoverPair",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L96",
+      "source_location": "L76",
       "id": "src_types_loverpair",
       "community": 3,
       "norm_label": "loverpair"
@@ -808,7 +808,7 @@
       "label": "RoomLog",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L101",
+      "source_location": "L81",
       "id": "src_types_roomlog",
       "community": 3,
       "norm_label": "roomlog"
@@ -817,7 +817,7 @@
       "label": "PendingDeath",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L109",
+      "source_location": "L96",
       "id": "src_types_pendingdeath",
       "community": 3,
       "norm_label": "pendingdeath"
@@ -826,7 +826,7 @@
       "label": "NightDeathAnnouncement",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L114",
+      "source_location": "L101",
       "id": "src_types_nightdeathannouncement",
       "community": 3,
       "norm_label": "nightdeathannouncement"
@@ -835,16 +835,16 @@
       "label": "Winner",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L119",
+      "source_location": "L106",
       "id": "src_types_winner",
-      "community": 10,
+      "community": 3,
       "norm_label": "winner"
     },
     {
       "label": "Room",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L125",
+      "source_location": "L112",
       "id": "src_types_room",
       "community": 0,
       "norm_label": "room"
@@ -853,7 +853,7 @@
       "label": "PlayerPublic",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L173",
+      "source_location": "L164",
       "id": "src_types_playerpublic",
       "community": 3,
       "norm_label": "playerpublic"
@@ -862,7 +862,7 @@
       "label": "RoomViewVoteState",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L183",
+      "source_location": "L174",
       "id": "src_types_roomviewvotestate",
       "community": 3,
       "norm_label": "roomviewvotestate"
@@ -871,7 +871,7 @@
       "label": "RoomViewLog",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L190",
+      "source_location": "L181",
       "id": "src_types_roomviewlog",
       "community": 3,
       "norm_label": "roomviewlog"
@@ -880,7 +880,7 @@
       "label": "RoomViewSelf",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L196",
+      "source_location": "L187",
       "id": "src_types_roomviewself",
       "community": 3,
       "norm_label": "roomviewself"
@@ -889,7 +889,7 @@
       "label": "RoomView",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L204",
+      "source_location": "L195",
       "id": "src_types_roomview",
       "community": 2,
       "norm_label": "roomview"
@@ -898,7 +898,7 @@
       "label": "StoredSession",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L250",
+      "source_location": "L245",
       "id": "src_types_storedsession",
       "community": 2,
       "norm_label": "storedsession"
@@ -907,18 +907,18 @@
       "label": "RoomSummary",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L267",
+      "source_location": "L262",
       "id": "src_types_roomsummary",
-      "community": 2,
+      "community": 3,
       "norm_label": "roomsummary"
     },
     {
       "label": "AdminObserver",
       "file_type": "code",
       "source_file": "core/src/types.ts",
-      "source_location": "L286",
+      "source_location": "L281",
       "id": "src_types_adminobserver",
-      "community": 10,
+      "community": 3,
       "norm_label": "adminobserver"
     },
     {
@@ -1051,7 +1051,7 @@
       "label": "RoleConfig",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L25",
+      "source_location": "L18",
       "id": "e2e_helpers_roleconfig",
       "community": 1,
       "norm_label": "roleconfig"
@@ -1060,7 +1060,7 @@
       "label": "AdvanceToDayResult",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L37",
+      "source_location": "L30",
       "id": "e2e_helpers_advancetodayresult",
       "community": 1,
       "norm_label": "advancetodayresult"
@@ -1069,7 +1069,7 @@
       "label": "ROLE_FIELDS",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L44",
+      "source_location": "L37",
       "id": "e2e_helpers_role_fields",
       "community": 1,
       "norm_label": "role_fields"
@@ -1078,7 +1078,7 @@
       "label": "joinRoom()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L55",
+      "source_location": "L48",
       "id": "e2e_helpers_joinroom",
       "community": 1,
       "norm_label": "joinroom()"
@@ -1087,7 +1087,7 @@
       "label": "createLobbyWithPlayers()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L63",
+      "source_location": "L56",
       "id": "e2e_helpers_createlobbywithplayers",
       "community": 1,
       "norm_label": "createlobbywithplayers()"
@@ -1096,7 +1096,7 @@
       "label": "configureRoles()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L87",
+      "source_location": "L80",
       "id": "e2e_helpers_configureroles",
       "community": 1,
       "norm_label": "configureroles()"
@@ -1105,7 +1105,7 @@
       "label": "startGameAndReady()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L174",
+      "source_location": "L166",
       "id": "e2e_helpers_startgameandready",
       "community": 1,
       "norm_label": "startgameandready()"
@@ -1114,7 +1114,7 @@
       "label": "tryClick()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L214",
+      "source_location": "L206",
       "id": "e2e_helpers_tryclick",
       "community": 1,
       "norm_label": "tryclick()"
@@ -1123,7 +1123,7 @@
       "label": "selectFirstOption()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L230",
+      "source_location": "L222",
       "id": "e2e_helpers_selectfirstoption",
       "community": 1,
       "norm_label": "selectfirstoption()"
@@ -1132,7 +1132,7 @@
       "label": "selectFirstOptionAvoidingLabel()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L240",
+      "source_location": "L232",
       "id": "e2e_helpers_selectfirstoptionavoidinglabel",
       "community": 1,
       "norm_label": "selectfirstoptionavoidinglabel()"
@@ -1141,7 +1141,7 @@
       "label": "selectOptionByLabel()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L260",
+      "source_location": "L252",
       "id": "e2e_helpers_selectoptionbylabel",
       "community": 1,
       "norm_label": "selectoptionbylabel()"
@@ -1150,7 +1150,7 @@
       "label": "trySubmitNightActions()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L277",
+      "source_location": "L269",
       "id": "e2e_helpers_trysubmitnightactions",
       "community": 1,
       "norm_label": "trysubmitnightactions()"
@@ -1159,7 +1159,7 @@
       "label": "trySubmitMayorVotes()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L368",
+      "source_location": "L360",
       "id": "e2e_helpers_trysubmitmayorvotes",
       "community": 1,
       "norm_label": "trysubmitmayorvotes()"
@@ -1168,7 +1168,7 @@
       "label": "completeMayorElection()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L413",
+      "source_location": "L405",
       "id": "e2e_helpers_completemayorelection",
       "community": 1,
       "norm_label": "completemayorelection()"
@@ -1177,7 +1177,7 @@
       "label": "trySubmitArmor()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L444",
+      "source_location": "L436",
       "id": "e2e_helpers_trysubmitarmor",
       "community": 1,
       "norm_label": "trysubmitarmor()"
@@ -1186,7 +1186,7 @@
       "label": "findHunterPromptPage()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L466",
+      "source_location": "L458",
       "id": "e2e_helpers_findhunterpromptpage",
       "community": 1,
       "norm_label": "findhunterpromptpage()"
@@ -1195,7 +1195,7 @@
       "label": "submitHunterShot()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L484",
+      "source_location": "L476",
       "id": "e2e_helpers_submithuntershot",
       "community": 1,
       "norm_label": "submithuntershot()"
@@ -1204,7 +1204,7 @@
       "label": "ensureHunterOverlay()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L495",
+      "source_location": "L487",
       "id": "e2e_helpers_ensurehunteroverlay",
       "community": 1,
       "norm_label": "ensurehunteroverlay()"
@@ -1213,7 +1213,7 @@
       "label": "reconnectPage()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L522",
+      "source_location": "L514",
       "id": "e2e_helpers_reconnectpage",
       "community": 1,
       "norm_label": "reconnectpage()"
@@ -1222,7 +1222,7 @@
       "label": "waitForDayOnAllPages()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L546",
+      "source_location": "L538",
       "id": "e2e_helpers_waitfordayonallpages",
       "community": 1,
       "norm_label": "waitfordayonallpages()"
@@ -1231,7 +1231,7 @@
       "label": "findVisiblePage()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L554",
+      "source_location": "L546",
       "id": "e2e_helpers_findvisiblepage",
       "community": 1,
       "norm_label": "findvisiblepage()"
@@ -1240,7 +1240,7 @@
       "label": "getPhaseText()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L568",
+      "source_location": "L560",
       "id": "e2e_helpers_getphasetext",
       "community": 1,
       "norm_label": "getphasetext()"
@@ -1249,7 +1249,7 @@
       "label": "advanceToDay()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L581",
+      "source_location": "L573",
       "id": "e2e_helpers_advancetoday",
       "community": 1,
       "norm_label": "advancetoday()"
@@ -1258,7 +1258,7 @@
       "label": "getAliveNames()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L674",
+      "source_location": "L666",
       "id": "e2e_helpers_getalivenames",
       "community": 1,
       "norm_label": "getalivenames()"
@@ -1267,7 +1267,7 @@
       "label": "voteAllForTarget()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L683",
+      "source_location": "L675",
       "id": "e2e_helpers_voteallfortarget",
       "community": 1,
       "norm_label": "voteallfortarget()"
@@ -1276,7 +1276,7 @@
       "label": "proceedToNight()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L709",
+      "source_location": "L701",
       "id": "e2e_helpers_proceedtonight",
       "community": 1,
       "norm_label": "proceedtonight()"
@@ -1285,7 +1285,7 @@
       "label": "proceedToNightIfAvailable()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L715",
+      "source_location": "L707",
       "id": "e2e_helpers_proceedtonightifavailable",
       "community": 1,
       "norm_label": "proceedtonightifavailable()"
@@ -1294,7 +1294,7 @@
       "label": "closeContexts()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L725",
+      "source_location": "L717",
       "id": "e2e_helpers_closecontexts",
       "community": 1,
       "norm_label": "closecontexts()"
@@ -1303,7 +1303,7 @@
       "label": "findMayorPromptPage()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L737",
+      "source_location": "L729",
       "id": "e2e_helpers_findmayorpromptpage",
       "community": 1,
       "norm_label": "findmayorpromptpage()"
@@ -1312,7 +1312,7 @@
       "label": "submitMayorSelection()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L755",
+      "source_location": "L747",
       "id": "e2e_helpers_submitmayorselection",
       "community": 1,
       "norm_label": "submitmayorselection()"
@@ -1321,7 +1321,7 @@
       "label": "ensureMayorOverlay()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L770",
+      "source_location": "L762",
       "id": "e2e_helpers_ensuremayoroverlay",
       "community": 1,
       "norm_label": "ensuremayoroverlay()"
@@ -1330,7 +1330,7 @@
       "label": "getMayorName()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L797",
+      "source_location": "L789",
       "id": "e2e_helpers_getmayorname",
       "community": 1,
       "norm_label": "getmayorname()"
@@ -1339,7 +1339,7 @@
       "label": "waitForMayorSelectionPending()",
       "file_type": "code",
       "source_file": "e2e/helpers.ts",
-      "source_location": "L806",
+      "source_location": "L798",
       "id": "e2e_helpers_waitformayorselectionpending",
       "community": 1,
       "norm_label": "waitformayorselectionpending()"
@@ -2104,34 +2104,34 @@
       "label": "ROOM_CODE",
       "file_type": "code",
       "source_file": "server/src/config/constants.ts",
-      "source_location": "L30",
+      "source_location": "L31",
       "id": "config_constants_room_code",
-      "community": 3,
+      "community": 10,
       "norm_label": "room_code"
     },
     {
       "label": "PLAYER_ID",
       "file_type": "code",
       "source_file": "server/src/config/constants.ts",
-      "source_location": "L31",
+      "source_location": "L32",
       "id": "config_constants_player_id",
-      "community": 3,
+      "community": 10,
       "norm_label": "player_id"
     },
     {
       "label": "RESUME_TOKEN",
       "file_type": "code",
       "source_file": "server/src/config/constants.ts",
-      "source_location": "L32",
+      "source_location": "L33",
       "id": "config_constants_resume_token",
-      "community": 3,
+      "community": 10,
       "norm_label": "resume_token"
     },
     {
       "label": "RoleInfo",
       "file_type": "code",
       "source_file": "server/src/config/constants.ts",
-      "source_location": "L34",
+      "source_location": "L35",
       "id": "config_constants_roleinfo",
       "community": 3,
       "norm_label": "roleinfo"
@@ -2140,7 +2140,7 @@
       "label": "ROLE_INFO",
       "file_type": "code",
       "source_file": "server/src/config/constants.ts",
-      "source_location": "L36",
+      "source_location": "L37",
       "id": "config_constants_role_info",
       "community": 3,
       "norm_label": "role_info"
@@ -2149,7 +2149,7 @@
       "label": "DEFAULT_ROLE_CONFIG",
       "file_type": "code",
       "source_file": "server/src/config/constants.ts",
-      "source_location": "L89",
+      "source_location": "L90",
       "id": "config_constants_default_role_config",
       "community": 3,
       "norm_label": "default_role_config"
@@ -2158,7 +2158,7 @@
       "label": "DEFAULT_PASSIVE_ROLE_CONFIG",
       "file_type": "code",
       "source_file": "server/src/config/constants.ts",
-      "source_location": "L100",
+      "source_location": "L101",
       "id": "config_constants_default_passive_role_config",
       "community": 3,
       "norm_label": "default_passive_role_config"
@@ -2212,7 +2212,7 @@
       "label": "pendingDisconnects",
       "file_type": "code",
       "source_file": "server/src/handlers/socketHandlers.ts",
-      "source_location": "L56",
+      "source_location": "L58",
       "id": "handlers_sockethandlers_pendingdisconnects",
       "community": 0,
       "norm_label": "pendingdisconnects"
@@ -2221,7 +2221,7 @@
       "label": "cancelPendingDisconnect()",
       "file_type": "code",
       "source_file": "server/src/handlers/socketHandlers.ts",
-      "source_location": "L58",
+      "source_location": "L60",
       "id": "handlers_sockethandlers_cancelpendingdisconnect",
       "community": 10,
       "norm_label": "cancelpendingdisconnect()"
@@ -2230,7 +2230,7 @@
       "label": "getPlayerForSocket()",
       "file_type": "code",
       "source_file": "server/src/handlers/socketHandlers.ts",
-      "source_location": "L70",
+      "source_location": "L72",
       "id": "handlers_sockethandlers_getplayerforsocket",
       "community": 0,
       "norm_label": "getplayerforsocket()"
@@ -2239,7 +2239,7 @@
       "label": "ensureActingHost()",
       "file_type": "code",
       "source_file": "server/src/handlers/socketHandlers.ts",
-      "source_location": "L76",
+      "source_location": "L78",
       "id": "handlers_sockethandlers_ensureactinghost",
       "community": 0,
       "norm_label": "ensureactinghost()"
@@ -2248,7 +2248,7 @@
       "label": "updateHostIfNeeded()",
       "file_type": "code",
       "source_file": "server/src/handlers/socketHandlers.ts",
-      "source_location": "L92",
+      "source_location": "L94",
       "id": "handlers_sockethandlers_updatehostifneeded",
       "community": 0,
       "norm_label": "updatehostifneeded()"
@@ -2257,7 +2257,7 @@
       "label": "detachSocketFromRoom()",
       "file_type": "code",
       "source_file": "server/src/handlers/socketHandlers.ts",
-      "source_location": "L96",
+      "source_location": "L98",
       "id": "handlers_sockethandlers_detachsocketfromroom",
       "community": 0,
       "norm_label": "detachsocketfromroom()"
@@ -2266,7 +2266,7 @@
       "label": "setupSocketHandlers()",
       "file_type": "code",
       "source_file": "server/src/handlers/socketHandlers.ts",
-      "source_location": "L131",
+      "source_location": "L133",
       "id": "handlers_sockethandlers_setupsockethandlers",
       "community": 0,
       "norm_label": "setupsockethandlers()"
@@ -2473,7 +2473,7 @@
       "label": "broadcastRoomToAdmins()",
       "file_type": "code",
       "source_file": "server/src/managers/broadcastManager.ts",
-      "source_location": "L114",
+      "source_location": "L116",
       "id": "managers_broadcastmanager_broadcastroomtoadmins",
       "community": 10,
       "norm_label": "broadcastroomtoadmins()"
@@ -2482,16 +2482,16 @@
       "label": "sendStateToPlayer()",
       "file_type": "code",
       "source_file": "server/src/managers/broadcastManager.ts",
-      "source_location": "L129",
+      "source_location": "L131",
       "id": "managers_broadcastmanager_sendstatetoplayer",
-      "community": 10,
+      "community": 0,
       "norm_label": "sendstatetoplayer()"
     },
     {
       "label": "getWinnerReasonMessage()",
       "file_type": "code",
       "source_file": "server/src/managers/broadcastManager.ts",
-      "source_location": "L140",
+      "source_location": "L142",
       "id": "managers_broadcastmanager_getwinnerreasonmessage",
       "community": 10,
       "norm_label": "getwinnerreasonmessage()"
@@ -2500,7 +2500,7 @@
       "label": "localizeWinner()",
       "file_type": "code",
       "source_file": "server/src/managers/broadcastManager.ts",
-      "source_location": "L157",
+      "source_location": "L159",
       "id": "managers_broadcastmanager_localizewinner",
       "community": 10,
       "norm_label": "localizewinner()"
@@ -2509,7 +2509,7 @@
       "label": "sanitizeRoom()",
       "file_type": "code",
       "source_file": "server/src/managers/broadcastManager.ts",
-      "source_location": "L167",
+      "source_location": "L169",
       "id": "managers_broadcastmanager_sanitizeroom",
       "community": 10,
       "norm_label": "sanitizeroom()"
@@ -2644,7 +2644,7 @@
       "label": "tryFinalizeWolfVote()",
       "file_type": "code",
       "source_file": "server/src/managers/nightManager.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "id": "managers_nightmanager_tryfinalizewolfvote",
       "community": 0,
       "norm_label": "tryfinalizewolfvote()"
@@ -2653,7 +2653,7 @@
       "label": "advanceNightStep()",
       "file_type": "code",
       "source_file": "server/src/managers/nightManager.ts",
-      "source_location": "L60",
+      "source_location": "L80",
       "id": "managers_nightmanager_advancenightstep",
       "community": 0,
       "norm_label": "advancenightstep()"
@@ -2662,7 +2662,7 @@
       "label": "handleWitchDecision()",
       "file_type": "code",
       "source_file": "server/src/managers/nightManager.ts",
-      "source_location": "L106",
+      "source_location": "L126",
       "id": "managers_nightmanager_handlewitchdecision",
       "community": 0,
       "norm_label": "handlewitchdecision()"
@@ -2671,7 +2671,7 @@
       "label": "resolveNight()",
       "file_type": "code",
       "source_file": "server/src/managers/nightManager.ts",
-      "source_location": "L166",
+      "source_location": "L202",
       "id": "managers_nightmanager_resolvenight",
       "community": 0,
       "norm_label": "resolvenight()"
@@ -2698,16 +2698,25 @@
       "label": "scheduleNightStep()",
       "file_type": "code",
       "source_file": "server/src/managers/phaseManager.ts",
-      "source_location": "L44",
+      "source_location": "L45",
       "id": "managers_phasemanager_schedulenightstep",
       "community": 0,
       "norm_label": "schedulenightstep()"
     },
     {
+      "label": "beginDay()",
+      "file_type": "code",
+      "source_file": "server/src/managers/phaseManager.ts",
+      "source_location": "L77",
+      "id": "managers_phasemanager_beginday",
+      "community": 0,
+      "norm_label": "beginday()"
+    },
+    {
       "label": "schedulePhaseTransition()",
       "file_type": "code",
       "source_file": "server/src/managers/phaseManager.ts",
-      "source_location": "L76",
+      "source_location": "L95",
       "id": "managers_phasemanager_schedulephasetransition",
       "community": 0,
       "norm_label": "schedulephasetransition()"
@@ -2716,7 +2725,7 @@
       "label": "holdDayToNightTransition()",
       "file_type": "code",
       "source_file": "server/src/managers/phaseManager.ts",
-      "source_location": "L159",
+      "source_location": "L167",
       "id": "managers_phasemanager_holddaytonighttransition",
       "community": 0,
       "norm_label": "holddaytonighttransition()"
@@ -2725,7 +2734,7 @@
       "label": "resolveNightStep()",
       "file_type": "code",
       "source_file": "server/src/managers/phaseManager.ts",
-      "source_location": "L163",
+      "source_location": "L171",
       "id": "managers_phasemanager_resolvenightstep",
       "community": 0,
       "norm_label": "resolvenightstep()"
@@ -2734,7 +2743,7 @@
       "label": "advanceFromReveal()",
       "file_type": "code",
       "source_file": "server/src/managers/phaseManager.ts",
-      "source_location": "L191",
+      "source_location": "L199",
       "id": "managers_phasemanager_advancefromreveal",
       "community": 0,
       "norm_label": "advancefromreveal()"
@@ -2743,7 +2752,7 @@
       "label": "advanceFromMayor()",
       "file_type": "code",
       "source_file": "server/src/managers/phaseManager.ts",
-      "source_location": "L224",
+      "source_location": "L232",
       "id": "managers_phasemanager_advancefrommayor",
       "community": 0,
       "norm_label": "advancefrommayor()"
@@ -2752,7 +2761,7 @@
       "label": "notifyLovers()",
       "file_type": "code",
       "source_file": "server/src/managers/phaseManager.ts",
-      "source_location": "L237",
+      "source_location": "L245",
       "id": "managers_phasemanager_notifylovers",
       "community": 0,
       "norm_label": "notifylovers()"
@@ -2779,16 +2788,16 @@
       "label": "normalizePassiveRoleConfig()",
       "file_type": "code",
       "source_file": "server/src/managers/roleManager.ts",
-      "source_location": "L15",
+      "source_location": "L18",
       "id": "managers_rolemanager_normalizepassiveroleconfig",
-      "community": 0,
+      "community": 3,
       "norm_label": "normalizepassiveroleconfig()"
     },
     {
       "label": "validateCounts()",
       "file_type": "code",
       "source_file": "server/src/managers/roleManager.ts",
-      "source_location": "L24",
+      "source_location": "L30",
       "id": "managers_rolemanager_validatecounts",
       "community": 3,
       "norm_label": "validatecounts()"
@@ -2797,7 +2806,7 @@
       "label": "assignRoles()",
       "file_type": "code",
       "source_file": "server/src/managers/roleManager.ts",
-      "source_location": "L63",
+      "source_location": "L69",
       "id": "managers_rolemanager_assignroles",
       "community": 3,
       "norm_label": "assignroles()"
@@ -2824,7 +2833,7 @@
       "label": "resolveDayKill()",
       "file_type": "code",
       "source_file": "server/src/managers/voteManager.ts",
-      "source_location": "L152",
+      "source_location": "L185",
       "id": "managers_votemanager_resolvedaykill",
       "community": 0,
       "norm_label": "resolvedaykill()"
@@ -2835,7 +2844,7 @@
       "source_file": "server/src/models/player.ts",
       "source_location": "L1",
       "id": "models_player",
-      "community": 3,
+      "community": 10,
       "norm_label": "player.ts"
     },
     {
@@ -2844,7 +2853,7 @@
       "source_file": "server/src/models/player.ts",
       "source_location": "L4",
       "id": "models_player_socketindex",
-      "community": 3,
+      "community": 10,
       "norm_label": "socketindex"
     },
     {
@@ -2853,7 +2862,7 @@
       "source_file": "server/src/models/player.ts",
       "source_location": "L6",
       "id": "models_player_createplayer",
-      "community": 3,
+      "community": 10,
       "norm_label": "createplayer()"
     },
     {
@@ -2889,50 +2898,50 @@
       "source_file": "server/src/models/room.ts",
       "source_location": "L1",
       "id": "models_room",
-      "community": 3,
+      "community": 10,
       "norm_label": "room.ts"
     },
     {
       "label": "rooms",
       "file_type": "code",
       "source_file": "server/src/models/room.ts",
-      "source_location": "L10",
+      "source_location": "L11",
       "id": "models_room_rooms",
-      "community": 3,
+      "community": 10,
       "norm_label": "rooms"
     },
     {
       "label": "createRoom()",
       "file_type": "code",
       "source_file": "server/src/models/room.ts",
-      "source_location": "L17",
+      "source_location": "L18",
       "id": "models_room_createroom",
-      "community": 3,
+      "community": 10,
       "norm_label": "createroom()"
     },
     {
       "label": "getRoom()",
       "file_type": "code",
       "source_file": "server/src/models/room.ts",
-      "source_location": "L81",
+      "source_location": "L84",
       "id": "models_room_getroom",
-      "community": 0,
+      "community": 10,
       "norm_label": "getroom()"
     },
     {
       "label": "getAllRooms()",
       "file_type": "code",
       "source_file": "server/src/models/room.ts",
-      "source_location": "L85",
+      "source_location": "L88",
       "id": "models_room_getallrooms",
-      "community": 3,
+      "community": 10,
       "norm_label": "getallrooms()"
     },
     {
       "label": "deleteRoom()",
       "file_type": "code",
       "source_file": "server/src/models/room.ts",
-      "source_location": "L89",
+      "source_location": "L92",
       "id": "models_room_deleteroom",
       "community": 10,
       "norm_label": "deleteroom()"
@@ -2941,7 +2950,7 @@
       "label": "updateRoomActivity()",
       "file_type": "code",
       "source_file": "server/src/models/room.ts",
-      "source_location": "L99",
+      "source_location": "L102",
       "id": "models_room_updateroomactivity",
       "community": 10,
       "norm_label": "updateroomactivity()"
@@ -2950,9 +2959,9 @@
       "label": "cleanupIdleRooms()",
       "file_type": "code",
       "source_file": "server/src/models/room.ts",
-      "source_location": "L103",
+      "source_location": "L106",
       "id": "models_room_cleanupidlerooms",
-      "community": 3,
+      "community": 10,
       "norm_label": "cleanupidlerooms()"
     },
     {
@@ -3024,7 +3033,7 @@
       "source_file": "server/src/utils/helpers.ts",
       "source_location": "L1",
       "id": "server_src_utils_helpers_ts_utils_helpers",
-      "community": 3,
+      "community": 0,
       "norm_label": "helpers.ts"
     },
     {
@@ -3033,7 +3042,7 @@
       "source_file": "server/src/utils/helpers.ts",
       "source_location": "L11",
       "id": "utils_helpers_sanitizename",
-      "community": 3,
+      "community": 0,
       "norm_label": "sanitizename()"
     },
     {
@@ -3069,7 +3078,7 @@
       "source_file": "server/src/utils/helpers.ts",
       "source_location": "L39",
       "id": "utils_helpers_errorresponse",
-      "community": 10,
+      "community": 0,
       "norm_label": "errorresponse()"
     },
     {
@@ -3082,10 +3091,19 @@
       "norm_label": "addlog()"
     },
     {
+      "label": "isDiscussionLocked()",
+      "file_type": "code",
+      "source_file": "server/src/utils/helpers.ts",
+      "source_location": "L62",
+      "id": "utils_helpers_isdiscussionlocked",
+      "community": 0,
+      "norm_label": "isdiscussionlocked()"
+    },
+    {
       "label": "clearRoomTimers()",
       "file_type": "code",
       "source_file": "server/src/utils/helpers.ts",
-      "source_location": "L57",
+      "source_location": "L66",
       "id": "utils_helpers_clearroomtimers",
       "community": 0,
       "norm_label": "clearroomtimers()"
@@ -3094,7 +3112,7 @@
       "label": "getPlayerRoleLabel()",
       "file_type": "code",
       "source_file": "server/src/utils/helpers.ts",
-      "source_location": "L91",
+      "source_location": "L100",
       "id": "utils_helpers_getplayerrolelabel",
       "community": 0,
       "norm_label": "getplayerrolelabel()"
@@ -4021,7 +4039,7 @@
       "label": "onSelectChange()",
       "file_type": "code",
       "source_file": "ui-vue/src/components/DayPhase.vue",
-      "source_location": "L52",
+      "source_location": "L75",
       "id": "components_dayphase_onselectchange",
       "community": 7,
       "norm_label": "onselectchange()"
@@ -4030,7 +4048,7 @@
       "label": "submitVote()",
       "file_type": "code",
       "source_file": "ui-vue/src/components/DayPhase.vue",
-      "source_location": "L57",
+      "source_location": "L80",
       "id": "components_dayphase_submitvote",
       "community": 7,
       "norm_label": "submitvote()"
@@ -4039,7 +4057,7 @@
       "label": "endVoting()",
       "file_type": "code",
       "source_file": "ui-vue/src/components/DayPhase.vue",
-      "source_location": "L71",
+      "source_location": "L94",
       "id": "components_dayphase_endvoting",
       "community": 7,
       "norm_label": "endvoting()"
@@ -4048,7 +4066,7 @@
       "label": "proceedToNight()",
       "file_type": "code",
       "source_file": "ui-vue/src/components/DayPhase.vue",
-      "source_location": "L76",
+      "source_location": "L99",
       "id": "components_dayphase_proceedtonight",
       "community": 7,
       "norm_label": "proceedtonight()"
@@ -4120,7 +4138,7 @@
       "label": "emitConfig()",
       "file_type": "code",
       "source_file": "ui-vue/src/components/Lobby.vue",
-      "source_location": "L70",
+      "source_location": "L72",
       "id": "components_lobby_emitconfig",
       "community": 17,
       "norm_label": "emitconfig()"
@@ -4129,7 +4147,7 @@
       "label": "onRoleChange()",
       "file_type": "code",
       "source_file": "ui-vue/src/components/Lobby.vue",
-      "source_location": "L88",
+      "source_location": "L93",
       "id": "components_lobby_onrolechange",
       "community": 17,
       "norm_label": "onrolechange()"
@@ -4138,7 +4156,7 @@
       "label": "onRoleInput()",
       "file_type": "code",
       "source_file": "ui-vue/src/components/Lobby.vue",
-      "source_location": "L96",
+      "source_location": "L101",
       "id": "components_lobby_onroleinput",
       "community": 17,
       "norm_label": "onroleinput()"
@@ -4147,16 +4165,25 @@
       "label": "onPassiveRoleChange()",
       "file_type": "code",
       "source_file": "ui-vue/src/components/Lobby.vue",
-      "source_location": "L108",
+      "source_location": "L113",
       "id": "components_lobby_onpassiverolechange",
       "community": 17,
       "norm_label": "onpassiverolechange()"
     },
     {
+      "label": "onDiscussionTimerChange()",
+      "file_type": "code",
+      "source_file": "ui-vue/src/components/Lobby.vue",
+      "source_location": "L118",
+      "id": "components_lobby_ondiscussiontimerchange",
+      "community": 17,
+      "norm_label": "ondiscussiontimerchange()"
+    },
+    {
       "label": "startGame()",
       "file_type": "code",
       "source_file": "ui-vue/src/components/Lobby.vue",
-      "source_location": "L113",
+      "source_location": "L123",
       "id": "components_lobby_startgame",
       "community": 17,
       "norm_label": "startgame()"
@@ -4986,7 +5013,7 @@
       "source_file": "ui-vue/src/stores/admin.ts",
       "source_location": "L1",
       "id": "stores_admin",
-      "community": 2,
+      "community": 3,
       "norm_label": "admin.ts"
     },
     {
@@ -4995,7 +5022,7 @@
       "source_file": "ui-vue/src/stores/admin.ts",
       "source_location": "L32",
       "id": "stores_admin_adminstate",
-      "community": 2,
+      "community": 3,
       "norm_label": "adminstate"
     },
     {
@@ -5004,7 +5031,7 @@
       "source_file": "ui-vue/src/stores/admin.ts",
       "source_location": "L43",
       "id": "stores_admin_readstoredtoken",
-      "community": 2,
+      "community": 3,
       "norm_label": "readstoredtoken()"
     },
     {
@@ -5013,7 +5040,7 @@
       "source_file": "ui-vue/src/stores/admin.ts",
       "source_location": "L52",
       "id": "stores_admin_writestoredtoken",
-      "community": 2,
+      "community": 3,
       "norm_label": "writestoredtoken()"
     },
     {
@@ -5022,7 +5049,7 @@
       "source_file": "ui-vue/src/stores/admin.ts",
       "source_location": "L66",
       "id": "stores_admin_useadminstore",
-      "community": 2,
+      "community": 3,
       "norm_label": "useadminstore"
     },
     {
@@ -5209,7 +5236,7 @@
       "label": "Narrator",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L46",
+      "source_location": "L52",
       "id": "utils_narrator_narrator",
       "community": 2,
       "norm_label": "narrator"
@@ -5218,7 +5245,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L87",
+      "source_location": "L93",
       "id": "utils_narrator_narrator_constructor",
       "community": 2,
       "norm_label": ".constructor()"
@@ -5227,7 +5254,7 @@
       "label": ".initFromStorage()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L97",
+      "source_location": "L103",
       "id": "utils_narrator_narrator_initfromstorage",
       "community": 2,
       "norm_label": ".initfromstorage()"
@@ -5236,7 +5263,7 @@
       "label": ".isEnabled()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L103",
+      "source_location": "L109",
       "id": "utils_narrator_narrator_isenabled",
       "community": 2,
       "norm_label": ".isenabled()"
@@ -5245,7 +5272,7 @@
       "label": ".isUnlocked()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L107",
+      "source_location": "L113",
       "id": "utils_narrator_narrator_isunlocked",
       "community": 2,
       "norm_label": ".isunlocked()"
@@ -5254,7 +5281,7 @@
       "label": ".setEnabled()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L111",
+      "source_location": "L117",
       "id": "utils_narrator_narrator_setenabled",
       "community": 2,
       "norm_label": ".setenabled()"
@@ -5263,7 +5290,7 @@
       "label": ".unlock()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L140",
+      "source_location": "L146",
       "id": "utils_narrator_narrator_unlock",
       "community": 2,
       "norm_label": ".unlock()"
@@ -5272,7 +5299,7 @@
       "label": ".handleRoomUpdate()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L173",
+      "source_location": "L179",
       "id": "utils_narrator_narrator_handleroomupdate",
       "community": 2,
       "norm_label": ".handleroomupdate()"
@@ -5281,7 +5308,7 @@
       "label": ".announceLatest()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L186",
+      "source_location": "L192",
       "id": "utils_narrator_narrator_announcelatest",
       "community": 2,
       "norm_label": ".announcelatest()"
@@ -5290,7 +5317,7 @@
       "label": ".stop()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L198",
+      "source_location": "L204",
       "id": "utils_narrator_narrator_stop",
       "community": 2,
       "norm_label": ".stop()"
@@ -5299,7 +5326,7 @@
       "label": ".resolveAudioPath()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L205",
+      "source_location": "L211",
       "id": "utils_narrator_narrator_resolveaudiopath",
       "community": 2,
       "norm_label": ".resolveaudiopath()"
@@ -5308,7 +5335,7 @@
       "label": ".discoverVariants()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L254",
+      "source_location": "L260",
       "id": "utils_narrator_narrator_discovervariants",
       "community": 2,
       "norm_label": ".discovervariants()"
@@ -5317,7 +5344,7 @@
       "label": ".selectVariant()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L288",
+      "source_location": "L294",
       "id": "utils_narrator_narrator_selectvariant",
       "community": 2,
       "norm_label": ".selectvariant()"
@@ -5326,7 +5353,7 @@
       "label": ".playWithHowler()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L310",
+      "source_location": "L316",
       "id": "utils_narrator_narrator_playwithhowler",
       "community": 2,
       "norm_label": ".playwithhowler()"
@@ -5335,7 +5362,7 @@
       "label": ".getHowl()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L335",
+      "source_location": "L341",
       "id": "utils_narrator_narrator_gethowl",
       "community": 2,
       "norm_label": ".gethowl()"
@@ -5344,7 +5371,7 @@
       "label": ".requestPlay()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L432",
+      "source_location": "L438",
       "id": "utils_narrator_narrator_requestplay",
       "community": 2,
       "norm_label": ".requestplay()"
@@ -5353,7 +5380,7 @@
       "label": ".safePlay()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L438",
+      "source_location": "L444",
       "id": "utils_narrator_narrator_safeplay",
       "community": 2,
       "norm_label": ".safeplay()"
@@ -5362,7 +5389,7 @@
       "label": ".handlePlaybackError()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L452",
+      "source_location": "L458",
       "id": "utils_narrator_narrator_handleplaybackerror",
       "community": 2,
       "norm_label": ".handleplaybackerror()"
@@ -5371,7 +5398,7 @@
       "label": ".informUser()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L467",
+      "source_location": "L473",
       "id": "utils_narrator_narrator_informuser",
       "community": 2,
       "norm_label": ".informuser()"
@@ -5380,7 +5407,7 @@
       "label": "createNarrator()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L475",
+      "source_location": "L481",
       "id": "utils_narrator_createnarrator",
       "community": 2,
       "norm_label": "createnarrator()"
@@ -6962,6 +6989,17 @@
       "source_file": "__tests__/helpers.test.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "source": "tests_helpers_test",
+      "target": "utils_helpers_isdiscussionlocked",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/helpers.test.ts",
+      "source_location": "L1",
+      "weight": 1.0,
       "confidence_score": 1.0,
       "source": "tests_helpers_test",
       "target": "utils_helpers_sanitizename"
@@ -7963,6 +8001,17 @@
       "source_file": "__tests__/roleManager.test.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "source": "tests_rolemanager_test",
+      "target": "managers_rolemanager_normalizepassiveroleconfig",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "__tests__/roleManager.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
       "confidence_score": 1.0,
       "source": "tests_rolemanager_test",
       "target": "managers_rolemanager_normalizeroleconfig"
@@ -8039,9 +8088,9 @@
       "source_file": "__tests__/roomCleanup.test.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_roomcleanup_test",
-      "target": "models_player",
-      "confidence_score": 1.0
+      "target": "models_player"
     },
     {
       "relation": "imports",
@@ -8050,9 +8099,9 @@
       "source_file": "__tests__/roomCleanup.test.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_roomcleanup_test",
-      "target": "models_player_createplayer",
-      "confidence_score": 1.0
+      "target": "models_player_createplayer"
     },
     {
       "relation": "imports_from",
@@ -8061,9 +8110,9 @@
       "source_file": "__tests__/roomCleanup.test.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_roomcleanup_test",
-      "target": "models_room",
-      "confidence_score": 1.0
+      "target": "models_room"
     },
     {
       "relation": "imports",
@@ -8072,9 +8121,9 @@
       "source_file": "__tests__/roomCleanup.test.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_roomcleanup_test",
-      "target": "models_room_cleanupidlerooms",
-      "confidence_score": 1.0
+      "target": "models_room_cleanupidlerooms"
     },
     {
       "relation": "imports",
@@ -8083,9 +8132,9 @@
       "source_file": "__tests__/roomCleanup.test.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_roomcleanup_test",
-      "target": "models_room_createroom",
-      "confidence_score": 1.0
+      "target": "models_room_createroom"
     },
     {
       "relation": "imports",
@@ -8094,9 +8143,9 @@
       "source_file": "__tests__/roomCleanup.test.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_roomcleanup_test",
-      "target": "models_room_getallrooms",
-      "confidence_score": 1.0
+      "target": "models_room_getallrooms"
     },
     {
       "relation": "imports",
@@ -8105,9 +8154,9 @@
       "source_file": "__tests__/roomCleanup.test.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_roomcleanup_test",
-      "target": "models_room_getroom",
-      "confidence_score": 1.0
+      "target": "models_room_getroom"
     },
     {
       "relation": "imports_from",
@@ -8160,9 +8209,9 @@
       "source_file": "__tests__/socketHandlers.test.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_sockethandlers_test",
-      "target": "managers_broadcastmanager_notifyadminobserversroomclosed",
-      "confidence_score": 1.0
+      "target": "managers_broadcastmanager_notifyadminobserversroomclosed"
     },
     {
       "relation": "imports",
@@ -8479,9 +8528,9 @@
       "source_file": "__tests__/socketHandlers.test.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_sockethandlers_test",
-      "target": "models_room_deleteroom",
-      "confidence_score": 1.0
+      "target": "models_room_deleteroom"
     },
     {
       "relation": "imports",
@@ -13405,9 +13454,9 @@
       "source_file": "server/src/handlers/adminSocketHandlers.ts",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "handlers_adminsockethandlers",
-      "target": "handlers_sockethandlers",
-      "confidence_score": 1.0
+      "target": "handlers_sockethandlers"
     },
     {
       "relation": "imports",
@@ -13416,9 +13465,9 @@
       "source_file": "server/src/handlers/adminSocketHandlers.ts",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "handlers_adminsockethandlers",
-      "target": "handlers_sockethandlers_cancelpendingdisconnect",
-      "confidence_score": 1.0
+      "target": "handlers_sockethandlers_cancelpendingdisconnect"
     },
     {
       "relation": "imports_from",
@@ -13515,9 +13564,9 @@
       "source_file": "server/src/handlers/adminSocketHandlers.ts",
       "source_location": "L32",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "handlers_adminsockethandlers",
-      "target": "managers_broadcastmanager_notifyadminobserversroomclosed",
-      "confidence_score": 1.0
+      "target": "managers_broadcastmanager_notifyadminobserversroomclosed"
     },
     {
       "relation": "imports_from",
@@ -13559,9 +13608,9 @@
       "source_file": "server/src/handlers/adminSocketHandlers.ts",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "handlers_adminsockethandlers",
-      "target": "models_room_deleteroom",
-      "confidence_score": 1.0
+      "target": "models_room_deleteroom"
     },
     {
       "relation": "imports",
@@ -13658,9 +13707,9 @@
       "source_file": "server/src/handlers/adminSocketHandlers.ts",
       "source_location": "L126",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "handlers_adminsockethandlers_kickplayerfromroom",
-      "target": "managers_broadcastmanager_notifyadminobserversroomclosed",
-      "confidence_score": 1.0
+      "target": "managers_broadcastmanager_notifyadminobserversroomclosed"
     },
     {
       "relation": "calls",
@@ -13680,9 +13729,9 @@
       "source_file": "server/src/handlers/adminSocketHandlers.ts",
       "source_location": "L127",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "handlers_adminsockethandlers_kickplayerfromroom",
-      "target": "models_room_deleteroom",
-      "confidence_score": 1.0
+      "target": "models_room_deleteroom"
     },
     {
       "relation": "calls",
@@ -13713,9 +13762,9 @@
       "source_file": "server/src/handlers/adminSocketHandlers.ts",
       "source_location": "L252",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "handlers_adminsockethandlers_setupadminsockethandlers",
-      "target": "handlers_sockethandlers_cancelpendingdisconnect",
-      "confidence_score": 1.0
+      "target": "handlers_sockethandlers_cancelpendingdisconnect"
     },
     {
       "relation": "calls",
@@ -13790,9 +13839,9 @@
       "source_file": "server/src/handlers/adminSocketHandlers.ts",
       "source_location": "L268",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "handlers_adminsockethandlers_setupadminsockethandlers",
-      "target": "managers_broadcastmanager_notifyadminobserversroomclosed",
-      "confidence_score": 1.0
+      "target": "managers_broadcastmanager_notifyadminobserversroomclosed"
     },
     {
       "relation": "calls",
@@ -13801,9 +13850,9 @@
       "source_file": "server/src/handlers/adminSocketHandlers.ts",
       "source_location": "L261",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "handlers_adminsockethandlers_setupadminsockethandlers",
-      "target": "models_player_deletesocketindex",
-      "confidence_score": 1.0
+      "target": "models_player_deletesocketindex"
     },
     {
       "relation": "calls",
@@ -13812,9 +13861,9 @@
       "source_file": "server/src/handlers/adminSocketHandlers.ts",
       "source_location": "L270",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "handlers_adminsockethandlers_setupadminsockethandlers",
-      "target": "models_room_deleteroom",
-      "confidence_score": 1.0
+      "target": "models_room_deleteroom"
     },
     {
       "relation": "calls",
@@ -13970,9 +14019,9 @@
       "source_file": "server/src/handlers/socketHandlers.ts",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "handlers_sockethandlers",
-      "target": "managers_broadcastmanager_notifyadminobserversroomclosed",
-      "confidence_score": 1.0
+      "target": "managers_broadcastmanager_notifyadminobserversroomclosed"
     },
     {
       "relation": "imports",
@@ -14160,6 +14209,17 @@
       "confidence_score": 1.0,
       "source": "handlers_sockethandlers",
       "target": "managers_phasemanager_advancefromreveal"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/handlers/socketHandlers.ts",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "handlers_sockethandlers",
+      "target": "managers_phasemanager_beginday",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -14443,6 +14503,17 @@
       "source_file": "server/src/handlers/socketHandlers.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "source": "handlers_sockethandlers",
+      "target": "utils_helpers_isdiscussionlocked",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/handlers/socketHandlers.ts",
+      "source_location": "L2",
+      "weight": 1.0,
       "confidence_score": 1.0,
       "source": "handlers_sockethandlers",
       "target": "utils_helpers_localizedmessage"
@@ -14597,9 +14668,9 @@
       "source_file": "server/src/handlers/socketHandlers.ts",
       "source_location": "L957",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "handlers_sockethandlers_setupsockethandlers",
-      "target": "managers_broadcastmanager_notifyadminobserversroomclosed",
-      "confidence_score": 1.0
+      "target": "managers_broadcastmanager_notifyadminobserversroomclosed"
     },
     {
       "relation": "calls",
@@ -14743,6 +14814,17 @@
       "confidence_score": 1.0,
       "source": "handlers_sockethandlers_setupsockethandlers",
       "target": "managers_phasemanager_advancefromreveal"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/handlers/socketHandlers.ts",
+      "source_location": "L643",
+      "weight": 1.0,
+      "source": "handlers_sockethandlers_setupsockethandlers",
+      "target": "managers_phasemanager_beginday",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -14974,6 +15056,17 @@
       "confidence_score": 1.0,
       "source": "handlers_sockethandlers_setupsockethandlers",
       "target": "utils_helpers_errorresponse"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/handlers/socketHandlers.ts",
+      "source_location": "L730",
+      "weight": 1.0,
+      "source": "handlers_sockethandlers_setupsockethandlers",
+      "target": "utils_helpers_isdiscussionlocked",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -15241,9 +15334,9 @@
       "source_file": "server/src/managers/broadcastManager.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "managers_broadcastmanager",
-      "target": "managers_adminmanager",
-      "confidence_score": 1.0
+      "target": "managers_adminmanager"
     },
     {
       "relation": "calls",
@@ -15263,9 +15356,9 @@
       "source_file": "server/src/managers/broadcastManager.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "managers_broadcastmanager",
-      "target": "managers_adminmanager_removeadminobserver",
-      "confidence_score": 1.0
+      "target": "managers_adminmanager_removeadminobserver"
     },
     {
       "relation": "calls",
@@ -15274,9 +15367,9 @@
       "source_file": "server/src/managers/broadcastManager.ts",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "managers_broadcastmanager_notifyadminobserversroomclosed",
-      "target": "managers_adminmanager_removeadminobserver",
-      "confidence_score": 1.0
+      "target": "managers_adminmanager_removeadminobserver"
     },
     {
       "relation": "imports",
@@ -15285,9 +15378,9 @@
       "source_file": "server/src/managers/broadcastManager.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "managers_broadcastmanager",
-      "target": "managers_adminmanager_getadminobserversforroom",
-      "confidence_score": 1.0
+      "target": "managers_adminmanager_getadminobserversforroom"
     },
     {
       "relation": "calls",
@@ -15296,9 +15389,9 @@
       "source_file": "server/src/managers/broadcastManager.ts",
       "source_location": "L24",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "managers_broadcastmanager_notifyadminobserversroomclosed",
-      "target": "managers_adminmanager_getadminobserversforroom",
-      "confidence_score": 1.0
+      "target": "managers_adminmanager_getadminobserversforroom"
     },
     {
       "relation": "contains",
@@ -15356,9 +15449,9 @@
       "source_file": "server/src/managers/broadcastManager.ts",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "managers_broadcastmanager",
-      "target": "managers_broadcastmanager_notifyadminobserversroomclosed",
-      "confidence_score": 1.0
+      "target": "managers_broadcastmanager_notifyadminobserversroomclosed"
     },
     {
       "relation": "contains",
@@ -16378,6 +16471,28 @@
       "target": "managers_phasemanager_schedulephasetransition"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/managers/nightManager.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "managers_nightmanager",
+      "target": "utils_helpers_addlog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/managers/nightManager.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "managers_nightmanager",
+      "target": "utils_helpers_localizedmessage",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -16387,6 +16502,28 @@
       "confidence_score": 1.0,
       "source": "managers_nightmanager_tryfinalizewolfvote",
       "target": "managers_phasemanager_schedulenightstep"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/managers/nightManager.ts",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "managers_nightmanager_tryfinalizewolfvote",
+      "target": "utils_helpers_addlog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/managers/nightManager.ts",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "managers_nightmanager_tryfinalizewolfvote",
+      "target": "utils_helpers_localizedmessage",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16420,6 +16557,28 @@
       "confidence_score": 1.0,
       "source": "managers_nightmanager_handlewitchdecision",
       "target": "managers_phasemanager_schedulenightstep"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/managers/nightManager.ts",
+      "source_location": "L148",
+      "weight": 1.0,
+      "source": "managers_nightmanager_handlewitchdecision",
+      "target": "utils_helpers_addlog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/managers/nightManager.ts",
+      "source_location": "L152",
+      "weight": 1.0,
+      "source": "managers_nightmanager_handlewitchdecision",
+      "target": "utils_helpers_localizedmessage",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16473,6 +16632,16 @@
       "confidence_score": 1.0,
       "source": "managers_phasemanager",
       "target": "managers_phasemanager_advancefromreveal"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/managers/phaseManager.ts",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "managers_phasemanager",
+      "target": "managers_phasemanager_beginday",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -16643,6 +16812,39 @@
       "confidence_score": 1.0,
       "source": "managers_phasemanager_schedulenightstep",
       "target": "utils_helpers_clearroomtimers"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/managers/phaseManager.ts",
+      "source_location": "L87",
+      "weight": 1.0,
+      "source": "managers_phasemanager_beginday",
+      "target": "utils_helpers_addlog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/managers/phaseManager.ts",
+      "source_location": "L82",
+      "weight": 1.0,
+      "source": "managers_phasemanager_beginday",
+      "target": "utils_helpers_createvotestate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/managers/phaseManager.ts",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "managers_phasemanager_beginday",
+      "target": "utils_helpers_localizedmessage",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -17306,6 +17508,16 @@
       "confidence_score": 1.0,
       "source": "server_src_utils_helpers_ts_utils_helpers",
       "target": "utils_helpers_getplayerrolelabel"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server/src/utils/helpers.ts",
+      "source_location": "L62",
+      "weight": 1.0,
+      "source": "server_src_utils_helpers_ts_utils_helpers",
+      "target": "utils_helpers_isdiscussionlocked",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -18579,6 +18791,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/components/Lobby.vue",
+      "source_location": "L118",
+      "weight": 1.0,
+      "source": "components_lobby",
+      "target": "components_lobby_ondiscussiontimerchange",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ui-vue/src/components/Lobby.vue",
       "source_location": "L100",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -18634,6 +18856,17 @@
       "confidence_score": 1.0,
       "source": "components_lobby",
       "target": "components_lobby_villagerslots"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "ui-vue/src/components/Lobby.vue",
+      "source_location": "L120",
+      "weight": 1.0,
+      "source": "components_lobby_ondiscussiontimerchange",
+      "target": "components_lobby_emitconfig",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -20929,5 +21162,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "8f2843c7877dc0a560e31f357190407ed339d48c"
+  "built_at_commit": "eea874162c28d7ee941a6f80970f9530c72325de"
 }

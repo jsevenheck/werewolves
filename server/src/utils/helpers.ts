@@ -49,9 +49,18 @@ function addLog(
   text: string,
   publicText: string | null = null,
   message: LocalizedMessage | null = null,
-  publicMessage: LocalizedMessage | null = null
+  publicMessage: LocalizedMessage | null = null,
+  deadOnly = false
 ) {
-  room.logs.push({ ts: Date.now(), text, publicText, message, publicMessage });
+  room.logs.push({ ts: Date.now(), text, publicText, message, publicMessage, deadOnly });
+}
+
+/**
+ * Whether day voting is currently locked behind the configured discussion
+ * period. Returns true only while the discussion countdown is still running.
+ */
+function isDiscussionLocked(room: Room): boolean {
+  return room.discussionEndsAt !== null && Date.now() < room.discussionEndsAt;
 }
 
 function clearRoomTimers(room: Room) {
@@ -100,6 +109,7 @@ export {
   localizedMessage,
   errorResponse,
   addLog,
+  isDiscussionLocked,
   clearRoomTimers,
   getPlayerRoleLabel,
 };

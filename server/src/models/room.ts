@@ -2,6 +2,7 @@ import {
   ROOM_CODE,
   DEFAULT_ROLE_CONFIG,
   DEFAULT_PASSIVE_ROLE_CONFIG,
+  DEFAULT_DISCUSSION_TIMER_SECONDS,
   MIN_PLAYERS,
 } from '../config/constants';
 import { createVoteState, clearRoomTimers } from '../utils/helpers';
@@ -34,6 +35,8 @@ function createRoom(
     minPlayers: MIN_PLAYERS,
     roleConfig: { ...DEFAULT_ROLE_CONFIG },
     passiveRoleConfig: { ...DEFAULT_PASSIVE_ROLE_CONFIG },
+    discussionTimerSeconds: DEFAULT_DISCUSSION_TIMER_SECONDS,
+    discussionEndsAt: null,
     mayorId: null,
     awaitingMayorSelection: null,
     mayorSelectionQueue: [],

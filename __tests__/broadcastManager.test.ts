@@ -20,6 +20,8 @@ const makeRoom = (): Room => ({
     harlot: 0,
   },
   passiveRoleConfig: { mayor: true },
+  discussionTimerSeconds: 60,
+  discussionEndsAt: null,
   mayorId: null,
   awaitingMayorSelection: null,
   mayorSelectionQueue: [],
@@ -111,5 +113,63 @@ describe('broadcastManager', () => {
     const viewOther = sanitizeRoom(room, 'p3');
     expect(viewOther.loversKnown).toBe(false);
     expect(viewOther.loverName).toBeNull();
+  });
+
+  test('dead viewers see deadOnly action logs; alive viewers do not', () => {
+    const room = makeRoom();
+    room.phase = 'day';
+    room.players = {
+      p1: buildPlayer({ id: 'p1', name: 'Alice', role: 'villager', team: 'village', isHost: true }),
+      p2: buildPlayer({ id: 'p2', name: 'Bob', role: 'werewolf', team: 'wolves', alive: false }),
+    };
+    room.logs.push({
+      ts: 1,
+      text: 'Public death',
+      publicText: 'Public death',
+      message: null,
+      publicMessage: null,
+    });
+    room.logs.push({
+      ts: 2,
+      text: 'Wolves chose Bob.',
+      publicText: null,
+      message: { key: 'server.logs.wolfAttackTarget', params: { target: 'Bob' } },
+      deadOnly: true,
+    });
+
+    const deadView = sanitizeRoom(room, 'p2');
+    const aliveView = sanitizeRoom(room, 'p1');
+
+    // Dead viewer sees the deadOnly action log; alive viewer does not.
+    expect(deadView.logs.map((l) => l.text)).toContain('server.logs.wolfAttackTarget');
+    expect(aliveView.logs.map((l) => l.text)).not.toContain('server.logs.wolfAttackTarget');
+    // Both still see the public log.
+    expect(deadView.logs.map((l) => l.text)).toContain('Public death');
+    expect(aliveView.logs.map((l) => l.text)).toContain('Public death');
+  });
+
+  test('player role tags are hidden while dead and revealed only at game end', () => {
+    const room = makeRoom();
+    room.phase = 'day';
+    room.players = {
+      p1: buildPlayer({ id: 'p1', name: 'Alice', role: 'villager', team: 'village', isHost: true }),
+      p2: buildPlayer({ id: 'p2', name: 'Bob', role: 'werewolf', team: 'wolves', alive: false }),
+    };
+
+    // Alive viewer does not see the dead player's role on the card mid-game.
+    const aliveView = sanitizeRoom(room, 'p1');
+    const aliveBob = aliveView.players.find((p) => p.id === 'p2');
+    expect(aliveBob?.role).toBeNull();
+
+    // Dead viewer also does not see other dead players' roles mid-game.
+    const deadView = sanitizeRoom(room, 'p2');
+    const deadAlice = deadView.players.find((p) => p.id === 'p1');
+    expect(deadAlice?.role).toBeNull();
+
+    // At game end everyone's role is revealed on the cards.
+    room.phase = 'ended';
+    const endedView = sanitizeRoom(room, 'p1');
+    const endedBob = endedView.players.find((p) => p.id === 'p2');
+    expect(endedBob?.role).toBe('werewolf');
   });
 });

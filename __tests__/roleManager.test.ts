@@ -1,6 +1,7 @@
 import { DEFAULT_ROLE_CONFIG, ROLE_INFO } from '../server/src/config/constants';
 import {
   normalizeRoleConfig,
+  normalizePassiveRoleConfig,
   validateCounts,
   assignRoles,
 } from '../server/src/managers/roleManager';
@@ -35,6 +36,30 @@ const makePlayers = (count: number): Record<string, Player> => {
 };
 
 describe('roleManager', () => {
+  test('normalizeRoleConfig preserves untouched roles from the existing base', () => {
+    const base: RoleConfig = {
+      werewolf: 3,
+      seer: 1,
+      hunter: 2,
+      witch: 1,
+      armor: 0,
+      joker: 0,
+      guard: 1,
+      harlot: 1,
+    };
+    // Only werewolf is sent; all other roles must be retained from the base.
+    const normalized = normalizeRoleConfig({ werewolf: 1 }, base);
+    expect(normalized.werewolf).toBe(1);
+    expect(normalized.hunter).toBe(2);
+    expect(normalized.guard).toBe(1);
+    expect(normalized.harlot).toBe(1);
+  });
+
+  test('normalizePassiveRoleConfig preserves untouched passives from the base', () => {
+    const normalized = normalizePassiveRoleConfig({ mayor: false }, { mayor: true });
+    expect(normalized.mayor).toBe(false);
+  });
+
   test('normalizeRoleConfig clamps invalid inputs to defaults', () => {
     const normalized = normalizeRoleConfig({
       werewolf: '3' as unknown as number,

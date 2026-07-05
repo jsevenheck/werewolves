@@ -90,6 +90,7 @@ export const en = {
     disconnectedWarning:
       '{count} player(s) are disconnected. Kick them or wait for them to reconnect before starting.',
     startGame: 'Start Game',
+    discussionTimer: 'Discussion time before voting (seconds)',
   },
   roleReveal: {
     title: 'Your Role',
@@ -163,6 +164,8 @@ export const en = {
     eliminated: '{name} ({role}) was eliminated.',
     endVoting: 'End Voting',
     proceedToNight: 'Proceed to Night',
+    discussionActive: 'Discussion time: {seconds}s until voting opens.',
+    discussionHint: 'Discuss before voting opens.',
   },
   gameOver: {
     title: 'Game Over',
@@ -263,11 +266,20 @@ export const en = {
       voteSkipped: 'Vote skipped. No one eliminated.',
       majorityAbstained: 'Majority abstained. No one eliminated.',
       voteTieMayor: "Vote tied. Mayor's vote decided the outcome.",
+      voteTieMayorDouble: "Vote tied. Mayor's vote counted double and decided the outcome.",
+      voteStillTiedAfterMayorDouble: "Vote still tied after Mayor's doubled vote.",
       voteTiedRevote: 'Vote tied. Revote among highlighted players.',
       revoteTieMayor: "Revote tied. Mayor's vote decided the outcome.",
       voteTiedRandom: 'Vote tied again. Randomly selected {name}.',
       voteTiedRandomFallback: 'Vote tied again. Randomly selected a player.',
       votedOut: '{name} was voted out. Role: {role}.',
+      wolfAttackTarget: 'Wolves chose to attack {target}.',
+      wolfNoTarget: 'Wolves chose no target.',
+      witchHealed: 'Witch healed {target}.',
+      witchPoisoned: 'Witch poisoned {target}.',
+      guardProtected: 'Guard protected {target}.',
+      harlotVisited: 'Harlot visited {target}.',
+      seerInspected: 'Seer inspected {target} ({result}).',
     },
     deathReasons: {
       heartbreak: 'died of heartbreak',

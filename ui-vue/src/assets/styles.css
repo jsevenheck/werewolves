@@ -46,6 +46,20 @@
   gap: 0.75rem;
 }
 
+/* Landing forms: stack the label text above the input with a clear gap
+   instead of rendering label + input on the same line with no spacing. */
+.werewolves-root .landing-root form label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.werewolves-root .landing-root form label > span {
+  font-size: 0.9rem;
+  color: rgba(203, 213, 225, 0.9);
+}
+
 .werewolves-root input,
 .werewolves-root select,
 .werewolves-root button,
@@ -223,6 +237,28 @@
 }
 
 .werewolves-root .role-row input {
+  width: 100%;
+}
+
+.werewolves-root .discussion-timer-config {
+  margin-top: 0.75rem;
+}
+
+.werewolves-root .discussion-timer-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.werewolves-root .discussion-timer-label {
+  font-size: 0.9rem;
+  color: rgba(203, 213, 225, 0.9);
+}
+
+.werewolves-root .discussion-timer-input {
+  max-width: 120px;
   width: 100%;
 }
 

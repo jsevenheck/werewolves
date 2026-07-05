@@ -39,6 +39,8 @@ Werewolves is a social deduction game where:
 - `roleConfig`: counts for each special role; villagers fill remainder automatically.
 - `minPlayers`: minimum players before start (fixed at 5).
 - `passiveRoleConfig`: `{ mayor: boolean }` feature toggles for passive roles.
+- `discussionTimerSeconds`: configurable lobby setting (default 60; 0 in E2E) for the forced discussion period after each night before day voting opens.
+- `discussionEndsAt`: timestamp (ms) when the day discussion lock lifts and voting opens, or null when inactive.
 - `mayorId`: playerId of the current Mayor (null before election).
 - `awaitingMayorSelection`: playerId awaiting a mayor succession pick, or null.
 - `mayorSelectionQueue`: queue of mayor succession prompts.
@@ -61,6 +63,9 @@ Werewolves is a social deduction game where:
 - `logs`: array of structured entries for UI recap (`{ts, text, publicText, message?, publicMessage?}`).
   `message`/`publicMessage` contain a stable localization key + params so the client can
   translate the log; legacy `text`/`publicText` remains for backward compatibility.
+  `deadOnly`: when true, the entry is only shown to dead spectators (and to everyone
+  once the game ends); alive players never see it. Used for night-action narration so
+  dead players can follow who did what, mirroring in-person spectating.
 - `lastNightDeaths`: array of `{name, role}` announced in the day report.
 - `lastDayDeaths`: array of `{name, role}` announced after day vote.
 - `lastDayMessage`: string or null (used when no one is eliminated).
@@ -93,6 +98,10 @@ loop:
       send each player role; wolves get list of other wolves (private UI fields)
       require each player to mark ready
       host continues once all connected players are ready
+      note: player role tags are only shown on the cards for the viewer's own
+        role and once the game ends (phase='ended') — dead players' roles are NOT
+        revealed on the cards mid-game, so dead spectators follow the game via the
+        event log (night-action `deadOnly` logs) instead of spoiled card tags.
       if passiveRoleConfig.mayor -> go phase=mayor
       else -> go phase=armor if armor alive else startNight (phase=night, step='wolves')
     mayor:
@@ -168,13 +177,24 @@ loop:
     day:
       announce deaths to all
       collect votes from alive players
+      a configurable `discussionTimerSeconds` countdown runs first (default 60s);
+        day voting (`submitDayVote` / `hostFinalizeDayVote`) is rejected until it
+        elapses, so players can discuss before anyone votes. 0 disables the lock.
       abstain requires explicit selection; majority abstain -> no elimination
       if tie:
-        if mayor voted for a tied candidate: mayor breaks tie
+        if mayor voted for a tied candidate: mayor's vote counts double
+          (i.e. +1 to their candidate). If the doubled tally still ties
+          or never reaches a simple majority, fall through to the revote
+          path below.
         else set revote list + reset votes limited to tied players
       if tie again:
-        if mayor voted for a tied candidate: mayor breaks tie
+        if mayor voted for a tied candidate: mayor's vote counts double
         else choose random among tied players
+      simple majority required: the leading candidate must hold more than
+        half of the votes that counted toward resolution; otherwise the
+        day is skipped (no elimination, no revote). Host-forced early
+        resolution (allowEarly) waives the simple-majority threshold so a
+        host can still push a small lead through.
       once winner target established:
         if role(target)=='joker':
           queue joker death and resolveDeaths() first (so lover heartbreak is processed)

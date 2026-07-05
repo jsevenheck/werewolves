@@ -46,6 +46,8 @@ const makeRoom = (): Room => ({
     harlot: 0,
   } as RoleConfig,
   passiveRoleConfig: { mayor: true },
+  discussionTimerSeconds: 60,
+  discussionEndsAt: null,
   mayorId: null,
   awaitingMayorSelection: null,
   mayorSelectionQueue: [],

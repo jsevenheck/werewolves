@@ -35,6 +35,12 @@ function toBaseAudioKey(audioKey: string): string {
 
 function computeNarrationKey(room: RoomView): NarrationKey {
   if (room.phaseTransition) {
+    // The postReveal transition leads to the Mayor election when the Mayor is
+    // enabled, not to night. Suppress the "village falls asleep" clip for the
+    // initial Mayor election; the Mayor clip plays once the mayor phase begins.
+    if (room.phaseTransition === 'postReveal' && room.passiveRoleConfig?.mayor) {
+      return null;
+    }
     return room.phaseTransition;
   }
   if (room.phase === 'night' && room.phaseStep) {

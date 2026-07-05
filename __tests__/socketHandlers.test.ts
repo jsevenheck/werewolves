@@ -43,15 +43,19 @@ vi.mock('../server/src/managers/broadcastManager', () => ({
   notifyAdminObserversRoomClosed: vi.fn(),
 }));
 
-vi.mock('../server/src/managers/phaseManager', () => ({
-  schedulePhaseTransition: vi.fn(),
-  holdDayToNightTransition: vi.fn(),
-  advanceFromReveal: vi.fn(),
-  advanceFromMayor: vi.fn(),
-  startNight: vi.fn(),
-  notifyLovers: vi.fn(),
-  scheduleNightStep: vi.fn(),
-}));
+vi.mock('../server/src/managers/phaseManager', async (importOriginal) => {
+  const actual = (await importOriginal()) as typeof import('../server/src/managers/phaseManager');
+  return {
+    ...actual,
+    schedulePhaseTransition: vi.fn(),
+    holdDayToNightTransition: vi.fn(),
+    advanceFromReveal: vi.fn(),
+    advanceFromMayor: vi.fn(),
+    startNight: vi.fn(),
+    notifyLovers: vi.fn(),
+    scheduleNightStep: vi.fn(),
+  };
+});
 
 vi.mock('../server/src/managers/nightManager', () => ({
   tryFinalizeWolfVote: vi.fn(),
@@ -1638,6 +1642,7 @@ describe('socketHandlers mechanics guards', () => {
       },
       seerActed: false,
       seerAwaitingDismiss: false,
+      logs: [],
     } as unknown as Room;
     (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();

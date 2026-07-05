@@ -3,6 +3,7 @@ import {
   shuffle,
   createVoteState,
   addLog,
+  isDiscussionLocked,
   getPlayerRoleLabel,
 } from '../server/src/utils/helpers';
 import type { Room, Player, Role } from '../core/src/types';
@@ -35,6 +36,29 @@ describe('helpers', () => {
     expect(room.logs).toHaveLength(1);
     expect(room.logs[0]).toMatchObject({ text: 'private text', publicText: 'public text' });
     expect(typeof room.logs[0].ts).toBe('number');
+  });
+
+  test('addLog supports deadOnly flag for spectator-only logs', () => {
+    const room = { logs: [] } as unknown as Room;
+    addLog(room, 'secret', null, null, null, true);
+    expect(room.logs[0]).toMatchObject({ text: 'secret', deadOnly: true });
+  });
+
+  describe('isDiscussionLocked', () => {
+    test('returns true while the discussion countdown is running', () => {
+      const room = { discussionEndsAt: Date.now() + 5000 } as unknown as Room;
+      expect(isDiscussionLocked(room)).toBe(true);
+    });
+
+    test('returns false once the countdown has elapsed', () => {
+      const room = { discussionEndsAt: Date.now() - 1000 } as unknown as Room;
+      expect(isDiscussionLocked(room)).toBe(false);
+    });
+
+    test('returns false when no discussion lock is active', () => {
+      const room = { discussionEndsAt: null } as unknown as Room;
+      expect(isDiscussionLocked(room)).toBe(false);
+    });
   });
 
   describe('getPlayerRoleLabel', () => {

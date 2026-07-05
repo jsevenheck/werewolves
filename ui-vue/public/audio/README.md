@@ -98,7 +98,10 @@ Role reveal phase while players privately view their roles. Max length: no fixed
 
 ### postReveal.mp3
 
-Transition after role reveal (e.g. "the village falls asleep") before mayor selection. Max length: 6s.
+Transition after role reveal (e.g. "the village falls asleep") before mayor selection.
+When the Mayor passive role is enabled, this clip is suppressed for the initial
+transition (which leads to the Mayor election, not night) — the `mayor.mp3`
+clip plays once the Mayor phase begins instead. Max length: 6s.
 
 ### mayor.mp3
 

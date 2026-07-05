@@ -30,7 +30,10 @@ export interface ClientToServerEvents {
   updateRoleConfig: (payload: {
     roomCode: string;
     playerId: string;
-    config: Partial<RoleConfig> & { passiveRoles?: Partial<PassiveRoleConfig> };
+    config: Partial<RoleConfig> & {
+      passiveRoles?: Partial<PassiveRoleConfig>;
+      discussionTimerSeconds?: number;
+    };
   }) => void;
   startGame: (
     payload: { roomCode: string; playerId: string },
