@@ -5,64 +5,72 @@
  * with the app. These bundled URLs serve as fallbacks, eliminating the
  * dependency on host-served `/audio/...` paths.
  *
- * Custom audio overrides (if provided via `assetsBasePath`) still take precedence.
+ * Files are organised by locale under `en/` and `de/`. Vite's `import.meta.glob`
+ * picks up whatever files are present at build time, so a locale can be added
+ * later by dropping MP3s into its folder without code changes.
+ *
+ * Custom audio overrides (if provided via `assetsBasePath`) still take precedence
+ * and are locale-aware: the narrator first looks under
+ * `${assetsBasePath}/${locale}/...` before falling back to the locale-agnostic
+ * `${assetsBasePath}/...` paths.
+ *
+ * If a key is missing for the active locale (e.g. only some DE clips exist),
+ * the narrator falls back to the English clip for that key.
  */
 
-// Import all built-in narrator audio files
-import armorUrl from './armor.mp3';
-import dayUrl from './day.mp3';
-import dayToNightUrl from './dayToNight.mp3';
-import endedUrl from './ended.mp3';
-import lobbyUrl from './lobby.mp3';
-import mayorUrl from './mayor.mp3';
-import nightUrl from './night.mp3';
-import nightGuardUrl from './night_guard.mp3';
-import nightHarlotUrl from './night_harlot.mp3';
-import nightResolveUrl from './night_resolve.mp3';
-import nightSeerUrl from './night_seer.mp3';
-import nightTransitionUrl from './night_transition.mp3';
-import nightWitchUrl from './night_witch.mp3';
-import nightWolvesUrl from './night_wolves.mp3';
-import nightToDayUrl from './nightToDay.mp3';
-import postArmorUrl from './postArmor.mp3';
-import postMayorUrl from './postMayor.mp3';
-import postRevealUrl from './postReveal.mp3';
-import roleRevealUrl from './roleReveal.mp3';
+import type { SupportedLocale } from '../../i18n/types';
+
+const EN_AUDIO_MODULES = import.meta.glob('./en/*.mp3', {
+  eager: true,
+  import: 'default',
+}) as Record<string, string>;
+const DE_AUDIO_MODULES = import.meta.glob('./de/*.mp3', {
+  eager: true,
+  import: 'default',
+}) as Record<string, string>;
+
+function globToMap(modules: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [path, url] of Object.entries(modules)) {
+    // path looks like './en/armor.mp3' or './de/night_wolves.mp3'
+    const fileName = path.split('/').pop();
+    if (!fileName) continue;
+    const key = fileName.replace(/\.mp3$/, '');
+    out[key] = url;
+  }
+  return out;
+}
 
 /**
- * Map of narration keys to bundled audio URLs.
- *
- * These URLs are generated at build time by Vite and will work without
- * requiring separately hosted static files.
+ * Map of narration keys to bundled audio URLs, per locale.
  */
-export const BUNDLED_AUDIO: Record<string, string> = {
-  armor: armorUrl,
-  day: dayUrl,
-  dayToNight: dayToNightUrl,
-  ended: endedUrl,
-  lobby: lobbyUrl,
-  mayor: mayorUrl,
-  night: nightUrl,
-  night_guard: nightGuardUrl,
-  night_harlot: nightHarlotUrl,
-  night_resolve: nightResolveUrl,
-  night_seer: nightSeerUrl,
-  night_transition: nightTransitionUrl,
-  night_witch: nightWitchUrl,
-  night_wolves: nightWolvesUrl,
-  nightToDay: nightToDayUrl,
-  postArmor: postArmorUrl,
-  postMayor: postMayorUrl,
-  postReveal: postRevealUrl,
-  roleReveal: roleRevealUrl,
+const BUNDLED_AUDIO: Record<SupportedLocale, Record<string, string>> = {
+  en: globToMap(EN_AUDIO_MODULES),
+  de: globToMap(DE_AUDIO_MODULES),
 };
 
 /**
- * Get the bundled audio URL for a narration key.
+ * Get the bundled audio URL for a narration key, in a given locale.
+ *
+ * If the key is not present in the requested locale, the English clip is
+ * returned (if it exists) so that a partial DE set still has audio.
  *
  * @param key - The narration key (e.g., 'lobby', 'day', 'night_wolves')
- * @returns The bundled audio URL, or undefined if the key is not recognized
+ * @param locale - The active UI locale ('en' | 'de')
+ * @returns The bundled audio URL, or undefined if the key is unknown in
+ *   both the active locale and the English fallback.
  */
-export function getBundledAudioUrl(key: string): string | undefined {
-  return BUNDLED_AUDIO[key];
+export function getBundledAudioUrl(key: string, locale: SupportedLocale): string | undefined {
+  return BUNDLED_AUDIO[locale]?.[key] ?? BUNDLED_AUDIO.en?.[key];
 }
+
+/**
+ * For tests and tooling: the raw per-locale audio map.
+ *
+ * Exposed for introspection (e.g. to assert which keys are bundled for a
+ * given locale). Do not use this at runtime to resolve a clip — call
+ * `getBundledAudioUrl(key, locale)` instead so the English fallback applies.
+ */
+export const __BUNDLED_AUDIO__: Readonly<
+  Record<SupportedLocale, Readonly<Record<string, string>>>
+> = BUNDLED_AUDIO;

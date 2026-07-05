@@ -1,15 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "lib": ["ES2020", "DOM"],
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["node", "vitest/globals"],
+    "types": ["node", "vitest/globals", "vite/client"],
     "baseUrl": ".",
     "paths": {
       "@shared/*": ["core/src/*"]

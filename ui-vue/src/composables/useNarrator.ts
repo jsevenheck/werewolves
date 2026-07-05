@@ -6,6 +6,8 @@ import { createNarrator } from '../utils/narrator';
 import type { Narrator } from '../utils/narrator';
 import { notify } from '../utils/helpers';
 import type { RoomView } from '@shared/types';
+import { i18n } from '../i18n';
+import type { SupportedLocale } from '../i18n/types';
 
 const NARRATOR_UNLOCK_COOLDOWN_MS = 1500;
 
@@ -19,6 +21,7 @@ export function useNarrator(assetsBasePath?: string) {
       notify(t(`app.notifications.${message}`));
     },
     assetsBasePath,
+    getLocale: () => i18n.global.locale.value as SupportedLocale,
   });
   const storageKey = 'werewolves_narrator_enabled';
 
@@ -52,6 +55,16 @@ export function useNarrator(assetsBasePath?: string) {
       previousRoom = newRoom;
     }
   });
+  // When the UI language changes, drop cached Howl instances so the next
+  // clip resolves from the new locale. The currently-playing clip is left
+  // to finish (no abrupt cut), and we don't re-announce the current key —
+  // the next room change picks up the new locale.
+  watch(
+    () => i18n.global.locale.value,
+    () => {
+      narrator.invalidateCache();
+    }
+  );
   // Reset narrator whenever the player switches rooms or leaves.
   watch(roomCode, (next, prev) => {
     if (next === prev) return;

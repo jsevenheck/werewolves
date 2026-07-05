@@ -35,8 +35,8 @@
     "semantic_hash": ""
   },
   "__tests__/narrator.test.ts": {
-    "mtime": 1783257402.7684379,
-    "ast_hash": "3f79a4350714f30f72babc4bca76fb55",
+    "mtime": 1783259707.282333,
+    "ast_hash": "c8b1439634871efce398fc84a3a70cc4",
     "semantic_hash": ""
   },
   "__tests__/narrator.vue.test.ts": {
@@ -275,8 +275,8 @@
     "semantic_hash": ""
   },
   "tsconfig.json": {
-    "mtime": 1774974853.931813,
-    "ast_hash": "9694aaacb16894bd31eec35606fb6aa2",
+    "mtime": 1783259368.110501,
+    "ast_hash": "20986813a821e4667d6f1fa0c3f89e1f",
     "semantic_hash": ""
   },
   "tsconfig.playwright.json": {
@@ -310,8 +310,8 @@
     "semantic_hash": ""
   },
   "ui-vue/src/assets/audio/manifest.ts": {
-    "mtime": 1774974853.960307,
-    "ast_hash": "b591e8b441c26aae375dc4cdf11b46b2",
+    "mtime": 1783259717.4108117,
+    "ast_hash": "e53e3d5650e418daacee377fb007c149",
     "semantic_hash": ""
   },
   "ui-vue/src/components/ArmorPhase.vue": {
@@ -395,8 +395,8 @@
     "semantic_hash": ""
   },
   "ui-vue/src/composables/useNarrator.ts": {
-    "mtime": 1782310795.894964,
-    "ast_hash": "a70d2f3fff8886131baa2f4d1d8f4a09",
+    "mtime": 1783259627.5776725,
+    "ast_hash": "d6cd756731496ab473a42a639416f50e",
     "semantic_hash": ""
   },
   "ui-vue/src/composables/useSocket.ts": {
@@ -430,8 +430,8 @@
     "semantic_hash": ""
   },
   "ui-vue/src/utils/narrator.ts": {
-    "mtime": 1783257402.9721584,
-    "ast_hash": "3e088bf955b2a60aa3550a25a3a30f43",
+    "mtime": 1783259718.2113369,
+    "ast_hash": "23df9755848cea0e9f546f6d1db7383f",
     "semantic_hash": ""
   },
   "ui-vue/src/utils/roleDetails.ts": {

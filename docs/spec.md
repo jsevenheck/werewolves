@@ -337,3 +337,29 @@ Rooms are automatically cleaned up to prevent memory leaks:
 - **Activity tracking**: `lastActivityAt` timestamp updates on every room broadcast
 - **Cleanup interval**: Runs every hour to check and remove stale rooms
 ```
+
+## Narrator Audio (Locale-Aware)
+
+The narrator is locale-aware. It reads the active UI language from
+`i18n.global.locale.value` and resolves audio clips in this order:
+
+1. `${assetsBasePath}/${locale}/custom/${key}.mp3` (locale custom override)
+2. `${assetsBasePath}/${locale}/${key}.mp3` (locale default override)
+3. `${assetsBasePath}/custom/${key}.mp3` (locale-agnostic custom)
+4. `${assetsBasePath}/${key}.mp3` (locale-agnostic default)
+5. Bundled clip for the active locale (e.g. `/en/${key}.mp3`)
+6. Bundled English clip as final fallback
+
+Locale is `'en'` or `'de'` — matching the supported languages in
+`ui-vue/src/i18n/types.ts`. When the UI language changes, the narrator
+drops its Howl cache so the next clip resolves from the new locale; the
+currently-playing clip is left to finish (no abrupt cut).
+
+Bundled clips live in:
+
+- `ui-vue/src/assets/audio/en/` (English)
+- `ui-vue/src/assets/audio/de/` (German; empty by default)
+
+To add a German clip, drop an MP3 with the same filename as the
+English one into the `de/` folder. Vite picks it up at build time via
+`import.meta.glob`. No code change required.

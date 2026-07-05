@@ -1,16 +1,16 @@
 # Graph Report - werewolves  (2026-07-05)
 
 ## Corpus Check
-- 116 files · ~67,021 words
+- 116 files · ~68,232 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 691 nodes · 1410 edges · 48 communities (44 shown, 4 thin omitted)
+- 695 nodes · 1423 edges · 57 communities (52 shown, 5 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 15 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `eea87416`
+- Built from commit: `4a9aba46`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -40,57 +40,62 @@
 - [[_COMMUNITY_Community 23|Community 23]]
 - [[_COMMUNITY_Community 24|Community 24]]
 - [[_COMMUNITY_Community 25|Community 25]]
+- [[_COMMUNITY_Community 26|Community 26]]
 - [[_COMMUNITY_Community 27|Community 27]]
 - [[_COMMUNITY_Community 28|Community 28]]
+- [[_COMMUNITY_Community 31|Community 31]]
 - [[_COMMUNITY_Community 32|Community 32]]
 - [[_COMMUNITY_Community 44|Community 44]]
+- [[_COMMUNITY_Community 45|Community 45]]
+- [[_COMMUNITY_Community 46|Community 46]]
 - [[_COMMUNITY_Community 47|Community 47]]
+- [[_COMMUNITY_Community 48|Community 48]]
 - [[_COMMUNITY_Community 49|Community 49]]
+- [[_COMMUNITY_Community 53|Community 53]]
+- [[_COMMUNITY_Community 54|Community 54]]
+- [[_COMMUNITY_Community 55|Community 55]]
+- [[_COMMUNITY_Community 56|Community 56]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `setupSocketHandlers()` - 43 edges
 2. `localizedMessage()` - 27 edges
 3. `addLog()` - 25 edges
 4. `Room` - 23 edges
-5. `createLobbyWithPlayers()` - 20 edges
-6. `broadcastRoom()` - 20 edges
-7. `resolveDeaths()` - 20 edges
-8. `schedulePhaseTransition()` - 20 edges
-9. `Narrator` - 20 edges
+5. `Narrator` - 22 edges
+6. `createLobbyWithPlayers()` - 20 edges
+7. `broadcastRoom()` - 20 edges
+8. `resolveDeaths()` - 20 edges
+9. `schedulePhaseTransition()` - 20 edges
 10. `ClientToServerEvents` - 17 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `makeSocket()` --calls--> `attachAdminToSocket()`  [EXTRACTED]
   __tests__/adminHandlers.test.ts → server/src/utils/adminAuth.ts
-- `AdminState` --references--> `RoomView`  [EXTRACTED]
-  ui-vue/src/stores/admin.ts → core/src/types.ts
 - `useAdminSocket()` --calls--> `io`  [INFERRED]
   ui-vue/src/composables/useAdminSocket.ts → server/src/index.ts
 - `useSocket()` --calls--> `io`  [INFERRED]
   ui-vue/src/composables/useSocket.ts → server/src/index.ts
+- `AdminState` --references--> `RoomView`  [EXTRACTED]
+  ui-vue/src/stores/admin.ts → core/src/types.ts
 - `GameState` --references--> `RoomView`  [EXTRACTED]
   ui-vue/src/stores/game.ts → core/src/types.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (48 total, 4 thin omitted)
+## Communities (57 total, 5 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.11
-Nodes (50): AdminSocket, TypedSocket, detachSocketFromRoom(), ensureActingHost(), pendingDisconnects, setupSocketHandlers(), updateHostIfNeeded(), broadcastRoom() (+42 more)
+Cohesion: 0.12
+Nodes (48): kickPlayerFromRoom(), detachSocketFromRoom(), ensureActingHost(), pendingDisconnects, setupSocketHandlers(), updateHostIfNeeded(), broadcastRoom(), checkWinners() (+40 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.08
 Nodes (40): getRoleName(), mapRolesToPages(), advanceToDay(), AdvanceToDayResult, closeContexts(), completeMayorElection(), configureRoles(), createLobbyWithPlayers() (+32 more)
 
-### Community 2 - "Community 2"
-Cohesion: 0.06
-Nodes (28): BUNDLED_AUDIO, getBundledAudioUrl(), useNarrator(), HowlEvent, MockHowl, RoomView, StoredSession, GameState (+20 more)
-
 ### Community 3 - "Community 3"
-Cohesion: 0.05
-Nodes (45): DEATH_REASON_KEYS, SERVER_DEATH_REASONS, AdminSocket, HostKickResult, DEFAULT_PASSIVE_ROLE_CONFIG, DEFAULT_ROLE_CONFIG, ROLE_INFO, RoleInfo (+37 more)
+Cohesion: 0.11
+Nodes (16): AdminObserver, LocalizedMessageParam, LocalizedMessageParams, LoverPair, NightDeathAnnouncement, PassiveRole, PendingDeath, PhaseTransition (+8 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.05
@@ -118,7 +123,7 @@ Nodes (17): compilerOptions, baseUrl, esModuleInterop, forceConsistentCasingInFi
 
 ### Community 10 - "Community 10"
 Cohesion: 0.07
-Nodes (43): useAdminSocket(), useSocket(), PLAYER_ID, RESUME_TOKEN, ROOM_CODE, kickPlayerFromRoom(), setupAdminSocketHandlers(), cancelPendingDisconnect() (+35 more)
+Nodes (39): PLAYER_ID, RESUME_TOKEN, ROOM_CODE, setupAdminSocketHandlers(), cancelPendingDisconnect(), getAdminObserversForRoom(), getRoomForAdminSocket(), observersByRoom (+31 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.12
@@ -153,8 +158,8 @@ Cohesion: 0.29
 Nodes (4): detail, narratorLabel, phaseText, seerResult
 
 ### Community 20 - "Community 20"
-Cohesion: 0.10
-Nodes (26): deathReasonKey(), applyLocale(), getBrowserLocale(), getCurrentLocale(), getInitialLocale(), getStoredLocale(), i18n, initializeLocale() (+18 more)
+Cohesion: 0.31
+Nodes (12): applyLocale(), getBrowserLocale(), getCurrentLocale(), getInitialLocale(), getStoredLocale(), initializeLocale(), isSupportedLocale(), messages (+4 more)
 
 ### Community 21 - "Community 21"
 Cohesion: 0.40
@@ -172,37 +177,73 @@ Nodes (4): compilerOptions, types, extends, include
 Cohesion: 0.40
 Nodes (4): compilerOptions, types, extends, include
 
+### Community 26 - "Community 26"
+Cohesion: 0.12
+Nodes (17): __BUNDLED_AUDIO__, DE_AUDIO_MODULES, EN_AUDIO_MODULES, getBundledAudioUrl(), useNarrator(), LocaleOption, SUPPORTED_LOCALES, SupportedLocale (+9 more)
+
+### Community 31 - "Community 31"
+Cohesion: 0.14
+Nodes (15): AdminSocket, useAdminSocket(), AdminSocket, HostKickResult, TypedSocket, useSocket(), ClientToServerEvents, ErrorResponse (+7 more)
+
 ### Community 44 - "Community 44"
 Cohesion: 0.14
 Nodes (13): author, description, directories, doc, engines, node, keywords, license (+5 more)
+
+### Community 45 - "Community 45"
+Cohesion: 0.23
+Nodes (13): DEFAULT_PASSIVE_ROLE_CONFIG, DEFAULT_ROLE_CONFIG, ROLE_INFO, RoleInfo, assignRoles(), normalizePassiveRoleConfig(), normalizeRoleConfig(), validateCounts() (+5 more)
+
+### Community 46 - "Community 46"
+Cohesion: 0.19
+Nodes (5): HowlEvent, MockHowl, baseRoom(), buildRoom(), RoomOverrides
 
 ### Community 47 - "Community 47"
 Cohesion: 0.33
 Nodes (6): dependencies, express, howler, nanoid, socket.io, socket.io-client
 
+### Community 48 - "Community 48"
+Cohesion: 0.20
+Nodes (7): DEATH_REASON_KEYS, deathReasonKey(), SERVER_DEATH_REASONS, NightStep, Phase, extractQueueDeathReasons(), readServerSources()
+
 ### Community 49 - "Community 49"
 Cohesion: 0.67
 Nodes (3): overrides, diff, esbuild
 
+### Community 53 - "Community 53"
+Cohesion: 0.29
+Nodes (6): RoomSummary, RoomView, StoredSession, AdminState, useAdminStore, GameState
+
+### Community 54 - "Community 54"
+Cohesion: 0.31
+Nodes (4): de, en, extractServerMessageKeys(), readServerSources()
+
+### Community 55 - "Community 55"
+Cohesion: 0.39
+Nodes (7): alertMock, capitalize(), escapeHtml(), formatPhase(), getPlayerName(), notify(), pushNotification()
+
+### Community 56 - "Community 56"
+Cohesion: 0.40
+Nodes (4): i18n, app, werewolvesConfig, WerewolvesGameConfig
+
 ## Knowledge Gaps
-- **265 isolated node(s):** `IoStub`, `HowlEvent`, `RoomOverrides`, `{ mockHowlInstances, mockPlay, mockStop, mockUnload, mockOn, mockOnce, mockOff, mockLoad }`, `localStorageMock` (+260 more)
+- **267 isolated node(s):** `IoStub`, `HowlEvent`, `RoomOverrides`, `{ mockHowlInstances, mockPlay, mockStop, mockUnload, mockOn, mockOnce, mockOff, mockLoad }`, `localStorageMock` (+262 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `RoomView` connect `Community 2` to `Community 0`, `Community 10`, `Community 3`?**
-  _High betweenness centrality (0.016) - this node is a cross-community bridge._
+- **Why does `Narrator` connect `Community 2` to `Community 26`?**
+  _High betweenness centrality (0.028) - this node is a cross-community bridge._
+- **Why does `RoomView` connect `Community 53` to `Community 2`, `Community 3`, `Community 10`, `Community 46`, `Community 48`, `Community 55`, `Community 26`, `Community 31`?**
+  _High betweenness centrality (0.015) - this node is a cross-community bridge._
 - **What connects `IoStub`, `HowlEvent`, `RoomOverrides` to the rest of the system?**
-  _265 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _267 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.11197663096397274 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.12108108108108108 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.07672634271099744 - nodes in this community are weakly interconnected._
-- **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.05605499735589635 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**
-  _Cohesion score 0.05446853516657853 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected._
 - **Should `Community 4` be split into smaller, more focused modules?**
   _Cohesion score 0.04878048780487805 - nodes in this community are weakly interconnected._

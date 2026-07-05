@@ -1,6 +1,17 @@
 # Narrator audio files
 
-**Note:** Built-in narrator clips are bundled with the app (`ui-vue/src/assets/audio/`) and work out-of-the-box. This `public/audio/` folder is kept for:
+**Note:** Built-in narrator clips are bundled with the app and work out-of-the-box:
+
+- English clips: `ui-vue/src/assets/audio/en/`
+- German clips: `ui-vue/src/assets/audio/de/`
+
+The narrator is locale-aware. When the UI is set to German it tries DE clips
+first (both bundled and from custom override paths), and falls back to the
+English clip for any key that has no German equivalent. To add a German
+clip, drop an MP3 with the same filename as the English one into
+`ui-vue/src/assets/audio/de/` (or use the custom override paths below).
+
+This `public/audio/` folder is kept for:
 
 - Custom audio overrides (allows customization by replacing files in public/audio)
 - Documentation reference (standard file names and descriptions)
@@ -8,6 +19,26 @@
 
 For custom audio overrides, use `assetsBasePath` in the config to point to your custom audio directory.
 The app defaults `assetsBasePath` to `/audio`.
+
+## Custom Override Paths (Locale-Aware)
+
+The narrator probes custom override paths in this order:
+
+1. `${assetsBasePath}/${locale}/custom/${key}.mp3` & `${key}_N.mp3`
+2. `${assetsBasePath}/${locale}/${key}.mp3`
+3. `${assetsBasePath}/custom/${key}.mp3` & `${key}_N.mp3` (locale-agnostic)
+4. `${assetsBasePath}/${key}.mp3` (locale-agnostic)
+5. Bundled clip for the active locale (e.g. `/en/${key}.mp3`)
+6. Bundled English clip as final fallback
+
+Where `locale` is `'en'` or `'de'`, matching the active UI language.
+
+**Examples for `assetsBasePath: '/audio'`:**
+
+- `/audio/de/custom/day_1.mp3` (German variant 1)
+- `/audio/de/day.mp3` (German default)
+- `/audio/custom/day_1.mp3` (variant shared by all locales)
+- `/audio/day.mp3` (default, locale-agnostic)
 
 ---
 
