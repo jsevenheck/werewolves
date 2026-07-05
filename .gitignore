@@ -7,7 +7,7 @@ test-results/
 coverage/
 settings.local.json
 *.mp3
-!**/audio/*.mp3
+!**/audio/**/*.mp3
 **/audio/custom/*.mp3
 .eslintcache 
 

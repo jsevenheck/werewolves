@@ -1,6 +1,7 @@
 import { Howl } from 'howler';
 import type { RoomView } from '@shared/types';
 import { getBundledAudioUrl } from '../assets/audio/manifest';
+import type { SupportedLocale } from '../i18n/types';
 
 type NarrationKey = string | null;
 type NarratorNotification = 'audioBlocked';
@@ -9,12 +10,23 @@ type NarratorOptions = {
   /**
    * Optional base path for custom audio overrides.
    * If provided, narrator will first try to load custom audio from:
-   * - ${assetsBasePath}/custom/${key}.mp3 (with variants)
-   * - ${assetsBasePath}/${key}.mp3 (fallback)
+   * - ${assetsBasePath}/${locale}/custom/${key}.mp3 (locale-aware, with variants)
+   * - ${assetsBasePath}/${locale}/${key}.mp3 (locale-aware fallback)
+   * - ${assetsBasePath}/custom/${key}.mp3 (with variants, locale-agnostic)
+   * - ${assetsBasePath}/${key}.mp3 (locale-agnostic fallback)
    *
    * If not provided or if custom audio fails to load, narrator will use bundled audio.
+   * The bundled audio itself is locale-aware: the narrator will try the active
+   * locale first and then fall back to English.
    */
   assetsBasePath?: string;
+  /**
+   * Returns the active UI locale. The narrator uses this to pick the right
+   * bundled clip and to look under the locale-specific override folders.
+   * Defaults to a constant `'en'` so non-i18n callers (tests) get predictable
+   * behaviour.
+   */
+  getLocale?: () => SupportedLocale;
   storage?: Storage | null;
   initialEnabled?: boolean;
   initialUnlocked?: boolean;
@@ -67,6 +79,7 @@ class Narrator {
   private readonly playClip: (key: string) => void;
   private readonly notify: (message: NarratorNotification) => void;
   private readonly playDebounceMs: number;
+  private readonly getLocale: () => SupportedLocale;
   private readonly variants = new Map<string, number>([
     ['day', -1],
     ['night', -1],
@@ -98,6 +111,7 @@ class Narrator {
     this.playClip = options.playClip ?? ((key) => void this.playWithHowler(key));
     this.notify = options.notify ?? (() => {});
     this.playDebounceMs = options.playDebounceMs ?? 800;
+    this.getLocale = options.getLocale ?? (() => 'en');
   }
 
   initFromStorage() {
@@ -208,50 +222,83 @@ class Narrator {
     }
   }
 
+  /**
+   * Drop all cached Howl instances and discovered variant lists so the next
+   * `playWithHowler` call re-resolves URLs from the (possibly changed) locale.
+   *
+   * The currently-playing clip is left to finish — language change happens
+   * on the next announcement, not by yanking audio out from under the user.
+   */
+  invalidateCache() {
+    for (const howl of this.howls.values()) {
+      howl.unload();
+    }
+    this.howls.clear();
+    this.howlPromises.clear();
+    this.discoveredVariants.clear();
+  }
+
   private async resolveAudioPath(audioKey: string): Promise<string | undefined> {
     const baseAudioKey = toBaseAudioKey(audioKey);
+    const locale = this.getLocale();
 
-    // If assetsBasePath is provided, try custom audio overrides first
-    if (this.assetsBasePath) {
-      // 1. Try custom path with variant support
-      const customPath = `${this.assetsBasePath}/custom/${audioKey}.mp3`;
-      try {
-        const response = await fetch(customPath, { method: 'HEAD' });
-        const contentType = response.headers.get('content-type') || '';
-        // Accept audio/* or application/octet-stream; reject HTML (SPA fallback)
-        if (response.ok && !contentType.startsWith('text/html')) {
-          return customPath;
-        }
-      } catch {
-        // Custom file doesn't exist, continue to next fallback
+    // Locale-aware candidate builders. We probe each location in this order:
+    //  1. ${assetsBasePath}/${locale}/custom/${key}.mp3   (locale custom override)
+    //  2. ${assetsBasePath}/${locale}/${key}.mp3          (locale default override)
+    //  3. ${assetsBasePath}/custom/${key}.mp3             (locale-agnostic custom)
+    //  4. ${assetsBasePath}/${key}.mp3                    (locale-agnostic default)
+    //  5. bundled(key, locale)                            (bundled, active locale)
+    //  6. bundled(key, 'en')                              (bundled English fallback)
+    //
+    // For variant keys (e.g. day_1) we also try the base key (day) as a
+    // fallback at each step.
+    const customCandidates = (localePrefix: string | null) => {
+      if (localePrefix) {
+        return [audioKey, baseAudioKey].map(
+          (k) => `${this.assetsBasePath}/${localePrefix}/custom/${k}.mp3`
+        );
       }
+      return [audioKey, baseAudioKey].map((k) => `${this.assetsBasePath}/custom/${k}.mp3`);
+    };
+    const defaultCandidates = (localePrefix: string | null) => {
+      if (localePrefix) {
+        return [audioKey, baseAudioKey].map(
+          (k) => `${this.assetsBasePath}/${localePrefix}/${k}.mp3`
+        );
+      }
+      return [audioKey, baseAudioKey].map((k) => `${this.assetsBasePath}/${k}.mp3`);
+    };
+    const allOverrideCandidates: string[] = [
+      ...customCandidates(locale),
+      ...defaultCandidates(locale),
+      ...customCandidates(null),
+      ...defaultCandidates(null),
+    ];
 
-      // 2. Try default file path(s) from assetsBasePath.
-      // For variant keys (e.g. day_1), also fall back to the base file (day.mp3).
-      const defaultCandidates = baseAudioKey === audioKey ? [audioKey] : [audioKey, baseAudioKey];
-      for (const key of defaultCandidates) {
-        const defaultPath = `${this.assetsBasePath}/${key}.mp3`;
+    if (this.assetsBasePath) {
+      for (const path of allOverrideCandidates) {
         try {
-          const response = await fetch(defaultPath, { method: 'HEAD' });
+          const response = await fetch(path, { method: 'HEAD' });
           const contentType = response.headers.get('content-type') || '';
           // Accept audio/* or application/octet-stream; reject HTML (SPA fallback)
           if (response.ok && !contentType.startsWith('text/html')) {
-            return defaultPath;
+            return path;
           }
         } catch {
-          // Default file from assetsBasePath doesn't exist, continue to next fallback
+          // Path doesn't exist or network error — try next candidate
         }
       }
     }
 
-    // 3. Use bundled audio as fallback (works in all contexts without host-served files).
-    // For variant keys (e.g. day_1), also try the base key (day).
+    // Bundled audio: try the active locale first, then fall back to English.
     const bundledCandidates = baseAudioKey === audioKey ? [audioKey] : [audioKey, baseAudioKey];
     for (const key of bundledCandidates) {
-      const bundled = getBundledAudioUrl(key);
-      if (bundled) {
-        return bundled;
-      }
+      const bundled = getBundledAudioUrl(key, locale);
+      if (bundled) return bundled;
+    }
+    for (const key of bundledCandidates) {
+      const bundled = getBundledAudioUrl(key, 'en');
+      if (bundled) return bundled;
     }
 
     return undefined;
@@ -266,25 +313,40 @@ class Narrator {
       return variants;
     }
 
-    for (let i = 1; i <= maxVariants; i++) {
-      const variantKey = `${key}_${i}`;
+    const locale = this.getLocale();
+    // Search the locale-specific custom folder first, then the locale-agnostic
+    // custom folder. Variants are numbered sequentially so the first folder
+    // that returns 404-style responses is where we stop.
+    const folders = [`${this.assetsBasePath}/${locale}/custom`, `${this.assetsBasePath}/custom`];
 
-      // Check custom folder only - standard files are used as fallback when no custom variants exist
-      const customUrl = `${this.assetsBasePath}/custom/${variantKey}.mp3`;
-      try {
-        const response = await fetch(customUrl, { method: 'HEAD' });
-        const contentType = response.headers.get('content-type') || '';
-        // Only accept if response is OK AND content-type indicates audio (not HTML fallback)
-        if (response.ok && contentType.includes('audio')) {
-          variants.push(variantKey);
-        } else {
-          // Either 404 (file doesn't exist) or SPA HTML fallback – stop searching.
-          // Variants are numbered sequentially so there is no point checking further.
+    for (const folder of folders) {
+      let stopped = false;
+      for (let i = 1; i <= maxVariants; i++) {
+        const variantKey = `${key}_${i}`;
+        const customUrl = `${folder}/${variantKey}.mp3`;
+        try {
+          const response = await fetch(customUrl, { method: 'HEAD' });
+          const contentType = response.headers.get('content-type') || '';
+          if (response.ok && contentType.includes('audio')) {
+            variants.push(variantKey);
+          } else {
+            // 404 (file doesn't exist) or SPA HTML fallback — stop searching
+            // in this folder. We don't `break` out of the outer loop so that
+            // we still try the other folder (locale vs locale-agnostic).
+            stopped = true;
+            break;
+          }
+        } catch {
+          stopped = true;
           break;
         }
-      } catch {
-        // Network error or file doesn't exist, stop searching
-        break;
+      }
+      if (stopped) {
+        // If the locale folder didn't have any variants, fall through to the
+        // locale-agnostic folder. If it had some, assume sequential numbering
+        // applies to the next folder too (no fallthrough).
+        if (variants.length === 0) continue;
+        return variants;
       }
     }
 
