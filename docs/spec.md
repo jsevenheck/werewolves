@@ -170,11 +170,19 @@ loop:
       collect votes from alive players
       abstain requires explicit selection; majority abstain -> no elimination
       if tie:
-        if mayor voted for a tied candidate: mayor breaks tie
+        if mayor voted for a tied candidate: mayor's vote counts double
+          (i.e. +1 to their candidate). If the doubled tally still ties
+          or never reaches a simple majority, fall through to the revote
+          path below.
         else set revote list + reset votes limited to tied players
       if tie again:
-        if mayor voted for a tied candidate: mayor breaks tie
+        if mayor voted for a tied candidate: mayor's vote counts double
         else choose random among tied players
+      simple majority required: the leading candidate must hold more than
+        half of the votes that counted toward resolution; otherwise the
+        day is skipped (no elimination, no revote). Host-forced early
+        resolution (allowEarly) waives the simple-majority threshold so a
+        host can still push a small lead through.
       once winner target established:
         if role(target)=='joker':
           queue joker death and resolveDeaths() first (so lover heartbreak is processed)

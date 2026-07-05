@@ -229,7 +229,10 @@ describe('voteManager', () => {
   });
 
   describe('mayor tie-breaking', () => {
-    test('mayor vote breaks initial tie when mayor voted for tied candidate', () => {
+    test("mayor's vote counts double on initial tie and lifts their candidate", () => {
+      // Four alive, 2-2 tie between b and c, mayor voted for b. After
+      // the mayor's vote is doubled, b = 3 and c = 2. b reaches the
+      // simple majority threshold (3 of 4 alive) and is eliminated.
       const players = {
         a: buildPlayer({ id: 'a', alive: true }),
         b: buildPlayer({ id: 'b', alive: true }),
@@ -238,17 +241,19 @@ describe('voteManager', () => {
       };
       const room = makeRoom(players);
       room.mayorId = 'a';
-      room.voteState.votes = { a: 'b', b: 'c', c: 'b', d: 'c' }; // 2-2 tie, mayor voted for b
+      room.voteState.votes = { a: 'b', b: 'c', c: 'b', d: 'c' };
       const broadcastRoom = vi.fn();
 
       tryResolveDayVote(room, broadcastRoom, undefined as never);
 
-      expect(room.logs.some((log) => log.text.includes("Mayor's vote decided"))).toBe(true);
+      expect(room.logs.some((log) => log.text.includes("Mayor's vote counted double"))).toBe(true);
       expect(room.players.b.alive).toBe(false);
-      expect(room.voteState.revoteFromTie).toBeNull(); // No revote triggered
+      expect(room.voteState.revoteFromTie).toBeNull();
     });
 
-    test('mayor vote breaks revote tie', () => {
+    test("mayor's vote counts double on revote tie and lifts their candidate", () => {
+      // Four alive, revote between b and c, 2-2 tie, mayor voted for b.
+      // After doubling: b = 3, c = 2. b is eliminated.
       const players = {
         a: buildPlayer({ id: 'a', alive: true }),
         b: buildPlayer({ id: 'b', alive: true }),
@@ -258,15 +263,68 @@ describe('voteManager', () => {
       const room = makeRoom(players);
       room.mayorId = 'a';
       room.voteState.revoteFromTie = ['b', 'c'];
-      room.voteState.votes = { a: 'b', b: 'c', c: 'b', d: 'c' }; // 2-2 tie after revote
+      room.voteState.votes = { a: 'b', b: 'c', c: 'b', d: 'c' };
       const broadcastRoom = vi.fn();
 
       tryResolveDayVote(room, broadcastRoom, undefined as never);
 
-      // Check if mayor's vote broke the tie
-      const mayorDecidedLog = room.logs.find((log) => log.text.includes("Mayor's vote decided"));
+      const mayorDecidedLog = room.logs.find((log) =>
+        log.text.includes("Mayor's vote counted double")
+      );
       expect(mayorDecidedLog).toBeTruthy();
       expect(room.players.b.alive).toBe(false);
+    });
+
+    test('1-1-1 split with 6 alive is skipped, even when mayor voted for a tied candidate', () => {
+      // Six alive, three votes, three different targets: 2/2/2. The
+      // mayor's doubled vote lifts one candidate to 3 of 6, which is
+      // still below the simple-majority threshold of 4. The day is
+      // skipped — nobody is eliminated.
+      const players = {
+        a: buildPlayer({ id: 'a', alive: true }),
+        b: buildPlayer({ id: 'b', alive: true }),
+        c: buildPlayer({ id: 'c', alive: true }),
+        d: buildPlayer({ id: 'd', alive: true }),
+        e: buildPlayer({ id: 'e', alive: true }),
+        f: buildPlayer({ id: 'f', alive: true }),
+      };
+      const room = makeRoom(players);
+      room.mayorId = 'a';
+      room.voteState.votes = { a: 'a', b: 'b', c: 'c', d: 'a', e: 'b', f: 'c' };
+      const broadcastRoom = vi.fn();
+
+      tryResolveDayVote(room, broadcastRoom, undefined as never);
+
+      expect(room.dayVoteResolved).toBe(true);
+      expect(room.logs[room.logs.length - 1].text).toBe('Vote skipped. No one eliminated.');
+      expect(Object.values(room.players).every((p) => p.alive)).toBe(true);
+    });
+
+    test("3-way tie where mayor's doubled vote still ties goes to revote", () => {
+      // Six alive, 2/2/2 with mayor voting for b. After doubling b = 3,
+      // a = 2, c = 2 — b is the unique leader but still < simple
+      // majority (4 of 6). The day is skipped (no revote triggered
+      // because there is only one tied top — it just falls below the
+      // majority threshold).
+      const players = {
+        a: buildPlayer({ id: 'a', alive: true }),
+        b: buildPlayer({ id: 'b', alive: true }),
+        c: buildPlayer({ id: 'c', alive: true }),
+        d: buildPlayer({ id: 'd', alive: true }),
+        e: buildPlayer({ id: 'e', alive: true }),
+        f: buildPlayer({ id: 'f', alive: true }),
+      };
+      const room = makeRoom(players);
+      room.mayorId = 'a';
+      room.voteState.votes = { a: 'b', b: 'a', c: 'a', d: 'b', e: 'c', f: 'c' }; // 2/2/2
+      const broadcastRoom = vi.fn();
+
+      tryResolveDayVote(room, broadcastRoom, undefined as never);
+
+      // Mayor's double lifts b to 3, but 3 < 4 → skipped.
+      expect(room.dayVoteResolved).toBe(true);
+      expect(room.logs[room.logs.length - 1].text).toBe('Vote skipped. No one eliminated.');
+      expect(Object.values(room.players).every((p) => p.alive)).toBe(true);
     });
 
     test('tie goes to revote when mayor did not vote for tied candidate', () => {

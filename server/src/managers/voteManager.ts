@@ -38,12 +38,12 @@ function tryResolveDayVote(
     tallies[targetId] = (tallies[targetId] || 0) + 1;
   });
 
-  // Mayor tie-breaking mechanics:
-  // The mayor's vote is counted in the initial tally like everyone else.
-  // If there's a tie, the mayor's vote ALSO acts as a tie-breaker IF the mayor
-  // voted for one of the tied candidates. This means the mayor has additional
-  // power: their vote both counts normally AND can break ties.
-  // This is intentional game design to give the mayor meaningful authority.
+  // If the day-vote tally is tied and the mayor voted for one of the
+  // tied candidates, the mayor's vote counts DOUBLE — i.e. their chosen
+  // candidate gets +1 extra vote — instead of acting as an outright
+  // tiebreaker. This means the mayor can lift their candidate out of a
+  // tie, but if even the doubled tally does not reach a simple majority
+  // the day is still skipped.
   const mayorAlive = room.mayorId && room.players[room.mayorId]?.alive;
   const mayorVote = mayorAlive ? room.voteState.votes[room.mayorId!] : undefined;
 
@@ -85,22 +85,32 @@ function tryResolveDayVote(
     broadcastRoom(room);
     return true;
   }
-  const tied = entries.filter(([, count]) => count === top[1]).map(([id]) => id);
+  // First tie check: do we have multiple candidates at the top?
+  const initiallyTied = entries.filter(([, count]) => count === top[1]).map(([id]) => id);
+  let mayorDoubled = false;
+  let workingEntries: [string, number][] = entries;
+  if (initiallyTied.length > 1 && mayorAlive && mayorVote && initiallyTied.includes(mayorVote)) {
+    // The mayor's vote counts double: +1 to their candidate. Recompute
+    // the tally and look for a clear winner.
+    tallies[mayorVote] = tallies[mayorVote] + 1;
+    mayorDoubled = true;
+    workingEntries = Object.entries(tallies).sort((a, b) => b[1] - a[1]);
+  }
+  const newTop = workingEntries[0];
+  if (!newTop) return true;
+  const tied = workingEntries.filter(([, count]) => count === newTop[1]).map(([id]) => id);
   if (tied.length > 1) {
-    // Check if mayor voted for one of the tied candidates
-    if (mayorAlive && mayorVote && tied.includes(mayorVote)) {
-      // Mayor's vote breaks the tie
+    // Tie persists (e.g. 3-way tie becomes 2-way tie, or 2-way tie stays
+    // tied because the mayor did not vote for either tied candidate).
+    if (mayorDoubled) {
       addLog(
         room,
-        `Vote tied. Mayor's vote decided the outcome.`,
-        `Vote tied. Mayor's vote decided the outcome.`,
-        localizedMessage('server.logs.voteTieMayor'),
-        localizedMessage('server.logs.voteTieMayor')
+        `Vote still tied after Mayor's doubled vote.`,
+        `Vote still tied after Mayor's doubled vote.`,
+        localizedMessage('server.logs.voteStillTiedAfterMayorDouble'),
+        localizedMessage('server.logs.voteStillTiedAfterMayorDouble')
       );
-      resolveDayKill(room, mayorVote, broadcastRoom, io);
-      return true;
     }
-
     if (!room.voteState.revoteFromTie) {
       room.voteState.revoteFromTie = tied;
       room.voteState.votes = {};
@@ -113,18 +123,7 @@ function tryResolveDayVote(
       broadcastRoom(room);
       return true;
     }
-    // On revote, also check if mayor can break the tie
-    if (mayorAlive && mayorVote && tied.includes(mayorVote)) {
-      addLog(
-        room,
-        `Revote tied. Mayor's vote decided the outcome.`,
-        `Revote tied. Mayor's vote decided the outcome.`,
-        localizedMessage('server.logs.revoteTieMayor'),
-        localizedMessage('server.logs.revoteTieMayor')
-      );
-      resolveDayKill(room, mayorVote, broadcastRoom, io);
-      return true;
-    }
+    // On revote tie, pick a random tied candidate.
     const randomPick = tied[Math.floor(Math.random() * tied.length)];
     if (!randomPick) return true;
     const randomPlayer = room.players[randomPick];
@@ -143,9 +142,43 @@ function tryResolveDayVote(
         : localizedMessage('server.logs.voteTiedRandomFallback')
     );
     resolveDayKill(room, randomPick, broadcastRoom, io);
-  } else {
-    resolveDayKill(room, top[0], broadcastRoom, io);
+    return true;
   }
+  // Single leader after the tie / mayor handling above (or never tied).
+  // Require a simple majority of all living players when the full vote
+  // tally is in; on an early host-forced resolution (allowEarly) the
+  // threshold is waived so a host can still push a small lead through.
+  // This prevents a 1-1-1 split (e.g. three votes across six alive) from
+  // eliminating one of the tied candidates just because they happened to
+  // be sorted first.
+  if (!allowEarly) {
+    const majorityThreshold = Math.floor(alivePlayers.length / 2) + 1;
+    if (newTop[1] < majorityThreshold) {
+      addLog(
+        room,
+        'Vote skipped. No one eliminated.',
+        'Vote skipped. No one eliminated.',
+        localizedMessage('server.logs.voteSkipped'),
+        localizedMessage('server.logs.voteSkipped')
+      );
+      room.lastDayDeaths = [];
+      room.lastDayMessage = 'No one was eliminated.';
+      room.lastDayMessageI18n = localizedMessage('server.dayResults.noElimination');
+      room.dayVoteResolved = true;
+      broadcastRoom(room);
+      return true;
+    }
+  }
+  if (mayorDoubled) {
+    addLog(
+      room,
+      `Vote tied. Mayor's vote counted double and decided the outcome.`,
+      `Vote tied. Mayor's vote counted double and decided the outcome.`,
+      localizedMessage('server.logs.voteTieMayorDouble'),
+      localizedMessage('server.logs.voteTieMayorDouble')
+    );
+  }
+  resolveDayKill(room, newTop[0], broadcastRoom, io);
   return true;
 }
 
