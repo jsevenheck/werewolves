@@ -98,10 +98,9 @@ loop:
       send each player role; wolves get list of other wolves (private UI fields)
       require each player to mark ready
       host continues once all connected players are ready
-      note: player role tags are only shown on the cards for the viewer's own
-        role and once the game ends (phase='ended') — dead players' roles are NOT
-        revealed on the cards mid-game, so dead spectators follow the game via the
-        event log (night-action `deadOnly` logs) instead of spoiled card tags.
+      note: player role tags are shown on the cards for the viewer's own role,
+        for players who are already dead, and for everyone once the game ends
+        (phase='ended'). Living players' roles remain hidden during the game.
       if passiveRoleConfig.mayor -> go phase=mayor
       else -> go phase=armor if armor alive else startNight (phase=night, step='wolves')
     mayor:
@@ -191,7 +190,8 @@ loop:
         if mayor voted for a tied candidate: mayor's vote counts double
         else choose random among tied players
       simple majority required: the leading candidate must hold more than
-        half of the votes that counted toward resolution; otherwise the
+        half of the non-abstaining votes that counted toward resolution;
+        explicit abstentions do not count toward either side. Otherwise the
         day is skipped (no elimination, no revote). Host-forced early
         resolution (allowEarly) waives the simple-majority threshold so a
         host can still push a small lead through.

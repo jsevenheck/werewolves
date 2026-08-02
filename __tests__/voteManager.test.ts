@@ -149,6 +149,24 @@ describe('voteManager', () => {
     expect(room.lastDayMessage).toBe('No one was eliminated.');
   });
 
+  test('tryResolveDayVote counts abstentions out of the majority denominator', () => {
+    const players = {
+      wolf: buildPlayer({ id: 'wolf', alive: true, role: 'werewolf', team: 'wolves' }),
+      a: buildPlayer({ id: 'a', alive: true }),
+      b: buildPlayer({ id: 'b', alive: true }),
+      c: buildPlayer({ id: 'c', alive: true }),
+    };
+    const room = makeRoom(players);
+    room.voteState.votes = { wolf: 'a', a: 'a', b: 'b', c: null };
+    const broadcastRoom = vi.fn();
+
+    tryResolveDayVote(room, broadcastRoom, undefined as never);
+
+    expect(room.players.a.alive).toBe(false);
+    expect(room.lastDayDeaths).toEqual([{ name: 'Player', role: 'villager' }]);
+    expect(room.dayVoteResolved).toBe(true);
+  });
+
   test('tryResolveDayVote counts disconnected players as abstain after others vote', () => {
     const players = {
       a: buildPlayer({ id: 'a', alive: true, connected: true }),
