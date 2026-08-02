@@ -175,7 +175,7 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
     alive: player.alive,
     connected: player.connected,
     isHost: player.id === room.hostId,
-    role: player.id === viewerId || gameEnded ? player.role : null,
+    role: player.id === viewerId || !player.alive || gameEnded ? player.role : null,
     ...(room.phase === 'roleReveal' ? { ready: player.ready } : {}),
   }));
   const viewerAlive = viewer ? viewer.alive : false;

@@ -33,6 +33,7 @@ function tryResolveDayVote(
   const votes = Object.values(room.voteState.votes);
   const effectiveVotes = allowEarly ? votes.filter((value) => value !== undefined) : votes;
   const abstainCount = effectiveVotes.filter((value) => value === null).length;
+  const countedVotes = effectiveVotes.filter((value) => value !== null && value !== undefined);
   effectiveVotes.forEach((targetId) => {
     if (!targetId) return;
     tallies[targetId] = (tallies[targetId] || 0) + 1;
@@ -145,14 +146,14 @@ function tryResolveDayVote(
     return true;
   }
   // Single leader after the tie / mayor handling above (or never tied).
-  // Require a simple majority of all living players when the full vote
-  // tally is in; on an early host-forced resolution (allowEarly) the
+  // Require a simple majority of the non-abstaining votes when the full
+  // vote tally is in; explicit abstentions do not count toward either side
+  // of that majority. On an early host-forced resolution (allowEarly) the
   // threshold is waived so a host can still push a small lead through.
-  // This prevents a 1-1-1 split (e.g. three votes across six alive) from
-  // eliminating one of the tied candidates just because they happened to
-  // be sorted first.
+  // A 2-1-1 result therefore eliminates the 2-vote leader: two of the
+  // three counted votes form a simple majority.
   if (!allowEarly) {
-    const majorityThreshold = Math.floor(alivePlayers.length / 2) + 1;
+    const majorityThreshold = Math.floor(countedVotes.length / 2) + 1;
     if (newTop[1] < majorityThreshold) {
       addLog(
         room,

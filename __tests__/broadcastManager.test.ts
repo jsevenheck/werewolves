@@ -148,7 +148,7 @@ describe('broadcastManager', () => {
     expect(aliveView.logs.map((l) => l.text)).toContain('Public death');
   });
 
-  test('player role tags are hidden while dead and revealed only at game end', () => {
+  test('player role tags are revealed for dead players before game end', () => {
     const room = makeRoom();
     room.phase = 'day';
     room.players = {
@@ -156,12 +156,12 @@ describe('broadcastManager', () => {
       p2: buildPlayer({ id: 'p2', name: 'Bob', role: 'werewolf', team: 'wolves', alive: false }),
     };
 
-    // Alive viewer does not see the dead player's role on the card mid-game.
+    // Alive viewers see the dead player's role on the card mid-game.
     const aliveView = sanitizeRoom(room, 'p1');
     const aliveBob = aliveView.players.find((p) => p.id === 'p2');
-    expect(aliveBob?.role).toBeNull();
+    expect(aliveBob?.role).toBe('werewolf');
 
-    // Dead viewer also does not see other dead players' roles mid-game.
+    // Living players' roles remain hidden mid-game.
     const deadView = sanitizeRoom(room, 'p2');
     const deadAlice = deadView.players.find((p) => p.id === 'p1');
     expect(deadAlice?.role).toBeNull();
