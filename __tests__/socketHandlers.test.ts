@@ -1862,6 +1862,28 @@ describe('socketHandlers mechanics guards', () => {
     expect(broadcastRoom).not.toHaveBeenCalled();
   });
 
+  test('day votes reject voting for oneself', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'day',
+      phaseStep: null,
+      players: {
+        p1: { id: 'p1', role: 'villager', alive: true, socketId: 'socket-1' },
+        p2: { id: 'p2', role: 'villager', alive: true },
+      },
+      voteState: { votes: {}, revoteFromTie: null },
+    } as unknown as Room;
+    (getRoom as Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.submitDayVote({ roomCode: 'ABCD', playerId: 'p1', targetId: 'p1' });
+
+    expect(room.voteState.votes.p1).toBeUndefined();
+    expect(broadcastRoom).not.toHaveBeenCalled();
+  });
+
   test('host can finalize day vote early', () => {
     const room = {
       code: 'ABCD',

@@ -734,8 +734,8 @@ function setupSocketHandlers(
     if (player.socketId !== socket.id) return;
     if (room.voteState.votes[playerId] !== undefined) return;
     // Require explicit selection: targetId must be provided (string for player, null for abstain)
-    // Reject undefined or an empty string which indicate no selection was made
-    if (targetId === undefined || targetId === '') return;
+    // Reject undefined, an empty string, or the voter's own id; null is the explicit abstention.
+    if (targetId === undefined || targetId === '' || targetId === playerId) return;
     if (
       room.voteState.revoteFromTie &&
       targetId &&

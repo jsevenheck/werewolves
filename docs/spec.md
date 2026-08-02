@@ -175,7 +175,8 @@ loop:
         host clicks 'Proceed to Night' to trigger dayToNight transition
     day:
       announce deaths to all
-      collect votes from alive players
+      collect votes from alive players; a player cannot vote for themselves
+      a player may explicitly abstain
       a configurable `discussionTimerSeconds` countdown runs first (default 60s);
         day voting (`submitDayVote` / `hostFinalizeDayVote`) is rejected until it
         elapses, so players can discuss before anyone votes. 0 disables the lock.
