@@ -212,6 +212,57 @@ describe('socketHandlers resumePlayer socket handoff', () => {
   });
 });
 
+describe('socketHandlers resumePlayer validation', () => {
+  const io = { sockets: { get: () => undefined } } as unknown as any;
+
+  afterEach(() => {
+    vi.useRealTimers();
+    deleteSocketIndex('socket-resume-old');
+    deleteSocketIndex('socket-resume-attacker');
+  });
+
+  test('invalid resume cannot cancel another player disconnect grace timer', () => {
+    vi.useFakeTimers();
+    const room = {
+      code: 'ABCD',
+      players: {
+        p1: {
+          id: 'p1',
+          name: 'Player',
+          role: 'villager',
+          alive: true,
+          connected: true,
+          socketId: 'socket-resume-old',
+          resumeToken: 'correct-token',
+        },
+      },
+      logs: [],
+    } as unknown as Room;
+    (getRoom as Mock).mockReturnValue(room);
+
+    const oldSocket = makeSocket();
+    oldSocket.socket.id = 'socket-resume-old';
+    setSocketIndex(oldSocket.socket.id, room.code, 'p1');
+    setupSocketHandlers(io, oldSocket.socket as any);
+    oldSocket.handlers.disconnect();
+
+    const attacker = makeSocket();
+    attacker.socket.id = 'socket-resume-attacker';
+    setupSocketHandlers(io, attacker.socket as any);
+    const cb = vi.fn();
+    attacker.handlers.resumePlayer(
+      { roomCode: 'WRONG', playerId: 'p1', name: 'Attacker', resumeToken: 'wrong-token' },
+      cb
+    );
+
+    vi.advanceTimersByTime(5000);
+
+    expect(cb).toHaveBeenCalledWith(expect.objectContaining({ error: expect.any(String) }));
+    expect(room.players.p1.connected).toBe(false);
+    expect(room.players.p1.socketId).toBeNull();
+  });
+});
+
 describe('socketHandlers room entry and state events', () => {
   const io = { sockets: { sockets: new Map() } } as unknown as any;
 
@@ -242,6 +293,52 @@ describe('socketHandlers room entry and state events', () => {
     });
     expect(getSocketIndex('socket-1')).toEqual({ roomCode: 'WOLF', playerId: 'host-1' });
     expect(broadcastRoom).toHaveBeenCalledWith(room, io);
+  });
+
+  test('invalid createRoom does not detach the existing player session', () => {
+    const oldRoom = {
+      code: 'OLD1',
+      phase: 'lobby',
+      hostId: 'p1',
+      players: {
+        p1: { id: 'p1', socketId: 'socket-1', connected: true, isHost: true },
+      },
+      logs: [],
+    } as unknown as Room;
+    (getRoom as Mock).mockImplementation((code: string) => (code === 'OLD1' ? oldRoom : undefined));
+    setSocketIndex('socket-1', oldRoom.code, 'p1');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+    const cb = vi.fn();
+
+    handlers.createRoom({ name: '   ' }, cb);
+
+    expect(cb).toHaveBeenCalledWith(expect.objectContaining({ error: expect.any(String) }));
+    expect(oldRoom.players.p1.connected).toBe(true);
+    expect(getSocketIndex('socket-1')).toEqual({ roomCode: 'OLD1', playerId: 'p1' });
+  });
+
+  test('invalid joinRoom does not detach the existing player session', () => {
+    const oldRoom = {
+      code: 'OLD1',
+      phase: 'lobby',
+      hostId: 'p1',
+      players: {
+        p1: { id: 'p1', socketId: 'socket-1', connected: true, isHost: true },
+      },
+      logs: [],
+    } as unknown as Room;
+    (getRoom as Mock).mockImplementation((code: string) => (code === 'OLD1' ? oldRoom : undefined));
+    setSocketIndex('socket-1', oldRoom.code, 'p1');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+    const cb = vi.fn();
+
+    handlers.joinRoom({ name: 'New Player', code: 'MISSING' }, cb);
+
+    expect(cb).toHaveBeenCalledWith(expect.objectContaining({ error: expect.any(String) }));
+    expect(oldRoom.players.p1.connected).toBe(true);
+    expect(getSocketIndex('socket-1')).toEqual({ roomCode: 'OLD1', playerId: 'p1' });
   });
 
   test('joinRoom adds a player in lobby rooms', () => {
@@ -427,7 +524,50 @@ describe('socketHandlers room entry and state events', () => {
     expect(room.hunterShotEndsAt).toBeNull();
     expect(startNextHunterShot).toHaveBeenCalledWith(room, expect.any(Function), io);
     expect(startNextMayorSelection).toHaveBeenCalledWith(room, expect.any(Function), io);
+    expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'nightToDay', expect.any(Function));
     clearTimeout(timer);
+  });
+
+  test('leaveRoom resumes day after pending mayor selection leaves', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'day',
+      phaseStep: null,
+      phaseTransition: null,
+      players: {
+        host: { id: 'host', name: 'Host', socketId: 'socket-host', connected: true, isHost: true },
+        p1: {
+          id: 'p1',
+          name: 'Mayor',
+          role: 'villager',
+          socketId: 'socket-1',
+          connected: true,
+          alive: false,
+        },
+      },
+      mayorId: 'p1',
+      awaitingHunterShot: null,
+      awaitingMayorSelection: 'p1',
+      mayorSelectionTimer: setTimeout(() => undefined, 60000),
+      hunterShotQueue: [],
+      mayorSelectionQueue: [],
+      wolfVotes: {},
+      voteState: { votes: {}, revoteFromTie: null },
+      logs: [],
+      winner: null,
+    } as unknown as Room;
+    (getRoom as Mock).mockReturnValue(room);
+    (startNextHunterShot as Mock).mockReturnValue(false);
+    (startNextMayorSelection as Mock).mockReturnValue(false);
+    setSocketIndex('socket-1', room.code, 'p1');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, vi.fn());
+
+    expect(room.dayVoteResolved).toBe(true);
+    expect(holdDayToNightTransition).toHaveBeenCalledWith(room, expect.any(Function));
   });
 
   test('leaveRoom returns early in lobby phase', () => {
@@ -1697,6 +1837,28 @@ describe('socketHandlers mechanics guards', () => {
     handlers.submitDayVote({ roomCode: 'ABCD', playerId: 'p1', targetId: null });
 
     expect(room.voteState.votes.p1).toBe('p2');
+    expect(broadcastRoom).not.toHaveBeenCalled();
+  });
+
+  test('day votes reject an empty target instead of recording an invalid vote', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'day',
+      phaseStep: null,
+      players: {
+        p1: { id: 'p1', role: 'villager', alive: true, socketId: 'socket-1' },
+        p2: { id: 'p2', role: 'villager', alive: true },
+      },
+      voteState: { votes: {}, revoteFromTie: null },
+    } as unknown as Room;
+    (getRoom as Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.submitDayVote({ roomCode: 'ABCD', playerId: 'p1', targetId: '' });
+
+    expect(room.voteState.votes.p1).toBeUndefined();
     expect(broadcastRoom).not.toHaveBeenCalled();
   });
 

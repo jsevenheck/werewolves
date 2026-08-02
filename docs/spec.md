@@ -311,14 +311,16 @@ onPlayerLeave(playerId):
     - if night phase and all remaining wolves have voted -> finalize wolf vote
     - if night phase and active step belongs to departed player (seer/witch/guard/harlot) -> advance to next night step
     - if day phase and all remaining alive players have voted -> resolve day vote
-    - if departed player was awaiting hunter shot -> clear timer/prompt and process next queued hunter or resume flow
-    - if departed player was awaiting mayor succession -> clear timer/prompt and continue mayor/hunter queue flow
+    - if departed player was awaiting hunter shot -> clear timer/prompt and process next queued hunter or resume the current phase when no prompt remains
+    - if departed player was awaiting mayor succession -> clear timer/prompt and continue the mayor/hunter queue, or resume the current phase when no prompt remains
       (random mayor auto-selection only happens on mayor-selection timeout)
     - check win conditions after all cleanup
   if room becomes empty -> stop resolution and broadcast (room lifecycle cleanup handles eventual deletion)
 
 onPlayerResume(roomCode, playerId, resumeToken):
-  if resumeToken missing or mismatched -> reject
+  validate room, player, and resumeToken before changing socket or disconnect state
+  only a validated resume may cancel the 5-second disconnect grace timer
+  if resumeToken missing or mismatched -> reject without detaching the current session
   mark connected=true
   if player is original host -> set acting host back to owner
 

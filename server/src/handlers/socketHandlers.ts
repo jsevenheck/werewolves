@@ -135,9 +135,9 @@ function setupSocketHandlers(
   socket: Socket<ClientToServerEvents, ServerToClientEvents>
 ) {
   socket.on('createRoom', ({ name }, cb) => {
-    detachSocketFromRoom(io, socket.id, 'left the room');
     const cleanName = sanitizeName(name);
     if (!cleanName) return cb?.(errorResponse('Name required', 'server.errors.nameRequired'));
+    detachSocketFromRoom(io, socket.id, 'left the room');
     const { room, player } = createRoom(cleanName, socket.id, createPlayer);
     setSocketIndex(socket.id, room.code, player.id);
     cb?.({ roomCode: room.code, playerId: player.id, resumeToken: player.resumeToken });
@@ -145,7 +145,6 @@ function setupSocketHandlers(
   });
 
   socket.on('joinRoom', ({ name, code }, cb) => {
-    detachSocketFromRoom(io, socket.id, 'left the room');
     const cleanName = sanitizeName(name);
     if (!cleanName) return cb?.(errorResponse('Name required', 'server.errors.nameRequired'));
     const room = getRoom(code?.toUpperCase());
@@ -158,6 +157,7 @@ function setupSocketHandlers(
     if (nameExists) {
       return cb?.(errorResponse('Name already taken', 'server.errors.nameAlreadyTaken'));
     }
+    detachSocketFromRoom(io, socket.id, 'left the room');
     const player = createPlayer(cleanName, socket.id, false);
     room.players[player.id] = player;
     setSocketIndex(socket.id, room.code, player.id);
@@ -167,12 +167,6 @@ function setupSocketHandlers(
   });
 
   socket.on('resumePlayer', ({ roomCode, playerId, resumeToken }, cb) => {
-    // Cancel any pending disconnect grace timer for this player.
-    cancelPendingDisconnect(playerId);
-    const existingRef = getSocketIndex(socket.id);
-    if (existingRef && (existingRef.roomCode !== roomCode || existingRef.playerId !== playerId)) {
-      detachSocketFromRoom(io, socket.id, 'left the room');
-    }
     const room = getRoom(roomCode);
     if (!room) return cb?.(errorResponse('Room not found', 'server.errors.roomNotFound'));
     const player = room.players[playerId];
@@ -182,6 +176,13 @@ function setupSocketHandlers(
     }
     if (!resumeToken || resumeToken !== player.resumeToken) {
       return cb?.(errorResponse('Invalid session', 'server.errors.invalidSession'));
+    }
+
+    // Only a validated resume may cancel the disconnect grace timer.
+    cancelPendingDisconnect(playerId);
+    const existingRef = getSocketIndex(socket.id);
+    if (existingRef && (existingRef.roomCode !== roomCode || existingRef.playerId !== playerId)) {
+      detachSocketFromRoom(io, socket.id, 'left the room');
     }
     if (player.socketId && player.socketId !== socket.id) {
       const previousSocketId = player.socketId;
@@ -733,8 +734,8 @@ function setupSocketHandlers(
     if (player.socketId !== socket.id) return;
     if (room.voteState.votes[playerId] !== undefined) return;
     // Require explicit selection: targetId must be provided (string for player, null for abstain)
-    // Reject undefined which indicates no selection was made
-    if (targetId === undefined) return;
+    // Reject undefined or an empty string which indicate no selection was made
+    if (targetId === undefined || targetId === '') return;
     if (
       room.voteState.revoteFromTie &&
       targetId &&
@@ -970,6 +971,8 @@ function setupSocketHandlers(
     updateHostIfNeeded(room);
 
     // --- Game flow continuation after player removal ---
+    let clearedPendingPlayerAction = false;
+
     // If the game hasn't started yet or already ended, just broadcast
     if (room.phase === 'lobby' || room.phase === 'ended') {
       broadcastRoom(room, io);
@@ -988,6 +991,7 @@ function setupSocketHandlers(
 
     // Clear timers for awaiting actions that belonged to this player
     if (room.awaitingHunterShot === playerId) {
+      clearedPendingPlayerAction = true;
       room.awaitingHunterShot = null;
       if (room.hunterShotTimer) {
         clearTimeout(room.hunterShotTimer);
@@ -1002,6 +1006,7 @@ function setupSocketHandlers(
       }
     }
     if (room.awaitingMayorSelection === playerId) {
+      clearedPendingPlayerAction = true;
       room.awaitingMayorSelection = null;
       if (room.mayorSelectionTimer) {
         clearTimeout(room.mayorSelectionTimer);
@@ -1022,6 +1027,17 @@ function setupSocketHandlers(
       broadcastRoom(room, io);
       cb?.({ ok: true });
       return;
+    }
+
+    // If a dead player was the final pending hunter/mayor prompt and no queued
+    // prompt replaced it, continue the phase just like a completed prompt.
+    if (clearedPendingPlayerAction && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
+      if (room.phase === 'day') {
+        room.dayVoteResolved = true;
+        holdDayToNightTransition(room, (r) => broadcastRoom(r, io));
+      } else if (room.phase === 'night') {
+        schedulePhaseTransition(room, 'nightToDay', (r) => broadcastRoom(r, io));
+      }
     }
 
     // Continue game flow based on current phase if the departed player was alive
