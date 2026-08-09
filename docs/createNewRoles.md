@@ -112,7 +112,11 @@ In addition to the "Minimal Path":
    - `ui-vue/src/stores/game.ts`: add any local pending state if needed.
    - `ui-vue/src/App.vue`: handle new phases/transitions in rendering.
 4. Audio (optional):
-   - Add narrator files for new steps or phases in `ui-vue/public/audio/` (see `ui-vue/public/audio/README.md`).
+   - Add matching bundled narrator files to `ui-vue/src/assets/audio/en/` and
+     `ui-vue/src/assets/audio/de/`, register the cue in
+     `ACTIVE_NARRATION_KEYS`, and add the reviewed German script to
+     `ui-vue/src/assets/audio/scripts.de.json`. Runtime-only custom overrides
+     belong in `ui-vue/public/audio/` (see its `README.md`).
 
 ## Example 1: Passive Role "Elder"
 
@@ -172,7 +176,8 @@ Goal: the Guard picks a player at night to protect from wolves for that night.
    - `ui-vue/src/components/NightPhase.vue`: render the Guard selection form on the `guard` step.
    - `ui-vue/src/components/NightPhase.vue`: emit `submitGuard`.
 7. Audio (optional)
-   - Add `ui-vue/public/audio/night_guard.mp3`.
+   - Add matching bundled `night_guard.mp3` files under
+     `ui-vue/src/assets/audio/en/` and `de/`, plus the reviewed German script.
 8. Tests
    - Update `__tests__/nightManager.test.ts`, `__tests__/phaseManager.test.ts`, `__tests__/socketHandlers.test.ts`.
 

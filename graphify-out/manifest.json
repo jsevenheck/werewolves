@@ -30,13 +30,13 @@
     "semantic_hash": ""
   },
   "__tests__/mocks/howler.ts": {
-    "mtime": 1781777606.940705,
-    "ast_hash": "81d3843af2bdc3a035476423f810a91a",
+    "mtime": 1786316045.4629688,
+    "ast_hash": "3d55ef70b17bb7f3132ef5161e6ff15d",
     "semantic_hash": ""
   },
   "__tests__/narrator.test.ts": {
-    "mtime": 1786314367.3334527,
-    "ast_hash": "b16766155dc0d83dab747b3dc0a9142b",
+    "mtime": 1786316444.5171115,
+    "ast_hash": "5013cc9649ed08dcaf811b2963d33ec2",
     "semantic_hash": ""
   },
   "__tests__/narrator.vue.test.ts": {
@@ -395,8 +395,8 @@
     "semantic_hash": ""
   },
   "ui-vue/src/composables/useNarrator.ts": {
-    "mtime": 1783451161.8755937,
-    "ast_hash": "d6cd756731496ab473a42a639416f50e",
+    "mtime": 1786316669.7469008,
+    "ast_hash": "6d068d42d76b7c6b4c960d464158d919",
     "semantic_hash": ""
   },
   "ui-vue/src/composables/useSocket.ts": {
@@ -430,8 +430,8 @@
     "semantic_hash": ""
   },
   "ui-vue/src/utils/narrator.ts": {
-    "mtime": 1786314379.267549,
-    "ast_hash": "11fcb07f772e4fd9b1af2cf8d3eb54b6",
+    "mtime": 1786316410.9208455,
+    "ast_hash": "75138b8c45dbc550f3917faf402ff8ca",
     "semantic_hash": ""
   },
   "ui-vue/src/utils/roleDetails.ts": {

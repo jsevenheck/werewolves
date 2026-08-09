@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 
-type HowlEvent = 'play' | 'playerror' | 'load' | 'loaderror';
+type HowlEvent = 'play' | 'playerror' | 'load' | 'loaderror' | 'end';
 
 class MockHowl {
   static instances: MockHowl[] = [];

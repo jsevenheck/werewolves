@@ -153,8 +153,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_deathreasoncontract_test",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 13,
+      "community_name": "deathReasonContract.test.ts",
       "norm_label": "deathreasoncontract.test.ts"
     },
     {
@@ -164,8 +164,8 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "tests_deathreasoncontract_test_flattenkeys",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 13,
+      "community_name": "deathReasonContract.test.ts",
       "norm_label": "flattenkeys()"
     },
     {
@@ -175,8 +175,8 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "tests_deathreasoncontract_test_readserversources",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 13,
+      "community_name": "deathReasonContract.test.ts",
       "norm_label": "readserversources()"
     },
     {
@@ -186,8 +186,8 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "tests_deathreasoncontract_test_extractqueuedeathreasons",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 13,
+      "community_name": "deathReasonContract.test.ts",
       "norm_label": "extractqueuedeathreasons()"
     },
     {
@@ -230,8 +230,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_i18ncontract_test",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 13,
+      "community_name": "deathReasonContract.test.ts",
       "norm_label": "i18ncontract.test.ts"
     },
     {
@@ -241,8 +241,8 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "tests_i18ncontract_test_flattenkeys",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 13,
+      "community_name": "deathReasonContract.test.ts",
       "norm_label": "flattenkeys()"
     },
     {
@@ -252,8 +252,8 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "tests_i18ncontract_test_readserversources",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 13,
+      "community_name": "deathReasonContract.test.ts",
       "norm_label": "readserversources()"
     },
     {
@@ -263,8 +263,8 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "tests_i18ncontract_test_extractservermessagekeys",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 13,
+      "community_name": "deathReasonContract.test.ts",
       "norm_label": "extractservermessagekeys()"
     },
     {
@@ -274,8 +274,8 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "tests_i18ncontract_test_extractcalls",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 13,
+      "community_name": "deathReasonContract.test.ts",
       "norm_label": "extractcalls()"
     },
     {
@@ -329,8 +329,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_mocks_howler",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 32,
+      "community_name": "MockHowl",
       "norm_label": "howler.ts"
     },
     {
@@ -340,8 +340,8 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "tests_mocks_howler_howlevent",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 32,
+      "community_name": "MockHowl",
       "norm_label": "howlevent"
     },
     {
@@ -351,8 +351,8 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "tests_mocks_howler_mockhowl",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 32,
+      "community_name": "MockHowl",
       "norm_label": "mockhowl"
     },
     {
@@ -362,8 +362,8 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "tests_mocks_howler_mockhowl_reset",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 32,
+      "community_name": "MockHowl",
       "norm_label": ".reset()"
     },
     {
@@ -373,8 +373,8 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "tests_mocks_howler_mockhowl_constructor",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 32,
+      "community_name": "MockHowl",
       "norm_label": ".constructor()"
     },
     {
@@ -384,8 +384,8 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "tests_mocks_howler_mockhowl_once",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 32,
+      "community_name": "MockHowl",
       "norm_label": ".once()"
     },
     {
@@ -395,8 +395,8 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "tests_mocks_howler_mockhowl_trigger",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 32,
+      "community_name": "MockHowl",
       "norm_label": ".trigger()"
     },
     {
@@ -825,8 +825,8 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "core_src_types_team",
-      "community": 48,
-      "community_name": "Community 48",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "team"
     },
     {
@@ -836,8 +836,8 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "core_src_types_phase",
-      "community": 48,
-      "community_name": "Community 48",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "phase"
     },
     {
@@ -847,8 +847,8 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "core_src_types_nightstep",
-      "community": 48,
-      "community_name": "Community 48",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "nightstep"
     },
     {
@@ -1100,8 +1100,8 @@
       "source_location": "L245",
       "_origin": "ast",
       "id": "core_src_types_storedsession",
-      "community": 30,
-      "community_name": "Community 30",
+      "community": 55,
+      "community_name": "Community 55",
       "norm_label": "storedsession"
     },
     {
@@ -5709,8 +5709,8 @@
       "source_location": "L192",
       "_origin": "ast",
       "id": "ui_vue_src_app_onroomclosed",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 3,
+      "community_name": "Community 3",
       "norm_label": "onroomclosed()"
     },
     {
@@ -5731,8 +5731,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_vue_src_assets_audio_manifest",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 19,
+      "community_name": "Community 19",
       "norm_label": "manifest.ts"
     },
     {
@@ -5742,8 +5742,8 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "ui_vue_src_assets_audio_manifest_en_audio_modules",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 19,
+      "community_name": "Community 19",
       "norm_label": "en_audio_modules"
     },
     {
@@ -5753,8 +5753,8 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "ui_vue_src_assets_audio_manifest_de_audio_modules",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 19,
+      "community_name": "Community 19",
       "norm_label": "de_audio_modules"
     },
     {
@@ -5764,8 +5764,8 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "ui_vue_src_assets_audio_manifest_globtomap",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 19,
+      "community_name": "Community 19",
       "norm_label": "globtomap()"
     },
     {
@@ -5775,8 +5775,8 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "ui_vue_src_assets_audio_manifest_bundled_audio",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 19,
+      "community_name": "Community 19",
       "norm_label": "__bundled_audio__"
     },
     {
@@ -6039,8 +6039,8 @@
       "source_location": "L195",
       "_origin": "ast",
       "id": "ui_vue_src_components_adminpage_joinasobserver",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 3,
+      "community_name": "Community 3",
       "norm_label": "joinasobserver()"
     },
     {
@@ -6545,8 +6545,8 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "ui_vue_src_components_dayphase_submitvote",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 3,
+      "community_name": "Community 3",
       "norm_label": "submitvote()"
     },
     {
@@ -7128,8 +7128,8 @@
       "source_location": "L123",
       "_origin": "ast",
       "id": "ui_vue_src_components_lobby_startgame",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 3,
+      "community_name": "Community 3",
       "norm_label": "startgame()"
     },
     {
@@ -7843,8 +7843,8 @@
       "source_location": "L145",
       "_origin": "ast",
       "id": "ui_vue_src_components_nightphase_submitseerinspect",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 3,
+      "community_name": "Community 3",
       "norm_label": "submitseerinspect()"
     },
     {
@@ -7887,8 +7887,8 @@
       "source_location": "L194",
       "_origin": "ast",
       "id": "ui_vue_src_components_nightphase_submitguardprotection",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 3,
+      "community_name": "Community 3",
       "norm_label": "submitguardprotection()"
     },
     {
@@ -7898,8 +7898,8 @@
       "source_location": "L211",
       "_origin": "ast",
       "id": "ui_vue_src_components_nightphase_submitharlotvisit",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 3,
+      "community_name": "Community 3",
       "norm_label": "submitharlotvisit()"
     },
     {
@@ -8492,8 +8492,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_vue_src_components_overlays_seerresultoverlay",
-      "community": 48,
-      "community_name": "Community 48",
+      "community": 39,
+      "community_name": "Community 39",
       "norm_label": "seerresultoverlay.vue"
     },
     {
@@ -8503,8 +8503,8 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "ui_vue_src_components_overlays_seerresultoverlay_props",
-      "community": 48,
-      "community_name": "Community 48",
+      "community": 39,
+      "community_name": "Community 39",
       "norm_label": "props"
     },
     {
@@ -8514,8 +8514,8 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "ui_vue_src_components_overlays_seerresultoverlay_emit",
-      "community": 48,
-      "community_name": "Community 48",
+      "community": 39,
+      "community_name": "Community 39",
       "norm_label": "emit"
     },
     {
@@ -8525,8 +8525,8 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "ui_vue_src_components_overlays_seerresultoverlay_t_seerresultlabel",
-      "community": 48,
-      "community_name": "Community 48",
+      "community": 39,
+      "community_name": "Community 39",
       "norm_label": "{ t, seerresultlabel }"
     },
     {
@@ -8536,8 +8536,8 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "ui_vue_src_components_overlays_seerresultoverlay_store",
-      "community": 48,
-      "community_name": "Community 48",
+      "community": 39,
+      "community_name": "Community 39",
       "norm_label": "store"
     },
     {
@@ -8547,8 +8547,8 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "ui_vue_src_components_overlays_seerresultoverlay_room_playerid",
-      "community": 48,
-      "community_name": "Community 48",
+      "community": 39,
+      "community_name": "Community 39",
       "norm_label": "{ room, playerid }"
     },
     {
@@ -8558,8 +8558,8 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "ui_vue_src_components_overlays_seerresultoverlay_dismiss",
-      "community": 48,
-      "community_name": "Community 48",
+      "community": 39,
+      "community_name": "Community 39",
       "norm_label": "dismiss()"
     },
     {
@@ -8569,8 +8569,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_vue_src_components_panels_header",
-      "community": 19,
-      "community_name": "Community 19",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "header.vue"
     },
     {
@@ -8580,8 +8580,8 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "ui_vue_src_components_panels_header_props",
-      "community": 19,
-      "community_name": "Community 19",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "props"
     },
     {
@@ -8591,8 +8591,8 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "ui_vue_src_components_panels_header_store",
-      "community": 19,
-      "community_name": "Community 19",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "store"
     },
     {
@@ -8602,8 +8602,8 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "ui_vue_src_components_panels_header_room_playername_rolevisible",
-      "community": 19,
-      "community_name": "Community 19",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "{ room, playername, rolevisible }"
     },
     {
@@ -8613,8 +8613,8 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "ui_vue_src_components_panels_header_t_rolename_roledescription_seerresultlabel_formatroomphase",
-      "community": 19,
-      "community_name": "Community 19",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "{ t, rolename, roledescription, seerresultlabel, formatroomphase }"
     },
     {
@@ -8624,8 +8624,8 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "ui_vue_src_components_panels_header_self",
-      "community": 19,
-      "community_name": "Community 19",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "self"
     },
     {
@@ -8635,8 +8635,8 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "ui_vue_src_components_panels_header_detail",
-      "community": 19,
-      "community_name": "Community 19",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "detail"
     },
     {
@@ -8646,8 +8646,8 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "ui_vue_src_components_panels_header_seerresult",
-      "community": 19,
-      "community_name": "Community 19",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "seerresult"
     },
     {
@@ -8657,8 +8657,8 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "ui_vue_src_components_panels_header_phasetext",
-      "community": 19,
-      "community_name": "Community 19",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "phasetext"
     },
     {
@@ -8668,8 +8668,8 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "ui_vue_src_components_panels_header_narratorlabel",
-      "community": 19,
-      "community_name": "Community 19",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "narratorlabel"
     },
     {
@@ -8679,8 +8679,8 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "ui_vue_src_components_panels_header_togglerole",
-      "community": 19,
-      "community_name": "Community 19",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "togglerole()"
     },
     {
@@ -8690,8 +8690,8 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "ui_vue_src_components_panels_header_leaveroom",
-      "community": 19,
-      "community_name": "Community 19",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "leaveroom()"
     },
     {
@@ -8833,8 +8833,8 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "ui_vue_src_components_panels_hostcontrolpanel_toggle",
-      "community": 30,
-      "community_name": "Community 30",
+      "community": 39,
+      "community_name": "Community 39",
       "norm_label": "toggle()"
     },
     {
@@ -9108,8 +9108,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_vue_src_components_settings_languageswitcher",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 19,
+      "community_name": "Community 19",
       "norm_label": "languageswitcher.vue"
     },
     {
@@ -9119,8 +9119,8 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "ui_vue_src_components_settings_languageswitcher_t",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 19,
+      "community_name": "Community 19",
       "norm_label": "{ t }"
     },
     {
@@ -9130,8 +9130,8 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "ui_vue_src_components_settings_languageswitcher_options",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 19,
+      "community_name": "Community 19",
       "norm_label": "options"
     },
     {
@@ -9141,8 +9141,8 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "ui_vue_src_components_settings_languageswitcher_selectedlocale",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 19,
+      "community_name": "Community 19",
       "norm_label": "selectedlocale"
     },
     {
@@ -9185,8 +9185,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_vue_src_composables_usegamei18n",
-      "community": 48,
-      "community_name": "Community 48",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "usegamei18n.ts"
     },
     {
@@ -9196,8 +9196,8 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "ui_vue_src_composables_usegamei18n_death_reason_keys",
-      "community": 48,
-      "community_name": "Community 48",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "death_reason_keys"
     },
     {
@@ -9207,8 +9207,8 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "ui_vue_src_composables_usegamei18n_deathreasonkey",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 13,
+      "community_name": "deathReasonContract.test.ts",
       "norm_label": "deathreasonkey()"
     },
     {
@@ -9218,8 +9218,8 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "ui_vue_src_composables_usegamei18n_server_death_reasons",
-      "community": 48,
-      "community_name": "Community 48",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "server_death_reasons"
     },
     {
@@ -9229,8 +9229,8 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "ui_vue_src_composables_usegamei18n_iswerewolfresult",
-      "community": 48,
-      "community_name": "Community 48",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "iswerewolfresult()"
     },
     {
@@ -9240,8 +9240,8 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "ui_vue_src_composables_usegamei18n_usegamei18n",
-      "community": 48,
-      "community_name": "Community 48",
+      "community": 25,
+      "community_name": "Community 25",
       "norm_label": "usegamei18n()"
     },
     {
@@ -9306,8 +9306,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_vue_src_composables_usenarrator",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 19,
+      "community_name": "Community 19",
       "norm_label": "usenarrator.ts"
     },
     {
@@ -9317,8 +9317,8 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "ui_vue_src_composables_usenarrator_usenarrator",
-      "community": 30,
-      "community_name": "Community 30",
+      "community": 39,
+      "community_name": "Community 39",
       "norm_label": "usenarrator()"
     },
     {
@@ -9460,8 +9460,8 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "ui_vue_src_i18n_index_i18n",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 34,
+      "community_name": "main.ts",
       "norm_label": "i18n"
     },
     {
@@ -9515,8 +9515,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_vue_src_i18n_messages_de",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 13,
+      "community_name": "deathReasonContract.test.ts",
       "norm_label": "de.ts"
     },
     {
@@ -9526,8 +9526,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_vue_src_i18n_messages_de_de",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 13,
+      "community_name": "deathReasonContract.test.ts",
       "norm_label": "de"
     },
     {
@@ -9537,8 +9537,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_vue_src_i18n_messages_en",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 13,
+      "community_name": "deathReasonContract.test.ts",
       "norm_label": "en.ts"
     },
     {
@@ -9548,8 +9548,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_vue_src_i18n_messages_en_en",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 13,
+      "community_name": "deathReasonContract.test.ts",
       "norm_label": "en"
     },
     {
@@ -9559,8 +9559,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_vue_src_i18n_types",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 19,
+      "community_name": "Community 19",
       "norm_label": "types.ts"
     },
     {
@@ -9581,8 +9581,8 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "ui_vue_src_i18n_types_supportedlocale",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 19,
+      "community_name": "Community 19",
       "norm_label": "supportedlocale"
     },
     {
@@ -9592,8 +9592,8 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "ui_vue_src_i18n_types_localeoption",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 19,
+      "community_name": "Community 19",
       "norm_label": "localeoption"
     },
     {
@@ -9603,8 +9603,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_vue_src_main",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 34,
+      "community_name": "main.ts",
       "norm_label": "main.ts"
     },
     {
@@ -9614,8 +9614,8 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "ui_vue_src_main_werewolvesconfig",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 34,
+      "community_name": "main.ts",
       "norm_label": "werewolvesconfig"
     },
     {
@@ -9625,8 +9625,8 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "ui_vue_src_main_app",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 34,
+      "community_name": "main.ts",
       "norm_label": "app"
     },
     {
@@ -9691,8 +9691,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_vue_src_stores_game",
-      "community": 30,
-      "community_name": "Community 30",
+      "community": 55,
+      "community_name": "Community 55",
       "norm_label": "game.ts"
     },
     {
@@ -9702,8 +9702,8 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "ui_vue_src_stores_game_gamestate",
-      "community": 30,
-      "community_name": "Community 30",
+      "community": 55,
+      "community_name": "Community 55",
       "norm_label": "gamestate"
     },
     {
@@ -9713,8 +9713,8 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "ui_vue_src_stores_game_usegamestore",
-      "community": 30,
-      "community_name": "Community 30",
+      "community": 39,
+      "community_name": "Community 39",
       "norm_label": "usegamestore"
     },
     {
@@ -9724,8 +9724,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_vue_src_types_config",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 34,
+      "community_name": "main.ts",
       "norm_label": "config.ts"
     },
     {
@@ -9735,8 +9735,8 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "ui_vue_src_types_config_werewolvesgameconfig",
-      "community": 20,
-      "community_name": "Community 20",
+      "community": 34,
+      "community_name": "main.ts",
       "norm_label": "werewolvesgameconfig"
     },
     {
@@ -9746,8 +9746,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_vue_src_types_howler_d",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 29,
+      "community_name": "Howl",
       "norm_label": "howler.d.ts"
     },
     {
@@ -9757,8 +9757,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_vue_src_types_howler_d_howler",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 29,
+      "community_name": "Howl",
       "norm_label": "howler"
     },
     {
@@ -9768,8 +9768,8 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "ui_vue_src_types_howler_d_howl",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 29,
+      "community_name": "Howl",
       "norm_label": "howl"
     },
     {
@@ -9779,8 +9779,8 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "ui_vue_src_types_howler_d_howl_constructor",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 29,
+      "community_name": "Howl",
       "norm_label": ".constructor()"
     },
     {
@@ -9790,8 +9790,8 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "ui_vue_src_types_howler_d_howl_off",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 29,
+      "community_name": "Howl",
       "norm_label": ".off()"
     },
     {
@@ -9801,8 +9801,8 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "ui_vue_src_types_howler_d_howl_once",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".once()"
     },
     {
@@ -9812,8 +9812,8 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "ui_vue_src_types_howler_d_howl_play",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 29,
+      "community_name": "Howl",
       "norm_label": ".play()"
     },
     {
@@ -9823,8 +9823,8 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "ui_vue_src_types_howler_d_howl_stop",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 29,
+      "community_name": "Howl",
       "norm_label": ".stop()"
     },
     {
@@ -9834,8 +9834,8 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "ui_vue_src_types_howler_d_howl_unload",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".unload()"
     },
     {
@@ -9845,8 +9845,8 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "ui_vue_src_types_howler_d_howl_load",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 29,
+      "community_name": "Howl",
       "norm_label": ".load()"
     },
     {
@@ -9867,8 +9867,8 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "ui_vue_src_utils_helpers_notify",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 3,
+      "community_name": "Community 3",
       "norm_label": "notify()"
     },
     {
@@ -10010,125 +10010,125 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "narrator"
     },
     {
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L119",
+      "source_location": "L121",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_constructor",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".constructor()"
     },
     {
       "label": ".initFromStorage()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L132",
+      "source_location": "L134",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_initfromstorage",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".initfromstorage()"
     },
     {
       "label": ".isEnabled()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L138",
+      "source_location": "L140",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_isenabled",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".isenabled()"
     },
     {
       "label": ".isUnlocked()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L142",
+      "source_location": "L144",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_isunlocked",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".isunlocked()"
     },
     {
       "label": ".setEnabled()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L146",
+      "source_location": "L148",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_setenabled",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".setenabled()"
     },
     {
       "label": ".unlock()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L172",
+      "source_location": "L174",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_unlock",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".unlock()"
     },
     {
       "label": ".handleRoomUpdate()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L205",
+      "source_location": "L207",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_handleroomupdate",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".handleroomupdate()"
     },
     {
       "label": ".announceLatest()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L222",
+      "source_location": "L224",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_announcelatest",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".announcelatest()"
     },
     {
       "label": ".stop()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L234",
+      "source_location": "L236",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_stop",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".stop()"
     },
     {
       "label": ".invalidateCache()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L248",
+      "source_location": "L254",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_invalidatecache",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".invalidatecache()"
     },
     {
       "label": ".resolveAudioPath()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L257",
+      "source_location": "L278",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_resolveaudiopath",
       "community": 26,
@@ -10139,106 +10139,106 @@
       "label": ".discoverVariants()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L323",
+      "source_location": "L344",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_discovervariants",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".discovervariants()"
     },
     {
       "label": ".selectVariant()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L372",
+      "source_location": "L393",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_selectvariant",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".selectvariant()"
     },
     {
       "label": ".playWithHowler()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L394",
+      "source_location": "L415",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_playwithhowler",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".playwithhowler()"
     },
     {
       "label": ".getHowl()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L433",
+      "source_location": "L454",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_gethowl",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".gethowl()"
     },
     {
       "label": ".requestPlay()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L532",
+      "source_location": "L559",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_requestplay",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".requestplay()"
     },
     {
       "label": ".cancelPendingPlayback()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L540",
+      "source_location": "L567",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_cancelpendingplayback",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".cancelpendingplayback()"
     },
     {
       "label": ".safePlay()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L549",
+      "source_location": "L576",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_safeplay",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".safeplay()"
     },
     {
       "label": ".handlePlaybackError()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L563",
+      "source_location": "L590",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_handleplaybackerror",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".handleplaybackerror()"
     },
     {
       "label": ".informUser()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L578",
+      "source_location": "L605",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_narrator_informuser",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": ".informuser()"
     },
     {
       "label": "createNarrator()",
       "file_type": "code",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L586",
+      "source_location": "L613",
       "_origin": "ast",
       "id": "ui_vue_src_utils_narrator_createnarrator",
       "community": 26,
@@ -10692,8 +10692,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "vitest_setup",
-      "community": 26,
-      "community_name": "Community 26",
+      "community": 32,
+      "community_name": "MockHowl",
       "norm_label": "vitest.setup.ts"
     },
     {
@@ -15818,7 +15818,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L205",
+      "source_location": "L207",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_handleroomupdate",
@@ -26812,7 +26812,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L312",
+      "source_location": "L333",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_resolveaudiopath",
@@ -31971,7 +31971,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "ui-vue/src/composables/useNarrator.ts",
-      "source_location": "L158",
+      "source_location": "L159",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_composables_usenarrator_usenarrator",
@@ -33393,7 +33393,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L113",
+      "source_location": "L115",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -33628,7 +33628,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L466",
+      "source_location": "L491",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_gethowl",
@@ -33640,7 +33640,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L505",
+      "source_location": "L530",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_gethowl",
@@ -33652,7 +33652,19 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L551",
+      "source_location": "L261",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "ui_vue_src_utils_narrator_narrator_invalidatecache",
+      "target": "ui_vue_src_types_howler_d_howl_once"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "ui-vue/src/utils/narrator.ts",
+      "source_location": "L578",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_safeplay",
@@ -33664,7 +33676,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L476",
+      "source_location": "L501",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_gethowl",
@@ -33676,7 +33688,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L250",
+      "source_location": "L266",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_invalidatecache",
@@ -33688,7 +33700,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L159",
+      "source_location": "L161",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_setenabled",
@@ -33870,7 +33882,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L586",
+      "source_location": "L613",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator",
@@ -33938,7 +33950,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L125",
+      "source_location": "L127",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_constructor",
@@ -33949,7 +33961,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L258",
+      "source_location": "L279",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_resolveaudiopath",
@@ -33961,7 +33973,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L206",
+      "source_location": "L208",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_handleroomupdate",
@@ -33972,7 +33984,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L222",
+      "source_location": "L224",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -33983,7 +33995,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L540",
+      "source_location": "L567",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -33994,7 +34006,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L119",
+      "source_location": "L121",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34005,7 +34017,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L323",
+      "source_location": "L344",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34016,7 +34028,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L433",
+      "source_location": "L454",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34027,7 +34039,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L563",
+      "source_location": "L590",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34038,7 +34050,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L205",
+      "source_location": "L207",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34049,7 +34061,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L578",
+      "source_location": "L605",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34060,7 +34072,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L132",
+      "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34071,7 +34083,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L248",
+      "source_location": "L254",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34082,7 +34094,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L138",
+      "source_location": "L140",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34093,7 +34105,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L142",
+      "source_location": "L144",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34104,7 +34116,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L394",
+      "source_location": "L415",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34115,7 +34127,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L532",
+      "source_location": "L559",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34126,7 +34138,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L257",
+      "source_location": "L278",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34137,7 +34149,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L549",
+      "source_location": "L576",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34148,7 +34160,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L372",
+      "source_location": "L393",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34159,7 +34171,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L146",
+      "source_location": "L148",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34170,7 +34182,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L234",
+      "source_location": "L236",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34181,7 +34193,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L172",
+      "source_location": "L174",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator",
@@ -34193,7 +34205,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L126",
+      "source_location": "L128",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_constructor",
@@ -34205,7 +34217,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L573",
+      "source_location": "L600",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_handleplaybackerror",
@@ -34217,7 +34229,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L168",
+      "source_location": "L170",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_setenabled",
@@ -34229,7 +34241,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L155",
+      "source_location": "L157",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_setenabled",
@@ -34241,7 +34253,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L157",
+      "source_location": "L159",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_setenabled",
@@ -34253,7 +34265,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L210",
+      "source_location": "L212",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_handleroomupdate",
@@ -34265,7 +34277,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L219",
+      "source_location": "L221",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_handleroomupdate",
@@ -34277,7 +34289,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L231",
+      "source_location": "L233",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_announcelatest",
@@ -34289,7 +34301,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L428",
+      "source_location": "L449",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_playwithhowler",
@@ -34301,7 +34313,19 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L440",
+      "source_location": "L256",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "ui_vue_src_utils_narrator_narrator_invalidatecache",
+      "target": "ui_vue_src_utils_narrator_narrator_cancelpendingplayback",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "ui-vue/src/utils/narrator.ts",
+      "source_location": "L462",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_gethowl",
@@ -34313,7 +34337,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L379",
+      "source_location": "L400",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_selectvariant",
@@ -34325,7 +34349,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L434",
+      "source_location": "L456",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_gethowl",
@@ -34337,7 +34361,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L396",
+      "source_location": "L417",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_playwithhowler",
@@ -34349,7 +34373,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L430",
+      "source_location": "L451",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_playwithhowler",
@@ -34361,7 +34385,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L497",
+      "source_location": "L522",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_gethowl",
@@ -34373,7 +34397,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L533",
+      "source_location": "L560",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_requestplay",
@@ -34385,7 +34409,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L555",
+      "source_location": "L582",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_safeplay",
@@ -34397,7 +34421,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "ui-vue/src/utils/narrator.ts",
-      "source_location": "L575",
+      "source_location": "L602",
       "weight": 1.0,
       "_origin": "ast",
       "source": "ui_vue_src_utils_narrator_narrator_handleplaybackerror",
@@ -34799,5 +34823,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "2999f574b5327a85e75419f2af2c289626ca4362"
+  "built_at_commit": "f97861ef829ac9198271860c0b00040529a9d925"
 }

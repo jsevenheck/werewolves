@@ -124,9 +124,13 @@ they are prompted to open the admin page once to store it.
 
 ## Narrator Audio
 
-- Place MP3 files in `ui-vue/public/audio/` (served at runtime as `/audio/<name>.mp3`).
-- Vite serves files from `ui-vue/public/` at `/` during development and copies them into the build output.
-- The narrator looks up files by key and falls back to a silent placeholder if missing.
+- Built-in EN/DE MP3 files live under `ui-vue/src/assets/audio/` and are bundled
+  by Vite with hashed asset URLs.
+- Runtime custom overrides can be placed under `ui-vue/public/audio/` and are
+  served as `/audio/<name>.mp3` when `assetsBasePath` is configured.
+- Resolution checks the active locale, then English, then the silent fallback.
+- Regenerate the reviewed German set with
+  `uv run tools/generate-german-narrator.py` (requires `ffmpeg`).
 - See `ui-vue/public/audio/README.md` for per-file descriptions and when each clip plays.
 
 ## Troubleshooting

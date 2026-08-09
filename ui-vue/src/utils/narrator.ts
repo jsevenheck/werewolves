@@ -99,9 +99,11 @@ class Narrator {
   private currentHowl: Howl | null = null;
   private readonly howls = new Map<string, Howl>();
   private readonly howlPromises = new Map<string, Promise<Howl>>();
+  private readonly detachedHowls = new Set<Howl>();
   private pendingTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingPlayback: { key: string; requestId: number } | null = null;
   private disableToken = 0;
+  private cacheGeneration = 0;
   private playbackRequestId = 0;
   private lastPlayAttemptAt = 0;
   private lastUserMessageAt = 0;
@@ -233,7 +235,11 @@ class Narrator {
 
   private stop() {
     if (this.currentHowl) {
-      this.currentHowl.stop();
+      const current = this.currentHowl;
+      current.stop();
+      if (this.detachedHowls.delete(current)) {
+        current.unload();
+      }
       this.currentHowl = null;
     }
   }
@@ -246,8 +252,23 @@ class Narrator {
    * on the next announcement, not by yanking audio out from under the user.
    */
   invalidateCache() {
+    this.cacheGeneration += 1;
+    this.cancelPendingPlayback();
     for (const howl of this.howls.values()) {
-      howl.unload();
+      if (howl === this.currentHowl) {
+        if (!this.detachedHowls.has(howl)) {
+          this.detachedHowls.add(howl);
+          howl.once('end', () => {
+            this.detachedHowls.delete(howl);
+            if (this.currentHowl === howl) {
+              this.currentHowl = null;
+            }
+            howl.unload();
+          });
+        }
+      } else {
+        howl.unload();
+      }
     }
     this.howls.clear();
     this.howlPromises.clear();
@@ -431,6 +452,7 @@ class Narrator {
   }
 
   private async getHowl(key: string, playbackRequestId: number) {
+    const cacheGeneration = this.cacheGeneration;
     const audioKey = await this.selectVariant(key);
     const existing = this.howls.get(audioKey);
     if (existing) return existing;
@@ -443,7 +465,10 @@ class Narrator {
       let attemptedFallback = false;
       let resolved = false;
       const requestToken = this.disableToken;
-      const shouldCache = () => this.enabled && this.disableToken === requestToken;
+      const shouldCache = () =>
+        this.enabled &&
+        this.disableToken === requestToken &&
+        this.cacheGeneration === cacheGeneration;
       const createHowl = (src: string) =>
         new Howl({
           src,
@@ -525,7 +550,9 @@ class Narrator {
       activeHowl.load();
     });
 
-    this.howlPromises.set(audioKey, promise);
+    if (cacheGeneration === this.cacheGeneration) {
+      this.howlPromises.set(audioKey, promise);
+    }
     return promise;
   }
 

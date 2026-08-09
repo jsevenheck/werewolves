@@ -353,7 +353,8 @@ The narrator is locale-aware. It reads the active UI language from
 Locale is `'en'` or `'de'` — matching the supported languages in
 `ui-vue/src/i18n/types.ts`. When the UI language changes, the narrator
 drops its Howl cache so the next clip resolves from the new locale; the
-currently-playing clip is left to finish (no abrupt cut).
+currently-playing clip is left to finish (no abrupt cut), while an old-locale
+clip that is still loading is cancelled before it can start.
 
 The narrator intentionally stays silent during internal pacing-only states:
 

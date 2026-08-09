@@ -65,7 +65,11 @@ Manual and automated testing expectations for the Werewolves game.
 
 ## Narrator Audio Assets
 
-Place MP3 narrator clips in `ui-vue/public/audio/` with filenames matching the expected ones (for example, `night_wolves.mp3` or `dayToNight.mp3`) so the narrator continues to map phase changes correctly. The code falls back to a bundled silent clip when files are missing, so adding the real audio files is required for audible narration.
+Bundled MP3 narrator clips live in `ui-vue/src/assets/audio/{en,de}/` with
+matching filenames (for example, `night_wolves.mp3` or `dayToNight.mp3`). Vite
+packages them automatically. `ui-vue/public/audio/` is only for optional runtime
+custom overrides. Resolution falls back from the active locale to English and
+finally to a silent placeholder if neither locale contains the requested cue.
 
 **Audio Variants** (optional): The narrator supports multiple audio variants per clip for variety in `ui-vue/public/audio/custom/`. Name files as `custom/{key}_1.mp3`, `custom/{key}_2.mp3`, etc. The system auto-detects custom variants (up to 10) and randomly selects one each time. See `ui-vue/public/audio/README.md` for details.
 

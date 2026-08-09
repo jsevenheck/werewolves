@@ -55,13 +55,16 @@ This document tracks the plan and implementation progress for adding German UI s
 - [x] Keep one semantic phase cue plus distinct actionable role cues.
 - [x] Reject stale async audio loads after a newer room state arrives.
 - [x] Add lifecycle, bundled-key parity, silent-state, and out-of-order load regression tests.
+- [x] Preserve the currently playing clip across a locale-cache reset; unload it
+      after natural completion or when the next cue replaces it.
+- [x] Cancel an old-locale clip that is still loading when the locale changes.
 - [x] Rewrite every active German narrator script in natural, terminology-consistent German.
 - [x] Regenerate all 15 active German MP3s with one voice and normalized encoding/loudness.
 - [x] Version the reviewed scripts and reproducible generator command.
 
 Validation for this slice:
 
-- `pnpm test`: 275/275 unit tests passed.
+- `pnpm test`: 277/277 unit tests passed.
 - `pnpm run test:e2e`: 36/36 Playwright tests passed.
 - `pnpm run typecheck`, `pnpm lint`, `pnpm format:check`, and `pnpm run build`: passed.
 - Audio audit: 15 EN and 15 DE active clips; every German clip is MP3, 44.1 kHz, mono, 128 kbit/s, generated with `de-DE-SeraphinaMultilingualNeural`.

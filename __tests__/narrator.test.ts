@@ -1021,51 +1021,115 @@ describe('narrator locale-aware audio', () => {
     expect(howl.options.src).toBe('/audio/day.mp3');
   });
 
-  test('invalidateCache drops cached Howls so the next play resolves from the new locale', async () => {
+  test('invalidateCache preserves the active clip and resolves the next cue in the new locale', async () => {
     const mockEnDayUrl = 'blob:http://localhost/bundled-day-en.mp3';
-    const mockDeDayUrl = 'blob:http://localhost/bundled-day-de.mp3';
+    const mockDeNightUrl = 'blob:http://localhost/bundled-night-de.mp3';
     let activeLocale: 'en' | 'de' = 'en';
     vi.spyOn(audioManifest, 'getBundledAudioUrl').mockImplementation(
       (key: string, locale: string) => {
         if (key === 'day' && locale === 'en') return mockEnDayUrl;
-        if (key === 'day' && locale === 'de') return mockDeDayUrl;
+        if (key === 'night' && locale === 'de') return mockDeNightUrl;
         return undefined;
       }
     );
-    global.fetch = vi.fn().mockResolvedValue({ ok: false });
 
     const narrator = createNarrator({
       initialEnabled: true,
       initialUnlocked: true,
       storage: null,
+      playDebounceMs: 0,
       getLocale: () => activeLocale,
     });
 
-    // First play under EN
-    const room = buildRoom({ phase: 'day' });
-    narrator.handleRoomUpdate(null, room);
+    const roomDay = buildRoom({ phase: 'day' });
+    narrator.handleRoomUpdate(null, roomDay);
     await flushPromises();
     const firstHowl = MockHowl.instances[0];
     firstHowl.trigger('load');
     await flushPromises();
     expect(firstHowl.options.src).toBe(mockEnDayUrl);
+    expect(firstHowl.play).toHaveBeenCalledTimes(1);
 
-    // Switch to DE and invalidate the cache (useNarrator does this on locale change)
     activeLocale = 'de';
     narrator.invalidateCache();
+    expect(firstHowl.unload).not.toHaveBeenCalled();
 
-    // A subsequent room change (different key) must resolve from the new locale.
     const roomNight = buildRoom({ phase: 'night' });
-    narrator.handleRoomUpdate(room, roomNight);
+    narrator.handleRoomUpdate(roomDay, roomNight);
     await flushPromises();
     const secondHowl = MockHowl.instances[1];
+    expect(secondHowl.options.src).toBe(mockDeNightUrl);
     secondHowl.trigger('load');
     await flushPromises();
-    // Both DE and EN return undefined for 'night' in this test, so the
-    // narrator falls back to the bundled EN day clip (EN fallback path).
-    // The point of this test is that the cache was cleared and the resolver
-    // re-ran: we verify the new fetch mock saw a fresh resolve for 'night'.
-    expect(global.fetch).not.toHaveBeenCalled();
+
+    expect(firstHowl.stop).toHaveBeenCalledTimes(1);
+    expect(firstHowl.unload).toHaveBeenCalledTimes(1);
+    expect(secondHowl.play).toHaveBeenCalledTimes(1);
+  });
+
+  test('unloads a detached locale clip after it finishes naturally', async () => {
+    vi.spyOn(audioManifest, 'getBundledAudioUrl').mockReturnValue(
+      'blob:http://localhost/bundled-day-en.mp3'
+    );
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: true,
+      storage: null,
+      playDebounceMs: 0,
+    });
+
+    narrator.handleRoomUpdate(null, buildRoom({ phase: 'day' }));
+    await flushPromises();
+    const howl = MockHowl.instances[0];
+    howl.trigger('load');
+    await flushPromises();
+
+    narrator.invalidateCache();
+    expect(howl.unload).not.toHaveBeenCalled();
+
+    howl.trigger('end');
+    expect(howl.unload).toHaveBeenCalledTimes(1);
+  });
+
+  test('does not start an old-locale clip that finishes loading after cache invalidation', async () => {
+    const mockEnDayUrl = 'blob:http://localhost/bundled-day-en.mp3';
+    const mockDeNightUrl = 'blob:http://localhost/bundled-night-de.mp3';
+    let activeLocale: 'en' | 'de' = 'en';
+    vi.spyOn(audioManifest, 'getBundledAudioUrl').mockImplementation(
+      (key: string, locale: string) => {
+        if (key === 'day' && locale === 'en') return mockEnDayUrl;
+        if (key === 'night' && locale === 'de') return mockDeNightUrl;
+        return undefined;
+      }
+    );
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: true,
+      storage: null,
+      playDebounceMs: 0,
+      getLocale: () => activeLocale,
+    });
+
+    const roomDay = buildRoom({ phase: 'day' });
+    narrator.handleRoomUpdate(null, roomDay);
+    await flushPromises();
+    const staleHowl = MockHowl.instances[0];
+
+    activeLocale = 'de';
+    narrator.invalidateCache();
+    staleHowl.trigger('load');
+    await flushPromises();
+
+    expect(staleHowl.play).not.toHaveBeenCalled();
+    expect(staleHowl.unload).toHaveBeenCalledTimes(1);
+
+    narrator.handleRoomUpdate(roomDay, buildRoom({ phase: 'night' }));
+    await flushPromises();
+    const currentHowl = MockHowl.instances[1];
+    expect(currentHowl.options.src).toBe(mockDeNightUrl);
+    currentHowl.trigger('load');
+    await flushPromises();
+    expect(currentHowl.play).toHaveBeenCalledTimes(1);
   });
 
   test('discoverVariants probes the locale-specific custom folder first', async () => {
