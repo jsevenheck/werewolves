@@ -67,6 +67,7 @@ Validation for this slice:
 - `pnpm test`: 277/277 unit tests passed.
 - `pnpm run test:e2e`: 36/36 Playwright tests passed.
 - `pnpm run typecheck`, `pnpm lint`, `pnpm format:check`, and `pnpm run build`: passed.
+- GitHub CI test runtime and setup actions are aligned on Node.js 24.
 - Audio audit: 15 EN and 15 DE active clips; every German clip is MP3, 44.1 kHz, mono, 128 kbit/s, generated with `de-DE-SeraphinaMultilingualNeural`.
 
 ## Server-Originated String Inventory
