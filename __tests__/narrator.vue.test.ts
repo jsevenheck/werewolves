@@ -105,9 +105,9 @@ describe('computeNarrationKey', () => {
     self: null,
   });
 
-  test('returns phaseTransition when present', () => {
-    const room: RoomView = { ...baseRoom(), phaseTransition: 'nightToDay' as const };
-    expect(computeNarrationKey(room)).toBe('nightToDay');
+  test('returns an audible phaseTransition when present', () => {
+    const room: RoomView = { ...baseRoom(), phaseTransition: 'dayToNight' };
+    expect(computeNarrationKey(room)).toBe('dayToNight');
   });
 
   test('returns night_<step> for night phase with step', () => {

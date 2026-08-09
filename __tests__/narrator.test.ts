@@ -1,6 +1,10 @@
 import { MockHowl } from './mocks/howler';
 
-import { computeNarrationKey, createNarrator } from '../ui-vue/src/utils/narrator';
+import {
+  ACTIVE_NARRATION_KEYS,
+  computeNarrationKey,
+  createNarrator,
+} from '../ui-vue/src/utils/narrator';
 import type { RoomView } from '../core/src/types';
 import * as audioManifest from '../ui-vue/src/assets/audio/manifest';
 
@@ -106,6 +110,66 @@ describe('computeNarrationKey', () => {
       passiveRoleConfig: { mayor: false },
     });
     expect(computeNarrationKey(room)).toBe('postReveal');
+  });
+
+  test('suppresses internal night transitions between actionable role cues', () => {
+    const sequence = [
+      buildRoom({ phase: 'day', phaseTransition: 'dayToNight' }),
+      buildRoom({
+        phase: 'night',
+        phaseStep: 'transition',
+        nextNightStep: 'wolves',
+      }),
+      buildRoom({ phase: 'night', phaseStep: 'wolves' }),
+      buildRoom({
+        phase: 'night',
+        phaseStep: 'transition',
+        nextNightStep: 'seer',
+      }),
+      buildRoom({ phase: 'night', phaseStep: 'seer' }),
+    ];
+
+    expect(sequence.map(computeNarrationKey).filter(Boolean)).toEqual([
+      'dayToNight',
+      'night_wolves',
+      'night_seer',
+    ]);
+  });
+
+  test('announces the completed day phase once instead of narrating every morning state', () => {
+    const sequence = [
+      buildRoom({ phase: 'night', phaseStep: 'resolve' }),
+      buildRoom({
+        phase: 'night',
+        phaseStep: 'transition',
+        phaseTransition: 'nightToDay',
+      }),
+      buildRoom({ phase: 'day', phaseStep: null, phaseTransition: null }),
+    ];
+
+    expect(sequence.map(computeNarrationKey).filter(Boolean)).toEqual(['day']);
+  });
+
+  test('skips generic post-mayor narration and announces the next actionable phase', () => {
+    const sequence = [
+      buildRoom({ phase: 'mayor', phaseTransition: 'postMayor' }),
+      buildRoom({ phase: 'armor', phaseStep: null, phaseTransition: null }),
+    ];
+
+    expect(sequence.map(computeNarrationKey).filter(Boolean)).toEqual(['armor']);
+  });
+
+  test('bundles every active narration cue in both supported locales', () => {
+    for (const key of ACTIVE_NARRATION_KEYS) {
+      expect(
+        audioManifest.getBundledAudioUrl(key, 'en'),
+        `missing EN clip for ${key}`
+      ).toBeDefined();
+      expect(
+        audioManifest.getBundledAudioUrl(key, 'de'),
+        `missing DE clip for ${key}`
+      ).toBeDefined();
+    }
   });
 });
 
@@ -229,6 +293,36 @@ describe('narrator playback', () => {
     expect(howl.unload).toHaveBeenCalled();
   });
 
+  test('does not play an older clip that finishes loading after a newer state', async () => {
+    vi.spyOn(audioManifest, 'getBundledAudioUrl').mockImplementation((key: string) => {
+      return `blob:http://localhost/${key}.mp3`;
+    });
+    const narrator = createNarrator({
+      initialEnabled: true,
+      initialUnlocked: true,
+      storage: null,
+      playDebounceMs: 0,
+    });
+    const roomDay = buildRoom({ phase: 'day' });
+    const roomWolves = buildRoom({ phase: 'night', phaseStep: 'wolves' });
+
+    narrator.handleRoomUpdate(null, roomDay);
+    await flushPromises();
+    const dayHowl = MockHowl.instances[0];
+
+    narrator.handleRoomUpdate(roomDay, roomWolves);
+    await flushPromises();
+    const wolvesHowl = MockHowl.instances[1];
+
+    wolvesHowl.trigger('load');
+    await flushPromises();
+    dayHowl.trigger('load');
+    await flushPromises();
+
+    expect(wolvesHowl.play).toHaveBeenCalledTimes(1);
+    expect(dayHowl.play).not.toHaveBeenCalled();
+  });
+
   test('does not play when locked', () => {
     const playClip = vi.fn();
     const narrator = createNarrator({
@@ -259,6 +353,28 @@ describe('narrator playback', () => {
     narrator.setEnabled(true);
 
     expect(playClip).toHaveBeenCalledTimes(2);
+  });
+
+  test('does not announce a stale phase after entering a silent transition state', () => {
+    const playClip = vi.fn();
+    const narrator = createNarrator({
+      initialEnabled: false,
+      initialUnlocked: true,
+      storage: null,
+      playClip,
+    });
+    const roomDay = buildRoom({ phase: 'day' });
+    const roomTransition = buildRoom({
+      phase: 'night',
+      phaseStep: 'transition',
+      nextNightStep: 'wolves',
+    });
+
+    narrator.handleRoomUpdate(null, roomDay);
+    narrator.handleRoomUpdate(roomDay, roomTransition);
+    narrator.setEnabled(true);
+
+    expect(playClip).not.toHaveBeenCalled();
   });
 });
 

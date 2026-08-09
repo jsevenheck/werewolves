@@ -1,0 +1,21 @@
+{
+  "voice": "de-DE-SeraphinaMultilingualNeural",
+  "style": "Ruhige, atmosphärische Spielleitung in natürlichem Hochdeutsch",
+  "clips": {
+    "lobby": "Willkommen in der Lobby. Sobald alle bereit sind, kann das Spiel beginnen.",
+    "roleReveal": "Die Rollen werden verteilt. Seht euch eure Rolle heimlich an und zeigt sie niemandem.",
+    "postReveal": "Danke. Schließt jetzt die Augen.",
+    "mayor": "Wählt jetzt euren ersten Bürgermeister. Beratet euch kurz und stimmt anschließend ab.",
+    "armor": "Amor, wach auf. Bestimme zwei Liebende und bestätige deine Wahl.",
+    "postArmor": "Liebende, öffnet die Augen und erkennt einander. Stirbt einer von euch, stirbt auch der andere.",
+    "night": "Die Nacht beginnt. Alle schließen die Augen und bleiben still.",
+    "night_wolves": "Werwölfe, wacht auf. Wählt gemeinsam und leise ein Opfer. Bestätigt eure Wahl und schließt danach wieder die Augen.",
+    "night_seer": "Seherin, wach auf. Wähle einen Spieler, dessen wahre Rolle du erfahren möchtest.",
+    "night_witch": "Hexe, wach auf. Du kannst das Opfer retten oder einen Spieler vergiften. Bestätige deine Entscheidung.",
+    "night_guard": "Leibwächter, wach auf. Wähle einen Spieler, den du in dieser Nacht beschützen möchtest.",
+    "night_harlot": "Hure, wach auf. Wähle einen Spieler, den du in dieser Nacht besuchen möchtest.",
+    "day": "Der Tag beginnt. Tauscht euch aus. Anschließend stimmt ihr darüber ab, wen das Dorf verurteilt.",
+    "dayToNight": "Die Nacht beginnt. Schließt die Augen.",
+    "ended": "Das Spiel ist beendet. Das Ergebnis steht fest. Danke fürs Mitspielen."
+  }
+}
