@@ -191,10 +191,11 @@ loop:
         else choose random among tied players
       simple majority required: the leading candidate must hold more than
         half of the non-abstaining votes that counted toward resolution;
-        explicit abstentions do not count toward either side. Otherwise the
-        day is skipped (no elimination, no revote). Host-forced early
-        resolution (allowEarly) waives the simple-majority threshold so a
-        host can still push a small lead through.
+      explicit abstentions do not count toward either side. A strict
+      majority of abstentions always skips the day, including when the host
+      ends voting early; players who have not voted yet count as abstaining
+      for that early-resolution check. Otherwise the day is skipped (no
+      elimination, no revote).
       once winner target established:
         if role(target)=='joker':
           queue joker death and resolveDeaths() first (so lover heartbreak is processed)
@@ -218,10 +219,12 @@ resolveDeaths():
     if player is mayorId -> add to mayorSelectionQueue and start mayor succession prompt (60s timeout)
     if player is lover -> enqueue other lover death reason='died of heartbreak'
   after queue empty check win conditions:
-    if all wolves dead -> endGame('village', 'All wolves dead')
+    if no players remain -> endGame('wolves', 'No players remain; Werewolves win')
+    else if all wolves dead -> endGame('village', 'All wolves dead')
     else if wolves > others (strict majority):
       endGame('wolves', 'Werewolves have the majority')
     else if wolves == others (parity):
+      if exactly one wolf and one other player remain -> endGame('wolves', 'Werewolves reached parity')
       special case:
         - if a witch is alive AND has both potions available -> endGame('village', 'Witch can heal and poison to break parity')
       otherwise check if village still has counterplay:
@@ -232,6 +235,7 @@ resolveDeaths():
       else -> endGame('wolves', 'Werewolves reached parity')
 
 HunterShot(targetId):
+  wake the village with a public event before showing the hunter prompt
   enqueue death for target
   resolveDeaths()
   if no response within 60 seconds (30 seconds in E2E mode):

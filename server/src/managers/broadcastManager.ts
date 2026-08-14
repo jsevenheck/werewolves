@@ -149,6 +149,8 @@ function getWinnerReasonMessage(winner: Winner | null): LocalizedMessage | null 
       return localizedMessage('server.winnerReasons.witchBreakParity');
     case 'Werewolves reached parity.':
       return localizedMessage('server.winnerReasons.wolvesParity');
+    case 'No players remain; Werewolves win.':
+      return localizedMessage('server.winnerReasons.noPlayersRemainWolvesWin');
     case 'Joker was voted out and laughs last!':
       return localizedMessage('server.winnerReasons.jokerVotedOut');
     default:

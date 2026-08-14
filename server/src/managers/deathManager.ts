@@ -37,6 +37,12 @@ function startHunterShot(
   room.hunterShotEndsAt = Date.now() + HUNTER_SHOT_TIMEOUT_MS;
 
   const hunter = room.players[hunterId];
+  addLog(
+    room,
+    'The village wakes up. The Hunter is choosing a target.',
+    null,
+    localizedMessage('server.logs.hunterAwakens')
+  );
   const socket = io && hunter?.socketId && io.sockets?.get(hunter.socketId);
   if (socket && hunter?.connected) {
     socket.emit('hunterPrompt', { roomCode: room.code });
@@ -196,6 +202,19 @@ function checkWinners(room: Room) {
   if (room.winner) return;
   const alive = Object.values(room.players).filter((p) => p.alive);
   const wolves = alive.filter((p) => p.role === 'werewolf');
+  // If the Hunter's final shot kills the last Werewolf and nobody else is
+  // alive, the simultaneous final death belongs to the Werewolf team.
+  if (!alive.length) {
+    room.winner = { team: 'wolves', reason: 'No players remain; Werewolves win.' };
+    room.phase = 'ended';
+    room.phaseStep = null;
+    room.nextNightStep = null;
+    room.phaseTransition = null;
+    room.awaitingMayorSelection = null;
+    room.mayorSelectionQueue = [];
+    clearRoomTimers(room);
+    return;
+  }
   if (!wolves.length) {
     room.winner = { team: 'village', reason: 'All Werewolves are dead.' };
     room.phase = 'ended';
@@ -224,6 +243,19 @@ function checkWinners(room: Room) {
 
   // Wolves at parity - check if village has abilities that could turn the tide
   if (wolves.length === others) {
+    // A one-versus-one end state is already decided: the Werewolf wins. Do
+    // not keep the game alive because of Mayor or Hunter counterplay.
+    if (wolves.length === 1 && others === 1) {
+      room.winner = { team: 'wolves', reason: 'Werewolves reached parity.' };
+      room.phase = 'ended';
+      room.phaseStep = null;
+      room.nextNightStep = null;
+      room.phaseTransition = null;
+      room.awaitingMayorSelection = null;
+      room.mayorSelectionQueue = [];
+      clearRoomTimers(room);
+      return;
+    }
     // Special case: witch with both potions at parity = guaranteed village win
     // (Witch heals self + poisons wolf = wolf dies, witch lives)
     const witchWithBothPotions =

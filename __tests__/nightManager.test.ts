@@ -187,6 +187,25 @@ describe('nightManager', () => {
     expect(broadcastRoom).toHaveBeenCalledWith(room);
   });
 
+  test('handleWitchDecision consumes both potions in the same night', () => {
+    const room = makeRoom();
+    room.wolfTarget = 'v1';
+    room.players = {
+      w1: buildPlayer({ id: 'w1', role: 'witch', team: 'village', alive: true }),
+      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village', alive: true }),
+      v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village', alive: true }),
+    };
+    const broadcastRoom = vi.fn();
+
+    handleWitchDecision(room, 'w1', 'heal', null, broadcastRoom, undefined as never);
+    handleWitchDecision(room, 'w1', 'poison', 'v2', broadcastRoom, undefined as never);
+
+    expect(room.witchState).toEqual({ healAvailable: false, poisonAvailable: false });
+    expect(room.healedTarget).toBe('v1');
+    expect(room.poisonTarget).toBe('v2');
+    expect(scheduleNightStep).toHaveBeenCalledWith(room, 'guard', expect.any(Function), undefined);
+  });
+
   test('handleWitchDecision uses poison potion and advances', () => {
     const room = makeRoom();
     room.players = {

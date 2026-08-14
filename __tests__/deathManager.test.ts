@@ -136,6 +136,7 @@ describe('deathManager', () => {
     expect(room.hunterShotTimer).not.toBeNull(); // Timer should be set for auto-timeout
     expect(emit).toHaveBeenCalledWith('hunterPrompt', { roomCode: room.code });
     expect(room.winner).toBeNull();
+    expect(room.logs[room.logs.length - 1]?.message).toEqual({ key: 'server.logs.hunterAwakens' });
   });
 
   test('checkWinners ends the game on wolf parity', () => {
@@ -157,11 +158,40 @@ describe('deathManager', () => {
     expect(room.phaseTimer).toBeNull();
   });
 
+  test('checkWinners ends a one-versus-one game with a Werewolf win', () => {
+    const room = makeRoom();
+    room.mayorId = 'villager';
+    room.players = {
+      wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: true }),
+      villager: buildPlayer({ id: 'villager', role: 'villager', team: 'village', alive: true }),
+    };
+
+    checkWinners(room);
+
+    expect(room.winner).toEqual({ team: 'wolves', reason: 'Werewolves reached parity.' });
+    expect(room.phase).toBe('ended');
+  });
+
+  test('checkWinners gives the Werewolves the final simultaneous death', () => {
+    const room = makeRoom();
+    room.players = {
+      wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: false }),
+      hunter: buildPlayer({ id: 'hunter', role: 'hunter', team: 'village', alive: false }),
+    };
+
+    checkWinners(room);
+
+    expect(room.winner).toEqual({ team: 'wolves', reason: 'No players remain; Werewolves win.' });
+    expect(room.phase).toBe('ended');
+  });
+
   test('checkWinners declares village win when lone witch has both potions at parity', () => {
     const room = makeRoom();
     room.players = {
-      wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: true }),
+      wolf1: buildPlayer({ id: 'wolf1', role: 'werewolf', team: 'wolves', alive: true }),
+      wolf2: buildPlayer({ id: 'wolf2', role: 'werewolf', team: 'wolves', alive: true }),
       witch: buildPlayer({ id: 'witch', role: 'witch', team: 'village', alive: true }),
+      villager: buildPlayer({ id: 'villager', role: 'villager', team: 'village', alive: true }),
     };
     room.witchState = { healAvailable: true, poisonAvailable: true };
 

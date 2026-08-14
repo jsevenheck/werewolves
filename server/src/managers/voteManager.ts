@@ -31,7 +31,12 @@ function tryResolveDayVote(
 
   const tallies: Record<string, number> = {};
   const votes = Object.values(room.voteState.votes);
-  const effectiveVotes = allowEarly ? votes.filter((value) => value !== undefined) : votes;
+  // Ending the vote early must not turn players who have not voted yet into
+  // invisible voters. They count as abstentions for the majority-abstention
+  // rule, so 3 abstentions and 2 actual votes cannot eliminate anyone.
+  const effectiveVotes = allowEarly
+    ? alivePlayers.map((player) => room.voteState.votes[player.id] ?? null)
+    : votes;
   const abstainCount = effectiveVotes.filter((value) => value === null).length;
   const countedVotes = effectiveVotes.filter((value) => value !== null && value !== undefined);
   effectiveVotes.forEach((targetId) => {
@@ -67,7 +72,7 @@ function tryResolveDayVote(
   entries.sort((a, b) => b[1] - a[1]);
   const top = entries[0];
   if (!top) return true;
-  const participantCount = allowEarly ? effectiveVotes.length : alivePlayers.length;
+  const participantCount = alivePlayers.length;
   // If a strict majority (> 50%) of alive players abstain (vote null),
   // the vote is considered skipped. The case where everyone abstains is
   // already handled above when entries.length === 0.

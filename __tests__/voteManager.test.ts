@@ -185,7 +185,7 @@ describe('voteManager', () => {
     expect(room.lastDayMessage).toBe('No one was eliminated.');
   });
 
-  test('tryResolveDayVote can resolve early and ignore missing votes', () => {
+  test('tryResolveDayVote does not resolve early when most players have not voted', () => {
     const players = {
       a: buildPlayer({ id: 'a', alive: true }),
       b: buildPlayer({ id: 'b', alive: true, role: 'joker', team: 'joker' }),
@@ -198,10 +198,29 @@ describe('voteManager', () => {
 
     tryResolveDayVote(room, broadcastRoom, undefined as never, { allowEarly: true });
 
-    expect(room.winner).toEqual({
-      team: 'joker',
-      reason: 'Joker was voted out and laughs last!',
-    });
+    expect(room.winner).toBeNull();
+    expect(room.players.b.alive).toBe(true);
+    expect(room.lastDayMessage).toBe('No one was eliminated.');
+  });
+
+  test('early resolution treats missing votes as abstentions', () => {
+    const players = {
+      a: buildPlayer({ id: 'a', alive: true }),
+      b: buildPlayer({ id: 'b', alive: true }),
+      c: buildPlayer({ id: 'c', alive: true }),
+      d: buildPlayer({ id: 'd', alive: true }),
+      e: buildPlayer({ id: 'e', alive: true }),
+    };
+    const room = makeRoom(players);
+    room.voteState.votes = { a: 'c', b: 'c' };
+    const broadcastRoom = vi.fn();
+
+    tryResolveDayVote(room, broadcastRoom, undefined as never, { allowEarly: true });
+
+    expect(room.players.c.alive).toBe(true);
+    expect(room.dayVoteResolved).toBe(true);
+    expect(room.lastDayMessage).toBe('No one was eliminated.');
+    expect(room.logs[room.logs.length - 1].text).toBe('Majority abstained. No one eliminated.');
   });
 
   test('resolveDayKill ends the game when Joker is voted out', () => {
