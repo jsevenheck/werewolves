@@ -172,16 +172,33 @@ describe('deathManager', () => {
     expect(room.phase).toBe('ended');
   });
 
-  test('checkWinners gives the Werewolves the final simultaneous death', () => {
+  test('checkWinners gives the village the win when all players are dead normally', () => {
     const room = makeRoom();
     room.players = {
       wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: false }),
-      hunter: buildPlayer({ id: 'hunter', role: 'hunter', team: 'village', alive: false }),
+      villager: buildPlayer({ id: 'villager', role: 'villager', team: 'village', alive: false }),
     };
 
     checkWinners(room);
 
-    expect(room.winner).toEqual({ team: 'wolves', reason: 'No players remain; Werewolves win.' });
+    expect(room.winner).toEqual({ team: 'village', reason: 'All Werewolves are dead.' });
+    expect(room.phase).toBe('ended');
+  });
+
+  test('resolveDeaths gives the Werewolves the final Hunter shot when nobody remains', () => {
+    const room = makeRoom();
+    room.players = {
+      hunter: buildPlayer({ id: 'hunter', role: 'hunter', team: 'village', alive: false }),
+      wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: true }),
+    };
+    room.pendingDeaths = [{ playerId: 'wolf', reason: 'shot by Hunter' }];
+
+    resolveDeaths(room, 'day', vi.fn(), undefined, { finalHunterShotAtWerewolf: true });
+
+    expect(room.winner).toEqual({
+      team: 'wolves',
+      reason: 'No players remain; Werewolves win.',
+    });
     expect(room.phase).toBe('ended');
   });
 

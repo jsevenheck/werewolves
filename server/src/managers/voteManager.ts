@@ -27,6 +27,18 @@ function tryResolveDayVote(
     }
     const everyoneVoted = alivePlayers.every((p) => room.voteState.votes[p.id] !== undefined);
     if (!everyoneVoted) return false;
+  } else {
+    const everyoneVoted = alivePlayers.every((p) => room.voteState.votes[p.id] !== undefined);
+    if (!everyoneVoted) {
+      // A host may only force-resolve an incomplete vote when the missing
+      // submissions themselves form a strict majority of the living players.
+      // Otherwise a small lead (e.g. 2 of 3 votes) must wait for the remaining
+      // player instead of silently becoming an elimination.
+      const missingVotes = alivePlayers.filter(
+        (p) => room.voteState.votes[p.id] === undefined
+      ).length;
+      if (missingVotes <= alivePlayers.length / 2) return false;
+    }
   }
 
   const tallies: Record<string, number> = {};
@@ -151,29 +163,27 @@ function tryResolveDayVote(
     return true;
   }
   // Single leader after the tie / mayor handling above (or never tied).
-  // Require a simple majority of the non-abstaining votes when the full
-  // vote tally is in; explicit abstentions do not count toward either side
-  // of that majority. On an early host-forced resolution (allowEarly) the
-  // threshold is waived so a host can still push a small lead through.
+  // Require a simple majority of the non-abstaining votes; explicit
+  // abstentions do not count toward either side of that majority. Early
+  // resolution only permits a strict majority of missing votes to be treated
+  // as abstentions; it never waives the majority requirement.
   // A 2-1-1 result therefore eliminates the 2-vote leader: two of the
   // three counted votes form a simple majority.
-  if (!allowEarly) {
-    const majorityThreshold = Math.floor(countedVotes.length / 2) + 1;
-    if (newTop[1] < majorityThreshold) {
-      addLog(
-        room,
-        'Vote skipped. No one eliminated.',
-        'Vote skipped. No one eliminated.',
-        localizedMessage('server.logs.voteSkipped'),
-        localizedMessage('server.logs.voteSkipped')
-      );
-      room.lastDayDeaths = [];
-      room.lastDayMessage = 'No one was eliminated.';
-      room.lastDayMessageI18n = localizedMessage('server.dayResults.noElimination');
-      room.dayVoteResolved = true;
-      broadcastRoom(room);
-      return true;
-    }
+  const majorityThreshold = Math.floor(countedVotes.length / 2) + 1;
+  if (newTop[1] < majorityThreshold) {
+    addLog(
+      room,
+      'Vote skipped. No one eliminated.',
+      'Vote skipped. No one eliminated.',
+      localizedMessage('server.logs.voteSkipped'),
+      localizedMessage('server.logs.voteSkipped')
+    );
+    room.lastDayDeaths = [];
+    room.lastDayMessage = 'No one was eliminated.';
+    room.lastDayMessageI18n = localizedMessage('server.dayResults.noElimination');
+    room.dayVoteResolved = true;
+    broadcastRoom(room);
+    return true;
   }
   if (mayorDoubled) {
     addLog(

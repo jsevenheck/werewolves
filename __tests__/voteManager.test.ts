@@ -223,6 +223,23 @@ describe('voteManager', () => {
     expect(room.logs[room.logs.length - 1].text).toBe('Majority abstained. No one eliminated.');
   });
 
+  test('early resolution does not resolve two of three votes', () => {
+    const players = {
+      a: buildPlayer({ id: 'a', alive: true }),
+      b: buildPlayer({ id: 'b', alive: true }),
+      c: buildPlayer({ id: 'c', alive: true }),
+    };
+    const room = makeRoom(players);
+    room.voteState.votes = { a: 'c', b: 'c' };
+    const broadcastRoom = vi.fn();
+
+    tryResolveDayVote(room, broadcastRoom, undefined as never, { allowEarly: true });
+
+    expect(room.players.c.alive).toBe(true);
+    expect(room.dayVoteResolved).toBe(false);
+    expect(broadcastRoom).not.toHaveBeenCalled();
+  });
+
   test('resolveDayKill ends the game when Joker is voted out', () => {
     const room = makeRoom({
       joker: buildPlayer({

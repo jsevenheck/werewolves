@@ -111,7 +111,8 @@ function resolveDeaths(
   room: Room,
   context: 'general' | 'night' | 'day' = 'general',
   broadcastRoom: (room: Room) => void,
-  io?: Namespace<ClientToServerEvents, ServerToClientEvents>
+  io?: Namespace<ClientToServerEvents, ServerToClientEvents>,
+  options: { finalHunterShotAtWerewolf?: boolean } = {}
 ) {
   const announced: NightDeathAnnouncement[] = [];
   while (room.pendingDeaths.length) {
@@ -188,7 +189,7 @@ function resolveDeaths(
     // Check winners if no new mayor selections were started
     // If a mayor selection is already in progress, we'll check winners after it completes
     if (!hasMoreMayorSelections) {
-      checkWinners(room);
+      checkWinners(room, options);
       // If in day phase and no more actions pending, mark vote as resolved so host can proceed
       if (room.phase === 'day' && context === 'day' && !room.winner) {
         room.dayVoteResolved = true;
@@ -198,14 +199,16 @@ function resolveDeaths(
   broadcastRoom(room);
 }
 
-function checkWinners(room: Room) {
+function checkWinners(room: Room, options: { finalHunterShotAtWerewolf?: boolean } = {}) {
   if (room.winner) return;
   const alive = Object.values(room.players).filter((p) => p.alive);
   const wolves = alive.filter((p) => p.role === 'werewolf');
-  // If the Hunter's final shot kills the last Werewolf and nobody else is
-  // alive, the simultaneous final death belongs to the Werewolf team.
   if (!alive.length) {
-    room.winner = { team: 'wolves', reason: 'No players remain; Werewolves win.' };
+    const team = options.finalHunterShotAtWerewolf ? 'wolves' : 'village';
+    const reason = options.finalHunterShotAtWerewolf
+      ? 'No players remain; Werewolves win.'
+      : 'All Werewolves are dead.';
+    room.winner = { team, reason };
     room.phase = 'ended';
     room.phaseStep = null;
     room.nextNightStep = null;
