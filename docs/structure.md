@@ -270,7 +270,16 @@ socket via `useAdminSocket`.
 **Narrator**: The `utils/narrator.ts` module handles audio playback with support
 for multiple audio variants per clip. Variants are discovered only in
 `/audio/custom/` (e.g., `custom/day_1.mp3`, `custom/day_2.mp3`) via HEAD requests
-and one is randomly selected per playback.
+and one is randomly selected per playback. Narration is derived from semantic
+game cues rather than every server pacing state: `transition`, `resolve`,
+`postMayor`, and `nightToDay` remain visible game states but do not trigger
+redundant audio. A monotonically increasing request ID prevents an older,
+slow-loading clip from playing after a newer room state; a separate cache
+generation prevents a pending old-locale clip from surviving a language
+change. The reviewed German
+scripts and versioned generation command live in
+`ui-vue/src/assets/audio/scripts.de.json` and
+`tools/generate-german-narrator.py`.
 
 ## Build Output
 

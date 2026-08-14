@@ -353,13 +353,28 @@ The narrator is locale-aware. It reads the active UI language from
 Locale is `'en'` or `'de'` — matching the supported languages in
 `ui-vue/src/i18n/types.ts`. When the UI language changes, the narrator
 drops its Howl cache so the next clip resolves from the new locale; the
-currently-playing clip is left to finish (no abrupt cut).
+currently-playing clip is left to finish (no abrupt cut), while an old-locale
+clip that is still loading is cancelled before it can start.
+
+The narrator intentionally stays silent during internal pacing-only states:
+
+- night `transition` and `resolve` steps
+- `postMayor`
+- `nightToDay`
+
+The next actionable role or completed `day` phase supplies the single useful
+cue. `dayToNight` remains audible because it is the actual instruction to close
+eyes. Async audio loads are request-ordered, so a clip from an older room state
+cannot start after a newer cue.
 
 Bundled clips live in:
 
 - `ui-vue/src/assets/audio/en/` (English)
-- `ui-vue/src/assets/audio/de/` (German; empty by default)
+- `ui-vue/src/assets/audio/de/` (German)
 
-To add a German clip, drop an MP3 with the same filename as the
-English one into the `de/` folder. Vite picks it up at build time via
+German source text and voice settings are versioned in
+`ui-vue/src/assets/audio/scripts.de.json`; regenerate the complete normalized
+set with `uv run tools/generate-german-narrator.py` (requires `ffmpeg`). To add
+another locale clip manually, use the same filename as the English one. Vite
+picks it up at build time via
 `import.meta.glob`. No code change required.

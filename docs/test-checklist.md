@@ -44,7 +44,7 @@ Manual and automated testing expectations for the Werewolves game.
 - **Host handoff / reclaim**: Disconnect the host, confirm another connected player becomes Host and can use host actions; reconnect the original host and verify the Host label returns to them.
 - **Endgame reveal**: When a team wins, ensure all roles reveal in the player list and that win condition matches expectations (wolves parity, all wolves dead, or Joker instant win).
 - **Dead-player role labels**: During an ongoing game, confirm each dead player's role appears as a blue role tag on the player card for all other players, while living players' roles remain hidden.
-- **Narrator audio toggle**: On mobile Safari/Chrome, tap "Narrator: Off" to enable sound, confirm audio unlock succeeds, and verify announcements only fire on phase/step/transition changes.
+- **Narrator audio toggle**: On mobile Safari/Chrome, tap "Narrator: Off" to enable sound and confirm audio unlock succeeds. Run a complete day/night cycle and verify `dayToNight` is followed by the actionable role cue without `night_transition`; verify the morning plays only `day`, without `night_resolve` or `nightToDay` narration. Rapidly change two states while the first clip is loading and verify only the newest cue plays.
 - **Narrator default state**: Reload or join a new room and confirm the narrator resets to Off.
 
 ## Admin Console
@@ -65,7 +65,11 @@ Manual and automated testing expectations for the Werewolves game.
 
 ## Narrator Audio Assets
 
-Place MP3 narrator clips in `ui-vue/public/audio/` with filenames matching the expected ones (for example, `night_wolves.mp3` or `dayToNight.mp3`) so the narrator continues to map phase changes correctly. The code falls back to a bundled silent clip when files are missing, so adding the real audio files is required for audible narration.
+Bundled MP3 narrator clips live in `ui-vue/src/assets/audio/{en,de}/` with
+matching filenames (for example, `night_wolves.mp3` or `dayToNight.mp3`). Vite
+packages them automatically. `ui-vue/public/audio/` is only for optional runtime
+custom overrides. Resolution falls back from the active locale to English and
+finally to a silent placeholder if neither locale contains the requested cue.
 
 **Audio Variants** (optional): The narrator supports multiple audio variants per clip for variety in `ui-vue/public/audio/custom/`. Name files as `custom/{key}_1.mp3`, `custom/{key}_2.mp3`, etc. The system auto-detects custom variants (up to 10) and randomly selects one each time. See `ui-vue/public/audio/README.md` for details.
 
@@ -73,20 +77,18 @@ Expected narrator keys:
 
 - `lobby.mp3` (also used for the initial audio unlock)
 - `roleReveal.mp3`
+- `postReveal.mp3`
+- `mayor.mp3`
 - `armor.mp3`
-- `day.mp3`
+- `postArmor.mp3`
 - `night.mp3`
-- `ended.mp3`
 - `night_wolves.mp3`
 - `night_seer.mp3`
 - `night_witch.mp3`
 - `night_guard.mp3`
 - `night_harlot.mp3`
-- `night_resolve.mp3`
-- `night_transition.mp3`
-- `postReveal.mp3`
-- `postArmor.mp3`
-- `nightToDay.mp3`
+- `day.mp3`
 - `dayToNight.mp3`
+- `ended.mp3`
 
 See `ui-vue/public/audio/README.md` for per-file meanings and timing.

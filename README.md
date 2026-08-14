@@ -138,6 +138,14 @@ Mobile browsers require a user gesture before audio can play. If a player enable
 - Vite automatically imports and bundles the MP3 files as assets
 - Works out-of-the-box without requiring separately hosted static files
 - No configuration needed - audio just works
+- Internal pacing states are silent: one semantic cue is played for a phase change, followed only by a distinct role-action cue when that role can act.
+- German clips use one consistent native German voice. Their reviewed source text is stored in `ui-vue/src/assets/audio/scripts.de.json`.
+
+Regenerate the complete German set reproducibly (requires `uv` and `ffmpeg`):
+
+```bash
+uv run tools/generate-german-narrator.py
+```
 
 **Custom Audio (Optional):**
 

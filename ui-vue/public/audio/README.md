@@ -8,8 +8,14 @@
 The narrator is locale-aware. When the UI is set to German it tries DE clips
 first (both bundled and from custom override paths), and falls back to the
 English clip for any key that has no German equivalent. To add a German
-clip, drop an MP3 with the same filename as the English one into
+clip for an active narration cue, drop an MP3 with the same filename as the English one into
 `ui-vue/src/assets/audio/de/` (or use the custom override paths below).
+
+The bundled German set is generated as one consistent batch with the
+`de-DE-SeraphinaMultilingualNeural` voice. Reviewed source text and voice
+settings live in `ui-vue/src/assets/audio/scripts.de.json`. Rebuild all 15
+active clips with `uv run tools/generate-german-narrator.py`; `ffmpeg` is
+required for 44.1 kHz, mono, 128 kbit/s encoding and loudness normalization.
 
 This `public/audio/` folder is kept for:
 
@@ -42,7 +48,7 @@ Where `locale` is `'en'` or `'de'`, matching the active UI language.
 
 ---
 
-Place MP3 narrator clips in this folder using the exact filenames expected by the narrator. Each file is triggered by the game phase, phase transition, or night step as described below:
+Place MP3 narrator clips in this folder using the exact filenames expected by the narrator. A cue is triggered only for a semantic phase change or actionable role. Internal pacing states (`transition`, `resolve`, `postMayor`, and `nightToDay`) are intentionally silent so the destination phase is not announced twice.
 
 ## Audio Variants
 
@@ -138,17 +144,15 @@ clip plays once the Mayor phase begins instead. Max length: 6s.
 
 Mayor election phase while players vote for the first Mayor. Max length: no fixed limit.
 
-### postMayor.mp3
-
-Transition after the Mayor election before armor or night. Max length: 5s.
-
 ### armor.mp3
 
 Armor phase while the Armor chooses Lovers. Max length: no fixed limit.
 
 ### postArmor.mp3
 
-Transition after Armor selection (time to check Lovers); then night_transition.mp3 plays before wolves act. Max length: 10s.
+Transition after Armor selection (time to check Lovers). The following internal
+night transition is silent; `night_wolves.mp3` plays when the wolves can act.
+Max length: 10s.
 
 ### night.mp3
 
@@ -174,26 +178,13 @@ Night step: guard protects a player. Max length: no fixed limit.
 
 Night step: harlot chooses a player to visit. Max length: no fixed limit.
 
-### night_transition.mp3
-
-Night step transition between roles (role sleeps, next role wakes). Max length: 3s.
-Also used after postArmor before the wolves step begins.
-
-### night_resolve.mp3
-
-Night resolve step: end of night actions, before the day transition. Max length: 6s.
-
-### nightToDay.mp3
-
-Transition from night to day (e.g. "the village wakes up"). Max length: 3s.
-
 ### day.mp3
 
 Day phase while discussion and voting happen. Max length: no fixed limit.
 
 ### dayToNight.mp3
 
-Transition from day to night (e.g. "night falls"). Max length: 3s.
+Transition from day to night (e.g. "night falls"). Max length: 6s.
 
 ### ended.mp3
 

@@ -40,6 +40,23 @@ const DEFAULT_VOLUME = 1;
 const FALLBACK_AUDIO_URL =
   'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=';
 const USER_MESSAGE_COOLDOWN_MS = 4000;
+const ACTIVE_NARRATION_KEYS = [
+  'day',
+  'night',
+  'night_wolves',
+  'night_seer',
+  'night_witch',
+  'night_guard',
+  'night_harlot',
+  'dayToNight',
+  'lobby',
+  'roleReveal',
+  'postReveal',
+  'mayor',
+  'armor',
+  'postArmor',
+  'ended',
+] as const;
 
 function toBaseAudioKey(audioKey: string): string {
   return audioKey.replace(/_\d+$/, '');
@@ -53,9 +70,21 @@ function computeNarrationKey(room: RoomView): NarrationKey {
     if (room.phaseTransition === 'postReveal' && room.passiveRoleConfig?.mayor) {
       return null;
     }
+    // These server-side transition states do not represent a separate player
+    // action. Announcing them as well as the destination phase causes the same
+    // logical phase change to be narrated two or three times.
+    if (room.phaseTransition === 'postMayor' || room.phaseTransition === 'nightToDay') {
+      return null;
+    }
     return room.phaseTransition;
   }
   if (room.phase === 'night' && room.phaseStep) {
+    // `transition` and `resolve` are internal pacing states. The next
+    // actionable role (or the completed day phase) provides the single useful
+    // narration cue.
+    if (room.phaseStep === 'transition' || room.phaseStep === 'resolve') {
+      return null;
+    }
     return `night_${room.phaseStep}`;
   }
   return room.phase;
@@ -70,37 +99,23 @@ class Narrator {
   private currentHowl: Howl | null = null;
   private readonly howls = new Map<string, Howl>();
   private readonly howlPromises = new Map<string, Promise<Howl>>();
+  private readonly detachedHowls = new Set<Howl>();
   private pendingTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingPlayback: { key: string; requestId: number } | null = null;
   private disableToken = 0;
+  private cacheGeneration = 0;
+  private playbackRequestId = 0;
   private lastPlayAttemptAt = 0;
   private lastUserMessageAt = 0;
   private readonly assetsBasePath: string | undefined;
   private readonly storage: Storage | null;
-  private readonly playClip: (key: string) => void;
+  private readonly playClip: (key: string, requestId: number) => void;
   private readonly notify: (message: NarratorNotification) => void;
   private readonly playDebounceMs: number;
   private readonly getLocale: () => SupportedLocale;
-  private readonly variants = new Map<string, number>([
-    ['day', -1],
-    ['night', -1],
-    ['night_wolves', -1],
-    ['night_seer', -1],
-    ['night_witch', -1],
-    ['night_guard', -1],
-    ['night_harlot', -1],
-    ['night_transition', -1],
-    ['night_resolve', -1],
-    ['nightToDay', -1],
-    ['dayToNight', -1],
-    ['lobby', -1],
-    ['roleReveal', -1],
-    ['postReveal', -1],
-    ['mayor', -1],
-    ['postMayor', -1],
-    ['armor', -1],
-    ['postArmor', -1],
-    ['ended', -1],
-  ]);
+  private readonly variants = new Map<string, number>(
+    ACTIVE_NARRATION_KEYS.map((key) => [key, -1])
+  );
   private readonly discoveredVariants = new Map<string, string[]>();
 
   constructor(options: NarratorOptions = {}) {
@@ -108,7 +123,9 @@ class Narrator {
     this.storage = options.storage ?? (typeof localStorage === 'undefined' ? null : localStorage);
     this.enabled = options.initialEnabled ?? false;
     this.unlocked = options.initialUnlocked ?? false;
-    this.playClip = options.playClip ?? ((key) => void this.playWithHowler(key));
+    this.playClip = options.playClip
+      ? (key, _requestId) => options.playClip?.(key)
+      : (key, requestId) => void this.playWithHowler(key, requestId);
     this.notify = options.notify ?? (() => {});
     this.playDebounceMs = options.playDebounceMs ?? 800;
     this.getLocale = options.getLocale ?? (() => 'en');
@@ -137,10 +154,7 @@ class Narrator {
     if (!next) {
       this.lastAnnouncedKey = null;
       this.pendingKey = null;
-      if (this.pendingTimer) {
-        clearTimeout(this.pendingTimer);
-        this.pendingTimer = null;
-      }
+      this.cancelPendingPlayback();
       this.disableToken += 1;
       this.stop();
       for (const howl of this.howls.values()) {
@@ -192,8 +206,12 @@ class Narrator {
 
   handleRoomUpdate(_prevRoom: RoomView | null, nextRoom: RoomView) {
     const nextKey = computeNarrationKey(nextRoom);
-    if (!nextKey) return;
     this.latestKey = nextKey;
+    if (!nextKey) {
+      this.pendingKey = null;
+      this.cancelPendingPlayback();
+      return;
+    }
     if (nextKey === this.lastAnnouncedKey) return;
     if (!this.enabled) return;
     if (!this.unlocked) {
@@ -217,7 +235,11 @@ class Narrator {
 
   private stop() {
     if (this.currentHowl) {
-      this.currentHowl.stop();
+      const current = this.currentHowl;
+      current.stop();
+      if (this.detachedHowls.delete(current)) {
+        current.unload();
+      }
       this.currentHowl = null;
     }
   }
@@ -230,8 +252,23 @@ class Narrator {
    * on the next announcement, not by yanking audio out from under the user.
    */
   invalidateCache() {
+    this.cacheGeneration += 1;
+    this.cancelPendingPlayback();
     for (const howl of this.howls.values()) {
-      howl.unload();
+      if (howl === this.currentHowl) {
+        if (!this.detachedHowls.has(howl)) {
+          this.detachedHowls.add(howl);
+          howl.once('end', () => {
+            this.detachedHowls.delete(howl);
+            if (this.currentHowl === howl) {
+              this.currentHowl = null;
+            }
+            howl.unload();
+          });
+        }
+      } else {
+        howl.unload();
+      }
     }
     this.howls.clear();
     this.howlPromises.clear();
@@ -375,21 +412,35 @@ class Narrator {
     return `${key}_${index}`;
   }
 
-  private async playWithHowler(key: string) {
-    const requestToken = this.disableToken;
-    const howl = await this.getHowl(key);
-    if (!this.enabled || !this.unlocked || this.disableToken !== requestToken) return;
+  private async playWithHowler(key: string, requestId: number) {
+    const disableToken = this.disableToken;
+    const howl = await this.getHowl(key, requestId);
+    if (
+      !this.enabled ||
+      !this.unlocked ||
+      this.disableToken !== disableToken ||
+      requestId !== this.playbackRequestId
+    ) {
+      return;
+    }
     const now = Date.now();
     if (now - this.lastPlayAttemptAt < this.playDebounceMs) {
-      this.pendingKey = key;
+      this.pendingPlayback = { key, requestId };
       if (!this.pendingTimer) {
         const delay = Math.max(this.playDebounceMs - (now - this.lastPlayAttemptAt), 0);
         this.pendingTimer = setTimeout(() => {
           this.pendingTimer = null;
-          const pending = this.pendingKey;
-          if (!pending || !this.enabled || !this.unlocked) return;
-          this.pendingKey = null;
-          this.playClip(pending);
+          const pending = this.pendingPlayback;
+          this.pendingPlayback = null;
+          if (
+            !pending ||
+            !this.enabled ||
+            !this.unlocked ||
+            pending.requestId !== this.playbackRequestId
+          ) {
+            return;
+          }
+          this.playClip(pending.key, pending.requestId);
         }, delay);
       }
       return;
@@ -400,7 +451,8 @@ class Narrator {
     await this.safePlay(howl, key);
   }
 
-  private async getHowl(key: string) {
+  private async getHowl(key: string, playbackRequestId: number) {
+    const cacheGeneration = this.cacheGeneration;
     const audioKey = await this.selectVariant(key);
     const existing = this.howls.get(audioKey);
     if (existing) return existing;
@@ -413,7 +465,10 @@ class Narrator {
       let attemptedFallback = false;
       let resolved = false;
       const requestToken = this.disableToken;
-      const shouldCache = () => this.enabled && this.disableToken === requestToken;
+      const shouldCache = () =>
+        this.enabled &&
+        this.disableToken === requestToken &&
+        this.cacheGeneration === cacheGeneration;
       const createHowl = (src: string) =>
         new Howl({
           src,
@@ -463,7 +518,9 @@ class Narrator {
           return;
         }
         if (playAfterSwap) {
-          void this.safePlay(fallbackHowl, key);
+          if (this.enabled && this.unlocked && playbackRequestId === this.playbackRequestId) {
+            void this.safePlay(fallbackHowl, key);
+          }
           finalize(fallbackHowl);
           return;
         }
@@ -493,14 +550,27 @@ class Narrator {
       activeHowl.load();
     });
 
-    this.howlPromises.set(audioKey, promise);
+    if (cacheGeneration === this.cacheGeneration) {
+      this.howlPromises.set(audioKey, promise);
+    }
     return promise;
   }
 
   private requestPlay(key: string) {
+    this.cancelPendingPlayback();
+    const requestId = ++this.playbackRequestId;
     this.lastAnnouncedKey = key;
     this.pendingKey = null;
-    this.playClip(key);
+    this.playClip(key, requestId);
+  }
+
+  private cancelPendingPlayback() {
+    this.playbackRequestId += 1;
+    this.pendingPlayback = null;
+    if (this.pendingTimer) {
+      clearTimeout(this.pendingTimer);
+      this.pendingTimer = null;
+    }
   }
 
   private async safePlay(howl: Howl, key: NarrationKey) {
@@ -544,5 +614,5 @@ function createNarrator(options: NarratorOptions = {}) {
   return new Narrator(options);
 }
 
-export { createNarrator, computeNarrationKey };
+export { ACTIVE_NARRATION_KEYS, createNarrator, computeNarrationKey };
 export type { NarrationKey, Narrator, NarratorNotification, NarratorOptions };

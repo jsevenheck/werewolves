@@ -57,8 +57,9 @@ export function useNarrator(assetsBasePath?: string) {
   });
   // When the UI language changes, drop cached Howl instances so the next
   // clip resolves from the new locale. The currently-playing clip is left
-  // to finish (no abrupt cut), and we don't re-announce the current key —
-  // the next room change picks up the new locale.
+  // to finish (no abrupt cut), while an old-locale clip that is still loading
+  // is cancelled. We don't re-announce the current key; the next room change
+  // picks up the new locale.
   watch(
     () => i18n.global.locale.value,
     () => {
