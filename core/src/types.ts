@@ -157,6 +157,12 @@ export interface Room {
   hunterShotTimer: NodeJS.Timeout | null;
   hunterShotEndsAt: number | null;
   hunterShotQueue: string[];
+  /**
+   * Set when a Hunter shot kills a Werewolf. Survives a deferred winner
+   * check (e.g. mayor succession) so a simultaneous final death still
+   * counts as a Werewolf win. Consumed (reset) when a winner is declared.
+   */
+  finalHunterShotAtWerewolf?: boolean;
   createdAt: number;
   lastActivityAt: number;
 }

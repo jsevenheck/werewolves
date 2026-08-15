@@ -219,7 +219,11 @@ resolveDeaths():
     if player is mayorId -> add to mayorSelectionQueue and start mayor succession prompt (60s timeout)
     if player is lover -> enqueue other lover death reason='died of heartbreak'
   after queue empty check win conditions:
-    if final Hunter shot killed the last Werewolf and no players remain -> endGame('wolves', 'No players remain; Werewolves win')
+    if no players remain:
+      if the final Hunter shot killed the last Werewolf (shot causality
+        recorded on the room, survives a deferred check e.g. mayor
+        succession) -> endGame('wolves', 'No players remain; Werewolves win')
+      else -> endGame('village', 'All wolves dead')
     else if all wolves dead -> endGame('village', 'All wolves dead')
     else if wolves > others (strict majority):
       endGame('wolves', 'Werewolves have the majority')

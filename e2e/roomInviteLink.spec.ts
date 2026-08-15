@@ -3,6 +3,13 @@ import { expect, test } from '@playwright/test';
 test('room invite link pre-fills the join code', async ({ browser }) => {
   const hostContext = await browser.newContext();
   const joinerContext = await browser.newContext();
+  // Headless Chromium exposes navigator.share but rejects it with
+  // AbortError (no user gesture), which makes shareRoomLink return
+  // silently and never raise the "copied" alert. Stub it away so the
+  // deterministic clipboard path is exercised instead.
+  await hostContext.addInitScript(() => {
+    Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+  });
   await hostContext.grantPermissions(['clipboard-read', 'clipboard-write'], {
     origin: 'http://localhost:5173',
   });

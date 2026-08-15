@@ -204,8 +204,14 @@ function checkWinners(room: Room, options: { finalHunterShotAtWerewolf?: boolean
   const alive = Object.values(room.players).filter((p) => p.alive);
   const wolves = alive.filter((p) => p.role === 'werewolf');
   if (!alive.length) {
-    const team = options.finalHunterShotAtWerewolf ? 'wolves' : 'village';
-    const reason = options.finalHunterShotAtWerewolf
+    // A Hunter shot that kills the last Werewolf makes the Werewolf team
+    // win the simultaneous final death. The flag survives a deferred
+    // winner check (e.g. mayor succession) and is consumed here.
+    const finalHunterShotAtWerewolf =
+      room.finalHunterShotAtWerewolf === true || options.finalHunterShotAtWerewolf === true;
+    room.finalHunterShotAtWerewolf = false;
+    const team = finalHunterShotAtWerewolf ? 'wolves' : 'village';
+    const reason = finalHunterShotAtWerewolf
       ? 'No players remain; Werewolves win.'
       : 'All Werewolves are dead.';
     room.winner = { team, reason };

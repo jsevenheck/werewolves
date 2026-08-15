@@ -431,6 +431,58 @@ describe('socketHandlers room entry and state events', () => {
     clearTimeout(timer);
   });
 
+  test('leaveRoom does not mark the day vote resolved when a living player leaves', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'day',
+      phaseStep: null,
+      phaseTransition: null,
+      players: {
+        host: {
+          id: 'host',
+          name: 'Host',
+          socketId: 'socket-host',
+          connected: true,
+          isHost: true,
+          alive: true,
+        },
+        p1: {
+          id: 'p1',
+          name: 'Villager',
+          role: 'villager',
+          socketId: 'socket-1',
+          connected: true,
+          alive: true,
+        },
+      },
+      mayorId: null,
+      awaitingHunterShot: null,
+      awaitingMayorSelection: null,
+      wolfTarget: null,
+      healedTarget: null,
+      poisonTarget: null,
+      guardedTarget: null,
+      lovers: null,
+      hunterShotQueue: [],
+      mayorSelectionQueue: [],
+      wolfVotes: {},
+      voteState: { votes: {}, revoteFromTie: null },
+      dayVoteResolved: false,
+      winner: null,
+      logs: [],
+    } as unknown as Room;
+    (getRoom as Mock).mockReturnValue(room);
+    setSocketIndex('socket-1', room.code, 'p1');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, vi.fn());
+
+    expect(room.dayVoteResolved).toBe(false);
+    expect(tryResolveDayVote).toHaveBeenCalledWith(room, expect.any(Function), io);
+  });
+
   test('leaveRoom returns early in lobby phase', () => {
     vi.clearAllMocks();
     const room = {

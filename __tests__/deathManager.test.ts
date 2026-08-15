@@ -172,6 +172,24 @@ describe('deathManager', () => {
     expect(room.phase).toBe('ended');
   });
 
+  test('checkWinners keeps the Werewolf win when the final Hunter shot was recorded on the room', () => {
+    const room = makeRoom();
+    room.players = {
+      hunter: buildPlayer({ id: 'hunter', role: 'hunter', team: 'village', alive: false }),
+      wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: false }),
+    };
+    // Simulates a deferred winner check (e.g. after mayor succession): the
+    // shot causality was recorded on the room, no options are passed.
+    room.finalHunterShotAtWerewolf = true;
+
+    checkWinners(room);
+
+    expect(room.winner).toEqual({ team: 'wolves', reason: 'No players remain; Werewolves win.' });
+    expect(room.phase).toBe('ended');
+    // The causality flag is consumed so it cannot leak into later phases.
+    expect(room.finalHunterShotAtWerewolf).toBe(false);
+  });
+
   test('checkWinners gives the village the win when all players are dead normally', () => {
     const room = makeRoom();
     room.players = {

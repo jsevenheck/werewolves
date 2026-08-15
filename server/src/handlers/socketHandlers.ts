@@ -802,6 +802,10 @@ function setupSocketHandlers(
     room.hunterShotEndsAt = null;
     queueDeath(room, targetId, 'shot by Hunter');
     room.awaitingHunterShot = null;
+    // Record the shot causality on the room so a deferred winner check
+    // (e.g. mayor succession for a Werewolf mayor) still awards the
+    // simultaneous final death to the Werewolf team.
+    room.finalHunterShotAtWerewolf = target.role === 'werewolf';
     const context = room.phase === 'night' ? 'night' : room.phase === 'day' ? 'day' : 'general';
     resolveDeaths(room, context, (r) => broadcastRoom(r, io), io, {
       finalHunterShotAtWerewolf: target.role === 'werewolf',
@@ -928,6 +932,8 @@ function setupSocketHandlers(
     const wasAlive = player.alive;
     const playerRole = player.role;
     const playerPhaseStep = room.phaseStep;
+    const wasPromptOwner =
+      room.awaitingHunterShot === playerId || room.awaitingMayorSelection === playerId;
 
     // Remove player completely from the room
     addLog(
@@ -1028,7 +1034,9 @@ function setupSocketHandlers(
 
     // If the removed player was the last pending hunter/mayor action and no
     // winner was declared, resume the phase that was paused for that prompt.
-    if (!room.awaitingHunterShot && !room.awaitingMayorSelection) {
+    // A living player leaving mid-vote is not a prompt owner: the vote must
+    // be re-evaluated with the remaining players instead of being skipped.
+    if (wasPromptOwner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
       if (room.phase === 'night' && room.phaseStep === 'resolve') {
         schedulePhaseTransition(room, 'nightToDay', (r) => broadcastRoom(r, io));
       } else if (room.phase === 'day') {
