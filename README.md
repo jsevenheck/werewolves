@@ -122,7 +122,7 @@ pnpm run test:e2e
 
 ## How to Play
 
-1. Host creates a room and shares the 4-letter code.
+1. Host creates a room and shares the room link from the lobby (or the 4-letter code). Opening the link pre-fills the join code for a new player.
 2. Host configures role counts, then starts the game (minimum 5 players required).
 3. Players see their private role on their device and click Ready.
 4. Host continues once everyone is ready.

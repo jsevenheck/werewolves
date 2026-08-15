@@ -136,6 +136,7 @@ describe('deathManager', () => {
     expect(room.hunterShotTimer).not.toBeNull(); // Timer should be set for auto-timeout
     expect(emit).toHaveBeenCalledWith('hunterPrompt', { roomCode: room.code });
     expect(room.winner).toBeNull();
+    expect(room.logs[room.logs.length - 1]?.message).toEqual({ key: 'server.logs.hunterAwakens' });
   });
 
   test('checkWinners ends the game on wolf parity', () => {
@@ -157,11 +158,75 @@ describe('deathManager', () => {
     expect(room.phaseTimer).toBeNull();
   });
 
+  test('checkWinners ends a one-versus-one game with a Werewolf win', () => {
+    const room = makeRoom();
+    room.mayorId = 'villager';
+    room.players = {
+      wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: true }),
+      villager: buildPlayer({ id: 'villager', role: 'villager', team: 'village', alive: true }),
+    };
+
+    checkWinners(room);
+
+    expect(room.winner).toEqual({ team: 'wolves', reason: 'Werewolves reached parity.' });
+    expect(room.phase).toBe('ended');
+  });
+
+  test('checkWinners keeps the Werewolf win when the final Hunter shot was recorded on the room', () => {
+    const room = makeRoom();
+    room.players = {
+      hunter: buildPlayer({ id: 'hunter', role: 'hunter', team: 'village', alive: false }),
+      wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: false }),
+    };
+    // Simulates a deferred winner check (e.g. after mayor succession): the
+    // shot causality was recorded on the room, no options are passed.
+    room.finalHunterShotAtWerewolf = true;
+
+    checkWinners(room);
+
+    expect(room.winner).toEqual({ team: 'wolves', reason: 'No players remain; Werewolves win.' });
+    expect(room.phase).toBe('ended');
+    // The causality flag is consumed so it cannot leak into later phases.
+    expect(room.finalHunterShotAtWerewolf).toBe(false);
+  });
+
+  test('checkWinners gives the village the win when all players are dead normally', () => {
+    const room = makeRoom();
+    room.players = {
+      wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: false }),
+      villager: buildPlayer({ id: 'villager', role: 'villager', team: 'village', alive: false }),
+    };
+
+    checkWinners(room);
+
+    expect(room.winner).toEqual({ team: 'village', reason: 'All Werewolves are dead.' });
+    expect(room.phase).toBe('ended');
+  });
+
+  test('resolveDeaths gives the Werewolves the final Hunter shot when nobody remains', () => {
+    const room = makeRoom();
+    room.players = {
+      hunter: buildPlayer({ id: 'hunter', role: 'hunter', team: 'village', alive: false }),
+      wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: true }),
+    };
+    room.pendingDeaths = [{ playerId: 'wolf', reason: 'shot by Hunter' }];
+
+    resolveDeaths(room, 'day', vi.fn(), undefined, { finalHunterShotAtWerewolf: true });
+
+    expect(room.winner).toEqual({
+      team: 'wolves',
+      reason: 'No players remain; Werewolves win.',
+    });
+    expect(room.phase).toBe('ended');
+  });
+
   test('checkWinners declares village win when lone witch has both potions at parity', () => {
     const room = makeRoom();
     room.players = {
-      wolf: buildPlayer({ id: 'wolf', role: 'werewolf', team: 'wolves', alive: true }),
+      wolf1: buildPlayer({ id: 'wolf1', role: 'werewolf', team: 'wolves', alive: true }),
+      wolf2: buildPlayer({ id: 'wolf2', role: 'werewolf', team: 'wolves', alive: true }),
       witch: buildPlayer({ id: 'witch', role: 'witch', team: 'village', alive: true }),
+      villager: buildPlayer({ id: 'villager', role: 'villager', team: 'village', alive: true }),
     };
     room.witchState = { healAvailable: true, poisonAvailable: true };
 

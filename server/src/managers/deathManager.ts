@@ -37,6 +37,12 @@ function startHunterShot(
   room.hunterShotEndsAt = Date.now() + HUNTER_SHOT_TIMEOUT_MS;
 
   const hunter = room.players[hunterId];
+  addLog(
+    room,
+    'The village wakes up. The Hunter is choosing a target.',
+    null,
+    localizedMessage('server.logs.hunterAwakens')
+  );
   const socket = io && hunter?.socketId && io.sockets?.get(hunter.socketId);
   if (socket && hunter?.connected) {
     socket.emit('hunterPrompt', { roomCode: room.code });
@@ -105,7 +111,8 @@ function resolveDeaths(
   room: Room,
   context: 'general' | 'night' | 'day' = 'general',
   broadcastRoom: (room: Room) => void,
-  io?: Namespace<ClientToServerEvents, ServerToClientEvents>
+  io?: Namespace<ClientToServerEvents, ServerToClientEvents>,
+  options: { finalHunterShotAtWerewolf?: boolean } = {}
 ) {
   const announced: NightDeathAnnouncement[] = [];
   while (room.pendingDeaths.length) {
@@ -182,7 +189,7 @@ function resolveDeaths(
     // Check winners if no new mayor selections were started
     // If a mayor selection is already in progress, we'll check winners after it completes
     if (!hasMoreMayorSelections) {
-      checkWinners(room);
+      checkWinners(room, options);
       // If in day phase and no more actions pending, mark vote as resolved so host can proceed
       if (room.phase === 'day' && context === 'day' && !room.winner) {
         room.dayVoteResolved = true;
@@ -192,10 +199,31 @@ function resolveDeaths(
   broadcastRoom(room);
 }
 
-function checkWinners(room: Room) {
+function checkWinners(room: Room, options: { finalHunterShotAtWerewolf?: boolean } = {}) {
   if (room.winner) return;
   const alive = Object.values(room.players).filter((p) => p.alive);
   const wolves = alive.filter((p) => p.role === 'werewolf');
+  if (!alive.length) {
+    // A Hunter shot that kills the last Werewolf makes the Werewolf team
+    // win the simultaneous final death. The flag survives a deferred
+    // winner check (e.g. mayor succession) and is consumed here.
+    const finalHunterShotAtWerewolf =
+      room.finalHunterShotAtWerewolf === true || options.finalHunterShotAtWerewolf === true;
+    room.finalHunterShotAtWerewolf = false;
+    const team = finalHunterShotAtWerewolf ? 'wolves' : 'village';
+    const reason = finalHunterShotAtWerewolf
+      ? 'No players remain; Werewolves win.'
+      : 'All Werewolves are dead.';
+    room.winner = { team, reason };
+    room.phase = 'ended';
+    room.phaseStep = null;
+    room.nextNightStep = null;
+    room.phaseTransition = null;
+    room.awaitingMayorSelection = null;
+    room.mayorSelectionQueue = [];
+    clearRoomTimers(room);
+    return;
+  }
   if (!wolves.length) {
     room.winner = { team: 'village', reason: 'All Werewolves are dead.' };
     room.phase = 'ended';
@@ -224,6 +252,19 @@ function checkWinners(room: Room) {
 
   // Wolves at parity - check if village has abilities that could turn the tide
   if (wolves.length === others) {
+    // A one-versus-one end state is already decided: the Werewolf wins. Do
+    // not keep the game alive because of Mayor or Hunter counterplay.
+    if (wolves.length === 1 && others === 1) {
+      room.winner = { team: 'wolves', reason: 'Werewolves reached parity.' };
+      room.phase = 'ended';
+      room.phaseStep = null;
+      room.nextNightStep = null;
+      room.phaseTransition = null;
+      room.awaitingMayorSelection = null;
+      room.mayorSelectionQueue = [];
+      clearRoomTimers(room);
+      return;
+    }
     // Special case: witch with both potions at parity = guaranteed village win
     // (Witch heals self + poisons wolf = wolf dies, witch lives)
     const witchWithBothPotions =

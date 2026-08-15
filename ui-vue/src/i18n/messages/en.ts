@@ -81,6 +81,10 @@ export const en = {
   lobby: {
     title: 'Lobby',
     shareCode: 'Share this code so friends can join: {code}',
+    shareLink: 'Share room link',
+    shareLinkText: 'Join my Werewolves room {code}.',
+    linkCopied: 'Room link copied to clipboard.',
+    linkCopyFailed: 'Unable to share or copy the room link.',
     maxOne: '(max 1)',
     passiveRoles: 'Passive Roles',
     waitingForHost: 'Waiting for host to configure roles.',
@@ -254,6 +258,7 @@ export const en = {
       armorLeft: 'Armor left the game. Skipping armor phase.',
       disconnected: '{name} disconnected.',
       hunterTimeout: 'Hunter shot timed out. No target selected.',
+      hunterAwakens: 'The village wakes up. The Hunter is choosing a target.',
       diedPrivate: '{name} died ({reason}). Role: {role}.',
       diedPublic: '{name} died. Role: {role}.',
       mayorSuccessionRandom:
@@ -294,6 +299,7 @@ export const en = {
       wolvesMajority: 'Werewolves have the majority.',
       witchBreakParity: 'Witch can heal and poison to break parity.',
       wolvesParity: 'Werewolves reached parity.',
+      noPlayersRemainWolvesWin: 'No players remain; Werewolves win.',
       jokerVotedOut: 'Joker was voted out and laughs last!',
     },
     dayResults: {

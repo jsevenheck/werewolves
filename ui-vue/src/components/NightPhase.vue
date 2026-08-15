@@ -24,6 +24,7 @@ const poisonTarget = ref('');
 const guardTarget = ref('');
 const harlotTarget = ref('');
 const witchActionTaken = ref(false);
+const witchActionPending = ref(false);
 
 const self = computed(() => room.value?.self || null);
 const isHost = computed(() => room.value?.hostId === playerId.value);
@@ -162,8 +163,9 @@ function submitSeerInspect() {
 }
 
 function healTarget() {
-  if (!playerId.value || !room.value) return;
+  if (!playerId.value || !room.value || witchActionPending.value) return;
   witchActionTaken.value = true;
+  witchActionPending.value = true;
   props.socket.emit('submitWitchDecision', {
     roomCode: room.value.code,
     playerId: playerId.value,
@@ -172,8 +174,9 @@ function healTarget() {
 }
 
 function poisonSubmit() {
-  if (!poisonTarget.value || !playerId.value || !room.value) return;
+  if (!poisonTarget.value || !playerId.value || !room.value || witchActionPending.value) return;
   witchActionTaken.value = true;
+  witchActionPending.value = true;
   props.socket.emit('submitWitchDecision', {
     roomCode: room.value.code,
     playerId: playerId.value,
@@ -183,7 +186,8 @@ function poisonSubmit() {
 }
 
 function skipWitch() {
-  if (!playerId.value || !room.value) return;
+  if (!playerId.value || !room.value || witchActionPending.value) return;
+  witchActionPending.value = true;
   props.socket.emit('submitWitchDecision', {
     roomCode: room.value.code,
     playerId: playerId.value,
@@ -249,7 +253,18 @@ watch(
     if (active) {
       poisonTarget.value = '';
       witchActionTaken.value = false;
+      witchActionPending.value = false;
     }
+  }
+);
+watch(
+  () => [
+    room.value?.phaseStep,
+    room.value?.witchState?.healAvailable,
+    room.value?.witchState?.poisonAvailable,
+  ],
+  () => {
+    witchActionPending.value = false;
   }
 );
 watch(
@@ -357,7 +372,7 @@ watch(
           <button
             id="heal-btn"
             type="button"
-            :disabled="!witchState.healAvailable || !witchWolfTarget"
+            :disabled="witchActionPending || !witchState.healAvailable || !witchWolfTarget"
             @click="healTarget"
           >
             {{ t('night.useHealPotion') }}
@@ -368,7 +383,7 @@ watch(
               <select
                 id="poison-select"
                 v-model="poisonTarget"
-                :disabled="!witchState.poisonAvailable"
+                :disabled="witchActionPending || !witchState.poisonAvailable"
               >
                 <option value="">{{ t('night.choosePlayer') }}</option>
                 <option v-for="player in aliveWitchTargets" :key="player.id" :value="player.id">
@@ -380,7 +395,7 @@ watch(
           <button
             id="poison-btn"
             type="button"
-            :disabled="!witchState.poisonAvailable"
+            :disabled="witchActionPending || !witchState.poisonAvailable"
             @click="poisonSubmit"
           >
             {{ t('night.usePoison') }}
