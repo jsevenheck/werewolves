@@ -81,6 +81,10 @@ export const de = {
   lobby: {
     title: 'Lobby',
     shareCode: 'Teile diesen Code, damit Freunde beitreten können: {code}',
+    shareLink: 'Raum-Link teilen',
+    shareLinkText: 'Tritt meinem Werwolf-Raum {code} bei.',
+    linkCopied: 'Raum-Link wurde in die Zwischenablage kopiert.',
+    linkCopyFailed: 'Der Raum-Link konnte nicht geteilt oder kopiert werden.',
     maxOne: '(max. 1)',
     passiveRoles: 'Passive Rollen',
     waitingForHost: 'Warte darauf, dass der Host die Rollen konfiguriert.',
@@ -258,6 +262,7 @@ export const de = {
       armorLeft: 'Amor hat das Spiel verlassen. Amor-Phase wird übersprungen.',
       disconnected: '{name} getrennt.',
       hunterTimeout: 'Jäger-Schuss abgelaufen. Kein Ziel gewählt.',
+      hunterAwakens: 'Das Dorf wacht auf. Der Jäger wählt ein Ziel.',
       diedPrivate: '{name} ist gestorben ({reason}). Rolle: {role}.',
       diedPublic: '{name} ist gestorben. Rolle: {role}.',
       mayorSuccessionRandom:
@@ -301,6 +306,7 @@ export const de = {
       wolvesMajority: 'Die Werwölfe haben die Mehrheit.',
       witchBreakParity: 'Die Hexe kann mit Heil- und Gifttrank den Gleichstand brechen.',
       wolvesParity: 'Die Werwölfe haben Gleichstand erreicht.',
+      noPlayersRemainWolvesWin: 'Niemand ist mehr übrig; die Werwölfe gewinnen.',
       jokerVotedOut: 'Der Joker wurde herausgewählt und lacht zuletzt!',
     },
     dayResults: {

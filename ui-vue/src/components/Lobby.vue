@@ -55,6 +55,13 @@ const totals = computed(() =>
 const playersCount = computed(() => room.value?.players.length || 0);
 const villagerSlots = computed(() => Math.max(playersCount.value - totals.value, 0));
 const needsAdjust = computed(() => totals.value > playersCount.value);
+const roomLink = computed(() => {
+  if (typeof window === 'undefined' || !room.value) return '';
+  const url = new URL(window.location.href);
+  url.searchParams.set('room', room.value.code);
+  url.hash = '';
+  return url.toString();
+});
 
 // Local state for role config inputs (host only)
 const localRoleConfig = ref<Record<string, number>>({});
@@ -132,12 +139,40 @@ function startGame() {
     }
   );
 }
+
+async function shareRoomLink() {
+  if (!roomLink.value || !room.value) return;
+  const shareData = {
+    title: t('landing.title'),
+    text: t('lobby.shareLinkText', { code: room.value.code }),
+    url: roomLink.value,
+  };
+
+  try {
+    if (window.navigator.share) {
+      await window.navigator.share(shareData);
+      return;
+    }
+    if (!window.navigator.clipboard?.writeText) {
+      notify(t('lobby.linkCopyFailed'));
+      return;
+    }
+    await window.navigator.clipboard.writeText(roomLink.value);
+    notify(t('lobby.linkCopied'));
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return;
+    notify(t('lobby.linkCopyFailed'));
+  }
+}
 </script>
 
 <template>
   <section v-if="room" class="panel">
     <h2>{{ t('lobby.title') }}</h2>
     <p :data-room-code="room.code">{{ t('lobby.shareCode', { code: room.code }) }}</p>
+    <button id="share-room-link" type="button" @click="shareRoomLink">
+      {{ t('lobby.shareLink') }}
+    </button>
     <form v-if="canStart" id="role-config" class="actions" @submit.prevent>
       <label v-for="[role, count] in Object.entries(roleConfig)" :key="role" class="role-row">
         <span>

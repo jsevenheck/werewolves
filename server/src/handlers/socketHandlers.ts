@@ -167,8 +167,6 @@ function setupSocketHandlers(
   });
 
   socket.on('resumePlayer', ({ roomCode, playerId, resumeToken }, cb) => {
-    // Cancel any pending disconnect grace timer for this player.
-    cancelPendingDisconnect(playerId);
     const existingRef = getSocketIndex(socket.id);
     if (existingRef && (existingRef.roomCode !== roomCode || existingRef.playerId !== playerId)) {
       detachSocketFromRoom(io, socket.id, 'left the room');
@@ -183,6 +181,8 @@ function setupSocketHandlers(
     if (!resumeToken || resumeToken !== player.resumeToken) {
       return cb?.(errorResponse('Invalid session', 'server.errors.invalidSession'));
     }
+    // Only a validated resume may cancel the player's disconnect grace timer.
+    cancelPendingDisconnect(playerId);
     if (player.socketId && player.socketId !== socket.id) {
       const previousSocketId = player.socketId;
       const previousSocket = io.sockets.get(previousSocketId);
@@ -802,8 +802,14 @@ function setupSocketHandlers(
     room.hunterShotEndsAt = null;
     queueDeath(room, targetId, 'shot by Hunter');
     room.awaitingHunterShot = null;
+    // Record the shot causality on the room so a deferred winner check
+    // (e.g. mayor succession for a Werewolf mayor) still awards the
+    // simultaneous final death to the Werewolf team.
+    room.finalHunterShotAtWerewolf = target.role === 'werewolf';
     const context = room.phase === 'night' ? 'night' : room.phase === 'day' ? 'day' : 'general';
-    resolveDeaths(room, context, (r) => broadcastRoom(r, io), io);
+    resolveDeaths(room, context, (r) => broadcastRoom(r, io), io, {
+      finalHunterShotAtWerewolf: target.role === 'werewolf',
+    });
     if (startNextHunterShot(room, (r) => broadcastRoom(r, io), io)) {
       return;
     }
@@ -926,6 +932,8 @@ function setupSocketHandlers(
     const wasAlive = player.alive;
     const playerRole = player.role;
     const playerPhaseStep = room.phaseStep;
+    const wasPromptOwner =
+      room.awaitingHunterShot === playerId || room.awaitingMayorSelection === playerId;
 
     // Remove player completely from the room
     addLog(
@@ -1022,6 +1030,18 @@ function setupSocketHandlers(
       broadcastRoom(room, io);
       cb?.({ ok: true });
       return;
+    }
+
+    // If the removed player was the last pending hunter/mayor action and no
+    // winner was declared, resume the phase that was paused for that prompt.
+    // A living player leaving mid-vote is not a prompt owner: the vote must
+    // be re-evaluated with the remaining players instead of being skipped.
+    if (wasPromptOwner && !room.awaitingHunterShot && !room.awaitingMayorSelection) {
+      if (room.phase === 'night' && room.phaseStep === 'resolve') {
+        schedulePhaseTransition(room, 'nightToDay', (r) => broadcastRoom(r, io));
+      } else if (room.phase === 'day') {
+        room.dayVoteResolved = true;
+      }
     }
 
     // Continue game flow based on current phase if the departed player was alive

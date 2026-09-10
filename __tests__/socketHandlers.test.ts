@@ -427,7 +427,60 @@ describe('socketHandlers room entry and state events', () => {
     expect(room.hunterShotEndsAt).toBeNull();
     expect(startNextHunterShot).toHaveBeenCalledWith(room, expect.any(Function), io);
     expect(startNextMayorSelection).toHaveBeenCalledWith(room, expect.any(Function), io);
+    expect(schedulePhaseTransition).toHaveBeenCalledWith(room, 'nightToDay', expect.any(Function));
     clearTimeout(timer);
+  });
+
+  test('leaveRoom does not mark the day vote resolved when a living player leaves', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'day',
+      phaseStep: null,
+      phaseTransition: null,
+      players: {
+        host: {
+          id: 'host',
+          name: 'Host',
+          socketId: 'socket-host',
+          connected: true,
+          isHost: true,
+          alive: true,
+        },
+        p1: {
+          id: 'p1',
+          name: 'Villager',
+          role: 'villager',
+          socketId: 'socket-1',
+          connected: true,
+          alive: true,
+        },
+      },
+      mayorId: null,
+      awaitingHunterShot: null,
+      awaitingMayorSelection: null,
+      wolfTarget: null,
+      healedTarget: null,
+      poisonTarget: null,
+      guardedTarget: null,
+      lovers: null,
+      hunterShotQueue: [],
+      mayorSelectionQueue: [],
+      wolfVotes: {},
+      voteState: { votes: {}, revoteFromTie: null },
+      dayVoteResolved: false,
+      winner: null,
+      logs: [],
+    } as unknown as Room;
+    (getRoom as Mock).mockReturnValue(room);
+    setSocketIndex('socket-1', room.code, 'p1');
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.leaveRoom({ roomCode: room.code, playerId: 'p1' }, vi.fn());
+
+    expect(room.dayVoteResolved).toBe(false);
+    expect(tryResolveDayVote).toHaveBeenCalledWith(room, expect.any(Function), io);
   });
 
   test('leaveRoom returns early in lobby phase', () => {
@@ -1551,6 +1604,52 @@ describe('socketHandlers security checks', () => {
     expect(room.players.p1.connected).toBe(true);
   });
 
+  test('invalid resume cannot cancel the disconnect grace timer', () => {
+    vi.useFakeTimers();
+    try {
+      const room = {
+        code: 'ABCD',
+        hostId: 'p1',
+        phase: 'lobby',
+        players: {
+          p1: {
+            id: 'p1',
+            name: 'Player',
+            connected: true,
+            socketId: 'socket-old',
+            resumeToken: 'good-token',
+            isHost: true,
+          },
+        },
+        voteState: { votes: {}, revoteFromTie: null },
+        logs: [],
+      } as unknown as Room;
+      (getRoom as Mock).mockReturnValue(room);
+
+      const disconnected = makeSocket();
+      disconnected.socket.id = 'socket-old';
+      setSocketIndex('socket-old', room.code, 'p1');
+      setupSocketHandlers(io, disconnected.socket as any);
+      disconnected.handlers.disconnect();
+
+      const attacker = makeSocket();
+      attacker.socket.id = 'socket-new';
+      setupSocketHandlers(io, attacker.socket as any);
+      attacker.handlers.resumePlayer(
+        { roomCode: room.code, playerId: 'p1', resumeToken: 'bad-token' },
+        vi.fn()
+      );
+
+      vi.advanceTimersByTime(5_001);
+      expect(room.players.p1.connected).toBe(false);
+      expect(room.players.p1.socketId).toBeNull();
+    } finally {
+      vi.useRealTimers();
+      deleteSocketIndex('socket-old');
+      deleteSocketIndex('socket-new');
+    }
+  });
+
   test('submitWolfVote rejects socket impersonation', () => {
     const room = {
       code: 'ABCD',
@@ -1720,10 +1819,8 @@ describe('socketHandlers mechanics guards', () => {
 
     handlers.hostFinalizeDayVote({ roomCode: 'ABCD', playerId: 'host' });
 
-    expect(room.winner).toEqual({
-      team: 'joker',
-      reason: 'Joker was voted out and laughs last!',
-    });
+    expect(room.winner).toBeNull();
+    expect(room.players.joker.alive).toBe(true);
   });
 
   test('mayor votes reject targets outside the revote list', () => {
@@ -1954,7 +2051,9 @@ describe('socketHandlers hunterShoot', () => {
 
     expect(queueDeath).toHaveBeenCalledWith(room, 'v1', 'shot by Hunter');
     expect(room.awaitingHunterShot).toBeNull();
-    expect(resolveDeaths).toHaveBeenCalledWith(room, 'day', expect.any(Function), io);
+    expect(resolveDeaths).toHaveBeenCalledWith(room, 'day', expect.any(Function), io, {
+      finalHunterShotAtWerewolf: false,
+    });
     expect(startNextHunterShot).toHaveBeenCalledWith(room, expect.any(Function), io);
     expect(holdDayToNightTransition).toHaveBeenCalledWith(room, expect.any(Function));
   });

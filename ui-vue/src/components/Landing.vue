@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../stores/game';
 import { useGameI18n } from '../composables/useGameI18n';
@@ -98,6 +98,14 @@ function resumeSession() {
     attemptResume(savedSession.value);
   }
 }
+
+onMounted(() => {
+  const params = new URLSearchParams(window.location.search);
+  const roomFromLink = params.get('room')?.trim().toUpperCase();
+  if (roomFromLink && /^[A-Z0-9]{4}$/.test(roomFromLink)) {
+    joinCode.value = roomFromLink;
+  }
+});
 </script>
 
 <template>
