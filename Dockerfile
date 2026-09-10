@@ -11,7 +11,7 @@ FROM base AS builder
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm config set store-dir /pnpm/store && \
-    pnpm install --frozen-lockfile --prod=false
+    pnpm install --frozen-lockfile
 
 COPY . .
 
@@ -20,7 +20,7 @@ COPY . .
 # workspace package's deps now.
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm config set store-dir /pnpm/store && \
-    pnpm -C ui-vue install --prod=false --no-frozen-lockfile
+    pnpm -C ui-vue install --no-frozen-lockfile
 
 # Build server and client
 RUN pnpm run build
