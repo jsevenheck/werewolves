@@ -26,7 +26,13 @@ export default tseslint.config(
       '**/*.config.mjs',
       '**/*.config.cjs',
       '**/*.cjs',
-      '.pi/extensions/*.ts',
+      // Agent tooling and generated repo context (not application code)
+      '.claude/**',
+      '.pi/**',
+      'graft/**',
+      '.mcp.json',
+      'AGENTS.md',
+      'CLAUDE.md',
     ],
   },
 

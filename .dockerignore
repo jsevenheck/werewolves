@@ -25,6 +25,8 @@ playwright-report
 .agents/
 .claude/
 .pi/
+graft/
+.mcp.json
 
 __tests__
 e2e
