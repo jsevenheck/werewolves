@@ -252,6 +252,7 @@ const BASH_ALLOW = [
   /^diff\b/,
   /^patch\b/,
   /^graphify\b/,
+  /^graft\b/,
 
   // Linting & Formatierung
   /^eslint\b/,

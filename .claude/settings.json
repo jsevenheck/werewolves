@@ -16,12 +16,10 @@
       "Bash(pnpm add*)",
       "Bash(pnpm exec playwright*)",
       "Bash(pnpm playwright-cli*)",
-
       "Bash(git status)",
       "Bash(git diff*)",
       "Bash(git log*)",
       "Bash(graphify*)",
-
       "Edit(**/*.ts)",
       "Edit(**/*.vue)",
       "Edit(**/*.tsx)",
@@ -30,7 +28,6 @@
       "Edit(**/*.md)",
       "Edit(**/*.css)",
       "Edit(**/*.html)",
-
       "Write(**/*.ts)",
       "Write(**/*.tsx)",
       "Write(**/*.vue)",
@@ -41,23 +38,23 @@
       "Write(**/*.html)",
       "Write(**/*.test.ts)",
       "Write(**/*.spec.ts)",
-
-      "Read(**/*)"
+      "Read(**/*)",
+      "Bash(graft:*)",
+      "Bash(npx graft:*)",
+      "Bash(graft-dev:*)",
+      "Bash(node dist/cli.js:*)"
     ],
     "deny": [
       "Bash(git merge*)",
       "Bash(git rebase*)",
       "Bash(git reset*)",
-
       "Edit(**/.env*)",
       "Write(**/.env*)",
       "Read(**/.env*)",
       "Edit(**/pnpm-lock.yaml)",
       "Write(**/pnpm-lock.yaml)",
-
       "Write(**/package.json)",
       "Write(**/tsconfig*.json)",
-
       "Bash(rm -rf*)",
       "Bash(sudo*)",
       "Bash(su*)"
@@ -72,7 +69,71 @@
             "command": "python ${CLAUDE_PROJECT_DIR}/.claude/hooks/graphify_hint.py"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" prompt",
+            "timeout": 15000
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" post-edit",
+            "timeout": 10000
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|mcp__graft__|Read|Grep|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" tool-savings",
+            "timeout": 8000
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" session-start",
+            "timeout": 8000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-hooks.cjs\" stop",
+            "timeout": 8000
+          }
+        ]
       }
     ]
-  }
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-statusline.cjs\""
+  },
+  "subagentStatusLine": {
+    "type": "command",
+    "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-statusline.cjs\""
+  },
+  "footerLinksRegexes": [
+    "graft/[\\w./-]+\\.md"
+  ]
 }
