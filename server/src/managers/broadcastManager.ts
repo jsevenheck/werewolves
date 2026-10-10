@@ -275,6 +275,12 @@ function sanitizeRoom(room: Room, viewerId: string): RoomView {
           team: viewer.team,
           alive: viewer.alive,
           ready: room.phase === 'roleReveal' ? viewer.ready : undefined,
+          seerResultPending:
+            viewer.role === 'seer' &&
+            viewer.alive &&
+            room.phase === 'night' &&
+            room.phaseStep === 'seer' &&
+            room.seerAwaitingDismiss,
         }
       : null,
   };

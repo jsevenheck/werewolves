@@ -71,6 +71,7 @@ function createRoom(
     hunterShotTimer: null,
     hunterShotEndsAt: null,
     hunterShotQueue: [],
+    finalHunterShotAtWerewolf: false,
     createdAt: now,
     lastActivityAt: now,
   };

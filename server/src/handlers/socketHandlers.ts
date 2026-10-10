@@ -422,6 +422,11 @@ function setupSocketHandlers(
     if (!player || player.role !== 'seer' || !player.alive) {
       return cb?.(errorResponse('Invalid player', 'server.errors.invalidPlayer'));
     }
+    if (room.seerActed || room.seerAwaitingDismiss) {
+      return cb?.(
+        errorResponse('Seer has already inspected this night', 'server.errors.seerAlreadyActed')
+      );
+    }
     if (targetId === playerId) {
       return cb?.(errorResponse('Cannot inspect yourself', 'server.errors.cannotInspectSelf'));
     }
@@ -726,7 +731,16 @@ function setupSocketHandlers(
 
   socket.on('submitDayVote', ({ roomCode, playerId, targetId }) => {
     const room = getRoom(roomCode);
-    if (!room || room.phase !== 'day') return;
+    if (
+      !room ||
+      room.phase !== 'day' ||
+      room.dayVoteResolved ||
+      room.phaseTransition ||
+      room.awaitingHunterShot ||
+      room.awaitingMayorSelection
+    ) {
+      return;
+    }
     if (isDiscussionLocked(room)) return;
     const player = room.players[playerId];
     if (!player || !player.alive) return;
@@ -754,6 +768,14 @@ function setupSocketHandlers(
     if (!room || room.phase !== 'day') return;
     if (room.hostId !== playerId) return;
     if (!getPlayerForSocket(room, playerId, socket.id)) return;
+    if (
+      room.dayVoteResolved ||
+      room.phaseTransition ||
+      room.awaitingHunterShot ||
+      room.awaitingMayorSelection
+    ) {
+      return;
+    }
     if (isDiscussionLocked(room)) return;
     tryResolveDayVote(room, (r) => broadcastRoom(r, io), io, { allowEarly: true });
   });
@@ -763,7 +785,14 @@ function setupSocketHandlers(
     if (!room || room.phase !== 'day') return;
     if (room.hostId !== playerId) return;
     if (!getPlayerForSocket(room, playerId, socket.id)) return;
-    if (!room.dayVoteResolved) return;
+    if (
+      !room.dayVoteResolved ||
+      room.phaseTransition ||
+      room.awaitingHunterShot ||
+      room.awaitingMayorSelection
+    ) {
+      return;
+    }
     // Check if game has already ended before transitioning
     if (room.winner) {
       broadcastRoom(room, io);
@@ -805,7 +834,8 @@ function setupSocketHandlers(
     // Record the shot causality on the room so a deferred winner check
     // (e.g. mayor succession for a Werewolf mayor) still awards the
     // simultaneous final death to the Werewolf team.
-    room.finalHunterShotAtWerewolf = target.role === 'werewolf';
+    room.finalHunterShotAtWerewolf =
+      room.finalHunterShotAtWerewolf === true || target.role === 'werewolf';
     const context = room.phase === 'night' ? 'night' : room.phase === 'day' ? 'day' : 'general';
     resolveDeaths(room, context, (r) => broadcastRoom(r, io), io, {
       finalHunterShotAtWerewolf: target.role === 'werewolf',
@@ -874,6 +904,7 @@ function setupSocketHandlers(
     room.hunterShotTimer = null;
     room.hunterShotEndsAt = null;
     room.hunterShotQueue = [];
+    room.finalHunterShotAtWerewolf = false;
     Object.values(room.players).forEach((player) => {
       player.role = null;
       player.team = null;

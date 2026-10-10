@@ -10,7 +10,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits<{ dismiss: [] }>();
 
 const { t, seerResultLabel } = useGameI18n();
 const store = useGameStore();
@@ -21,7 +20,6 @@ const isWerewolf = props.result.result === 'Werewolf';
 function dismiss() {
   if (!room.value || !playerId.value) return;
   props.socket.emit('seerContinue', { roomCode: room.value.code, playerId: playerId.value });
-  emit('dismiss');
 }
 </script>
 

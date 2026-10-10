@@ -10,6 +10,16 @@ function tryResolveDayVote(
   io: Namespace<ClientToServerEvents, ServerToClientEvents>,
   options: { allowEarly?: boolean } = {}
 ): boolean {
+  if (
+    room.phase !== 'day' ||
+    room.dayVoteResolved ||
+    room.phaseTransition ||
+    room.awaitingHunterShot ||
+    room.awaitingMayorSelection
+  ) {
+    return false;
+  }
+
   const allowEarly = !!options.allowEarly;
   const alivePlayers = Object.values(room.players).filter((p) => p.alive);
   const connectedAlive = alivePlayers.filter((p) => p.connected);

@@ -1755,6 +1755,41 @@ describe('socketHandlers mechanics guards', () => {
     expect(advanceNightStep).not.toHaveBeenCalled();
   });
 
+  test('seer can inspect only once per night', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'night',
+      phaseStep: 'seer',
+      players: {
+        seer: {
+          id: 'seer',
+          role: 'seer',
+          alive: true,
+          socketId: 'socket-1',
+          seerResult: null,
+        },
+        wolf: { id: 'wolf', name: 'Wolf', role: 'werewolf', alive: true },
+        villager: { id: 'villager', name: 'Villager', role: 'villager', alive: true },
+      },
+      seerActed: false,
+      seerAwaitingDismiss: false,
+      logs: [],
+    } as unknown as Room;
+    (getRoom as Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.submitSeerInspect({ roomCode: 'ABCD', playerId: 'seer', targetId: 'wolf' });
+    handlers.submitSeerInspect({ roomCode: 'ABCD', playerId: 'seer', targetId: 'villager' });
+
+    expect(room.players.seer.seerResult).toEqual({ name: 'Wolf', result: 'Werewolf' });
+    expect(room.seerActed).toBe(true);
+    expect(room.seerAwaitingDismiss).toBe(true);
+    expect(advanceNightStep).not.toHaveBeenCalled();
+    expect(broadcastRoom).toHaveBeenCalledTimes(1);
+  });
+
   test('seerContinue clears flag and advances night step', () => {
     const room = {
       code: 'ABCD',
@@ -1797,6 +1832,68 @@ describe('socketHandlers mechanics guards', () => {
 
     expect(room.voteState.votes.p1).toBe('p2');
     expect(broadcastRoom).not.toHaveBeenCalled();
+  });
+
+  test('day votes are rejected after resolution or while a transition/action is pending', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'day',
+      phaseStep: null,
+      players: {
+        p1: { id: 'p1', role: 'villager', alive: true, socketId: 'socket-1' },
+        p2: { id: 'p2', role: 'villager', alive: true },
+      },
+      voteState: { votes: { p1: 'p2' }, revoteFromTie: null },
+      dayVoteResolved: true,
+      phaseTransition: null,
+      awaitingHunterShot: null,
+      awaitingMayorSelection: null,
+    } as unknown as Room;
+    (getRoom as Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.submitDayVote({ roomCode: 'ABCD', playerId: 'p1', targetId: null });
+    room.dayVoteResolved = false;
+    room.phaseTransition = 'dayToNight';
+    handlers.submitDayVote({ roomCode: 'ABCD', playerId: 'p1', targetId: null });
+    room.phaseTransition = null;
+    room.awaitingHunterShot = 'p2';
+    handlers.submitDayVote({ roomCode: 'ABCD', playerId: 'p1', targetId: null });
+    room.awaitingHunterShot = null;
+    room.awaitingMayorSelection = 'p2';
+    handlers.submitDayVote({ roomCode: 'ABCD', playerId: 'p1', targetId: null });
+
+    expect(room.voteState.votes.p1).toBe('p2');
+    expect(tryResolveDayVote).not.toHaveBeenCalled();
+    expect(broadcastRoom).not.toHaveBeenCalled();
+  });
+
+  test('host cannot finalize or transition a resolved day twice', () => {
+    const room = {
+      code: 'ABCD',
+      hostId: 'host',
+      phase: 'day',
+      phaseStep: null,
+      phaseTransition: 'dayToNight',
+      players: {
+        host: { id: 'host', role: 'villager', alive: true, socketId: 'socket-1' },
+      },
+      voteState: { votes: {}, revoteFromTie: null },
+      dayVoteResolved: true,
+      awaitingHunterShot: null,
+      awaitingMayorSelection: null,
+    } as unknown as Room;
+    (getRoom as Mock).mockReturnValue(room);
+    const { handlers, socket } = makeSocket();
+    setupSocketHandlers(io, socket as any);
+
+    handlers.hostFinalizeDayVote({ roomCode: 'ABCD', playerId: 'host' });
+    handlers.hostProceedToNight({ roomCode: 'ABCD', playerId: 'host' });
+
+    expect(tryResolveDayVote).not.toHaveBeenCalled();
+    expect(holdDayToNightTransition).not.toHaveBeenCalled();
   });
 
   test('host can finalize day vote early', () => {
@@ -1933,6 +2030,7 @@ describe('socketHandlers restartGame', () => {
       transitionTimer: 2,
       hunterShotTimer: 3,
       hunterShotQueue: ['hunter'],
+      finalHunterShotAtWerewolf: true,
     } as unknown as Room;
     (getRoom as Mock).mockReturnValue(room);
     const { handlers, socket } = makeSocket();
@@ -1967,6 +2065,7 @@ describe('socketHandlers restartGame', () => {
     expect(room.transitionTimer).toBeNull();
     expect(room.hunterShotTimer).toBeNull();
     expect(room.hunterShotQueue).toEqual([]);
+    expect(room.finalHunterShotAtWerewolf).toBe(false);
     expect(room.logs[room.logs.length - 1].text).toBe('Game reset. Back to lobby.');
     Object.values(room.players).forEach((player) => {
       expect(player.role).toBeNull();

@@ -55,6 +55,7 @@ const makeRoom = (): Room => ({
   hunterShotTimer: null,
   hunterShotEndsAt: null,
   hunterShotQueue: [],
+  finalHunterShotAtWerewolf: false,
   harlotVisitedTarget: null,
   harlotActed: false,
   dayVoteResolved: false,
@@ -158,6 +159,53 @@ describe('deathManager', () => {
     expect(room.phaseTimer).toBeNull();
   });
 
+  test('a living village Mayor prevents a Werewolf win at parity', () => {
+    const room = makeRoom();
+    room.mayorId = 'mayor';
+    room.players = {
+      wolf1: buildPlayer({ id: 'wolf1', role: 'werewolf', team: 'wolves' }),
+      wolf2: buildPlayer({ id: 'wolf2', role: 'werewolf', team: 'wolves' }),
+      mayor: buildPlayer({ id: 'mayor', role: 'villager', team: 'village' }),
+      villager: buildPlayer({ id: 'villager', role: 'villager', team: 'village' }),
+    };
+
+    checkWinners(room);
+
+    expect(room.winner).toBeNull();
+  });
+
+  test('a Werewolf Mayor does not prevent a Werewolf win at parity', () => {
+    const room = makeRoom();
+    room.mayorId = 'wolf1';
+    room.players = {
+      wolf1: buildPlayer({ id: 'wolf1', role: 'werewolf', team: 'wolves' }),
+      wolf2: buildPlayer({ id: 'wolf2', role: 'werewolf', team: 'wolves' }),
+      v1: buildPlayer({ id: 'v1', role: 'villager', team: 'village' }),
+      v2: buildPlayer({ id: 'v2', role: 'villager', team: 'village' }),
+    };
+
+    checkWinners(room);
+
+    expect(room.winner).toEqual({ team: 'wolves', reason: 'Werewolves reached parity.' });
+    expect(room.phase).toBe('ended');
+  });
+
+  test('a Joker Mayor does not prevent a Werewolf win at parity', () => {
+    const room = makeRoom();
+    room.mayorId = 'joker';
+    room.players = {
+      wolf1: buildPlayer({ id: 'wolf1', role: 'werewolf', team: 'wolves' }),
+      wolf2: buildPlayer({ id: 'wolf2', role: 'werewolf', team: 'wolves' }),
+      joker: buildPlayer({ id: 'joker', role: 'joker', team: 'joker' }),
+      villager: buildPlayer({ id: 'villager', role: 'villager', team: 'village' }),
+    };
+
+    checkWinners(room);
+
+    expect(room.winner).toEqual({ team: 'wolves', reason: 'Werewolves reached parity.' });
+    expect(room.phase).toBe('ended');
+  });
+
   test('checkWinners ends a one-versus-one game with a Werewolf win', () => {
     const room = makeRoom();
     room.mayorId = 'villager';
@@ -170,6 +218,31 @@ describe('deathManager', () => {
 
     expect(room.winner).toEqual({ team: 'wolves', reason: 'Werewolves reached parity.' });
     expect(room.phase).toBe('ended');
+  });
+
+  test('checkWinners clears Hunter-shot causality when the game continues', () => {
+    const room = makeRoom();
+    room.players = {
+      hunter: buildPlayer({ id: 'hunter', role: 'hunter', alive: false }),
+      wolf1: buildPlayer({ id: 'wolf1', role: 'werewolf', team: 'wolves', alive: false }),
+      wolf2: buildPlayer({ id: 'wolf2', role: 'werewolf', team: 'wolves' }),
+      v1: buildPlayer({ id: 'v1', role: 'villager' }),
+      v2: buildPlayer({ id: 'v2', role: 'villager' }),
+      v3: buildPlayer({ id: 'v3', role: 'villager' }),
+    };
+    room.finalHunterShotAtWerewolf = true;
+
+    checkWinners(room);
+
+    expect(room.winner).toBeNull();
+    expect(room.finalHunterShotAtWerewolf).toBe(false);
+
+    Object.values(room.players).forEach((player) => {
+      player.alive = false;
+    });
+    checkWinners(room);
+
+    expect(room.winner).toEqual({ team: 'village', reason: 'All Werewolves are dead.' });
   });
 
   test('checkWinners keeps the Werewolf win when the final Hunter shot was recorded on the room', () => {

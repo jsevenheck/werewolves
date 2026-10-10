@@ -47,7 +47,7 @@ const makeRoom = (players: Record<string, Player>): Room => ({
   pendingDeaths: [],
   logs: [],
   nextNightStep: 'wolves',
-  phaseTransition: 'dayToNight',
+  phaseTransition: null,
   phaseTimer: null,
   transitionTimer: null,
   hunterShotTimer: null,
@@ -201,6 +201,42 @@ describe('voteManager', () => {
     expect(room.winner).toBeNull();
     expect(room.players.b.alive).toBe(true);
     expect(room.lastDayMessage).toBe('No one was eliminated.');
+  });
+
+  test('tryResolveDayVote ignores closed votes, transitions, and pending death choices', () => {
+    const players = {
+      a: buildPlayer({ id: 'a', alive: true }),
+      b: buildPlayer({ id: 'b', alive: true }),
+    };
+    const room = makeRoom(players);
+    room.voteState.votes = { a: 'b', b: 'a' };
+    const broadcastRoom = vi.fn();
+
+    room.dayVoteResolved = true;
+    expect(tryResolveDayVote(room, broadcastRoom, undefined as never, { allowEarly: true })).toBe(
+      false
+    );
+
+    room.dayVoteResolved = false;
+    room.phaseTransition = 'dayToNight';
+    expect(tryResolveDayVote(room, broadcastRoom, undefined as never, { allowEarly: true })).toBe(
+      false
+    );
+
+    room.phaseTransition = null;
+    room.awaitingHunterShot = 'a';
+    expect(tryResolveDayVote(room, broadcastRoom, undefined as never, { allowEarly: true })).toBe(
+      false
+    );
+
+    room.awaitingHunterShot = null;
+    room.awaitingMayorSelection = 'b';
+    expect(tryResolveDayVote(room, broadcastRoom, undefined as never, { allowEarly: true })).toBe(
+      false
+    );
+
+    expect(room.voteState.votes).toEqual({ a: 'b', b: 'a' });
+    expect(broadcastRoom).not.toHaveBeenCalled();
   });
 
   test('early resolution treats missing votes as abstentions', () => {

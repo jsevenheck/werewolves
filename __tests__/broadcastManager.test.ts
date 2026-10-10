@@ -97,6 +97,30 @@ describe('broadcastManager', () => {
     expect(endedOther?.role).toBe('werewolf');
   });
 
+  test('sanitizeRoom restores a pending Seer result only for the acting Seer', () => {
+    const room = makeRoom();
+    room.phase = 'night';
+    room.phaseStep = 'seer';
+    room.seerAwaitingDismiss = true;
+    room.players = {
+      seer: buildPlayer({
+        id: 'seer',
+        role: 'seer',
+        team: 'village',
+        seerResult: { name: 'Wolf', result: 'Werewolf' },
+      }),
+      other: buildPlayer({ id: 'other', role: 'villager', team: 'village' }),
+    };
+
+    const seerView = sanitizeRoom(room, 'seer');
+    const otherView = sanitizeRoom(room, 'other');
+
+    expect(seerView.self?.seerResultPending).toBe(true);
+    expect(seerView.seerResult).toEqual({ name: 'Wolf', result: 'Werewolf' });
+    expect(otherView.self?.seerResultPending).toBe(false);
+    expect(otherView.seerResult).toBeNull();
+  });
+
   test('sanitizeRoom exposes lover info to linked players', () => {
     const room = makeRoom();
     room.players = {

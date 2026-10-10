@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../stores/game';
 import { getPlayerName, notify } from '../utils/helpers';
@@ -19,8 +19,13 @@ const { room, playerId, pendingWolfVote } = storeToRefs(store);
 
 const wolfTarget = ref('');
 const seerTarget = ref('');
-const pendingSeerResult = ref<{ name: string; result: string } | null>(null);
+const seerRequestPending = ref(false);
 const poisonTarget = ref('');
+const resetSeerRequest = () => {
+  seerRequestPending.value = false;
+};
+props.socket.on('connect', resetSeerRequest);
+onBeforeUnmount(() => props.socket.off('connect', resetSeerRequest));
 const guardTarget = ref('');
 const harlotTarget = ref('');
 const witchActionTaken = ref(false);
@@ -72,6 +77,9 @@ const seerTargets = computed(() =>
   (room.value?.players ?? []).filter((p) => p.alive && p.id !== playerId.value)
 );
 const seerResult = computed(() => room.value?.seerResult || null);
+const pendingSeerResult = computed(() =>
+  self.value?.seerResultPending ? (room.value?.seerResult ?? null) : null
+);
 
 // Witch form
 const isWitch = computed(
@@ -144,7 +152,16 @@ function submitWolfVote() {
 }
 
 function submitSeerInspect() {
-  if (!seerTarget.value || !playerId.value || !room.value) return;
+  if (
+    !seerTarget.value ||
+    !playerId.value ||
+    !room.value ||
+    seerRequestPending.value ||
+    self.value?.seerResultPending
+  ) {
+    return;
+  }
+  seerRequestPending.value = true;
   props.socket.emit(
     'submitSeerInspect',
     {
@@ -154,9 +171,8 @@ function submitSeerInspect() {
     },
     (res) => {
       if (res && 'error' in res && res.error) {
+        seerRequestPending.value = false;
         notify(localizeError(res));
-      } else if (res && 'ok' in res && res.name && res.result) {
-        pendingSeerResult.value = { name: res.name, result: res.result };
       }
     }
   );
@@ -245,6 +261,12 @@ watch(
   () => isSeer.value,
   (active) => {
     if (active) seerTarget.value = '';
+  }
+);
+watch(
+  () => [isSeer.value, self.value?.seerResultPending] as const,
+  ([active, resultPending]) => {
+    if (!active || resultPending) seerRequestPending.value = false;
   }
 );
 watch(
@@ -352,7 +374,9 @@ watch(
             </option>
           </select>
         </label>
-        <button type="submit">{{ t('night.revealAlignment') }}</button>
+        <button type="submit" :disabled="seerRequestPending || self?.seerResultPending === true">
+          {{ t('night.revealAlignment') }}
+        </button>
         <p v-if="seerResult">
           {{
             t('night.lastVision', {
@@ -458,10 +482,5 @@ watch(
     </div>
   </section>
 
-  <SeerResultOverlay
-    v-if="pendingSeerResult"
-    :socket="props.socket"
-    :result="pendingSeerResult"
-    @dismiss="pendingSeerResult = null"
-  />
+  <SeerResultOverlay v-if="pendingSeerResult" :socket="props.socket" :result="pendingSeerResult" />
 </template>

@@ -218,6 +218,7 @@ export const en = {
       invalidRoomOrPhase: 'Invalid room or phase',
       invalidPlayer: 'Invalid player',
       cannotInspectSelf: 'Cannot inspect yourself',
+      seerAlreadyActed: 'You have already inspected someone this night',
       invalidTarget: 'Invalid target',
       cannotProtectSelf: 'Cannot protect yourself',
       cannotProtectSame: 'Cannot protect the same player two nights in a row',

@@ -158,9 +158,8 @@ export interface Room {
   hunterShotEndsAt: number | null;
   hunterShotQueue: string[];
   /**
-   * Set when a Hunter shot kills a Werewolf. Survives a deferred winner
-   * check (e.g. mayor succession) so a simultaneous final death still
-   * counts as a Werewolf win. Consumed (reset) when a winner is declared.
+   * Tracks a Werewolf hit during the current unresolved Hunter/death chain.
+   * It is cleared once that chain finishes or a new game/night begins.
    */
   finalHunterShotAtWerewolf?: boolean;
   createdAt: number;
@@ -196,6 +195,8 @@ export interface RoomViewSelf {
   team: Team | null;
   alive: boolean;
   ready?: boolean;
+  /** True only for this Seer while their current result awaits dismissal. */
+  seerResultPending?: boolean;
 }
 
 export interface RoomView {

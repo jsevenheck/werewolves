@@ -234,7 +234,7 @@ resolveDeaths():
       otherwise check if village still has counterplay:
         - hunter alive (can shoot)
         - pending mayor succession
-        - mayor alive (has tie-breaking power in votes)
+        - a living village-aligned Mayor (a Werewolf or Joker Mayor is not village counterplay)
       if any of above true -> game continues
       else -> endGame('wolves', 'Werewolves reached parity')
 

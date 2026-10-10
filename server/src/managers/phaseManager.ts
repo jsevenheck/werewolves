@@ -20,6 +20,7 @@ function startNight(room: Room) {
   clearRoomTimers(room);
   room.hunterShotQueue = [];
   room.mayorSelectionQueue = [];
+  room.finalHunterShotAtWerewolf = false;
   room.wolfVotes = {};
   // Don't pre-initialize wolf votes - leave them undefined until wolves actually vote
   room.wolfTarget = null;

@@ -224,7 +224,18 @@ function checkWinners(room: Room, options: { finalHunterShotAtWerewolf?: boolean
     clearRoomTimers(room);
     return;
   }
+  const hasPendingResolution = Boolean(
+    room.pendingDeaths?.length ||
+    room.awaitingHunterShot ||
+    room.hunterShotQueue?.length ||
+    room.awaitingMayorSelection ||
+    room.mayorSelectionQueue?.length
+  );
+  if (!hasPendingResolution) {
+    room.finalHunterShotAtWerewolf = false;
+  }
   if (!wolves.length) {
+    room.finalHunterShotAtWerewolf = false;
     room.winner = { team: 'village', reason: 'All Werewolves are dead.' };
     room.phase = 'ended';
     room.phaseStep = null;
@@ -239,6 +250,7 @@ function checkWinners(room: Room, options: { finalHunterShotAtWerewolf?: boolean
 
   // Wolves have strict majority - game over regardless of special abilities
   if (wolves.length > others) {
+    room.finalHunterShotAtWerewolf = false;
     room.winner = { team: 'wolves', reason: 'Werewolves have the majority.' };
     room.phase = 'ended';
     room.phaseStep = null;
@@ -255,6 +267,7 @@ function checkWinners(room: Room, options: { finalHunterShotAtWerewolf?: boolean
     // A one-versus-one end state is already decided: the Werewolf wins. Do
     // not keep the game alive because of Mayor or Hunter counterplay.
     if (wolves.length === 1 && others === 1) {
+      room.finalHunterShotAtWerewolf = false;
       room.winner = { team: 'wolves', reason: 'Werewolves reached parity.' };
       room.phase = 'ended';
       room.phaseStep = null;
@@ -273,6 +286,7 @@ function checkWinners(room: Room, options: { finalHunterShotAtWerewolf?: boolean
       room.witchState.healAvailable;
 
     if (witchWithBothPotions) {
+      room.finalHunterShotAtWerewolf = false;
       room.winner = { team: 'village', reason: 'Witch can heal and poison to break parity.' };
       room.phase = 'ended';
       room.phaseStep = null;
@@ -289,13 +303,15 @@ function checkWinners(room: Room, options: { finalHunterShotAtWerewolf?: boolean
       room.awaitingMayorSelection || room.mayorSelectionQueue.length > 0;
 
     // At parity, mayor's tie-breaking power in voting is crucial
-    const mayorAlive = room.mayorId && room.players[room.mayorId]?.alive;
+    const mayor = room.mayorId ? room.players[room.mayorId] : null;
+    const villageMayorAlive = mayor?.alive === true && mayor.team === 'village';
 
-    // If there's a hunter, pending mayor succession, or mayor with tie-breaking power, village still has a chance
-    if (hunterAlive || hasPendingMayorSelection || mayorAlive) {
+    // Only a village-aligned Mayor can provide counterplay for the village.
+    if (hunterAlive || hasPendingMayorSelection || villageMayorAlive) {
       return;
     }
 
+    room.finalHunterShotAtWerewolf = false;
     room.winner = { team: 'wolves', reason: 'Werewolves reached parity.' };
     room.phase = 'ended';
     room.phaseStep = null;

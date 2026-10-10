@@ -82,6 +82,7 @@ const buildPlayer = (overrides: Partial<Player>): Player => ({
 describe('phaseManager', () => {
   test('startNight resets night state and wolf votes', () => {
     const room = makeRoom();
+    room.finalHunterShotAtWerewolf = true;
     room.players = {
       w1: buildPlayer({ id: 'w1', role: 'werewolf', team: 'wolves', alive: true }),
       w2: buildPlayer({ id: 'w2', role: 'werewolf', team: 'wolves', alive: false }),
@@ -95,6 +96,7 @@ describe('phaseManager', () => {
     expect(room.wolfVotes).toEqual({});
     expect(room.wolfTarget).toBeNull();
     expect(room.seerActed).toBe(false);
+    expect(room.finalHunterShotAtWerewolf).toBe(false);
     expect(room.pendingDeaths).toEqual([]);
     expect(room.lastNightDeaths).toEqual([]);
     expect(room.voteState).toEqual({ votes: {}, revoteFromTie: null });

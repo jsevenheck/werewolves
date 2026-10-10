@@ -222,6 +222,7 @@ export const de = {
       invalidRoomOrPhase: 'Ungültiger Raum oder falsche Phase',
       invalidPlayer: 'Ungültiger Spieler',
       cannotInspectSelf: 'Du kannst dich nicht selbst prüfen',
+      seerAlreadyActed: 'Du hast diese Nacht bereits jemanden untersucht',
       invalidTarget: 'Ungültiges Ziel',
       cannotProtectSelf: 'Du kannst dich nicht selbst beschützen',
       cannotProtectSame: 'Du kannst dieselbe Person nicht zwei Nächte hintereinander beschützen',

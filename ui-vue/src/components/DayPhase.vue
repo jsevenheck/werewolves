@@ -58,7 +58,13 @@ const discussionActive = computed(
 const discussionSecondsLeft = computed(() =>
   discussionEndsAt.value ? Math.max(0, Math.ceil((discussionEndsAt.value - now.value) / 1000)) : 0
 );
-const votingEnabled = computed(() => !discussionActive.value);
+const votingEnabled = computed(
+  () =>
+    !discussionActive.value &&
+    !dayVoteResolved.value &&
+    !awaitingActions.value &&
+    !room.value?.phaseTransition
+);
 
 const eligible = computed(() => {
   if (!room.value) return [];
@@ -164,7 +170,7 @@ function proceedToNight() {
           }}</small>
         </form>
       </template>
-      <p v-else style="color: #fbbf24">{{ t('day.discussionHint') }}</p>
+      <p v-else-if="discussionActive" style="color: #fbbf24">{{ t('day.discussionHint') }}</p>
     </template>
     <p v-else>{{ t('day.deadCannotVote') }}</p>
 
@@ -192,7 +198,7 @@ function proceedToNight() {
         {{ t('day.endVoting') }}
       </button>
       <button
-        v-if="dayVoteResolved && !awaitingActions"
+        v-if="dayVoteResolved && !awaitingActions && !room.phaseTransition"
         id="proceed-to-night-btn"
         type="button"
         @click="proceedToNight"
