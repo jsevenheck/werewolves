@@ -11,6 +11,3 @@ pnpm-lock.yaml
 
 # Agent tooling (mirrors eslint ignore; not application code)
 .pi/
-
-# Graphify generated graph
-graphify-out/

@@ -109,7 +109,6 @@ const BASH_DENY = [
   /^git\s+clean\b/,
   /^git\s+checkout\s+--/,   // Datei-Discard
   
-  /^graphify\s+add\b/,
 
   // Destruktive Filesystem-Ops
   /\brm\s+.*-[a-z]*r[a-z]*f\b/,  // rm -rf und Varianten
@@ -251,7 +250,6 @@ const BASH_ALLOW = [
   /^touch\b/,
   /^diff\b/,
   /^patch\b/,
-  /^graphify\b/,
 
   // Linting & Formatierung
   /^eslint\b/,
